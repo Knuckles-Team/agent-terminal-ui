@@ -11,7 +11,7 @@
     <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
 </p>
 
-A [Textual](https://textual.textualize.io/)-based terminal interface for interacting with AI agents. Built on [agent-core](https://github.com/DavidKoleczek/agent-core) and [InteropRouter](https://github.com/DavidKoleczek/interop-router) for unified model provider support.
+A [Textual](https://textual.textualize.io/)-based terminal interface for interacting with AI agents. It uses the native Agent Communication Protocol (ACP) via the official [agent-client-protocol](https://pypi.org/project/agent-client-protocol/) SDK for standardized session management, planning, and streaming.
 
 > [!NOTE]
 > This library is in early development and subject to change.

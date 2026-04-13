@@ -21,7 +21,7 @@ from textual.widgets import RichLog
 from textual.containers import Horizontal
 
 # Core client and command imports
-from agent_terminal_ui.client import AgentClient, ACPHttpClient
+from agent_terminal_ui.client import AgentClient
 from agent_terminal_ui.commands import CommandProcessor
 
 # TUI component imports
@@ -87,16 +87,9 @@ class AgentApp(App):
         self._pending_tool_calls: dict[str, dict[str, Any]] = {}
         self._current_session_id: str | None = None
 
-        # Initialize client instead of direct Agent
+        # Initialize standardized ACP client
         server_url = os.getenv("AGENT_URL", "http://localhost:8000")
         self._client = AgentClient(base_url=server_url)
-        self._acp_client: ACPHttpClient | None = None
-        self._enable_acp: bool = os.getenv("ENABLE_ACP", "false").lower() == "true"
-
-        if self._enable_acp:
-            acp_url = os.getenv("ACP_URL", "http://localhost:8001")
-            self._acp_client = ACPHttpClient(base_url=acp_url)
-            self._acp_session_id: str | None = None
 
         self._cmd_processor = CommandProcessor(self)
 
@@ -133,18 +126,16 @@ class AgentApp(App):
             # To handle the pending parts clearing
             self._pending_parts = []
 
-        # Start agent turn via client
+        # Start agent turn via ACP client
         self._is_processing = True
         self.query_one(StatusLine).set_thinking(True)
-        if self._enable_acp:
-            self._run_acp_turn(value)
-        else:
-            self._run_agent_turn(value, parts=parts)
+        self._run_agent_turn(value, parts=parts)
 
+    @work(exclusive=True)
     async def _run_agent_turn(
         self, query: str, parts: list[dict[str, Any]] | None = None
     ) -> None:
-        """Stream events from the agent server using the AG-UI protocol.
+        """Stream events from the agent server using the native ACP protocol.
 
         Args:
             query: The user prompt to send.
@@ -155,53 +146,6 @@ class AgentApp(App):
             query, session_id=self._current_session_id, parts=parts
         ):
             self.post_message(AgentEventReceived(event))
-
-    @work(exclusive=True)
-    async def _run_acp_turn(self, query: str) -> None:
-        """Stream events from the ACP server.
-
-        Args:
-            query: The user prompt to send via the ACP protocol.
-
-        """
-        if not self._acp_client:
-            return
-
-        if not hasattr(self, "_acp_session_id") or not self._acp_session_id:
-            self._acp_session_id = await self._acp_client.create_session()
-
-        # In ACP, we first send the message (RPC) then stream
-        await self._acp_client.send_rpc(
-            self._acp_session_id, method="prompt", params={"text": query}
-        )
-
-        async for event in self._acp_client.stream(self._acp_session_id):
-            # Map ACP events to TUI events
-            tui_event = self._map_acp_event(event)
-            if tui_event:
-                self.post_message(AgentEventReceived(tui_event))
-
-    def _map_acp_event(self, acp_event: dict[str, Any]) -> dict[str, Any] | None:
-        """Translate ACP protocol events to the internal TUI event format.
-
-        Args:
-            acp_event: The raw event received from the ACP protocol.
-
-        Returns:
-            A normalized dictionary compatible with the TUI event log, or None.
-
-        """
-        etype = acp_event.get("type")
-        if etype == "text-delta":
-            return {"type": "text", "content": acp_event.get("delta", "")}
-        elif etype == "thinking":
-            # ACP thinking events can be shown in status bar
-            return None
-        elif etype == "tool-call":
-            return {"type": "tool_call", "data": acp_event.get("call", {})}
-        elif etype == "turn-end":
-            return {"type": "turn_end"}
-        return None
 
     def on_agent_event_received(self, message: AgentEventReceived) -> None:
         """Handle standardized events received from the agent client.
