@@ -1,27 +1,17 @@
+#!/usr/bin/python
+# coding: utf-8
 """Modal screen for approving or rejecting pending tool calls.
 
-This screen is displayed when the agent has tool calls that require user approval.
-It shows all pending tools with individual Accept/Reject buttons.
-Keyboard: Y accepts all, N/Esc rejects all, Enter accepts (no feedback) or rejects (with feedback).
-
-Widget hierarchy:
-    ToolApprovalScreen (ModalScreen - centers content, dims background)
-    +-- #approval-dialog (Vertical - the visible dialog box)
-        +-- #approval-title (Static - "Tool Approval Required")
-        +-- #tool-list (VerticalScroll - scrollable list of tools)
-        |   +-- ToolCallItem (one per pending tool)
-        |       +-- .tool-header (Static - tool name and args)
-        |       +-- Accept button
-        |       +-- Reject button
-        +-- #feedback-section (Vertical)
-            +-- #feedback-input (Input)
+This module provides the user interface for human-in-the-loop tool execution
+permissions. It displays pending tools, allows individual or batch decisions,
+and supports providing textual feedback for requested corrections.
 """
 
 from dataclasses import dataclass, field
 from typing import ClassVar, Literal
 
-from agent_core._types import AgentToolCallEvent
-from agent_tui.tui.tool_display._registry import get_formatter
+from agent_terminal_ui.tui.tool_display._registry import get_formatter
+from agent_terminal_ui.tui.tool_display._formatters import AgentToolCallEvent
 from textual.app import ComposeResult
 from textual.binding import Binding, BindingType
 from textual.containers import Horizontal, Vertical, VerticalScroll
@@ -33,7 +23,10 @@ ToolDecision = Literal["accept", "deny"]
 
 @dataclass
 class ToolApprovalResult:
-    """Result returned when the approval modal is dismissed."""
+    """Result returned when the approval modal is dismissed.
+
+    Contains the map of user decisions and optional textual feedback.
+    """
 
     decisions: dict[str, ToolDecision] = field(default_factory=dict)
     feedback: str | None = None
@@ -42,11 +35,9 @@ class ToolApprovalResult:
 class ToolApprovalScreen(ModalScreen[ToolApprovalResult]):
     """Modal screen for approving or rejecting pending tool calls.
 
-    ModalScreen automatically:
-    - Dims the background app
-    - Centers content
-    - Captures all keyboard input (prevents interaction with main app)
-    - Returns a typed result via dismiss()
+    Presents a focused dialog that dims the background and captures input
+    to ensure the user reviews security-sensitive or destructive tool
+    executions before they are finalized.
     """
 
     # Keyboard shortcuts for quick decisions
@@ -57,7 +48,7 @@ class ToolApprovalScreen(ModalScreen[ToolApprovalResult]):
         Binding("escape", "reject_all", "Reject All", show=False),
     ]
 
-    DEFAULT_CSS = """
+    DEFAULT_CSS: str = """
     ToolApprovalScreen {
         align: left middle;
     }
@@ -94,11 +85,23 @@ class ToolApprovalScreen(ModalScreen[ToolApprovalResult]):
     """
 
     def __init__(self, pending_tools: dict[str, AgentToolCallEvent]) -> None:
+        """Initialize the approval screen with the set of pending tools.
+
+        Args:
+            pending_tools: A mapping of call IDs to tool call event objects.
+
+        """
         super().__init__()
-        self._pending_tools = pending_tools
+        self._pending_tools: dict[str, AgentToolCallEvent] = pending_tools
         self._decisions: dict[str, ToolDecision] = {}
 
     def compose(self) -> ComposeResult:
+        """Construct the approval dialog layout.
+
+        Returns:
+            A Textual ComposeResult containing title, tool list, and feedback input.
+
+        """
         with Vertical(id="approval-dialog"):
             yield Static("Tool Approval Required", id="approval-title")
             with VerticalScroll(id="tool-list"):
@@ -110,14 +113,18 @@ class ToolApprovalScreen(ModalScreen[ToolApprovalResult]):
                 )
 
     def on_mount(self) -> None:
-        # Don't focus feedback input by default so Y/N shortcuts work immediately
+        """Handle screen initialization. Shortcuts work without focusing input."""
         pass
 
     def on_input_submitted(self, _event: Input.Submitted) -> None:
-        """Handle Enter in feedback input.
+        """Handle submission of the feedback input.
 
-        If feedback is provided, reject all (user is giving correction).
-        If no feedback, accept all (user is confirming).
+        A non-empty feedback string triggers a global rejection, while
+        an empty submission triggers a global acceptance.
+
+        Args:
+            _event: The focus event (not directly used).
+
         """
         feedback_input = self.query_one("#feedback-input", Input)
         if feedback_input.value.strip():
@@ -126,7 +133,12 @@ class ToolApprovalScreen(ModalScreen[ToolApprovalResult]):
             self.action_accept_all()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Route button presses to appropriate handlers based on button ID."""
+        """Handle individual Accept/Reject button clicks.
+
+        Args:
+            event: The Textual button press event.
+
+        """
         button_id = event.button.id
         if button_id is None:
             return
@@ -139,10 +151,12 @@ class ToolApprovalScreen(ModalScreen[ToolApprovalResult]):
             self._mark_decision(call_id, "deny")
 
     def _mark_decision(self, call_id: str, decision: ToolDecision) -> None:
-        """Mark a single tool call decision.
+        """Record the decision for a single tool and update visual state.
 
-        Updates button visual state to show which option is selected.
-        Decisions can be changed by clicking the other button.
+        Args:
+            call_id: The ID of the tool call.
+            decision: Whether the call is 'accept' or 'deny'.
+
         """
         self._decisions[call_id] = decision
 
@@ -169,21 +183,21 @@ class ToolApprovalScreen(ModalScreen[ToolApprovalResult]):
             self._close_with_result()
 
     def action_accept_all(self) -> None:
-        """Accept all undecided tools and close the modal."""
+        """Apply an 'accept' decision to all remaining undecided tools."""
         for call_id in self._pending_tools:
             if call_id not in self._decisions:
                 self._decisions[call_id] = "accept"
         self._close_with_result()
 
     def action_reject_all(self) -> None:
-        """Reject all undecided tools and close the modal."""
+        """Apply a 'deny' decision to all remaining undecided tools."""
         for call_id in self._pending_tools:
             if call_id not in self._decisions:
                 self._decisions[call_id] = "deny"
         self._close_with_result()
 
     def _close_with_result(self) -> None:
-        """Dismiss the modal with the collected decisions and feedback."""
+        """Finalize decisions and dismiss the modal returning a Result object."""
         feedback_input = self.query_one("#feedback-input", Input)
         feedback = feedback_input.value.strip() or None
 
@@ -192,9 +206,12 @@ class ToolApprovalScreen(ModalScreen[ToolApprovalResult]):
 
 
 class ToolCallItem(Horizontal):
-    """Widget for a single tool call with Accept/Reject buttons in a row."""
+    """Row component representing a single pendng tool call.
 
-    DEFAULT_CSS = """
+    Displays the tool call header and provides toggle buttons for approval.
+    """
+
+    DEFAULT_CSS: str = """
     ToolCallItem {
         height: 1;
         width: 100%;
@@ -228,15 +245,26 @@ class ToolCallItem(Horizontal):
     """
 
     def __init__(self, event: AgentToolCallEvent) -> None:
+        """Initialize the tool call item.
+
+        Args:
+            event: The tool call event to display.
+
+        """
         super().__init__()
-        self.event = event
-        self.call_id = event.call_id
+        self.event: AgentToolCallEvent = event
+        self.call_id: str = event.call_id
 
     def compose(self) -> ComposeResult:
+        """Construct the row layout with label and buttons.
+
+        Returns:
+            A Textual ComposeResult containing header label and Accept/Reject buttons.
+
+        """
         formatter = get_formatter(self.event.name)
         header = formatter.format_call_header(self.event)
         yield Static(header, classes="tool-header")
-        # Button IDs encode the call_id for routing in on_button_pressed
         yield Button(
             "\u2713", variant="success", id=f"accept-{self.call_id}", classes="tool-btn"
         )

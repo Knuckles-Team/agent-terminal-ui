@@ -1,3 +1,12 @@
+#!/usr/bin/python
+# coding: utf-8
+"""Agent Client implementation for the terminal UI.
+
+This module provides high-level client wrappers for interacting with the agent
+server. It supports the legacy AG-UI streaming protocol and the modern,
+standardized Agent Communication Protocol (ACP) via HTTP/SSE.
+"""
+
 from collections.abc import AsyncGenerator
 import json
 import logging
@@ -9,20 +18,45 @@ logger = logging.getLogger(__name__)
 
 
 class AgentClient:
-    """Client for the agent-utilities AG-UI streaming protocol."""
+    """Client for the agent-utilities AG-UI streaming protocol.
 
-    def __init__(self, base_url: str = "http://localhost:8000"):
-        self.base_url = base_url.rstrip("/")
-        self._client = httpx.AsyncClient(timeout=None)
+    Provides methods to stream agent events, manage chat sessions,
+    retrieve agent metadata, and send tool execution decisions.
+    """
+
+    def __init__(self, base_url: str = "http://localhost:8000") -> None:
+        """Initialize the AG-UI client.
+
+        Args:
+            base_url: The base URL of the agent server.
+
+        """
+        self.base_url: str = base_url.rstrip("/")
+        self._client: httpx.AsyncClient = httpx.AsyncClient(timeout=None)
 
     async def stream(
-        self, query: str, session_id: str | None = None
+        self,
+        query: str,
+        session_id: str | None = None,
+        parts: list[dict[str, Any]] | None = None,
     ) -> AsyncGenerator[dict[str, Any], None]:
-        """Stream events from the /ag-ui endpoint."""
+        """Stream real-time events from the /ag-ui endpoint.
+
+        Args:
+            query: The user prompt to send to the agent.
+            session_id: Optional existing session ID to resume.
+            parts: Optional list of multi-modal message parts.
+
+        Yields:
+            Standardized event dictionaries (text, tool_call, sideband, error).
+
+        """
         url = f"{self.base_url}/ag-ui"
-        payload = {"query": query}
+        payload: dict[str, Any] = {"query": query}
         if session_id:
             payload["session_id"] = session_id
+        if parts:
+            payload["parts"] = parts
 
         async with self._client.stream("POST", url, json=payload) as response:
             if response.status_code != 200:
@@ -52,7 +86,7 @@ class AgentClient:
                     if prefix == "1":
                         # Text chunk is usually a JSON string or raw text
                         try:
-                            # Try to parse if it's a JSON string (e.g. "Drafting...")
+                            # Try to parse if it's a JSON string
                             chunk = json.loads(content)
                             yield {"type": "text", "content": chunk}
                         except json.JSONDecodeError:
@@ -73,7 +107,12 @@ class AgentClient:
                     yield {"type": "error", "message": f"Parse error: {e}"}
 
     async def get_metadata(self) -> dict[str, Any]:
-        """Fetch general agent metadata."""
+        """Fetch general agent metadata from the /a2a endpoint.
+
+        Returns:
+            A dictionary containing the agent's identity and capabilities.
+
+        """
         try:
             response = await self._client.get(f"{self.base_url}/a2a")
             return response.json()
@@ -82,7 +121,12 @@ class AgentClient:
             return {}
 
     async def list_chats(self) -> list[dict[str, Any]]:
-        """Fetch list of chat sessions."""
+        """Fetch the list of historical chat sessions.
+
+        Returns:
+            A list of chat metadata dictionaries.
+
+        """
         try:
             response = await self._client.get(f"{self.base_url}/chats")
             return response.json()
@@ -91,7 +135,15 @@ class AgentClient:
             return []
 
     async def get_chat(self, chat_id: str) -> dict[str, Any]:
-        """Fetch full chat details."""
+        """Fetch the full conversation history for a specific chat.
+
+        Args:
+            chat_id: The unique identifier of the chat session.
+
+        Returns:
+            The complete chat session object including messages.
+
+        """
         try:
             response = await self._client.get(f"{self.base_url}/chats/{chat_id}")
             return response.json()
@@ -100,7 +152,12 @@ class AgentClient:
             return {}
 
     async def get_mcp_config(self) -> dict[str, Any]:
-        """Fetch current MCP configuration."""
+        """Fetch the current MCP server configuration.
+
+        Returns:
+            The parsed mcp_config.json content from the server.
+
+        """
         try:
             response = await self._client.get(f"{self.base_url}/mcp/config")
             return response.json()
@@ -109,7 +166,12 @@ class AgentClient:
             return {"mcpServers": {}}
 
     async def list_mcp_tools(self) -> list[dict[str, Any]]:
-        """Fetch list of all available MCP tools."""
+        """Fetch the consolidated list of all available tools across MCP servers.
+
+        Returns:
+            A list of tool definition dictionaries.
+
+        """
         try:
             response = await self._client.get(f"{self.base_url}/mcp/tools")
             return response.json()
@@ -120,11 +182,17 @@ class AgentClient:
     async def send_decision(
         self, decisions: dict[str, str], feedback: str | None = None
     ) -> AsyncGenerator[dict[str, Any], None]:
-        """Send tool approval decisions back to the agent."""
+        """Send tool approval decisions back to the agent orchestrator.
+
+        Args:
+            decisions: Map of tool call IDs to 'accept' or 'reject'.
+            feedback: Optional textual feedback from the user.
+
+        Yields:
+            Standardized event dictionaries as the agent resumes execution.
+
+        """
         url = f"{self.base_url}/ag-ui"
-        # The protocol for decisions usually involves sending a list of permission events
-        # In our case, we'll send them one by one or as a batch if supported.
-        # For now, following the pattern in _run_agent_turn_with_permissions
 
         for call_id, decision in decisions.items():
             payload = {
@@ -152,26 +220,50 @@ class AgentClient:
                     except Exception:
                         continue
 
-    async def close(self):
+    async def close(self) -> None:
+        """Close the underlying HTTP client resources."""
         await self._client.aclose()
 
 
 class ACPHttpClient:
-    """Client for the pydantic-acp ACP protocol over HTTP/SSE."""
+    """Client for the standardized Agent Communication Protocol (ACP) over HTTP/SSE.
 
-    def __init__(self, base_url: str = "http://localhost:8001"):
-        self.base_url = base_url.rstrip("/")
-        self._client = httpx.AsyncClient(timeout=None)
+    Facilitates structured session management, JSON-RPC communication,
+    and SSE-based event streaming.
+    """
+
+    def __init__(self, base_url: str = "http://localhost:8001") -> None:
+        """Initialize the ACP client.
+
+        Args:
+            base_url: The base URL of the ACP-compliant agent server.
+
+        """
+        self.base_url: str = base_url.rstrip("/")
+        self._client: httpx.AsyncClient = httpx.AsyncClient(timeout=None)
 
     async def create_session(self) -> str:
-        """Create a new ACP session and return its ID."""
+        """Create a new ACP session.
+
+        Returns:
+            The unique session_id generated by the server.
+
+        """
         url = f"{self.base_url}/acp/sessions"
         response = await self._client.post(url)
         data = response.json()
         return data["session_id"]
 
     async def stream(self, session_id: str) -> AsyncGenerator[dict[str, Any], None]:
-        """Stream ACP events from the SSE endpoint."""
+        """Stream real-time events from an active ACP session using SSE.
+
+        Args:
+            session_id: The ID of the session to stream from.
+
+        Yields:
+            Parsed ACP event dictionaries.
+
+        """
         url = f"{self.base_url}/acp/stream/{session_id}"
         async with self._client.stream("GET", url) as response:
             async for line in response.aiter_lines():
@@ -182,8 +274,20 @@ class ACPHttpClient:
                     except json.JSONDecodeError:
                         continue
 
-    async def send_rpc(self, session_id: str, method: str, params: dict) -> dict:
-        """Send a JSON-RPC request to the ACP agent."""
+    async def send_rpc(
+        self, session_id: str, method: str, params: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Send a JSON-RPC request to the ACP agent.
+
+        Args:
+            session_id: The ID of the session to send the request to.
+            method: The JSON-RPC method name (e.g., 'prompt').
+            params: The parameters for the RPC call.
+
+        Returns:
+            The JSON response from the RPC call.
+
+        """
         url = f"{self.base_url}/acp/rpc/{session_id}"
         payload = {
             "jsonrpc": "2.0",
@@ -194,5 +298,6 @@ class ACPHttpClient:
         response = await self._client.post(url, json=payload)
         return response.json()
 
-    async def close(self):
+    async def close(self) -> None:
+        """Close the underlying HTTP client resources."""
         await self._client.aclose()
