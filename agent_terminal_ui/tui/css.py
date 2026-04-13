@@ -1,4 +1,13 @@
-AGENT_APP_CSS = """
+#!/usr/bin/python
+# coding: utf-8
+"""CSS styles for the Agent Terminal UI.
+
+This module contains the global stylesheet for the Textual-based
+terminal application, defining the visual appearance of the event log,
+input area, status line, and activity timer.
+"""
+
+AGENT_APP_CSS: str = """
 RichLog {
     height: 1fr;
     background: transparent;

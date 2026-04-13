@@ -1,12 +1,26 @@
+#!/usr/bin/python
+# coding: utf-8
+"""Workflow sidebar widget for the terminal UI.
+
+Provides a visual representation of the agent's current graph execution state,
+highlighting the active domain expert (e.g., Planner, Researcher) as the
+agent moves through the multi-stage orchestration graph.
+"""
+
+from typing import Any
 from textual.app import ComposeResult
 from textual.containers import Vertical, VerticalScroll
 from textual.widgets import Label
 
 
 class WorkflowSidebar(Vertical):
-    """Sidebar to visualize the current agent execution state and graph nodes."""
+    """Sidebar widget to visualize the current agent execution state and graph nodes.
 
-    DEFAULT_CSS = """
+    Displays a list of available specialized agents and uses visual styling
+    to indicate which node is currently active in the root graph.
+    """
+
+    DEFAULT_CSS: str = """
     WorkflowSidebar {
         width: 30;
         background: $surface;
@@ -34,12 +48,30 @@ class WorkflowSidebar(Vertical):
     }
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the workflow sidebar.
+
+        Args:
+            **kwargs: Arguments passed to the base Vertical container.
+
+        """
         super().__init__(**kwargs)
-        self.active_node = "Basic"
-        self.nodes = ["Planner", "Researcher", "Programmer", "Architect", "QA"]
+        self.active_node: str = "Basic"
+        self.nodes: list[str] = [
+            "Planner",
+            "Researcher",
+            "Programmer",
+            "Architect",
+            "QA",
+        ]
 
     def compose(self) -> ComposeResult:
+        """Construct the sidebar layout.
+
+        Returns:
+            A Textual ComposeResult containing the workflow title and node list.
+
+        """
         yield Label("[bold]Workflow Execution[/bold]")
         with VerticalScroll(id="node-list"):
             for node in self.nodes:
@@ -47,16 +79,26 @@ class WorkflowSidebar(Vertical):
                     node, id=f"node-{node.lower()}", classes="node-item node-pending"
                 )
 
-    def update_state(self, node: str, status: str = "active"):
-        """Update the active node in the sidebar."""
+    def update_state(self, node: str, status: str = "active") -> None:
+        """Update the visual state of the sidebar to reflect the active node.
+
+        Args:
+            node: The identifier of the node that is now active.
+            status: The status to apply (default is 'active').
+
+        """
         self.active_node = node
         for n in self.nodes:
-            widget = self.query_one(f"#node-{n.lower()}", Label)
-            if n.lower() == node.lower():
-                widget.add_class("node-active")
-                widget.remove_class("node-pending")
-                widget.update(f"▶ {n}")
-            else:
-                widget.remove_class("node-active")
-                widget.add_class("node-pending")
-                widget.update(n)
+            try:
+                widget = self.query_one(f"#node-{n.lower()}", Label)
+                if n.lower() == node.lower():
+                    widget.add_class("node-active")
+                    widget.remove_class("node-pending")
+                    widget.update(f"▶ {n}")
+                else:
+                    widget.remove_class("node-active")
+                    widget.add_class("node-pending")
+                    widget.update(n)
+            except Exception:
+                # Handle cases where the specific node label might not exist yet
+                pass

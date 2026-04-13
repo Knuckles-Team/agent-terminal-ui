@@ -1,38 +1,75 @@
+#!/usr/bin/python
+# coding: utf-8
+"""Agent Terminal User Interface (TUI) Application.
+
+This module implements the primary Textual application for the agent terminal UI.
+It handles user input, streams events from the agent server (using both
+AG-UI and ACP protocols), manages tool execution flows, and provides
+an interactive log for agent-to-user communication.
+"""
+
 import os
 import time
+import logging
 from typing import Any, ClassVar
 
-from agent_tui.client import AgentClient, ACPHttpClient
-from agent_tui.commands import CommandProcessor
-from agent_tui.tui.agent_timer import AgentTimer
-from agent_tui.tui.css import AGENT_APP_CSS
-from agent_tui.tui.formatters import BulletMarkdown, format_user_message
-from agent_tui.tui.input_text_area import InputTextArea
-from agent_tui.tui.status_line import MODE_COLORS, StatusLine
-from agent_tui.tui.tool_approval_screen import ToolApprovalResult, ToolApprovalScreen
-from agent_tui.tui.tool_display._registry import get_formatter
-from agent_tui.tui.tool_display._widget import ToolCallDisplay, ToolOutputDisplay
-from agent_tui.widgets.workflow import WorkflowSidebar
 from textual import work
 from textual.app import App, ComposeResult
 from textual.binding import Binding, BindingType
 from textual.message import Message
 from textual.widgets import RichLog
+from textual.containers import Horizontal
 
-DOUBLE_TAP_SECONDS = 0.25
-MODES = list(MODE_COLORS.keys())
+# Core client and command imports
+from agent_terminal_ui.client import AgentClient, ACPHttpClient
+from agent_terminal_ui.commands import CommandProcessor
+
+# TUI component imports
+from agent_terminal_ui.tui.agent_timer import AgentTimer
+from agent_terminal_ui.tui.css import AGENT_APP_CSS
+from agent_terminal_ui.tui.formatters import BulletMarkdown, format_user_message
+from agent_terminal_ui.tui.input_text_area import InputTextArea
+from agent_terminal_ui.tui.status_line import MODE_COLORS, StatusLine
+from agent_terminal_ui.tui.tool_approval_screen import (
+    ToolApprovalResult,
+    ToolApprovalScreen,
+)
+from agent_terminal_ui.tui.tool_display._registry import get_formatter
+from agent_terminal_ui.tui.tool_display._widget import (
+    ToolCallDisplay,
+    ToolOutputDisplay,
+)
+from agent_terminal_ui.widgets.workflow import WorkflowSidebar
+
+logger = logging.getLogger(__name__)
+
+DOUBLE_TAP_SECONDS: float = 0.25
+MODES: list[str] = list(MODE_COLORS.keys())
 
 
 class AgentEventReceived(Message):
-    """Posted when an event is received from the agent client."""
+    """Event posted when a new message or tool call is received from the agent client."""
 
     def __init__(self, event: dict[str, Any]) -> None:
+        """Initialize the event message with the raw event data.
+
+        Args:
+            event: The dictionary containing the event payload.
+
+        """
         self.event = event
         super().__init__()
 
 
 class AgentApp(App):
-    CSS = AGENT_APP_CSS
+    """The main Textual application for the Agent Terminal UI.
+
+    Responsible for orchestrating the lifecycle of an agent interaction session,
+    managing UI state, and coordinating communication between the user and
+    the remote agent server.
+    """
+
+    CSS: str = AGENT_APP_CSS
 
     BINDINGS: ClassVar[list[BindingType]] = [
         Binding("ctrl+c", "interrupt", "Interrupt", show=False, priority=True),
@@ -41,6 +78,7 @@ class AgentApp(App):
     ]
 
     def __init__(self) -> None:
+        """Initialize the Agent application and its internal state."""
         super().__init__()
         self._last_ctrl_c: float = 0.0
         self._mode_index: int = 0
@@ -52,18 +90,25 @@ class AgentApp(App):
         # Initialize client instead of direct Agent
         server_url = os.getenv("AGENT_URL", "http://localhost:8000")
         self._client = AgentClient(base_url=server_url)
-        self._acp_client = None
-        self._enable_acp = os.getenv("ENABLE_ACP", "false").lower() == "true"
+        self._acp_client: ACPHttpClient | None = None
+        self._enable_acp: bool = os.getenv("ENABLE_ACP", "false").lower() == "true"
+
         if self._enable_acp:
             acp_url = os.getenv("ACP_URL", "http://localhost:8001")
             self._acp_client = ACPHttpClient(base_url=acp_url)
-            self._acp_session_id = None
+            self._acp_session_id: str | None = None
 
         self._cmd_processor = CommandProcessor(self)
 
     async def on_input_text_area_submitted(
         self, event: InputTextArea.Submitted
     ) -> None:
+        """Handle the submission of text from the input area.
+
+        Args:
+            event: The submission event from the InputTextArea.
+
+        """
         value = event.value.strip()
         if not value or self._is_processing:
             return
@@ -80,25 +125,49 @@ class AgentApp(App):
         log.write(format_user_message(value))
         self.query_one(InputTextArea).clear()
 
+        # Collect parts if any
+        parts = []
+        if hasattr(self, "_pending_parts") and self._pending_parts:
+            parts = self._pending_parts
+            parts.append({"text": value})
+            # To handle the pending parts clearing
+            self._pending_parts = []
+
         # Start agent turn via client
         self._is_processing = True
         self.query_one(StatusLine).set_thinking(True)
         if self._enable_acp:
             self._run_acp_turn(value)
         else:
-            self._run_agent_turn(value)
+            self._run_agent_turn(value, parts=parts)
 
-    async def _run_agent_turn(self, query: str) -> None:
-        """Stream events from the agent server (AG-UI)."""
+    async def _run_agent_turn(
+        self, query: str, parts: list[dict[str, Any]] | None = None
+    ) -> None:
+        """Stream events from the agent server using the AG-UI protocol.
+
+        Args:
+            query: The user prompt to send.
+            parts: Optional list of multi-modal parts.
+
+        """
         async for event in self._client.stream(
-            query, session_id=self._current_session_id
+            query, session_id=self._current_session_id, parts=parts
         ):
             self.post_message(AgentEventReceived(event))
 
     @work(exclusive=True)
     async def _run_acp_turn(self, query: str) -> None:
-        """Stream events from the ACP server."""
-        if not self._acp_session_id:
+        """Stream events from the ACP server.
+
+        Args:
+            query: The user prompt to send via the ACP protocol.
+
+        """
+        if not self._acp_client:
+            return
+
+        if not hasattr(self, "_acp_session_id") or not self._acp_session_id:
             self._acp_session_id = await self._acp_client.create_session()
 
         # In ACP, we first send the message (RPC) then stream
@@ -108,13 +177,20 @@ class AgentApp(App):
 
         async for event in self._acp_client.stream(self._acp_session_id):
             # Map ACP events to TUI events
-            # ACP schema: {type: "text-delta", delta: "..."} etc.
             tui_event = self._map_acp_event(event)
             if tui_event:
                 self.post_message(AgentEventReceived(tui_event))
 
     def _map_acp_event(self, acp_event: dict[str, Any]) -> dict[str, Any] | None:
-        """Translates ACP protocol events to internal TUI event format."""
+        """Translate ACP protocol events to the internal TUI event format.
+
+        Args:
+            acp_event: The raw event received from the ACP protocol.
+
+        Returns:
+            A normalized dictionary compatible with the TUI event log, or None.
+
+        """
         etype = acp_event.get("type")
         if etype == "text-delta":
             return {"type": "text", "content": acp_event.get("delta", "")}
@@ -128,7 +204,12 @@ class AgentApp(App):
         return None
 
     def on_agent_event_received(self, message: AgentEventReceived) -> None:
-        """Handle events received from the agent client."""
+        """Handle standardized events received from the agent client.
+
+        Args:
+            message: The event message containing the payload from the agent.
+
+        """
         event = message.event
         log = self.query_one("#event-log", RichLog)
 
@@ -167,6 +248,13 @@ class AgentApp(App):
                 self._show_tool_approval_modal()
 
     def _handle_tool_call(self, data: dict[str, Any], log: RichLog) -> None:
+        """Process and display a tool call event.
+
+        Args:
+            data: The tool call information.
+            log: The event log to display the tool call in.
+
+        """
         call_id = data.get("call_id")
         if not call_id:
             return
@@ -180,10 +268,10 @@ class AgentApp(App):
 
         # Mocking an event-like object for the formatter
         class MockEvent:
-            def __init__(self, d):
+            def __init__(self, d: dict[str, Any]) -> None:
                 self.__dict__.update(d)
 
-            def __getattr__(self, name):
+            def __getattr__(self, name: str) -> Any:
                 return self.__dict__.get(name)
 
         header = formatter.format_call_header(MockEvent(data))
@@ -198,6 +286,13 @@ class AgentApp(App):
             self._handle_tool_output(data, log)
 
     def _handle_tool_output(self, data: dict[str, Any], log: RichLog) -> None:
+        """Process and display the output of a tool call.
+
+        Args:
+            data: The tool execution result data.
+            log: The event log to display the output in.
+
+        """
         call_id = data.get("call_id")
         call_data = self._pending_tool_calls.pop(call_id, None)
 
@@ -207,10 +302,10 @@ class AgentApp(App):
         formatter = get_formatter(name)
 
         class MockEvent:
-            def __init__(self, d):
+            def __init__(self, d: dict[str, Any]) -> None:
                 self.__dict__.update(d)
 
-            def __getattr__(self, name):
+            def __getattr__(self, name: str) -> Any:
                 return self.__dict__.get(name)
 
         header = (
@@ -221,6 +316,11 @@ class AgentApp(App):
         log.write(ToolOutputDisplay(header, summary, details, agent_name=agent_name))
 
     def action_interrupt(self) -> None:
+        """Handle the interrupt action (Ctrl+C).
+
+        Clears selection if active, cancels pending work if processing,
+        or performs a exit check.
+        """
         text_area = self.query_one(InputTextArea)
         if not text_area.selection.is_empty:
             text_area.action_copy()
@@ -242,15 +342,21 @@ class AgentApp(App):
             text_area.clear()
 
     def action_select_all(self) -> None:
+        """Perform a select-all action in the input text area."""
         self.query_one(InputTextArea).action_select_all()
 
     def action_cycle_mode(self) -> None:
+        """Cycle through available agent interaction modes."""
         self._mode_index = (self._mode_index + 1) % len(MODES)
         self.query_one(StatusLine).set_mode(MODES[self._mode_index])
 
     def compose(self) -> ComposeResult:
-        from textual.containers import Horizontal
+        """Construct the visual layout of the application.
 
+        Returns:
+            A Textual ComposeResult containing the main layout components.
+
+        """
         with Horizontal():
             yield RichLog(id="event-log", wrap=True, markup=True)
             yield WorkflowSidebar()
@@ -259,12 +365,14 @@ class AgentApp(App):
         yield StatusLine()
 
     def on_mount(self) -> None:
+        """Handle the mount event when the application starts."""
         self.query_one(RichLog).can_focus = False
         self.query_one(StatusLine).can_focus = False
         self.query_one(AgentTimer).can_focus = False
         self.query_one(InputTextArea).focus()
 
     def _show_tool_approval_modal(self) -> None:
+        """Display a modal screen for approving pending tool calls."""
         pending = {
             cid: event
             for cid, event in self._pending_tool_calls.items()
@@ -273,12 +381,11 @@ class AgentApp(App):
         if not pending:
             return
 
-        # We need to wrap dictionaries into MockEvent for the screen if it expects objects
         class MockEvent:
-            def __init__(self, d):
+            def __init__(self, d: dict[str, Any]) -> None:
                 self.__dict__.update(d)
 
-            def __getattr__(self, name):
+            def __getattr__(self, name: str) -> Any:
                 return self.__dict__.get(name)
 
         wrapped_pending = {cid: MockEvent(ev) for cid, ev in pending.items()}
@@ -287,6 +394,12 @@ class AgentApp(App):
         )
 
     def _handle_tool_approval_result(self, result: ToolApprovalResult | None) -> None:
+        """Handle the result of a tool approval decision.
+
+        Args:
+            result: The user's decisions and feedback, or None if cancelled.
+
+        """
         if result is None:
             return
 
@@ -315,16 +428,28 @@ class AgentApp(App):
     async def _run_agent_turn_with_permissions(
         self, decisions: dict[str, str], feedback: str | None
     ) -> None:
+        """Resume an agent turn after user decisions are made.
+
+        Args:
+            decisions: Map of call IDs to 'accept' or 'reject'.
+            feedback: Optional feedback provided by the user.
+
+        """
         async for event in self._client.send_decision(decisions, feedback):
             self.post_message(AgentEventReceived(event))
         self._processing_permissions = False
-        # If no turn_end event is caught in the stream, ensure we reset here
+        # Ensure we reset thinking state if the stream ends
         if not self._is_processing:
             self.query_one(StatusLine).set_thinking(False)
 
     @work(exclusive=True)
     async def _resume_session(self, chat_id: str | None) -> None:
-        """Fetch and display a past chat session."""
+        """Fetch and display a past chat session from history.
+
+        Args:
+            chat_id: The unique identifier of the session to resume.
+
+        """
         if not chat_id:
             return
 
@@ -343,7 +468,6 @@ class AgentApp(App):
             if role == "user":
                 log.write(format_user_message(content))
             elif role == "assistant":
-                # Handle assistant messages (could be text or tool calls)
                 if isinstance(content, str):
                     log.write(BulletMarkdown(content, agent_name="assistant"))
                 elif isinstance(content, list):
@@ -354,12 +478,10 @@ class AgentApp(App):
                             log.write(
                                 BulletMarkdown(item["text"], agent_name="assistant")
                             )
-            elif role == "tool":
-                # Optional: log that a tool was run
-                pass
 
 
 def main() -> None:
+    """The application entry point."""
     AgentApp().run()
 
 

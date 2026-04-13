@@ -1,13 +1,22 @@
+#!/usr/bin/python
+# coding: utf-8
+"""Rich-based formatters for the terminal event log.
+
+Provides custom renderables and utility functions for formatting agent
+responses (Markdown with bullet points) and user input in the TUI log.
+Includes a deterministic color assignment system for domain specialists.
+"""
+
 from rich.console import Console, ConsoleOptions, RenderResult
 from rich.markdown import Markdown
 from rich.segment import Segment
 from rich.style import Style
 from rich.text import Text
 
-BULLET = "\u2022"
+BULLET: str = "\u2022"
 
 # Muted/pastel colors for subagents
-AGENT_COLORS = [
+AGENT_COLORS: list[str] = [
     "#9db4c0",  # pale blue
     "#c9ada7",  # pale mauve
     "#a7c4a0",  # pale green
@@ -20,19 +29,46 @@ AGENT_COLORS = [
 
 
 def get_agent_color(agent_name: str) -> str:
-    """Return a consistent color for an agent based on its name."""
+    """Return a consistent color for an agent based on its name.
+
+    Uses a deterministic hash of the agent name to pick a stable color
+    from the curated AGENT_COLORS palette.
+
+    Args:
+        agent_name: The identifier of the agent.
+
+    Returns:
+        A hex color string.
+
+    """
     return AGENT_COLORS[hash(agent_name) % len(AGENT_COLORS)]
 
 
 def format_agent_prefix(agent_name: str) -> str:
-    """Return agent name prefix for display, empty string for main agent."""
+    """Return the agent name prefix for plain text display.
+
+    Args:
+        agent_name: The identifier of the agent.
+
+    Returns:
+        A formatted string like "(researcher) " or empty string for the main agent.
+
+    """
     if agent_name == "main":
         return ""
     return f"({agent_name}) "
 
 
 def format_agent_prefix_markup(agent_name: str) -> str:
-    """Return agent name prefix with Rich markup color, empty string for main agent."""
+    """Return the agent name prefix with Rich color markup.
+
+    Args:
+        agent_name: The identifier of the agent.
+
+    Returns:
+        A string with Rich markup, e.g., "[#a7c4a0](researcher)[/#a7c4a0] ".
+
+    """
     if agent_name == "main":
         return ""
     color = get_agent_color(agent_name)
@@ -40,7 +76,12 @@ def format_agent_prefix_markup(agent_name: str) -> str:
 
 
 class BulletMarkdown:
-    """Markdown content with a bullet prefix and optional dim styling."""
+    """Markdown content with a bullet prefix and optional styling.
+
+    A custom Rich renderable that displays markdown text preceded by a
+    consistent bullet point. Supports attribution to specific agents and
+    dimming for secondary information.
+    """
 
     def __init__(
         self,
@@ -50,6 +91,15 @@ class BulletMarkdown:
         show_bullet: bool = True,
         agent_name: str = "main",
     ) -> None:
+        """Initialize the bulleted markdown renderable.
+
+        Args:
+            content: The raw markdown text to render.
+            dim: Whether to render the content with a dimmed style.
+            show_bullet: Whether to include the bullet point at the start.
+            agent_name: The identifier of the agent to attribute the message to.
+
+        """
         self.content = content
         self.dim = dim
         self.show_bullet = show_bullet
@@ -58,6 +108,7 @@ class BulletMarkdown:
     def __rich_console__(
         self, console: Console, options: ConsoleOptions
     ) -> RenderResult:
+        """Rich protocol implementation for custom rendering."""
         style = Style(dim=True) if self.dim else Style()
         bullet_style = Style(color="bright_yellow", bold=True) + style
 
@@ -89,7 +140,18 @@ class BulletMarkdown:
 
 
 def format_user_message(content: str) -> Text:
-    """Format user message with > prefix, no markdown."""
+    """Format a user message with a blockquote style.
+
+    Renders user input with a '> ' prefix and bold blue styling,
+    preserving newlines without markdown parsing.
+
+    Args:
+        content: The raw message string from the user.
+
+    Returns:
+        A Rich Text object ready for display.
+
+    """
     lines = content.split("\n")
     text = Text()
     for i, line in enumerate(lines):
