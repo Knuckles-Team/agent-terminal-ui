@@ -2,7 +2,7 @@ import os
 import time
 from typing import Any, ClassVar
 
-from agent_tui.client import AgentClient
+from agent_tui.client import AgentClient, ACPHttpClient
 from agent_tui.commands import CommandProcessor
 from agent_tui.tui.agent_timer import AgentTimer
 from agent_tui.tui.css import AGENT_APP_CSS
@@ -52,6 +52,13 @@ class AgentApp(App):
         # Initialize client instead of direct Agent
         server_url = os.getenv("AGENT_URL", "http://localhost:8000")
         self._client = AgentClient(base_url=server_url)
+        self._acp_client = None
+        self._enable_acp = os.getenv("ENABLE_ACP", "false").lower() == "true"
+        if self._enable_acp:
+            acp_url = os.getenv("ACP_URL", "http://localhost:8001")
+            self._acp_client = ACPHttpClient(base_url=acp_url)
+            self._acp_session_id = None
+
         self._cmd_processor = CommandProcessor(self)
 
     async def on_input_text_area_submitted(
@@ -76,15 +83,49 @@ class AgentApp(App):
         # Start agent turn via client
         self._is_processing = True
         self.query_one(StatusLine).set_thinking(True)
-        self._run_agent_turn(value)
+        if self._enable_acp:
+            self._run_acp_turn(value)
+        else:
+            self._run_agent_turn(value)
 
-    @work(exclusive=True)
     async def _run_agent_turn(self, query: str) -> None:
-        """Stream events from the agent server."""
+        """Stream events from the agent server (AG-UI)."""
         async for event in self._client.stream(
             query, session_id=self._current_session_id
         ):
             self.post_message(AgentEventReceived(event))
+
+    @work(exclusive=True)
+    async def _run_acp_turn(self, query: str) -> None:
+        """Stream events from the ACP server."""
+        if not self._acp_session_id:
+            self._acp_session_id = await self._acp_client.create_session()
+
+        # In ACP, we first send the message (RPC) then stream
+        await self._acp_client.send_rpc(
+            self._acp_session_id, method="prompt", params={"text": query}
+        )
+
+        async for event in self._acp_client.stream(self._acp_session_id):
+            # Map ACP events to TUI events
+            # ACP schema: {type: "text-delta", delta: "..."} etc.
+            tui_event = self._map_acp_event(event)
+            if tui_event:
+                self.post_message(AgentEventReceived(tui_event))
+
+    def _map_acp_event(self, acp_event: dict[str, Any]) -> dict[str, Any] | None:
+        """Translates ACP protocol events to internal TUI event format."""
+        etype = acp_event.get("type")
+        if etype == "text-delta":
+            return {"type": "text", "content": acp_event.get("delta", "")}
+        elif etype == "thinking":
+            # ACP thinking events can be shown in status bar
+            return None
+        elif etype == "tool-call":
+            return {"type": "tool_call", "data": acp_event.get("call", {})}
+        elif etype == "turn-end":
+            return {"type": "turn_end"}
+        return None
 
     def on_agent_event_received(self, message: AgentEventReceived) -> None:
         """Handle events received from the agent client."""

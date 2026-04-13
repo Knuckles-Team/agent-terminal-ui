@@ -20,5 +20,5 @@ repos:
     hooks:
       - id: vulture
         pass_filenames: false
-        args: [ ".", "--min-confidence", "95" ]   # or 100 if you want very high confidence only
+        args: [ ".", "--min-confidence", "95", "--exclude", ".venv" ]   # or 100 if you want very high confidence only
         require_serial: true
