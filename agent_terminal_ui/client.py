@@ -154,3 +154,45 @@ class AgentClient:
 
     async def close(self):
         await self._client.aclose()
+
+
+class ACPHttpClient:
+    """Client for the pydantic-acp ACP protocol over HTTP/SSE."""
+
+    def __init__(self, base_url: str = "http://localhost:8001"):
+        self.base_url = base_url.rstrip("/")
+        self._client = httpx.AsyncClient(timeout=None)
+
+    async def create_session(self) -> str:
+        """Create a new ACP session and return its ID."""
+        url = f"{self.base_url}/acp/sessions"
+        response = await self._client.post(url)
+        data = response.json()
+        return data["session_id"]
+
+    async def stream(self, session_id: str) -> AsyncGenerator[dict[str, Any], None]:
+        """Stream ACP events from the SSE endpoint."""
+        url = f"{self.base_url}/acp/stream/{session_id}"
+        async with self._client.stream("GET", url) as response:
+            async for line in response.aiter_lines():
+                if line.startswith("data: "):
+                    content = line[6:]
+                    try:
+                        yield json.loads(content)
+                    except json.JSONDecodeError:
+                        continue
+
+    async def send_rpc(self, session_id: str, method: str, params: dict) -> dict:
+        """Send a JSON-RPC request to the ACP agent."""
+        url = f"{self.base_url}/acp/rpc/{session_id}"
+        payload = {
+            "jsonrpc": "2.0",
+            "method": method,
+            "params": params,
+            "id": 1,
+        }
+        response = await self._client.post(url, json=payload)
+        return response.json()
+
+    async def close(self):
+        await self._client.aclose()
