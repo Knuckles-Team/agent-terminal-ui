@@ -37,6 +37,9 @@ class CommandProcessor:
             "mcp": self.cmd_mcp,
             "history": self.cmd_history,
             "image": self.cmd_image,
+            "plan": self.cmd_plan,
+            "chat": self.cmd_chat,
+            "build": self.cmd_build,
         }
 
     async def process(self, text: str) -> bool:
@@ -145,3 +148,39 @@ class CommandProcessor:
             )
         except Exception as e:
             self.app.notify(f"Failed to load image: {e}", severity="error")
+
+    async def cmd_plan(self, args: str) -> None:
+        """Switch agent to planning mode. Usage: /plan [optional prompt]"""
+        await self._switch_mode("plan", args)
+
+    async def cmd_chat(self, args: str) -> None:
+        """Switch agent to chat (ask) mode. Usage: /chat [optional prompt]"""
+        await self._switch_mode("ask", args)
+
+    async def cmd_build(self, args: str) -> None:
+        """Switch agent to build/code mode. Usage: /build [optional prompt]"""
+        await self._switch_mode("code", args)
+
+    async def _switch_mode(self, new_mode: str, args: str) -> None:
+        """Helper to switch mode, update UI, and optionally submit a prompt."""
+        self.app._agent_mode = new_mode
+        # The mode visually might be labelled differently
+        display_mode = new_mode if new_mode != "ask" else "chat"
+
+        # update status line
+        from agent_terminal_ui.tui.status_line import StatusLine
+
+        self.app.query_one(StatusLine).set_mode(display_mode)
+        self.app.notify(f"Switched to [{display_mode}] mode", severity="information")
+        self.app.query_one("#event-log").write(
+            f"[dim]Switched to {display_mode} mode.[/dim]"
+        )
+
+        if args:
+
+            # Manually trigger the text area submission logic
+            class MockSubmitEvent:
+                def __init__(self, value: str):
+                    self.value = value
+
+            await self.app.on_input_text_area_submitted(MockSubmitEvent(args))
