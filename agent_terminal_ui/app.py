@@ -21,7 +21,7 @@ from textual.widgets import RichLog
 from textual.containers import Horizontal
 
 # Core client and command imports
-from agent_terminal_ui.client import AgentClient
+from agent_terminal_ui.client import AgentClient, ACPClient
 from agent_terminal_ui.commands import CommandProcessor
 
 # TUI component imports
@@ -81,15 +81,21 @@ class AgentApp(App):
         """Initialize the Agent application and its internal state."""
         super().__init__()
         self._last_ctrl_c: float = 0.0
-        self._mode_index: int = 0
+        self._agent_mode: str = "ask"
         self._is_processing: bool = False
         self._processing_permissions: bool = False
         self._pending_tool_calls: dict[str, dict[str, Any]] = {}
         self._current_session_id: str | None = None
 
-        # Initialize standardized ACP client
+        # Initialize client instead of direct Agent
         server_url = os.getenv("AGENT_URL", "http://localhost:8000")
         self._client = AgentClient(base_url=server_url)
+        self._acp_client: ACPClient | None = None
+        self._enable_acp: bool = os.getenv("ENABLE_ACP", "false").lower() == "true"
+
+        if self._enable_acp:
+            self._acp_client = None  # Deferred
+            self._acp_session_id: str | None = None
 
         self._cmd_processor = CommandProcessor(self)
 
@@ -126,26 +132,77 @@ class AgentApp(App):
             # To handle the pending parts clearing
             self._pending_parts = []
 
-        # Start agent turn via ACP client
+        # Start agent turn via client
         self._is_processing = True
         self.query_one(StatusLine).set_thinking(True)
-        self._run_agent_turn(value, parts=parts)
+        if self._enable_acp:
+            self._run_acp_turn(value, mode_id=self._agent_mode)
+        else:
+            self._run_agent_turn(value, parts=parts, mode_id=self._agent_mode)
 
-    @work(exclusive=True)
     async def _run_agent_turn(
-        self, query: str, parts: list[dict[str, Any]] | None = None
+        self,
+        query: str,
+        parts: list[dict[str, Any]] | None = None,
+        mode_id: str = "ask",
     ) -> None:
-        """Stream events from the agent server using the native ACP protocol.
+        """Stream events from the agent server using the AG-UI protocol.
 
         Args:
             query: The user prompt to send.
             parts: Optional list of multi-modal parts.
+            mode_id: The interactive mode requested.
 
         """
         async for event in self._client.stream(
-            query, session_id=self._current_session_id, parts=parts
+            query, session_id=self._current_session_id, parts=parts, mode_id=mode_id
         ):
             self.post_message(AgentEventReceived(event))
+
+    @work(exclusive=True)
+    async def _run_acp_turn(self, query: str, mode_id: str = "ask") -> None:
+        """Stream events from the ACP server.
+
+        Args:
+            query: The user prompt to send via the ACP protocol.
+            mode_id: The interactive mode requested (e.g. 'plan' or 'ask').
+
+        """
+        if not self._acp_client:
+            return
+
+        if not hasattr(self, "_acp_session_id") or not self._acp_session_id:
+            self._acp_session_id = await self._acp_client.create_session()
+
+        # In ACP, we first send the message (RPC) then stream (now handled inside stream generator directly)
+        async for event in self._client.stream(
+            query, session_id=self._acp_session_id, parts=None, mode_id=mode_id
+        ):
+            tui_event = self._map_acp_event(event)
+            if tui_event:
+                self.post_message(AgentEventReceived(tui_event))
+
+    def _map_acp_event(self, acp_event: dict[str, Any]) -> dict[str, Any] | None:
+        """Translate ACP protocol events to the internal TUI event format.
+
+        Args:
+            acp_event: The raw event received from the ACP protocol.
+
+        Returns:
+            A normalized dictionary compatible with the TUI event log, or None.
+
+        """
+        etype = acp_event.get("type")
+        if etype == "text-delta":
+            return {"type": "text", "content": acp_event.get("delta", "")}
+        elif etype == "thinking":
+            # ACP thinking events can be shown in status bar
+            return None
+        elif etype == "tool-call":
+            return {"type": "tool_call", "data": acp_event.get("call", {})}
+        elif etype == "turn-end":
+            return {"type": "turn_end"}
+        return None
 
     def on_agent_event_received(self, message: AgentEventReceived) -> None:
         """Handle standardized events received from the agent client.
@@ -169,8 +226,29 @@ class AgentApp(App):
 
         elif event_type == "sideband":
             data = event.get("data", {})
-            if "node" in data:
-                node = data["node"]
+            # Extract node information from various graph event formats
+            node = data.get("node")
+            if not node:
+                # Try nested data-graph-event structure
+                inner = data.get("data", data)
+                graph_event = inner.get("event", "")
+                if graph_event == "specialist_enter":
+                    node = inner.get("agent", inner.get("node_id"))
+                elif graph_event == "specialist_exit":
+                    node = inner.get("agent", inner.get("node_id"))
+                    if node:
+                        try:
+                            self.query_one(WorkflowSidebar).update_state(
+                                node, status="completed"
+                            )
+                        except Exception:
+                            pass
+                        return
+                elif graph_event in ("routing_started", "routing_completed"):
+                    node = "router"
+                elif graph_event == "verification_result":
+                    node = "verifier"
+            if node:
                 try:
                     self.query_one(WorkflowSidebar).update_state(node)
                 except Exception:
@@ -181,7 +259,9 @@ class AgentApp(App):
             self._is_processing = False
             self.query_one(AgentTimer).stop()
 
-        elif event_type == "turn_end":
+        elif event_type == "turn_end" or (
+            event_type == "text" and "[DONE]" in event.get("content", "")
+        ):
             self._is_processing = False
             self.query_one(StatusLine).set_thinking(False)
             self.query_one(AgentTimer).stop()
@@ -291,8 +371,11 @@ class AgentApp(App):
 
     def action_cycle_mode(self) -> None:
         """Cycle through available agent interaction modes."""
-        self._mode_index = (self._mode_index + 1) % len(MODES)
-        self.query_one(StatusLine).set_mode(MODES[self._mode_index])
+        current_idx = MODES.index(self._agent_mode) if self._agent_mode in MODES else 0
+        self._agent_mode = MODES[(current_idx + 1) % len(MODES)]
+
+        display_mode = self._agent_mode if self._agent_mode != "ask" else "chat"
+        self.query_one(StatusLine).set_mode(display_mode)
 
     def compose(self) -> ComposeResult:
         """Construct the visual layout of the application.
@@ -310,6 +393,19 @@ class AgentApp(App):
 
     def on_mount(self) -> None:
         """Handle the mount event when the application starts."""
+        log = self.query_one("#event-log", RichLog)
+
+        try:
+            from pathlib import Path
+
+            logo_path = Path(__file__).parent / "tui" / "logo.txt"
+            logo_str = logo_path.read_text()
+            logo = f"{logo_str}\n[bold white]Welcome to Agent Terminal UI[/bold white]\nType [cyan]/help[/cyan] to see available commands or [cyan]/plan[/cyan] to start planning.\n"
+        except Exception:
+            logo = "[bold white]Welcome to Agent Terminal UI[/bold white]\nType [cyan]/help[/cyan] to see available commands or [cyan]/plan[/cyan] to start planning.\n"
+
+        log.write(logo)
+
         self.query_one(RichLog).can_focus = False
         self.query_one(StatusLine).can_focus = False
         self.query_one(AgentTimer).can_focus = False
