@@ -61,3 +61,15 @@ class StatusLine(Horizontal):
             thinking_widget.update("[bold cyan] Thinking...[/]")
         else:
             thinking_widget.update("")
+
+    def update_usage(self, usage: dict) -> None:
+        """Update the displayed token count and cost from usage metadata.
+
+        Args:
+            usage: A dictionary containing 'total_tokens' and 'estimated_cost_usd'.
+
+        """
+        tokens = usage.get("total_tokens", 0)
+        cost = usage.get("estimated_cost_usd", 0.0)
+        tokens_widget = self.query_one("#status-tokens", Static)
+        tokens_widget.update(f"{tokens} tokens [dim](${cost:.4f})[/dim]")

@@ -40,6 +40,12 @@ class CommandProcessor:
             "plan": self.cmd_plan,
             "chat": self.cmd_chat,
             "build": self.cmd_build,
+            "init": self.cmd_init,
+            "review": self.cmd_review,
+            "test": self.cmd_test,
+            "search": self.cmd_search,
+            "stats": self.cmd_stats,
+            "cost": self.cmd_stats,
         }
 
     async def process(self, text: str) -> bool:
@@ -184,3 +190,52 @@ class CommandProcessor:
                     self.value = value
 
             await self.app.on_input_text_area_submitted(MockSubmitEvent(args))
+
+    async def cmd_init(self, args: str) -> None:
+        """Initialize the project using Spec-Driven Development (SDD)."""
+        await self._submit_prompt("Initialize the project structure using setup_sdd.")
+
+    async def cmd_review(self, args: str) -> None:
+        """Perform a code review of the current workspace."""
+        await self._submit_prompt(f"Perform a comprehensive code review. {args}")
+
+    async def cmd_test(self, args: str) -> None:
+        """Run tests and report results."""
+        await self._submit_prompt(
+            f"Run tests for this project and report the outcome. {args}"
+        )
+
+    async def cmd_search(self, args: str) -> None:
+        """Search the codebase for a pattern. Usage: /search <query>"""
+        if not args:
+            self.app.notify("Usage: /search <query>", severity="warning")
+            return
+        await self._submit_prompt(f"Search the codebase for: {args}")
+
+    async def cmd_stats(self, args: str) -> None:
+        """Show usage statistics and cost for the current session."""
+        # In a real app, this would fetch data from the server
+        # For now, we use a placeholder or check app state if available
+        usage = getattr(self.app, "_last_usage", None)
+        if usage:
+            stats = (
+                f"[bold blue]Session Statistics:[/bold blue]\n"
+                f"- Total Tokens: {usage.get('total_tokens', 0)}\n"
+                f"- Estimated Cost: ${usage.get('estimated_cost_usd', 0):.4f}\n"
+            )
+        else:
+            stats = (
+                "[yellow]Usage statistics not yet available for this session.[/yellow]"
+            )
+
+        self.app.query_one("#event-log").write(stats)
+
+    async def _submit_prompt(self, prompt: str) -> None:
+        """Helper to submit a prompt to the agent."""
+
+        # Manually trigger the text area submission logic
+        class MockSubmitEvent:
+            def __init__(self, value: str):
+                self.value = value
+
+        await self.app.on_input_text_area_submitted(MockSubmitEvent(prompt))

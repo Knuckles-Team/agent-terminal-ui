@@ -45,7 +45,7 @@ The backend uses **unified specialist discovery** (`discover_all_specialists()`)
 |------|---------|
 | `app.py` | Main Textual application and screen composition |
 | `client.py` | AG-UI + ACP protocol clients (SSE parsing, event dispatch) |
-| `commands.py` | Slash command processor (`/help`, `/clear`, `/mcp`, `/history`, `/image`) |
+| `commands.py` | Slash command processor (`/help`, `/clear`, `/mcp`, `/history`, `/image`, `/init`, `/review`, `/test`, `/search`, `/stats`) |
 | `terminal_ui.py` | CLI entry point for the `agent-tui` command |
 | `widgets/workflow.py` | Dynamic workflow sidebar with phase labels and completion markers |
 | `tui/tool_display/` | Extensible tool formatter system (registry + per-tool formatters) |
@@ -76,3 +76,6 @@ The backend uses **unified specialist discovery** (`discover_all_specialists()`)
 - Backend now uses unified specialist discovery (`discover_all_specialists()`): MCP agents and A2A peers merged into a single `DiscoveredSpecialist` roster. The TUI consumes identical sideband events from both sources.
 - `tools-bound` sideband event now includes `toolset_count`, `dev_tools`, and `mcp_tools` for richer tool-binding telemetry
 - Backend emits structured trace logs to `agent_utilities.graph.trace` for server-side prompt-flow tracing without the TUI
+- Added slash commands for Claude Code parity: `/init`, `/review`, `/test`, `/search`, `/stats`, `/cost`
+- Integrated real-time token and cost tracking in the `StatusLine` widget
+- ACP protocol now supports usage metadata mapping and turn-end result extraction
