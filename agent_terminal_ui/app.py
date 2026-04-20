@@ -201,7 +201,9 @@ class AgentApp(App):
         elif etype == "tool-call":
             return {"type": "tool_call", "data": acp_event.get("call", {})}
         elif etype == "turn-end":
-            return {"type": "turn_end"}
+            return {"type": "turn_end", "usage": acp_event.get("usage")}
+        elif etype == "usage":
+            return {"type": "usage", "data": acp_event.get("usage")}
         return None
 
     def on_agent_event_received(self, message: AgentEventReceived) -> None:
@@ -223,6 +225,15 @@ class AgentApp(App):
         elif event_type == "tool_call":
             data = event.get("data", {})
             self._handle_tool_call(data, log)
+
+        elif event_type == "usage":
+            data = event.get("data", {})
+            self._last_usage = data
+            # Update status line if it supports it
+            try:
+                self.query_one(StatusLine).update_usage(data)
+            except Exception:
+                pass
 
         elif event_type == "sideband":
             data = event.get("data", {})
@@ -265,6 +276,15 @@ class AgentApp(App):
             self._is_processing = False
             self.query_one(StatusLine).set_thinking(False)
             self.query_one(AgentTimer).stop()
+
+            # Update usage from turn_end if present
+            if "usage" in event:
+                self._last_usage = event["usage"]
+                try:
+                    self.query_one(StatusLine).update_usage(event["usage"])
+                except Exception:
+                    pass
+
             # Check for decisions needed (if any pending tool calls need approval)
             if any(
                 tc.get("needs_approval") for tc in self._pending_tool_calls.values()
