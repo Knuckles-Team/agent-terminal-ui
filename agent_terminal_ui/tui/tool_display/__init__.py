@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# coding: utf-8
 """Tool Display sub-package.
 
 This package provides specialized formatting and widgets for displaying

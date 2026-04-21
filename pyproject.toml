@@ -23,6 +23,12 @@ dependencies = [
     "agent-client-protocol>=0.9.0"
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-asyncio"
+]
+
 [project.scripts]
 agent-tui = "agent_terminal_ui.terminal_ui:terminal_ui"
 
@@ -34,3 +40,16 @@ where = ["."]
 
 [tool.setuptools.package-data]
 agent_terminal_ui = ["py.typed"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E402"]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+check_untyped_defs = true

@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# coding: utf-8
 """CLI entry point for the Agent Terminal UI.
 
 This module provides the ``agent-tui`` console script referenced

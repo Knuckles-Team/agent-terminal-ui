@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# coding: utf-8
 """Agent Activity Timer component.
 
 Provides a visual timer and animated spinner to indicate the agent's

@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# coding: utf-8
 """Session history browser screen.
 
 Provides a modal interface for viewing past conversation summaries and
@@ -7,6 +6,7 @@ selecting a session to resume in the terminal UI.
 """
 
 from typing import Any
+
 from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.screen import ModalScreen

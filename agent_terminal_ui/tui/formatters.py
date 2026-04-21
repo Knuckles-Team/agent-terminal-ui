@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# coding: utf-8
 """Rich-based formatters for the terminal event log.
 
 Provides custom renderables and utility functions for formatting agent

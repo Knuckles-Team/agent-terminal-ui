@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# coding: utf-8
 """Input text area component for user queries.
 
 Customization of the Textual TextArea to handle submission on Enter and

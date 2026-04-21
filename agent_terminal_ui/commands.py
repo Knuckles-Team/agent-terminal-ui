@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# coding: utf-8
 """Command processor for the terminal UI.
 
 This module defines the slash command registry and execution logic for the
@@ -7,8 +6,8 @@ terminal UI. It allows users to perform administrative tasks like clearing logs,
 browsing history, and managing MCP tools directly from the command line.
 """
 
-from collections.abc import Awaitable, Callable
 import logging
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -183,7 +182,6 @@ class CommandProcessor:
         )
 
         if args:
-
             # Manually trigger the text area submission logic
             class MockSubmitEvent:
                 def __init__(self, value: str):

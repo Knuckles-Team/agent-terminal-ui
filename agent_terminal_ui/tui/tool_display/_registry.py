@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# coding: utf-8
 """Registry for tool display formatters.
 
 This module provides a centralized registry for managing how different tools

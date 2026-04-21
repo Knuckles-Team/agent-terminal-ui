@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# coding: utf-8
 """Tool display formatters for the terminal UI.
 
 This module defines the protocol and implementations for formatting tool

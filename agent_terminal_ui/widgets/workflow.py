@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# coding: utf-8
 """Workflow sidebar widget for the terminal UI.
 
 Provides a dynamic visual representation of the agent's current graph
@@ -9,6 +8,7 @@ the graph topology (including dynamic MCP agents).
 """
 
 from typing import Any
+
 from textual.app import ComposeResult
 from textual.containers import Vertical, VerticalScroll
 from textual.widgets import Label
