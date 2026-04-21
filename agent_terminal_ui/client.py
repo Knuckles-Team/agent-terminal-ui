@@ -1,16 +1,16 @@
 #!/usr/bin/python
-# coding: utf-8
 """Agent Client implementation for the terminal UI.
 
 This module provides high-level client wrappers for interacting with the agent
 server using the native Agent Communication Protocol (ACP).
 """
 
-from collections.abc import AsyncGenerator
 import json
 import logging
+from collections.abc import AsyncGenerator
+from typing import Any
+
 import httpx
-from typing import Any, Optional, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ class AgentClient:
         return response.json().get("session_id", "")
 
     async def send_rpc(
-        self, session_id: str, method: str, params: Dict[str, Any]
+        self, session_id: str, method: str, params: dict[str, Any]
     ) -> None:
         """Send a JSON-RPC request to the ACP session."""
         payload = {
@@ -55,7 +55,7 @@ class AgentClient:
 
     async def stream_events(
         self, session_id: str
-    ) -> AsyncGenerator[Dict[str, Any], None]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """Stream SSE from back-end server."""
         async with self._http_client.stream(
             "GET", f"{self.acp_url}/stream/{session_id}"
@@ -71,9 +71,9 @@ class AgentClient:
     async def stream(
         self,
         query: str,
-        session_id: Optional[str] = None,
-        parts: Optional[list[dict[str, Any]]] = None,
-        mode_id: Optional[str] = None,
+        session_id: str | None = None,
+        parts: list[dict[str, Any]] | None = None,
+        mode_id: str | None = None,
     ) -> AsyncGenerator[dict[str, Any], None]:
         """Stream real-time events from the ACP session.
 
@@ -155,8 +155,8 @@ class AgentClient:
     async def send_decision(
         self,
         decisions: dict[str, str],
-        feedback: Optional[str] = None,
-        session_id: Optional[str] = None,
+        feedback: str | None = None,
+        session_id: str | None = None,
     ) -> AsyncGenerator[dict[str, Any], None]:
         """Send tool approval decisions back to the agent.
 
@@ -190,6 +190,23 @@ class AgentClient:
             response = await self._http_client.get(f"{self.base_url}/a2a")
             return response.json()
         except Exception:
+            return {}
+
+    async def get_chat(self, chat_id: str) -> dict[str, Any]:
+        """Fetch full history for a specific chat session.
+
+        Args:
+            chat_id: The unique identifier of the chat.
+
+        Returns:
+            Dictionary containing chat metadata and message history.
+        """
+        try:
+            response = await self._http_client.get(f"{self.base_url}/chats/{chat_id}")
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            logger.error(f"Failed to fetch chat {chat_id}: {e}")
             return {}
 
     async def close(self) -> None:

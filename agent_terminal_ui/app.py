@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# coding: utf-8
 """Agent Terminal User Interface (TUI) Application.
 
 This module implements the primary Textual application for the agent terminal UI.
@@ -8,20 +7,20 @@ AG-UI and ACP protocols), manages tool execution flows, and provides
 an interactive log for agent-to-user communication.
 """
 
+import logging
 import os
 import time
-import logging
 from typing import Any, ClassVar
 
 from textual import work
 from textual.app import App, ComposeResult
 from textual.binding import Binding, BindingType
+from textual.containers import Horizontal
 from textual.message import Message
 from textual.widgets import RichLog
-from textual.containers import Horizontal
 
 # Core client and command imports
-from agent_terminal_ui.client import AgentClient, ACPClient
+from agent_terminal_ui.client import ACPClient, AgentClient
 from agent_terminal_ui.commands import CommandProcessor
 
 # TUI component imports
@@ -48,7 +47,9 @@ MODES: list[str] = list(MODE_COLORS.keys())
 
 
 class AgentEventReceived(Message):
-    """Event posted when a new message or tool call is received from the agent client."""
+    """
+    Event posted when a new message or tool call is received from the agent client.
+    """
 
     def __init__(self, event: dict[str, Any]) -> None:
         """Initialize the event message with the raw event data.
@@ -86,6 +87,7 @@ class AgentApp(App):
         self._processing_permissions: bool = False
         self._pending_tool_calls: dict[str, dict[str, Any]] = {}
         self._current_session_id: str | None = None
+        self._pending_parts: list[dict[str, Any]] = []
 
         # Initialize client instead of direct Agent
         server_url = os.getenv("AGENT_URL", "http://localhost:8000")
@@ -140,6 +142,7 @@ class AgentApp(App):
         else:
             self._run_agent_turn(value, parts=parts, mode_id=self._agent_mode)
 
+    @work(exclusive=True)
     async def _run_agent_turn(
         self,
         query: str,
@@ -174,7 +177,8 @@ class AgentApp(App):
         if not hasattr(self, "_acp_session_id") or not self._acp_session_id:
             self._acp_session_id = await self._acp_client.create_session()
 
-        # In ACP, we first send the message (RPC) then stream (now handled inside stream generator directly)
+        # In ACP, we first send the message (RPC) then stream
+        # (now handled inside stream generator directly)
         async for event in self._client.stream(
             query, session_id=self._acp_session_id, parts=None, mode_id=mode_id
         ):
@@ -338,6 +342,8 @@ class AgentApp(App):
 
         """
         call_id = data.get("call_id")
+        if not isinstance(call_id, str):
+            return
         call_data = self._pending_tool_calls.pop(call_id, None)
 
         name = data.get("name", "unknown_tool")
@@ -420,9 +426,18 @@ class AgentApp(App):
 
             logo_path = Path(__file__).parent / "tui" / "logo.txt"
             logo_str = logo_path.read_text()
-            logo = f"{logo_str}\n[bold white]Welcome to Agent Terminal UI[/bold white]\nType [cyan]/help[/cyan] to see available commands or [cyan]/plan[/cyan] to start planning.\n"
+            logo = (
+                f"{logo_str}\n"
+                "[bold white]Welcome to Agent Terminal UI[/bold white]\n"
+                "Type [cyan]/help[/cyan] to see available commands "
+                "or [cyan]/plan[/cyan] to start planning.\n"
+            )
         except Exception:
-            logo = "[bold white]Welcome to Agent Terminal UI[/bold white]\nType [cyan]/help[/cyan] to see available commands or [cyan]/plan[/cyan] to start planning.\n"
+            logo = (
+                "[bold white]Welcome to Agent Terminal UI[/bold white]\n"
+                "Type [cyan]/help[/cyan] to see available commands "
+                "or [cyan]/plan[/cyan] to start planning.\n"
+            )
 
         log.write(logo)
 
@@ -448,7 +463,13 @@ class AgentApp(App):
             def __getattr__(self, name: str) -> Any:
                 return self.__dict__.get(name)
 
-        wrapped_pending = {cid: MockEvent(ev) for cid, ev in pending.items()}
+        from typing import cast
+
+        from agent_terminal_ui.tui.tool_display._formatters import AgentToolCallEvent
+
+        wrapped_pending = {
+            cid: cast(AgentToolCallEvent, MockEvent(ev)) for cid, ev in pending.items()
+        }
         self.push_screen(
             ToolApprovalScreen(wrapped_pending), self._handle_tool_approval_result
         )

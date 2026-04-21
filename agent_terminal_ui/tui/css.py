@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# coding: utf-8
 """CSS styles for the Agent Terminal UI.
 
 This module contains the global stylesheet for the Textual-based

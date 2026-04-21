@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# coding: utf-8
 """Status line component for the terminal UI.
 
 Displays session metadata such as the current interaction mode (plan/code),

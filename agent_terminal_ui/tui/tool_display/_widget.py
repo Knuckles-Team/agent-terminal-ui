@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# coding: utf-8
 """Rich renderables for tool display widgets.
 
 This module defines custom Rich renderable objects used to display tool

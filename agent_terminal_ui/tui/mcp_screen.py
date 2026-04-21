@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# coding: utf-8
 """MCP Ecosystem browser screen.
 
 Provides a modal interface for viewing configured Model Context Protocol (MCP)
@@ -7,6 +6,7 @@ servers and the combined toolset available to the agent cluster.
 """
 
 from typing import Any
+
 from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.screen import ModalScreen

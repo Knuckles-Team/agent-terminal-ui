@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# coding: utf-8
 """Modal screen for approving or rejecting pending tool calls.
 
 This module provides the user interface for human-in-the-loop tool execution
@@ -10,13 +9,14 @@ and supports providing textual feedback for requested corrections.
 from dataclasses import dataclass, field
 from typing import ClassVar, Literal
 
-from agent_terminal_ui.tui.tool_display._registry import get_formatter
-from agent_terminal_ui.tui.tool_display._formatters import AgentToolCallEvent
 from textual.app import ComposeResult
 from textual.binding import Binding, BindingType
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Static
+
+from agent_terminal_ui.tui.tool_display._formatters import AgentToolCallEvent
+from agent_terminal_ui.tui.tool_display._registry import get_formatter
 
 ToolDecision = Literal["accept", "deny"]
 
