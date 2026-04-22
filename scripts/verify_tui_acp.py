@@ -1,10 +1,9 @@
 #!/usr/bin/env python
-# coding: utf-8
 """Headless validation script for the Agent Terminal UI ACP client."""
 
 import asyncio
 import logging
-from typing import Any
+
 from agent_terminal_ui.client import AgentClient
 
 logging.basicConfig(level=logging.INFO)
@@ -46,7 +45,10 @@ async def main() -> None:
                 break
 
         if not has_plan:
-            logger.warning("⚠️ No plan events detected on /plan prompt. (Might be okay if graph didn't need to plan).")
+            logger.warning(
+                "⚠️ No plan events detected on /plan prompt. "
+                "(Might be okay if graph didn't need to plan)."
+            )
     except Exception as e:
         logger.error(f"❌ Stream failed: {e}")
 

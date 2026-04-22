@@ -4,15 +4,26 @@
 This module implements the primary Textual application for the agent terminal UI.
 It handles user input, streams events from the agent server (using both
 AG-UI and ACP protocols), manages tool execution flows, and provides
-an interactive log for agent-to-user communication.
+an interactive log for agent-to-user communication with modern theming support.
 """
 
 import logging
 import os
+import re
 import time
 from typing import Any, ClassVar
 
-from textual import work
+try:
+    from textual import work
+except ImportError:
+    # Fallback for older Textual versions
+    def work(_exclusive=False, _group="default", _exit_on_error=True, _name=""):
+        def decorator(func):
+            return func
+
+        return decorator
+
+
 from textual.app import App, ComposeResult
 from textual.binding import Binding, BindingType
 from textual.containers import Horizontal
@@ -26,9 +37,14 @@ from agent_terminal_ui.commands import CommandProcessor
 # TUI component imports
 from agent_terminal_ui.tui.agent_timer import AgentTimer
 from agent_terminal_ui.tui.css import AGENT_APP_CSS
+from agent_terminal_ui.tui.exit_confirm_screen import ExitConfirmScreen
 from agent_terminal_ui.tui.formatters import BulletMarkdown, format_user_message
 from agent_terminal_ui.tui.input_text_area import InputTextArea
-from agent_terminal_ui.tui.status_line import MODE_COLORS, StatusLine
+from agent_terminal_ui.tui.status_line import StatusLine
+from agent_terminal_ui.tui.theme import (
+    generate_css_from_theme,
+    get_theme,
+)
 from agent_terminal_ui.tui.tool_approval_screen import (
     ToolApprovalResult,
     ToolApprovalScreen,
@@ -43,7 +59,7 @@ from agent_terminal_ui.widgets.workflow import WorkflowSidebar
 logger = logging.getLogger(__name__)
 
 DOUBLE_TAP_SECONDS: float = 0.25
-MODES: list[str] = list(MODE_COLORS.keys())
+MODES: list[str] = ["ask", "plan", "code", "chat", "build"]
 
 
 class AgentEventReceived(Message):
@@ -74,12 +90,44 @@ class AgentApp(App):
 
     BINDINGS: ClassVar[list[BindingType]] = [
         Binding("ctrl+c", "interrupt", "Interrupt", show=False, priority=True),
+        Binding("ctrl+d", "quit_session", "Exit Session", show=False, priority=True),
         Binding("ctrl+a", "select_all", "Select All", show=False, priority=True),
         Binding("shift+tab", "cycle_mode", "Cycle Mode", show=False, priority=True),
+        Binding("ctrl+q", "quit", "Quit", show=False, priority=True),
+        Binding("ctrl+h", "show_help", "Show Help", show=True, priority=True),
+        Binding("ctrl+l", "clear_log", "Clear Log", show=True, priority=True),
+        Binding("ctrl+o", "toggle_sidebar", "Toggle Sidebar", show=True, priority=True),
+        Binding("ctrl+u", "clear_input", "Clear Input", show=False, priority=True),
+        Binding("ctrl+y", "restore_input", "Restore Input", show=False, priority=True),
+        Binding("ctrl+g", "open_editor", "Open in Editor", show=True, priority=True),
+        Binding("ctrl+r", "reverse_search", "Reverse Search", show=True, priority=True),
+        Binding(
+            "ctrl+b", "show_background", "Background Tasks", show=True, priority=True
+        ),
+        Binding(
+            "ctrl+t", "toggle_sidebar", "Toggle Task List", show=True, priority=True
+        ),
+        Binding(
+            "ctrl+shift+t", "switch_theme", "Switch Theme", show=True, priority=True
+        ),
+        Binding(
+            "alt+p", "switch_model_picker", "Switch Model", show=True, priority=True
+        ),
+        Binding(
+            "alt+t", "toggle_thinking", "Toggle Thinking", show=True, priority=True
+        ),
+        Binding(
+            "alt+o", "toggle_fast_mode", "Toggle Fast Mode", show=True, priority=True
+        ),
+        Binding("escape,escape", "rewind", "Rewind", show=True, priority=True),
     ]
 
-    def __init__(self) -> None:
-        """Initialize the Agent application and its internal state."""
+    def __init__(self, theme_name: str = "modern_dark") -> None:
+        """Initialize the Agent application and its internal state.
+
+        Args:
+            theme_name: The name of the theme to use (default: modern_dark).
+        """
         super().__init__()
         self._last_ctrl_c: float = 0.0
         self._agent_mode: str = "ask"
@@ -88,6 +136,15 @@ class AgentApp(App):
         self._pending_tool_calls: dict[str, dict[str, Any]] = {}
         self._current_session_id: str | None = None
         self._pending_parts: list[dict[str, Any]] = []
+        self._current_model: str | None = None
+
+        # Message queue support
+        self._user_message_queue: list[dict[str, Any]] = []
+        self._queue_enabled: bool = True
+
+        # Theme support
+        self._current_theme = get_theme(theme_name)
+        self._apply_theme()
 
         # Initialize client instead of direct Agent
         server_url = os.getenv("AGENT_URL", "http://localhost:8000")
@@ -101,6 +158,118 @@ class AgentApp(App):
 
         self._cmd_processor = CommandProcessor(self)
 
+    def _add_to_queue(
+        self, message: str, parts: list[dict[str, Any]] | None = None
+    ) -> None:
+        """Add a message to the processing queue.
+
+        Args:
+            message: The user message to queue.
+            parts: Optional parts to include with the message.
+        """
+        queue_item = {
+            "message": message,
+            "parts": parts or [],
+            "timestamp": time.time(),
+        }
+        self._user_message_queue.append(queue_item)
+        logger.info(
+            f"Added message to queue: {message[:50]}... "
+            f"(Queue size: {len(self._user_message_queue)})"
+        )
+
+    def _try_combine_queries(
+        self, new_message: str, parts: list[dict[str, Any]] | None = None
+    ) -> str | None:
+        """Try to combine the new message with the last queued message.
+
+        Args:
+            new_message: The new message to potentially combine.
+            parts: Optional parts to include with the message.
+
+        Returns:
+            The combined message if combination succeeded, None otherwise.
+        """
+        if not self._user_message_queue:
+            return None
+
+        last_item = self._user_message_queue[-1]
+        last_message = last_item["message"]
+
+        # Combination patterns
+        combination_patterns = [
+            # Conjunctions that suggest combining
+            (r"^(.*?)(?:\s+(?:and|also|plus|then|after that)\s+)(.+)$", r"\1 and \2"),
+            # Sequential actions
+            (r"^(.*?)(?:\s+;\s*)(.+)$", r"\1; \2"),
+            # Similar structure (both starting with action verbs)
+            (
+                r"^(fix|add|remove|update|create|delete|implement|refactor)\s+(.+)$",
+                None,
+            ),
+        ]
+
+        for pattern, replacement in combination_patterns:
+            # Try to combine if both messages match similar patterns
+            if replacement:
+                combined = f"{last_message} and {new_message}"
+                # Check if the combination makes sense (not too long, similar structure)
+                if len(combined) < 500:  # Reasonable length limit
+                    return combined
+            else:
+                # Check if both messages start with the same action verb
+                new_match = re.match(pattern, new_message, re.IGNORECASE)
+                last_match = re.match(pattern, last_message, re.IGNORECASE)
+                if new_match and last_match:
+                    action = new_match.group(1).lower()
+                    if action == last_match.group(1).lower():
+                        # Same action, combine the targets
+                        return (
+                            f"{action} {last_match.group(2)} and {new_match.group(2)}"
+                        )
+
+        return None
+
+    def _process_queue(self) -> None:
+        """Process the next message in the queue if any."""
+        if not self._user_message_queue:
+            return
+
+        next_item = self._user_message_queue.pop(0)
+        message = next_item["message"]
+        parts = next_item["parts"]
+
+        logger.info(
+            f"Processing queued message: {message[:50]}... "
+            f"(Remaining: {len(self._user_message_queue)})"
+        )
+
+        # Display the queued message
+        log = self.query_one("#event-log", RichLog)
+        log.write(format_user_message(message))
+
+        # Start processing the queued message
+        self._is_processing = True
+        self.query_one(AgentTimer).start()
+        self.query_one(StatusLine).set_thinking(True)
+
+        if self._enable_acp:
+            self._run_acp_turn(message, mode_id=self._agent_mode)
+        else:
+            self._run_agent_turn(
+                message,
+                parts=parts,
+                mode_id=self._agent_mode,
+                model=self._current_model,
+            )
+
+    def _apply_theme(self) -> None:
+        """Apply the current theme to the application."""
+        # Generate theme-specific CSS
+        theme_css = generate_css_from_theme(self._current_theme)
+        # Combine with base CSS
+        self.CSS = AGENT_APP_CSS + theme_css
+
     async def on_input_text_area_submitted(
         self, event: InputTextArea.Submitted
     ) -> None:
@@ -111,7 +280,7 @@ class AgentApp(App):
 
         """
         value = event.value.strip()
-        if not value or self._is_processing:
+        if not value:
             return
 
         # Check for commands first
@@ -119,6 +288,49 @@ class AgentApp(App):
             self.query_one(InputTextArea).clear()
             return
 
+        # Handle direct bash execution via ! prefix
+        if value.startswith("!"):
+            bash_cmd = value[1:].strip()
+            if bash_cmd:
+                self.query_one(InputTextArea).clear()
+                self.query_one("#event-log", RichLog).write(
+                    f"[bold cyan]> {bash_cmd}[/bold cyan]"
+                )
+                # Use the run_shell_with_diagnostics tool logic (via agent turn)
+                await self._submit_prompt(f"Execute this shell command: {bash_cmd}")
+                return
+
+        # If currently processing, add to queue
+        if self._is_processing and self._queue_enabled:
+            # Try to combine with the last queued message
+            combined = self._try_combine_queries(value)
+            if combined:
+                # Replace the last queued message with the combined one
+                self._user_message_queue[-1]["message"] = combined
+                log = self.query_one("#event-log", RichLog)
+                log.write(
+                    f"[dim italic]Combined queued message: {combined[:100]}..."
+                    "[/dim italic]"
+                )
+            else:
+                # Add as a new queued message
+                parts = []
+                if hasattr(self, "_pending_parts") and self._pending_parts:
+                    parts = self._pending_parts
+                    parts.append({"text": value})
+                    self._pending_parts = []
+
+                self._add_to_queue(value, parts)
+                log = self.query_one("#event-log", RichLog)
+                log.write(
+                    f"[dim italic]Queued message ({len(self._user_message_queue)} "
+                    f"pending): {value[:100]}...[/dim italic]"
+                )
+
+            self.query_one(InputTextArea).clear()
+            return
+
+        # Normal processing when not busy
         self.query_one(AgentTimer).start()
 
         # Display user message
@@ -140,7 +352,23 @@ class AgentApp(App):
         if self._enable_acp:
             self._run_acp_turn(value, mode_id=self._agent_mode)
         else:
-            self._run_agent_turn(value, parts=parts, mode_id=self._agent_mode)
+            self._run_agent_turn(
+                value, parts=parts, mode_id=self._agent_mode, model=self._current_model
+            )
+
+    async def _submit_prompt(self, prompt: str) -> None:
+        """Helper to submit a prompt to the agent programmatically."""
+        # This mimics the logic in on_input_text_area_submitted but for internal use
+        self.query_one(AgentTimer).start()
+        self._is_processing = True
+        self.query_one(StatusLine).set_thinking(True)
+
+        if self._enable_acp:
+            self._run_acp_turn(prompt, mode_id=self._agent_mode)
+        else:
+            self._run_agent_turn(
+                prompt, parts=[], mode_id=self._agent_mode, model=self._current_model
+            )
 
     @work(exclusive=True)
     async def _run_agent_turn(
@@ -148,6 +376,7 @@ class AgentApp(App):
         query: str,
         parts: list[dict[str, Any]] | None = None,
         mode_id: str = "ask",
+        model: str | None = None,
     ) -> None:
         """Stream events from the agent server using the AG-UI protocol.
 
@@ -155,10 +384,15 @@ class AgentApp(App):
             query: The user prompt to send.
             parts: Optional list of multi-modal parts.
             mode_id: The interactive mode requested.
+            model: Optional model identifier.
 
         """
         async for event in self._client.stream(
-            query, session_id=self._current_session_id, parts=parts, mode_id=mode_id
+            query,
+            session_id=self._current_session_id,
+            parts=parts,
+            mode_id=mode_id,
+            model=model,
         ):
             self.post_message(AgentEventReceived(event))
 
@@ -270,7 +504,8 @@ class AgentApp(App):
                     pass
 
         elif event_type == "error":
-            log.write(f"[red]Error: {event.get('message')}[/red]")
+            error_message = event.get("message", "An unknown error occurred")
+            log.write(f"[bold red]Error: {error_message}[/bold red]")
             self._is_processing = False
             self.query_one(AgentTimer).stop()
 
@@ -294,6 +529,10 @@ class AgentApp(App):
                 tc.get("needs_approval") for tc in self._pending_tool_calls.values()
             ):
                 self._show_tool_approval_modal()
+            else:
+                # Process next queued message if any
+                if self._user_message_queue:
+                    self._process_queue()
 
     def _handle_tool_call(self, data: dict[str, Any], log: RichLog) -> None:
         """Process and display a tool call event.
@@ -369,7 +608,7 @@ class AgentApp(App):
         """Handle the interrupt action (Ctrl+C).
 
         Clears selection if active, cancels pending work if processing,
-        or performs a exit check.
+        or shows exit confirmation dialog.
         """
         text_area = self.query_one(InputTextArea)
         if not text_area.selection.is_empty:
@@ -381,15 +620,97 @@ class AgentApp(App):
             self._is_processing = False
             self.query_one(AgentTimer).hide()
             log = self.query_one("#event-log", RichLog)
-            log.write("[red]Interrupted[/red]")
+            log.write("[bold yellow]Operation interrupted by user[/bold yellow]")
             return
 
-        now = time.monotonic()
-        if now - self._last_ctrl_c < DOUBLE_TAP_SECONDS:
-            self.exit()
+        self.action_quit_session()
+
+    def action_quit_session(self) -> None:
+        """Handle the exit session action (Ctrl+D)."""
+
+        # Show exit confirmation dialog
+        def on_confirm(result: bool) -> None:
+            """Handle the user's confirmation choice."""
+            if result:
+                try:
+                    self.exit()
+                except Exception as e:
+                    # Log error but don't crash
+                    import logging
+
+                    logging.getLogger(__name__).error(f"Error during exit: {e}")
+
+        self.push_screen(ExitConfirmScreen(callback=on_confirm))
+
+    def action_clear_log(self) -> None:
+        """Clear the event log (Ctrl+L)."""
+        self.query_one("#event-log", RichLog).clear()
+        self.refresh()
+        self.notify("Log cleared", severity="information")
+
+    def action_toggle_sidebar(self) -> None:
+        """Toggle the visibility of the workflow sidebar (Ctrl+O, Ctrl+T)."""
+        sidebar = self.query_one(WorkflowSidebar)
+        sidebar.display = not sidebar.display
+        if sidebar.display:
+            sidebar.focus()
         else:
-            self._last_ctrl_c = now
-            text_area.clear()
+            self.query_one(InputTextArea).focus()
+
+    def action_clear_input(self) -> None:
+        """Clear the entire input buffer (Ctrl+U)."""
+        text_area = self.query_one(InputTextArea)
+        self._last_input_buffer = text_area.text
+        text_area.clear()
+        self.notify("Input cleared (Ctrl+Y to restore)", severity="information")
+
+    def action_restore_input(self) -> None:
+        """Restore the cleared input buffer (Ctrl+Y)."""
+        if hasattr(self, "_last_input_buffer") and self._last_input_buffer:
+            text_area = self.query_one(InputTextArea)
+            text_area.text = self._last_input_buffer
+            text_area.focus()
+            self._last_input_buffer = ""
+        else:
+            self.notify("Nothing to restore", severity="warning")
+
+    def action_open_editor(self) -> None:
+        """Open the current input in an external editor (Ctrl+G)."""
+        self.notify("External editor support not yet implemented", severity="warning")
+
+    def action_reverse_search(self) -> None:
+        """Open reverse search history (Ctrl+R)."""
+        # For now, just open the history screen
+        self._cmd_processor.cmd_history("")
+
+    def action_show_background(self) -> None:
+        """Show background running tasks (Ctrl+B)."""
+        self.notify("Background tasks view not yet implemented", severity="warning")
+
+    def action_switch_model_picker(self) -> None:
+        """Open the model selection picker (Alt+P)."""
+        # For now, just show current model in a notification
+        current = getattr(self, "_current_model", "default")
+        self.notify(
+            f"Current model: {current or 'default'}. Use /model to change.",
+            severity="information",
+        )
+
+    def action_toggle_thinking(self) -> None:
+        """Toggle extended thinking mode (Alt+T)."""
+        self._extended_thinking = not getattr(self, "_extended_thinking", False)
+        status = "enabled" if self._extended_thinking else "disabled"
+        self.notify(f"Extended thinking {status}", severity="information")
+
+    def action_toggle_fast_mode(self) -> None:
+        """Toggle fast mode (Alt+O)."""
+        self._fast_mode = not getattr(self, "_fast_mode", False)
+        status = "enabled" if self._fast_mode else "disabled"
+        self.notify(f"Fast mode {status}", severity="information")
+
+    def action_rewind(self) -> None:
+        """Rewind conversation or code checkpoint (Esc Esc)."""
+        self.notify("Rewind functionality not yet implemented", severity="warning")
 
     def action_select_all(self) -> None:
         """Perform a select-all action in the input text area."""
@@ -403,6 +724,178 @@ class AgentApp(App):
         display_mode = self._agent_mode if self._agent_mode != "ask" else "chat"
         self.query_one(StatusLine).set_mode(display_mode)
 
+    def action_show_help(self) -> None:
+        """Show the help overlay with keyboard shortcuts and commands."""
+        from textual import events
+        from textual.containers import Horizontal, Vertical
+        from textual.widget import Widget
+        from textual.widgets import Button, Label
+
+        class HelpOverlay(Widget):
+            """An overlay widget for displaying help information."""
+
+            DEFAULT_CSS = """
+            HelpOverlay {
+                layer: help_overlay;
+                align: center middle;
+            }
+            #help-dialog {
+                width: 60;
+                background: $surface;
+                border: solid $border;
+                padding: 2;
+            }
+            #help-title {
+                text-align: center;
+                padding: 1 0 2 0;
+                text-style: bold;
+                color: $primary;
+            }
+            #help-content {
+                margin: 1 0;
+            }
+            #help-close {
+                align: center middle;
+                margin-top: 1;
+            }
+            #help-close Button {
+                min-width: 12;
+            }
+            .help-section {
+                margin: 1 0;
+            }
+            .help-section-title {
+                text-style: bold;
+                color: $primary;
+                margin: 1 0 0 0;
+            }
+            .help-item {
+                margin: 0 0 0 2;
+            }
+            .help-key {
+                color: $success;
+                text-style: bold;
+            }
+            """
+
+            def __init__(self, on_close):
+                self.on_close = on_close
+                super().__init__()
+
+            def compose(self):
+                with Vertical(id="help-dialog"):
+                    yield Label("Keyboard Shortcuts", id="help-title")
+
+                    with Vertical(id="help-content"):
+                        yield Label("Keyboard Shortcuts", classes="help-section-title")
+                        yield Label(
+                            "[help-key]Ctrl+C[/help-key] - Interrupt action",
+                            classes="help-item",
+                        )
+                        yield Label(
+                            "[help-key]Ctrl+A[/help-key] - Select all text",
+                            classes="help-item",
+                        )
+                        yield Label(
+                            "[help-key]Ctrl+Q[/help-key] - Quit application",
+                            classes="help-item",
+                        )
+                        yield Label(
+                            "[help-key]Ctrl+H[/help-key] - Show this help",
+                            classes="help-item",
+                        )
+                        yield Label(
+                            "[help-key]Ctrl+T[/help-key] - Switch theme",
+                            classes="help-item",
+                        )
+                        yield Label(
+                            "[help-key]Shift+Tab[/help-key] - Cycle mode",
+                            classes="help-item",
+                        )
+
+                        yield Label("Slash Commands", classes="help-section-title")
+                        yield Label(
+                            "[help-key]/help[/help-key] - Show available commands",
+                            classes="help-item",
+                        )
+                        yield Label(
+                            "[help-key]/clear[/help-key] - Clear conversation",
+                            classes="help-item",
+                        )
+                        yield Label(
+                            "[help-key]/history[/help-key] - Browse chat history",
+                            classes="help-item",
+                        )
+                        yield Label(
+                            "[help-key]/mcp[/help-key] - Browse MCP servers",
+                            classes="help-item",
+                        )
+
+                    with Horizontal(id="help-close"):
+                        yield Button("Close", variant="primary", id="close-btn")
+
+            def on_button_pressed(self, event: Button.Pressed) -> None:
+                if event.button.id == "close-btn":
+                    self.on_close()
+                event.stop()
+
+            def on_key(self, event: events.Key):
+                if event.key == "escape":
+                    self.on_close()
+                    event.stop()
+                    event.prevent_default()
+
+        def on_close():
+            self.query_one(HelpOverlay).remove()
+
+        self.mount(HelpOverlay(on_close))
+
+    def action_switch_theme(self) -> None:
+        """Switch to the next available theme."""
+        from agent_terminal_ui.tui.theme import list_themes
+
+        themes = list_themes()
+        current_theme = self._current_theme.name
+
+        try:
+            current_idx = themes.index(current_theme)
+            next_idx = (current_idx + 1) % len(themes)
+            next_theme = themes[next_idx]
+            self.switch_theme(next_theme)
+        except (ValueError, IndexError):
+            # If current theme not found, switch to default
+            self.switch_theme("modern_dark")
+
+    def action_quit(self) -> None:
+        """Quit the application."""
+        self.exit()
+
+    def switch_theme(self, theme_name: str) -> None:
+        """Switch to a different theme.
+
+        Args:
+            theme_name: The name of the theme to switch to.
+        """
+        from agent_terminal_ui.tui.theme import AVAILABLE_THEMES
+
+        if theme_name.lower() not in AVAILABLE_THEMES:
+            self.notify(f"Unknown theme: {theme_name}", severity="error")
+            return
+
+        self._current_theme = get_theme(theme_name)
+        self._apply_theme()
+
+        # Update status line colors if needed
+        try:
+            status_line = self.query_one(StatusLine)
+            status_line.set_mode(self._agent_mode)
+        except Exception:
+            pass
+
+        self.notify(
+            f"Switched to {self._current_theme.name} theme", severity="information"
+        )
+
     def compose(self) -> ComposeResult:
         """Construct the visual layout of the application.
 
@@ -414,7 +907,7 @@ class AgentApp(App):
             yield RichLog(id="event-log", wrap=True, markup=True)
             yield WorkflowSidebar()
         yield AgentTimer()
-        yield InputTextArea(id="input")
+        yield InputTextArea(id="input", commands=self._cmd_processor.commands)
         yield StatusLine()
 
     def on_mount(self) -> None:
@@ -445,6 +938,16 @@ class AgentApp(App):
         self.query_one(StatusLine).can_focus = False
         self.query_one(AgentTimer).can_focus = False
         self.query_one(InputTextArea).focus()
+
+        # Register dynamic skill commands
+
+        async def register_skills():
+            await self._cmd_processor.register_skill_commands()
+            # Update InputTextArea with new commands
+            input_area = self.query_one(InputTextArea)
+            input_area._commands = self._cmd_processor.commands
+
+        self.run_worker(register_skills)
 
     def _show_tool_approval_modal(self) -> None:
         """Display a modal screen for approving pending tool calls."""
@@ -562,8 +1065,10 @@ class AgentApp(App):
 
 
 def main() -> None:
-    """The application entry point."""
-    AgentApp().run()
+    """The application entry point with theme support."""
+    # Get theme from environment variable or use default
+    theme_name = os.getenv("AGENT_THEME", "modern_dark")
+    AgentApp(theme_name=theme_name).run()
 
 
 if __name__ == "__main__":

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import sys
+
 from PIL import Image
+
 
 def image_to_ansi(image_path, width=40):
     try:
@@ -12,7 +14,9 @@ def image_to_ansi(image_path, width=40):
     img = img.convert("RGBA")
     w, h = img.size
     aspect_ratio = h / w
-    height = int(width * aspect_ratio * 0.5) # Terminal characters are ~twice as tall as wide
+    height = int(
+        width * aspect_ratio * 0.5
+    )  # Terminal characters are ~twice as tall as wide
     img = img.resize((width, height), Image.Resampling.LANCZOS)
 
     out = []
@@ -27,6 +31,7 @@ def image_to_ansi(image_path, width=40):
         out.append("\n")
 
     print("".join(out))
+
 
 if __name__ == "__main__":
     image_to_ansi(sys.argv[1])

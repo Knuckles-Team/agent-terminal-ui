@@ -1,8 +1,10 @@
 import pytest
 from textual.widgets import RichLog
+
 from agent_terminal_ui.app import AgentApp
-from agent_terminal_ui.tui.status_line import StatusLine
 from agent_terminal_ui.tui.input_text_area import InputTextArea
+from agent_terminal_ui.tui.status_line import StatusLine
+
 
 @pytest.mark.asyncio
 async def test_app_modes():
@@ -10,10 +12,10 @@ async def test_app_modes():
     async with app.run_test() as pilot:
         # Check initial state
         assert app._agent_mode == "ask"
-        status_line = app.query_one(StatusLine)
+        app.query_one(StatusLine)
 
         # Test mode change via /plan
-        input_area = app.query_one(InputTextArea)
+        app.query_one(InputTextArea)
         await pilot.click(InputTextArea)
         await pilot.press("/", "p", "l", "a", "n", "enter")
         await pilot.pause()

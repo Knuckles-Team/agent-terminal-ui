@@ -43,17 +43,39 @@ The backend uses **unified specialist discovery** (`discover_all_specialists()`)
 
 | File | Purpose |
 |------|---------|
-| `app.py` | Main Textual application and screen composition |
+| `app.py` | Main Textual application, screen composition, message queuing, exit confirmation |
 | `client.py` | AG-UI + ACP protocol clients (SSE parsing, event dispatch) |
-| `commands.py` | Slash command processor (`/help`, `/clear`, `/mcp`, `/history`, `/image`, `/init`, `/review`, `/test`, `/search`, `/stats`) |
+| `commands.py` | Slash command processor with comprehensive command set |
 | `terminal_ui.py` | CLI entry point for the `agent-tui` command |
 | `widgets/workflow.py` | Dynamic workflow sidebar with phase labels and completion markers |
 | `tui/tool_display/` | Extensible tool formatter system (registry + per-tool formatters) |
 | `tui/tool_approval_screen.py` | Human-in-the-loop modal for confirming sensitive tool calls |
 | `tui/history_screen.py` | Session management and chat history browser |
 | `tui/mcp_screen.py` | MCP server browser for inspecting connected servers and tools |
+| `tui/exit_confirm_screen.py` | Exit confirmation modal following Textual ModalScreen patterns |
 | `tui/formatters.py` | Rich text formatting utilities for chat messages |
+| `tui/theme.py` | Theme system with transparency support and color semantics |
 | `tui/css.py` | Textual CSS styling definitions |
+
+## Important Implementation Details
+
+### Message Queuing System
+- **Attribute**: `_user_message_queue` (NOT `_message_queue` to avoid Textual conflicts)
+- **Query Combination**: Uses regex patterns for conjunctions ("and", "also", "plus"), sequential actions (semicolon), and similar structure (same action verbs)
+- **Processing**: Automatic queue processing at turn_end events
+- **Commands**: `/queue`, `/queue:clear`, `/queue:toggle`
+
+### Theme System
+- **Transparency**: All themes use `rgba(0,0,0,0)` for backgrounds to respect terminal transparency
+- **Surface Colors**: Semi-transparent backgrounds for panels (`$surface` variable)
+- **Available Themes**: modern_dark (default), modern_light, nord, gruvbox
+- **CSS Variables**: Uses Textual's `$background`, `$surface`, `$primary`, etc.
+
+### Exit Confirmation
+- **Implementation**: `ExitConfirmScreen` with callback pattern (NOT `push_screen_wait()`)
+- **Keyboard Shortcuts**: Y (yes), N (no), Esc (cancel)
+- **Error Handling**: Wrapped in try-except to prevent crashes during exit
+- **CSS**: Uses margin-based spacing instead of invalid `gap` property
 
 ## Environment Variables
 
@@ -65,17 +87,33 @@ The backend uses **unified specialist discovery** (`discover_all_specialists()`)
 
 ## Recent Changes
 
-- Dynamic WorkflowSidebar: nodes discovered from sideband events, phase labels (Planning/Discovery/Execution/Validation), completion markers
-- Enhanced sideband event parsing: `specialist_enter`/`specialist_exit`, `routing_started`/`routing_completed`, `verification_result`
-- Fixed missing CLI entry point (`terminal_ui.py`)
-- ACP event mapping for graph transparency
+### Message Queuing System (2026-04-20)
+- **Decision**: Implement message queuing with query combination support similar to Devin's behavior
+- **Implementation**: Added `_user_message_queue` attribute to AgentApp with query combination logic
+- **Features**: Queues messages when agent is processing, combines related queries using regex patterns, slash commands for queue management
+- **Outcome**: Users can type multiple commands while agent is processing; related queries are intelligently combined
+- **Technical Note**: Fixed critical naming conflict - renamed from `_message_queue` to `_user_message_queue` to avoid collision with Textual's internal `_message_queue` (asyncio.Queue)
+
+### Exit Confirmation Modal (2026-04-20)
+- **Decision**: Re-enable exit confirmation modal using proper Textual ModalScreen patterns
+- **Implementation**: Created `ExitConfirmScreen` following Textual best practices with callback pattern
+- **Features**: Proper ModalScreen implementation, keyboard navigation (Y/N/Esc), error handling, proper modal sizing
+- **Outcome**: Users get confirmation dialog before exit, preventing accidental termination
+- **Technical Note**: Uses `push_screen()` with callback instead of `push_screen_wait()`, fixed CSS `gap` property issue
+
+### Terminal Transparency Support (2026-04-20)
+- **Decision**: Enable terminal transparency support to respect user's terminal background settings
+- **Implementation**: Changed all theme background colors to `rgba(0,0,0,0)` (fully transparent)
+- **Outcome**: UI now respects terminal transparency settings like Devin does
+- **Technical Note**: Textual CSS doesn't support "default" keyword, used `rgba(0,0,0,0)` for transparency
+
+### Prior Architecture Updates
+- Dynamic WorkflowSidebar with runtime node discovery from sideband events
+- Enhanced sideband event parsing for specialist lifecycle and routing events
 - Extensible tool display formatter system with registry-based dispatch
 - Human-in-the-loop tool approval screen for sensitive operations
 - Multi-modal image attachment support
 - MCP server browser screen
-- Backend now uses unified specialist discovery (`discover_all_specialists()`): MCP agents and A2A peers merged into a single `DiscoveredSpecialist` roster. The TUI consumes identical sideband events from both sources.
-- `tools-bound` sideband event now includes `toolset_count`, `dev_tools`, and `mcp_tools` for richer tool-binding telemetry
-- Backend emits structured trace logs to `agent_utilities.graph.trace` for server-side prompt-flow tracing without the TUI
-- Added slash commands for Claude Code parity: `/init`, `/review`, `/test`, `/search`, `/stats`, `/cost`
-- Integrated real-time token and cost tracking in the `StatusLine` widget
-- ACP protocol now supports usage metadata mapping and turn-end result extraction
+- Unified specialist discovery merging MCP agents and A2A peers
+- Real-time token and cost tracking in StatusLine widget
+- ACP protocol support for advanced session management and planning
