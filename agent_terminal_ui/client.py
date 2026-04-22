@@ -74,6 +74,7 @@ class AgentClient:
         session_id: str | None = None,
         parts: list[dict[str, Any]] | None = None,
         mode_id: str | None = None,
+        model: str | None = None,
     ) -> AsyncGenerator[dict[str, Any], None]:
         """Stream real-time events from the ACP session.
 
@@ -81,6 +82,7 @@ class AgentClient:
             query: The user prompt to send to the agent.
             session_id: Optional existing session ID to resume.
             parts: Optional list of multi-modal message parts.
+            model: Optional model identifier to use for this request.
 
         Yields:
             Standardized ACP event dictionaries.
@@ -106,10 +108,13 @@ class AgentClient:
                 mode_id = "ask"
 
             # Send the prompt as an RPC call
+            rpc_params = {"content": query, "modeId": mode_id, "parts": parts or []}
+            if model:
+                rpc_params["model"] = model
             await self.send_rpc(
                 session_id,
                 "message/send",
-                {"content": query, "modeId": mode_id, "parts": parts or []},
+                rpc_params,
             )
 
             # Stream events from the session
@@ -208,6 +213,130 @@ class AgentClient:
         except Exception as e:
             logger.error(f"Failed to fetch chat {chat_id}: {e}")
             return {}
+
+    async def list_skills(self) -> list[dict[str, Any]]:
+        """Fetch available skills from the backend or filesystem."""
+        try:
+            # Try to use the helper function from agent-utilities
+            logger.info(
+                f"Fetching skills from {self.base_url}/api/enhanced/helpers/list_skills"
+            )
+            response = await self._http_client.post(
+                f"{self.base_url}/api/enhanced/helpers/list_skills", json={}
+            )
+            response.raise_for_status()
+            result = response.json()
+            logger.info(f"Skills response: {result}")
+            # The helper returns the result directly
+            if isinstance(result, list):
+                return result
+            elif isinstance(result, dict) and "result" in result:
+                return result["result"]
+            return []
+        except Exception as e:
+            logger.error(f"Failed to fetch skills from backend: {e}")
+            # Fallback: try to load skills from universal-skills directory
+            return await self._load_skills_from_filesystem()
+
+    async def _load_skills_from_filesystem(self) -> list[dict[str, Any]]:
+        """Load skills from the universal-skills directory as a fallback."""
+        try:
+            from pathlib import Path
+
+            # Try to find universal-skills directory
+            # Need to go up to Workspace level
+            workspace_root = Path(__file__).parent.parent.parent.parent
+            skills_dirs = [
+                workspace_root
+                / "ai"
+                / "skills"
+                / "universal-skills"
+                / "universal_skills"
+                / "skills",
+                workspace_root
+                / "agent-packages"
+                / "skills"
+                / "universal-skills"
+                / "universal_skills"
+                / "skills",
+                Path.home() / ".codeium" / "windsurf" / "skills",
+                Path.home() / ".config" / "devin" / "skills",
+            ]
+
+            skills_dir = None
+            for dir_path in skills_dirs:
+                if dir_path.exists() and dir_path.is_dir():
+                    skills_dir = dir_path
+                    logger.info(f"Found skills directory: {skills_dir}")
+                    break
+
+            if not skills_dir:
+                logger.warning(
+                    f"Could not find universal-skills directory in {skills_dirs}"
+                )
+                logger.warning(f"Workspace root: {workspace_root}")
+                return []
+
+            skills = []
+            for skill_dir in skills_dir.iterdir():
+                if skill_dir.is_dir():
+                    skill_id = skill_dir.name
+                    # Try to read SKILL.md if it exists
+                    skill_md = skill_dir / "SKILL.md"
+                    description = ""
+                    if skill_md.exists():
+                        content = skill_md.read_text(encoding="utf-8")
+                        # Try to parse YAML frontmatter first
+                        lines = content.split("\n")
+                        in_yaml = False
+                        yaml_content = []
+
+                        for line in lines:
+                            if line.strip() == "---":
+                                if not in_yaml:
+                                    in_yaml = True
+                                else:
+                                    # End of YAML frontmatter
+                                    break
+                            elif in_yaml:
+                                yaml_content.append(line)
+
+                        # Parse YAML for description
+                        if yaml_content:
+                            try:
+                                import yaml
+
+                                yaml_data = yaml.safe_load("\n".join(yaml_content))
+                                if (
+                                    isinstance(yaml_data, dict)
+                                    and "description" in yaml_data
+                                ):
+                                    description = yaml_data["description"]
+                            except ImportError:
+                                # YAML not available, fall back to simple parsing
+                                pass
+                            except Exception:
+                                # YAML parsing failed, fall back to simple parsing
+                                pass
+
+                        # If no description from YAML, try simple parsing
+                        if not description:
+                            for line in lines:
+                                line = line.strip()
+                                # Skip YAML markers and empty lines
+                                if line and line != "---" and not line.startswith("#"):
+                                    description = line
+                                    break
+
+                    skills.append(
+                        {"id": skill_id, "name": skill_id, "description": description}
+                    )
+
+            logger.info(f"Loaded {len(skills)} skills from filesystem")
+            return skills
+        except Exception as e:
+            logger.error(f"Failed to load skills from filesystem: {e}")
+            return []
 
     async def close(self) -> None:
         """Close the client."""

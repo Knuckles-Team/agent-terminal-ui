@@ -2,9 +2,15 @@
 """Workflow sidebar widget for the terminal UI.
 
 Provides a dynamic visual representation of the agent's current graph
-execution state.  Nodes are discovered at runtime from sideband events
-rather than being hardcoded, so the sidebar automatically adapts to
-the graph topology (including dynamic MCP agents).
+execution state following modern terminal UI design principles:
+- Minimal icons: Text-based indicators instead of emojis
+- Semantic colors: State communication through color
+- Clear hierarchy: Phase labels and node states
+- Calm aesthetic: Focus on workflow over decoration
+
+Nodes are discovered at runtime from sideband events rather than being
+hardcoded, so the sidebar automatically adapts to the graph topology
+(including dynamic MCP agents).
 """
 
 from typing import Any
@@ -36,8 +42,8 @@ class WorkflowSidebar(Vertical):
     DEFAULT_CSS: str = """
     WorkflowSidebar {
         width: 30;
-        background: $surface;
-        border-left: solid $primary;
+        background: $panel;
+        border-left: solid $border;
         padding: 1;
     }
 
@@ -48,11 +54,11 @@ class WorkflowSidebar(Vertical):
     .node-item {
         margin: 0 0 0 0;
         padding: 0 1;
+        color: $foreground;
     }
 
     .node-active {
-        background: $primary;
-        color: white;
+        color: $primary;
         text-style: bold;
     }
 
@@ -65,8 +71,8 @@ class WorkflowSidebar(Vertical):
     }
 
     .phase-label {
-        color: $accent;
-        text-style: bold italic;
+        color: $primary;
+        text-style: bold;
         margin: 1 0 0 0;
     }
     """
