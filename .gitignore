@@ -208,3 +208,10 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Runtime-generated knowledge-graph databases (LadybugDB)
+knowledge_graph.db
+knowledge_graph.db.wal
+knowledge_graph.db-shm
+*.lbug/
+.lbug/

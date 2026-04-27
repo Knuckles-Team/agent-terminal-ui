@@ -1,0 +1,27 @@
+{
+  "vision": "Production-grade Textual terminal UI with Claude-code parity.",
+  "mission": "Provide a fast, keyboard-centric workflow for protocol-native agent orchestration.",
+  "core_principles": [
+    "Production-grade Python best practices",
+    "Keyboard-centric ergonomics (shortcuts/slash commands)",
+    "Strict type hinting (ty)",
+    "Pathlib-first file operations"
+  ],
+  "tech_stack": {
+    "framework": ["Textual"],
+    "rich_formatting": ["Rich"],
+    "http_client": ["httpx"],
+    "tooling": ["ty", "ruff", "mypy", "loguru"]
+  },
+  "quality_gates": [
+    "All features MUST be implemented with Pytests",
+    "Run `pre-commit run --all-files` after changes",
+    "Update plan and re-run if issues are found",
+    "Passing ty type check",
+    "Passing ruff/mypy pre-commit hooks",
+    "Google Python Style Guide compliance"
+  ],
+  "metadata": {
+    "project_name": "agent-terminal-ui"
+  }
+}

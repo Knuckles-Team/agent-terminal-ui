@@ -5,6 +5,7 @@ This module provides high-level client wrappers for interacting with the agent
 server using the native Agent Communication Protocol (ACP).
 """
 
+import contextlib
 import json
 import logging
 from collections.abc import AsyncGenerator
@@ -39,9 +40,21 @@ class AgentClient:
         return response.json().get("session_id", "")
 
     async def send_rpc(
-        self, session_id: str, method: str, params: dict[str, Any]
+        self,
+        session_id: str,
+        method: str,
+        params: dict[str, Any],
+        headers: dict[str, str] | None = None,
     ) -> None:
-        """Send a JSON-RPC request to the ACP session."""
+        """Send a JSON-RPC request to the ACP session.
+
+        Args:
+            session_id: Active ACP session id.
+            method: JSON-RPC method name.
+            params: Method params (merged with ``sessionId``).
+            headers: Optional extra HTTP headers (used for multi-model
+                overrides such as ``x-agent-model-id``).
+        """
         payload = {
             "jsonrpc": "2.0",
             "method": method,
@@ -49,7 +62,9 @@ class AgentClient:
             "id": 1,
         }
         response = await self._http_client.post(
-            f"{self.acp_url}/rpc/{session_id}", json=payload
+            f"{self.acp_url}/rpc/{session_id}",
+            json=payload,
+            headers=headers or None,
         )
         response.raise_for_status()
 
@@ -107,15 +122,27 @@ class AgentClient:
             else:
                 mode_id = "ask"
 
-            # Send the prompt as an RPC call
+            # Send the prompt as an RPC call. Include the model id as an
+            # ``x-agent-model-id`` header so the backend can apply the
+            # override without touching the RPC schema, but only when a
+            # model is actually selected (keeps the default call shape
+            # identical to the pre-multi-model behaviour).
             rpc_params = {"content": query, "modeId": mode_id, "parts": parts or []}
             if model:
                 rpc_params["model"] = model
-            await self.send_rpc(
-                session_id,
-                "message/send",
-                rpc_params,
-            )
+            if model:
+                await self.send_rpc(
+                    session_id,
+                    "message/send",
+                    rpc_params,
+                    headers={"x-agent-model-id": model},
+                )
+            else:
+                await self.send_rpc(
+                    session_id,
+                    "message/send",
+                    rpc_params,
+                )
 
             # Stream events from the session
             async for event in self.stream_events(session_id):
@@ -197,6 +224,31 @@ class AgentClient:
         except Exception:
             return {}
 
+    async def list_configured_models(self) -> dict[str, Any]:
+        """Fetch the configured LLM model registry from the backend.
+
+        Hits the core ``GET /models`` endpoint exposed by
+        ``agent_utilities.server``. The response has the shape
+        ``{"models": [...], "default_id": "..."}`` where each model is a
+        serialized ``ModelDefinition`` (id, name, provider, tier, tags,
+        cost, is_default, ...).
+
+        Returns:
+            The raw registry payload. On any network or parse error, an
+            empty ``{"models": [], "default_id": None}`` is returned so
+            callers can render a graceful empty-state.
+        """
+        try:
+            response = await self._http_client.get(f"{self.base_url}/models")
+            response.raise_for_status()
+            data = response.json()
+            if isinstance(data, dict):
+                return data
+            return {"models": [], "default_id": None}
+        except Exception as e:
+            logger.error(f"Failed to fetch model registry: {e}")
+            return {"models": [], "default_id": None}
+
     async def get_chat(self, chat_id: str) -> dict[str, Any]:
         """Fetch full history for a specific chat session.
 
@@ -213,6 +265,50 @@ class AgentClient:
         except Exception as e:
             logger.error(f"Failed to fetch chat {chat_id}: {e}")
             return {}
+
+    async def list_chats(self) -> list[dict[str, Any]]:
+        """Fetch the list of available chat sessions.
+
+        Returns:
+            List of chat summary dictionaries.
+        """
+        response = await self._http_client.get(f"{self.base_url}/chats")
+        response.raise_for_status()
+        return response.json()
+
+    async def get_mcp_config(self) -> dict[str, Any]:
+        """Fetch MCP server configuration from the backend.
+
+        Returns MCP config or empty default on error to prevent AttributeError.
+
+        Returns:
+            Dictionary containing MCP configuration (has ``mcpServers`` key),
+            or a safe empty default when servers are not available.
+        """
+        try:
+            response = await self._http_client.get(f"{self.base_url}/mcp/config")
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            logger.debug(f"Failed to fetch MCP config, using empty default: {e}")
+            return {"servers": [], "available": False}
+
+    async def list_mcp_tools(self) -> list[dict[str, Any]]:
+        """Fetch the list of tools exposed by connected MCP servers.
+
+        Returns tool list or empty on error to prevent AttributeError.
+
+        Returns:
+            List of MCP tool definition dictionaries with name and description.
+            Empty list if no tools available or connection fails.
+        """
+        try:
+            response = await self._http_client.get(f"{self.base_url}/mcp/tools")
+            response.raise_for_status()
+            return response.json().get("tools", [])
+        except Exception as e:
+            logger.debug(f"Failed to fetch MCP tools, returning empty list: {e}")
+            return []
 
     async def list_skills(self) -> list[dict[str, Any]]:
         """Fetch available skills from the backend or filesystem."""
@@ -303,7 +399,8 @@ class AgentClient:
 
                         # Parse YAML for description
                         if yaml_content:
-                            try:
+                            with contextlib.suppress(Exception):
+                                # YAML parsing failed, fall back to simple parsing
                                 import yaml
 
                                 yaml_data = yaml.safe_load("\n".join(yaml_content))
@@ -312,12 +409,6 @@ class AgentClient:
                                     and "description" in yaml_data
                                 ):
                                     description = yaml_data["description"]
-                            except ImportError:
-                                # YAML not available, fall back to simple parsing
-                                pass
-                            except Exception:
-                                # YAML parsing failed, fall back to simple parsing
-                                pass
 
                         # If no description from YAML, try simple parsing
                         if not description:
@@ -337,6 +428,445 @@ class AgentClient:
         except Exception as e:
             logger.error(f"Failed to load skills from filesystem: {e}")
             return []
+
+    async def get_graph_stats(self) -> dict[str, Any]:
+        """Fetch aggregate statistics for the knowledge graph.
+
+        Returns:
+            Dictionary with totals and by-type breakdowns.
+        """
+        response = await self._http_client.get(
+            f"{self.base_url}/api/enhanced/graph/stats"
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def list_graph_nodes(
+        self, node_type: str | None = None
+    ) -> list[dict[str, Any]]:
+        """List graph nodes, optionally filtered by type.
+
+        Args:
+            node_type: Optional node type to filter on (e.g. ``File``, ``Symbol``).
+
+        Returns:
+            List of node dictionaries.
+        """
+        params: dict[str, str] = {}
+        if node_type:
+            params["node_type"] = node_type
+        response = await self._http_client.get(
+            f"{self.base_url}/api/enhanced/graph/nodes", params=params
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def list_graph_relationships(self, limit: int = 100) -> list[dict[str, Any]]:
+        """List graph relationships up to ``limit`` entries.
+
+        Args:
+            limit: Maximum number of relationships to return.
+
+        Returns:
+            List of relationship dictionaries.
+        """
+        response = await self._http_client.get(
+            f"{self.base_url}/api/enhanced/graph/relationships",
+            params={"limit": limit},
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def search_graph(self, query: str, top_k: int = 10) -> list[dict[str, Any]]:
+        """Hybrid search across graph nodes.
+
+        Args:
+            query: Free-text search query.
+            top_k: Maximum number of hits to return.
+
+        Returns:
+            List of search-hit dictionaries.
+        """
+        response = await self._http_client.get(
+            f"{self.base_url}/api/enhanced/graph/search",
+            params={"query": query, "top_k": top_k},
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def get_graph_impact(self, symbol: str) -> list[dict[str, Any]]:
+        """Return the topological impact set for ``symbol``.
+
+        Args:
+            symbol: Fully-qualified symbol name (e.g. ``module.Class.method``).
+
+        Returns:
+            List of impacted node dictionaries.
+        """
+        response = await self._http_client.get(
+            f"{self.base_url}/api/enhanced/graph/impact/{symbol}"
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def get_impact(self, symbol: str) -> list[dict[str, Any]]:
+        """Return impact-analysis results for ``symbol``.
+
+        Alias of :meth:`get_graph_impact` that matches the parity audit naming.
+
+        Args:
+            symbol: Fully-qualified symbol name.
+
+        Returns:
+            List of impacted node dictionaries.
+        """
+        return await self.get_graph_impact(symbol)
+
+    async def reload_mcp(self) -> dict[str, Any]:
+        """Hot-reload the backend MCP configuration.
+
+        Returns:
+            Dictionary with ``status`` and reload details
+            (e.g. ``{"status": "reloaded", "agents": N, "tools": M}``).
+        """
+        response = await self._http_client.post(f"{self.base_url}/mcp/reload")
+        response.raise_for_status()
+        return response.json()
+
+    async def generate_codemap(self, prompt: str) -> dict[str, Any]:
+        """Generate a codebase codemap artifact for ``prompt``.
+
+        Args:
+            prompt: Free-form description of the target code region.
+
+        Returns:
+            Dictionary with ``status``, ``codemap_id``, and an ``artifact``
+            payload containing ``mermaid`` and/or ``markdown`` renders.
+        """
+        response = await self._http_client.post(
+            f"{self.base_url}/api/codemap", json={"prompt": prompt}
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def list_resources(self) -> list[dict[str, Any]]:
+        """List callable resources exposed by the backend.
+
+        Returns:
+            List of resource dictionaries (type, name, description, ...).
+        """
+        response = await self._http_client.get(
+            f"{self.base_url}/api/enhanced/resources"
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def spawn_resource(self, spec: dict[str, Any]) -> dict[str, Any]:
+        """Spawn a specialized agent from ``spec``.
+
+        Args:
+            spec: Specialized-agent payload forwarded to the backend verbatim.
+
+        Returns:
+            The spawned-agent descriptor returned by the server.
+        """
+        response = await self._http_client.post(
+            f"{self.base_url}/api/enhanced/resources/spawn", json=spec
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def get_pipeline_status(self) -> dict[str, Any]:
+        """Fetch the current 12-phase ingestion pipeline status.
+
+        Returns:
+            Dictionary with ``status`` and per-phase details under ``phases``.
+        """
+        response = await self._http_client.get(
+            f"{self.base_url}/api/enhanced/pipeline/status"
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def trigger_pipeline(self, phase: str | None = None) -> dict[str, Any]:
+        """Trigger a pipeline run for ``phase`` or the full pipeline.
+
+        Args:
+            phase: Optional phase name (e.g. ``"scan"``, ``"embedding"``).
+
+        Returns:
+            Dictionary containing ``status`` and trigger metadata.
+        """
+        payload: dict[str, Any] = {}
+        if phase:
+            payload["phase"] = phase
+        response = await self._http_client.post(
+            f"{self.base_url}/api/enhanced/pipeline/trigger", json=payload
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def get_maintenance_status(self) -> dict[str, Any]:
+        """Fetch the current graph-maintenance status.
+
+        Returns:
+            Dictionary with ``status`` and per-operation details under
+            ``operations``.
+        """
+        response = await self._http_client.get(
+            f"{self.base_url}/api/enhanced/maintenance/status"
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def trigger_maintenance(self, operation: str | None = None) -> dict[str, Any]:
+        """Trigger a maintenance operation (e.g. ``prune``, ``reindex``).
+
+        Args:
+            operation: Optional maintenance operation name.
+
+        Returns:
+            Dictionary containing ``status`` and operation metadata.
+        """
+        payload: dict[str, Any] = {}
+        if operation:
+            payload["operation"] = operation
+        response = await self._http_client.post(
+            f"{self.base_url}/api/enhanced/maintenance/trigger", json=payload
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def list_kbs(self) -> list[dict[str, Any]]:
+        """List all knowledge bases.
+
+        Returns:
+            List of KB summary dictionaries.
+        """
+        response = await self._http_client.get(f"{self.base_url}/api/enhanced/kb/list")
+        response.raise_for_status()
+        return response.json()
+
+    async def search_kb(
+        self, query: str, kb_id: str | None = None
+    ) -> list[dict[str, Any]]:
+        """Hybrid search across one or all knowledge bases.
+
+        Args:
+            query: Free-text search query.
+            kb_id: Optional KB identifier to scope the search.
+
+        Returns:
+            List of KB-hit dictionaries.
+        """
+        params: dict[str, str] = {"query": query}
+        if kb_id:
+            params["kb_id"] = kb_id
+        response = await self._http_client.get(
+            f"{self.base_url}/api/enhanced/kb/search", params=params
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def get_kb_article(self, article_id: str) -> dict[str, Any]:
+        """Retrieve a KB article by id.
+
+        Args:
+            article_id: Unique article identifier.
+
+        Returns:
+            Article dictionary with full markdown content.
+        """
+        response = await self._http_client.get(
+            f"{self.base_url}/api/enhanced/kb/article/{article_id}"
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def ingest_kb(self, source: str, kb_name: str) -> dict[str, Any]:
+        """Ingest a source (file, directory, or URL) into a knowledge base.
+
+        Args:
+            source: Path or URL to ingest.
+            kb_name: Name of the target knowledge base.
+
+        Returns:
+            Ingestion status dictionary.
+        """
+        response = await self._http_client.post(
+            f"{self.base_url}/api/enhanced/kb/ingest",
+            json={"source": source, "kb_name": kb_name},
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def create_memory(self, memory: dict[str, Any]) -> dict[str, Any]:
+        """Create a new memory node in the knowledge graph.
+
+        Args:
+            memory: Memory payload sent to the backend.
+
+        Returns:
+            The created memory dictionary as returned by the server.
+        """
+        response = await self._http_client.post(
+            f"{self.base_url}/api/enhanced/graph/memory", json=memory
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def get_memory(self, memory_id: str) -> dict[str, Any]:
+        """Fetch a memory node by id.
+
+        Args:
+            memory_id: Memory identifier.
+
+        Returns:
+            Memory dictionary.
+        """
+        response = await self._http_client.get(
+            f"{self.base_url}/api/enhanced/graph/memory/{memory_id}"
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def update_memory(
+        self, memory_id: str, memory: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Update an existing memory node.
+
+        Args:
+            memory_id: Memory identifier.
+            memory: New memory payload.
+
+        Returns:
+            The updated memory dictionary.
+        """
+        response = await self._http_client.put(
+            f"{self.base_url}/api/enhanced/graph/memory/{memory_id}", json=memory
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def delete_memory(self, memory_id: str) -> None:
+        """Delete a memory node from the knowledge graph.
+
+        Args:
+            memory_id: Memory identifier.
+        """
+        response = await self._http_client.delete(
+            f"{self.base_url}/api/enhanced/graph/memory/{memory_id}"
+        )
+        response.raise_for_status()
+
+    async def list_specs(self) -> list[dict[str, Any]]:
+        """List SDD specifications.
+
+        Returns:
+            List of specification dictionaries.
+        """
+        response = await self._http_client.get(
+            f"{self.base_url}/api/enhanced/sdd/specs"
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def get_constitution(self) -> dict[str, Any]:
+        """Fetch the current project constitution.
+
+        Returns:
+            Constitution dictionary (may be empty if not yet defined).
+        """
+        response = await self._http_client.get(
+            f"{self.base_url}/api/enhanced/sdd/constitution"
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def list_plans(self) -> list[dict[str, Any]]:
+        """List SDD implementation plans.
+
+        Returns:
+            List of plan dictionaries.
+        """
+        response = await self._http_client.get(
+            f"{self.base_url}/api/enhanced/sdd/plans"
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def get_tasks(self, plan_id: str | None = None) -> list[dict[str, Any]]:
+        """List SDD tasks, optionally scoped to a single plan.
+
+        Args:
+            plan_id: Optional plan identifier to filter on.
+
+        Returns:
+            List of task dictionaries.
+        """
+        params: dict[str, str] = {}
+        if plan_id:
+            params["plan_id"] = plan_id
+        response = await self._http_client.get(
+            f"{self.base_url}/api/enhanced/sdd/tasks", params=params
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def get_cron_calendar(self) -> list[dict[str, Any]]:
+        """Fetch the scheduled cron task calendar.
+
+        Returns:
+            List of cron task dictionaries describing the schedule, last/next
+            run timestamps, and current status.
+        """
+        response = await self._http_client.get(
+            f"{self.base_url}/api/enhanced/cron/calendar"
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def get_cron_logs(self) -> list[dict[str, Any]]:
+        """Fetch recent cron execution logs.
+
+        Returns:
+            List of cron log dictionaries (most recent first) containing the
+            task name, start time, status, and output preview.
+        """
+        response = await self._http_client.get(
+            f"{self.base_url}/api/enhanced/cron/logs"
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def get_backend_config(self) -> dict[str, Any]:
+        """Retrieve the current backend configuration.
+
+        Returns:
+            Dictionary describing the backend type, connection settings, and
+            environment overrides reported by the server.
+        """
+        response = await self._http_client.get(
+            f"{self.base_url}/api/enhanced/config/backend"
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def update_backend_config(self, config: dict[str, Any]) -> dict[str, Any]:
+        """Update the backend configuration.
+
+        Args:
+            config: Partial or full backend configuration dictionary.
+
+        Returns:
+            The server acknowledgement payload (usually contains a status and
+            restart-required message).
+        """
+        response = await self._http_client.put(
+            f"{self.base_url}/api/enhanced/config/backend", json=config
+        )
+        response.raise_for_status()
+        return response.json()
 
     async def close(self) -> None:
         """Close the client."""

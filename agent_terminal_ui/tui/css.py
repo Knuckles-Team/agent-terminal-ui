@@ -287,4 +287,14 @@ ToolOutputDisplay {{
 /* Enhanced typography with hierarchy */
 Static, Label {{
 }}
+
+#server-log {{
+    height: 10;
+    dock: top;
+    background: $background;
+    border-bottom: solid $border;
+    display: none;
+    padding: 0 1;
+    color: $text-muted;
+}}
 """

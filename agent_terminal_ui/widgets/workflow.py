@@ -13,6 +13,7 @@ hardcoded, so the sidebar automatically adapts to the graph topology
 (including dynamic MCP agents).
 """
 
+import contextlib
 from typing import Any
 
 from textual.app import ComposeResult
@@ -126,7 +127,7 @@ class WorkflowSidebar(Vertical):
         # Dynamically add the node if it hasn't been seen before
         if node not in self.nodes:
             self.nodes.append(node)
-            try:
+            with contextlib.suppress(Exception):
                 container = self.query_one("#node-list", VerticalScroll)
                 display_name = node.replace("_", " ").title()
                 label = Label(
@@ -135,23 +136,19 @@ class WorkflowSidebar(Vertical):
                     classes="node-item node-pending",
                 )
                 container.mount(label)
-            except Exception:
-                pass
 
         # Update phase label
         phase = _PHASE_MAP.get(node.lower(), "Execution")
         if phase != self.current_phase:
             self.current_phase = phase
-            try:
+            with contextlib.suppress(Exception):
                 self.query_one("#phase-label", Label).update(
                     f"[italic]{phase}[/italic]"
                 )
-            except Exception:
-                pass
 
         # Update visual state of all nodes
         for n in self.nodes:
-            try:
+            with contextlib.suppress(Exception):
                 widget = self.query_one(f"#node-{n.lower()}", Label)
                 display_name = n.replace("_", " ").title()
                 if n == node:
@@ -166,5 +163,3 @@ class WorkflowSidebar(Vertical):
                     widget.remove_class("node-active", "node-completed")
                     widget.add_class("node-pending")
                     widget.update(f"  {display_name}")
-            except Exception:
-                pass

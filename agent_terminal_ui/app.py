@@ -7,6 +7,7 @@ AG-UI and ACP protocols), manages tool execution flows, and provides
 an interactive log for agent-to-user communication with modern theming support.
 """
 
+import contextlib
 import logging
 import os
 import re
@@ -97,6 +98,9 @@ class AgentApp(App):
         Binding("ctrl+h", "show_help", "Show Help", show=True, priority=True),
         Binding("ctrl+l", "clear_log", "Clear Log", show=True, priority=True),
         Binding("ctrl+o", "toggle_sidebar", "Toggle Sidebar", show=True, priority=True),
+        Binding(
+            "ctrl+t", "toggle_sidebar", "Toggle Sidebar", show=False, priority=True
+        ),
         Binding("ctrl+u", "clear_input", "Clear Input", show=False, priority=True),
         Binding("ctrl+y", "restore_input", "Restore Input", show=False, priority=True),
         Binding("ctrl+g", "open_editor", "Open in Editor", show=True, priority=True),
@@ -105,10 +109,7 @@ class AgentApp(App):
             "ctrl+b", "show_background", "Background Tasks", show=True, priority=True
         ),
         Binding(
-            "ctrl+t", "toggle_sidebar", "Toggle Task List", show=True, priority=True
-        ),
-        Binding(
-            "ctrl+shift+t", "switch_theme", "Switch Theme", show=True, priority=True
+            "alt+shift+t", "switch_theme", "Switch Theme", show=True, priority=True
         ),
         Binding(
             "alt+p", "switch_model_picker", "Switch Model", show=True, priority=True
@@ -119,6 +120,7 @@ class AgentApp(App):
         Binding(
             "alt+o", "toggle_fast_mode", "Toggle Fast Mode", show=True, priority=True
         ),
+        Binding("ctrl+v", "toggle_logs", "Toggle Logs", show=True, priority=True),
         Binding("escape,escape", "rewind", "Rewind", show=True, priority=True),
     ]
 
@@ -157,6 +159,16 @@ class AgentApp(App):
             self._acp_session_id: str | None = None
 
         self._cmd_processor = CommandProcessor(self)
+
+    @property
+    def current_session_id(self) -> str | None:
+        """The active agent session identifier, if any."""
+        return self._current_session_id
+
+    @property
+    def agent_client(self) -> AgentClient:
+        """The underlying agent client used for backend communication."""
+        return self._client
 
     def _add_to_queue(
         self, message: str, parts: list[dict[str, Any]] | None = None
@@ -468,10 +480,8 @@ class AgentApp(App):
             data = event.get("data", {})
             self._last_usage = data
             # Update status line if it supports it
-            try:
+            with contextlib.suppress(Exception):
                 self.query_one(StatusLine).update_usage(data)
-            except Exception:
-                pass
 
         elif event_type == "sideband":
             data = event.get("data", {})
@@ -486,22 +496,18 @@ class AgentApp(App):
                 elif graph_event == "specialist_exit":
                     node = inner.get("agent", inner.get("node_id"))
                     if node:
-                        try:
+                        with contextlib.suppress(Exception):
                             self.query_one(WorkflowSidebar).update_state(
                                 node, status="completed"
                             )
-                        except Exception:
-                            pass
                         return
                 elif graph_event in ("routing_started", "routing_completed"):
                     node = "router"
                 elif graph_event == "verification_result":
                     node = "verifier"
             if node:
-                try:
+                with contextlib.suppress(Exception):
                     self.query_one(WorkflowSidebar).update_state(node)
-                except Exception:
-                    pass
 
         elif event_type == "error":
             error_message = event.get("message", "An unknown error occurred")
@@ -519,10 +525,8 @@ class AgentApp(App):
             # Update usage from turn_end if present
             if "usage" in event:
                 self._last_usage = event["usage"]
-                try:
+                with contextlib.suppress(Exception):
                     self.query_one(StatusLine).update_usage(event["usage"])
-                except Exception:
-                    pass
 
             # Check for decisions needed (if any pending tool calls need approval)
             if any(
@@ -681,7 +685,7 @@ class AgentApp(App):
     def action_reverse_search(self) -> None:
         """Open reverse search history (Ctrl+R)."""
         # For now, just open the history screen
-        self._cmd_processor.cmd_history("")
+        self.run_worker(self._cmd_processor.cmd_history(""))
 
     def action_show_background(self) -> None:
         """Show background running tasks (Ctrl+B)."""
@@ -707,6 +711,13 @@ class AgentApp(App):
         self._fast_mode = not getattr(self, "_fast_mode", False)
         status = "enabled" if self._fast_mode else "disabled"
         self.notify(f"Fast mode {status}", severity="information")
+
+    def action_toggle_logs(self) -> None:
+        """Toggle the visibility of the server logs (Ctrl+V)."""
+        log = self.query_one("#server-log", RichLog)
+        log.display = not log.display
+        status = "shown" if log.display else "hidden"
+        self.notify(f"Server logs {status}", severity="information")
 
     def action_rewind(self) -> None:
         """Rewind conversation or code checkpoint (Esc Esc)."""
@@ -805,7 +816,7 @@ class AgentApp(App):
                             classes="help-item",
                         )
                         yield Label(
-                            "[help-key]Ctrl+T[/help-key] - Switch theme",
+                            "[help-key]Alt+Shift+T[/help-key] - Switch theme",
                             classes="help-item",
                         )
                         yield Label(
@@ -886,11 +897,9 @@ class AgentApp(App):
         self._apply_theme()
 
         # Update status line colors if needed
-        try:
+        with contextlib.suppress(Exception):
             status_line = self.query_one(StatusLine)
             status_line.set_mode(self._agent_mode)
-        except Exception:
-            pass
 
         self.notify(
             f"Switched to {self._current_theme.name} theme", severity="information"
@@ -903,6 +912,7 @@ class AgentApp(App):
             A Textual ComposeResult containing the main layout components.
 
         """
+        yield RichLog(id="server-log", wrap=False, markup=True)
         with Horizontal():
             yield RichLog(id="event-log", wrap=True, markup=True)
             yield WorkflowSidebar()
@@ -939,6 +949,10 @@ class AgentApp(App):
         self.query_one(AgentTimer).can_focus = False
         self.query_one(InputTextArea).focus()
 
+        # Start log tailing if log file is provided
+        if log_file := os.getenv("AGENT_LOG_FILE"):
+            self._tail_server_logs(log_file)
+
         # Register dynamic skill commands
 
         async def register_skills():
@@ -948,6 +962,32 @@ class AgentApp(App):
             input_area._commands = self._cmd_processor.commands
 
         self.run_worker(register_skills)
+
+    @work(exclusive=True, thread=True)
+    def _tail_server_logs(self, log_file: str) -> None:
+        """Background worker to tail the server log file."""
+        import time
+
+        try:
+            with open(log_file) as f:
+                # Go to end of file
+                f.seek(0, 2)
+                while True:
+                    line = f.readline()
+                    if not line:
+                        time.sleep(0.1)
+                        continue
+                    # Strip newline and write to log
+                    self.call_from_thread(self._write_server_log, line.strip())
+        except Exception as e:
+            self.call_from_thread(self._write_server_log, f"Log error: {e}")
+
+    def _write_server_log(self, text: str) -> None:
+        """Write a line to the server log widget."""
+        import contextlib
+
+        with contextlib.suppress(Exception):
+            self.query_one("#server-log", RichLog).write(text)
 
     def _show_tool_approval_modal(self) -> None:
         """Display a modal screen for approving pending tool calls."""

@@ -1,0 +1,37 @@
+# Project Constitution - agent-terminal-ui
+
+## Vision & Mission
+**agent-terminal-ui** is a production-grade, Textual-based terminal interface designed to provide a fast, keyboard-centric workflow for agentic orchestration. It aims for feature parity with **Claude Code** while remaining protocol-native (AG-UI/ACP).
+
+## Core Principles
+### Guiding Principles
+- **Production-Grade Python**: Follow best open-source practices. Shortcuts are prohibited.
+- **Keyboard First**: Every action should be accessible via keyboard shortcuts or slash commands.
+- **Type Safety**: Use `ty` for strict type checking. All code must have appropriate type hints.
+- **Declarative UI**: Leverage Textual's reactive framework and CSS for layout and styling.
+
+### Normative Statements
+- **File Operations**: MUST use `pathlib` for all filesystem interactions.
+- **Logging**: Use `loguru` for internal diagnostics (only when explicitly requested).
+- **Style**: Follow the Google Python Style Guide.
+- **Testing**: Use `pytest` and `pytest-asyncio` for all tests.
+
+## Governance
+- **Protocol Parity**: The TUI must support both AG-UI and ACP protocols.
+- **Extensibility**: Tool formatters and slash commands must be implemented via registry patterns to allow easy expansion.
+- **Decision Making**: Slash commands and shortcuts are prioritized based on user ergonomics and CLI standards.
+
+## Quality Gates
+- **Testing**:
+  - All new features MUST be implemented with corresponding **Pytests**.
+- **Verification Loop**:
+  - After any code change, `pre-commit run --all-files` MUST be executed to verify integrity.
+  - If issues are introduced, the implementation plan MUST be updated to address them, and the process repeated until all checks pass.
+- **Type Check**: MUST pass `ty` type checking before merge.
+
+## Tech Stack & Standards
+- **Framework**: Textual (TUI framework).
+- **Formatting**: Rich.
+- **Networking**: httpx.
+- **Type Checking**: ty (Astral).
+- **Linting**: Ruff, Mypy.

@@ -28,6 +28,11 @@ def mock_app():
     app._client.list_mcp_tools = AsyncMock(return_value=[])
     app._client.list_chats = AsyncMock(return_value=[])
     app._client.list_skills = AsyncMock(return_value=[])
+    # Default to an empty model registry so /model list/show render the
+    # "no models configured" fallback unless a test populates it.
+    app._client.list_configured_models = AsyncMock(
+        return_value={"models": [], "default_id": None}
+    )
 
     # Mock screen methods
     app.push_screen = MagicMock()
@@ -408,21 +413,25 @@ class TestModelCommand:
 
     @pytest.mark.asyncio
     async def test_cmd_model_without_args(self, command_processor, mock_app):
-        """Test model command without args shows current model."""
+        """/model with no args queries the registry and renders a fallback
+        message when nothing is configured on the backend."""
         await command_processor.cmd_model("")
 
+        mock_app._client.list_configured_models.assert_awaited()
         event_log = mock_app.query_one("#event-log")
         event_log.write.assert_called()
         written_text = event_log.write.call_args[0][0]
-        assert "Model Configuration" in written_text
-        assert "Usage" in written_text
+        assert "No models configured" in written_text
 
     @pytest.mark.asyncio
     async def test_cmd_model_with_args(self, command_processor, mock_app):
-        """Test model command with args switches model."""
+        """Bare ``/model <id>`` is a legacy shorthand for /model set <id>;
+        it tolerates ids that are not in the backend registry so existing
+        workflows keep working."""
         await command_processor.cmd_model("gpt-4")
 
         assert mock_app._current_model == "gpt-4"
+        assert mock_app._current_model_id == "gpt-4"
         mock_app.notify.assert_called()
         assert "Switched to model" in mock_app.notify.call_args[0][0]
 

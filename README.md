@@ -57,7 +57,6 @@ A [Textual](https://textual.textualize.io/)-based terminal interface for interac
   - `/diff` -- show interactive diff viewer for recent changes
   - `/recap` -- summarize the session context
   - `/fast` -- toggle fast mode (Haiku/Flash models)
-  - `/effort` -- set reasoning effort level (low/medium/high/max)
   - `/memory` -- manage project memory (AGENTS.md)
   - `/agents` -- list available specialized agents
   - `/add-dir` -- add a directory to the agent's working context
