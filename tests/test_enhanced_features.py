@@ -216,18 +216,37 @@ class TestKeyboardShortcuts:
 
     @pytest.mark.asyncio
     async def test_theme_switch_shortcut(self):
-        """Test Ctrl+T cycles through themes."""
+        """Test Alt+Shift+T cycles through themes.
+
+        Rationale: Ctrl+T is reserved for Toggle Sidebar to match
+        Claude Code's keyboard-shortcut conventions. Theme switching
+        lives on the less-trafficked Alt+Shift+T combo.
+        """
         app = AgentApp()
         initial_theme = app._current_theme.name
 
         async with app.run_test() as pilot:
-            # Press Ctrl+T to switch theme
+            await pilot.press("alt+shift+t")
+            await pilot.pause()
+
+            new_theme = app._current_theme.name
+            assert new_theme != initial_theme
+
+    @pytest.mark.asyncio
+    async def test_toggle_sidebar_ctrl_t(self):
+        """Ctrl+T toggles the workflow sidebar (Claude Code parity)."""
+        app = AgentApp()
+
+        async with app.run_test() as pilot:
+            from agent_terminal_ui.widgets.workflow import WorkflowSidebar
+
+            sidebar = app.query_one(WorkflowSidebar)
+            initial = sidebar.display
+
             await pilot.press("ctrl+t")
             await pilot.pause()
 
-            # Check that theme changed
-            new_theme = app._current_theme.name
-            assert new_theme != initial_theme
+            assert sidebar.display != initial
 
     @pytest.mark.asyncio
     async def test_quit_shortcut(self):

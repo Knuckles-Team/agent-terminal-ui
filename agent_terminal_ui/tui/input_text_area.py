@@ -6,6 +6,7 @@ properly manage multi-line input via Shift+Enter (or backslash-escaped Enter
 on some terminals).
 """
 
+import contextlib
 import logging
 
 from textual import events
@@ -234,8 +235,8 @@ class FileSuggestionsOverlay(Widget):
         import os
 
         # Simple heuristic: list files in current dir, excluding hidden ones
-        files = []
-        try:
+        files: list[str] = []
+        with contextlib.suppress(Exception):
             for root, dirs, filenames in os.walk("."):
                 # Exclude common noisy directories
                 dirs[:] = [
@@ -252,8 +253,6 @@ class FileSuggestionsOverlay(Widget):
                         break
                 if len(files) > 1000:
                     break
-        except Exception:
-            pass
         self._all_files = sorted(files)
         self._filtered_files = self._all_files
 
@@ -423,7 +422,8 @@ class InputTextArea(TextArea):
                     matches = [
                         cmd
                         for cmd in self._commands.keys()
-                        if cmd.startswith(current_text_enter[1:]) and cmd != current_text_enter[1:]
+                        if cmd.startswith(current_text_enter[1:])
+                        and cmd != current_text_enter[1:]
                     ]
                     if matches:
                         # Autocomplete to the first match

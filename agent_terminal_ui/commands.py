@@ -6,9 +6,16 @@ terminal UI. It allows users to perform administrative tasks like clearing logs,
 browsing history, and managing MCP tools directly from the command line.
 """
 
+import contextlib
+import json
 import logging
 from collections.abc import Awaitable, Callable
 from typing import Any
+
+import httpx
+from rich.panel import Panel
+from rich.syntax import Syntax
+from rich.table import Table
 
 from agent_terminal_ui.tui.exit_confirm_screen import ExitConfirmScreen
 
@@ -53,29 +60,29 @@ class CommandProcessor:
             "queue:clear": self.cmd_queue_clear,
             "queue:toggle": self.cmd_queue_toggle,
             "compact": self.cmd_compact,
-            "branch": self.cmd_branch,
-            "fork": self.cmd_branch,  # Alias
             "context": self.cmd_context,
             "diff": self.cmd_diff,
-            "copy": self.cmd_copy,
             "recap": self.cmd_recap,
-            "undo": self.cmd_undo,
-            "rewind": self.cmd_undo,  # Alias
             "export": self.cmd_export,
             "focus": self.cmd_focus,
             "fast": self.cmd_fast,
-            "permissions": self.cmd_permissions,
-            "effort": self.cmd_effort,
-            "color": self.cmd_color,
             "keybindings": self.cmd_keybindings,
             "memory": self.cmd_memory,
-            "hooks": self.cmd_hooks,
             "agents": self.cmd_agents,
             "simplify": self.cmd_simplify,
-            "loop": self.cmd_loop,
-            "proactive": self.cmd_loop,  # Alias
             "add-dir": self.cmd_add_dir,
-            "btw": self.cmd_btw,
+            "graph": self.cmd_graph,
+            "kb": self.cmd_kb,
+            "sdd": self.cmd_sdd,
+            "impact": self.cmd_impact,
+            "mcp:reload": self.cmd_mcp_reload,
+            "codemap": self.cmd_codemap,
+            "resources": self.cmd_resources,
+            "pipeline": self.cmd_pipeline,
+            "maintenance": self.cmd_maintenance,
+            "cron": self.cmd_cron,
+            "config": self.cmd_config,
+            "logs": self.cmd_logs,
         }
         # Define canonical command names (aliases map to these)
         self.canonical_commands: dict[str, str] = {
@@ -287,31 +294,178 @@ class CommandProcessor:
         self.app.query_one("#event-log").write(stats)
 
     async def cmd_model(self, args: str) -> None:
-        """Switch to a different model.
+        """List, select, or inspect configured models.
 
-        Usage: /model <model_name> or /model to list available models.
+        Usage:
+            /model                 alias for /model list
+            /model list            show all configured models in a table
+            /model show            show the currently active model
+            /model set <id>        select a model id for subsequent turns
+            /model <id>            legacy shorthand for /model set <id>
         """
-        if not args:
-            # List current model and show how to switch
-            current = getattr(self.app, "_current_model", "default")
-            help_text = (
-                f"[bold blue]Model Configuration:[/bold blue]\n"
-                f"- Current model: {current or 'default (backend configured)'}\n"
-                f"\n"
-                f"[bold]Usage:[/bold] /model <model_name>\n"
-                f"[dim]Example: /model gpt-4[/dim]\n"
-                f"[dim]Example: /model claude-3-opus[/dim]\n"
-            )
-            self.app.query_one("#event-log").write(help_text)
+        tokens = args.strip().split(maxsplit=1)
+        subcommand = tokens[0].lower() if tokens else "list"
+        value = tokens[1].strip() if len(tokens) > 1 else ""
+
+        if subcommand in ("", "list"):
+            await self._model_list()
+        elif subcommand == "show":
+            await self._model_show()
+        elif subcommand == "set":
+            await self._model_set(value)
+        else:
+            # Legacy shorthand: ``/model <id>`` -> ``/model set <id>``.
+            # Combine tokens back into the original free-form id so multi-
+            # word ids (``/model my cool model``) still work.
+            shorthand = args.strip()
+            await self._model_set_shorthand(shorthand)
+
+    async def _model_set_shorthand(self, model_id: str) -> None:
+        """Legacy bare ``/model <id>`` that tolerates unknown ids.
+
+        Unlike ``/model set <id>``, this shorthand accepts ids that are
+        not present in the backend registry (so existing workflows that
+        pass raw provider model strings keep working). When the id *is*
+        in the registry, the richer ``_model_set`` flow is used so users
+        get the same validation message.
+        """
+        registry = await self.app._client.list_configured_models()
+        models = registry.get("models") or []
+        match = next((m for m in models if m.get("id") == model_id), None)
+        if match is not None:
+            await self._model_set(model_id)
             return
 
-        # Set the new model
-        self.app._current_model = args.strip()
-        self.app.notify(
-            f"Switched to model: {self.app._current_model}", severity="information"
-        )
+        self.app._current_model_id = model_id
+        self.app._current_model = model_id
+        self.app.notify(f"Switched to model: {model_id}", severity="information")
         self.app.query_one("#event-log").write(
-            f"[dim]Switched to model: {self.app._current_model}[/dim]"
+            f"[dim]Switched to model: {model_id}[/dim]"
+        )
+
+    async def _model_list(self) -> None:
+        """Render the configured model registry as a Rich table."""
+        registry = await self.app._client.list_configured_models()
+        models = registry.get("models") or []
+        default_id = registry.get("default_id")
+        active_id = (
+            getattr(self.app, "_current_model_id", None)
+            or getattr(self.app, "_current_model", None)
+            or default_id
+        )
+
+        if not models:
+            self.app.query_one("#event-log").write(
+                "[yellow]No models configured on the backend. "
+                "Set MODELS_CONFIG or configure single-model kwargs.[/yellow]"
+            )
+            return
+
+        table = Table(title="Configured Models", show_lines=False)
+        table.add_column("Active", justify="center", style="cyan", width=6)
+        table.add_column("ID", style="bold")
+        table.add_column("Name")
+        table.add_column("Provider")
+        table.add_column("Tier")
+        table.add_column("Tags")
+        table.add_column("Default", justify="center", width=7)
+        table.add_column("Cost / 1M (in / out)")
+
+        for m in models:
+            cost = m.get("cost") or {}
+            cost_in = float(cost.get("input", 0.0))
+            cost_out = float(cost.get("output", 0.0))
+            cost_str = f"${cost_in:.2f} / ${cost_out:.2f}"
+            tags = ", ".join(m.get("tags") or []) or "-"
+            is_active = m.get("id") == active_id
+            is_default = bool(m.get("is_default"))
+            table.add_row(
+                "*" if is_active else "",
+                str(m.get("id", "")),
+                str(m.get("name", "")),
+                str(m.get("provider", "")),
+                str(m.get("tier", "")),
+                tags,
+                "yes" if is_default else "",
+                cost_str,
+            )
+
+        event_log = self.app.query_one("#event-log")
+        event_log.write(table)
+        event_log.write(
+            "[dim]Use `/model set <id>` to switch, `/model show` to inspect.[/dim]"
+        )
+
+    async def _model_show(self) -> None:
+        """Display the currently active model, resolving the backend default."""
+        registry = await self.app._client.list_configured_models()
+        models = registry.get("models") or []
+        default_id = registry.get("default_id")
+        active_id = (
+            getattr(self.app, "_current_model_id", None)
+            or getattr(self.app, "_current_model", None)
+            or default_id
+        )
+        match = next((m for m in models if m.get("id") == active_id), None)
+
+        if match is None:
+            self.app.query_one("#event-log").write(
+                "[yellow]No active model. "
+                "Run `/model list` to see what is configured.[/yellow]"
+            )
+            return
+
+        cost = match.get("cost") or {}
+        cost_in = float(cost.get("input", 0.0))
+        cost_out = float(cost.get("output", 0.0))
+        panel = Panel(
+            (
+                f"[bold]ID:[/bold] {match.get('id')}\n"
+                f"[bold]Name:[/bold] {match.get('name')}\n"
+                f"[bold]Provider:[/bold] {match.get('provider')}\n"
+                f"[bold]Model ID:[/bold] {match.get('model_id')}\n"
+                f"[bold]Tier:[/bold] {match.get('tier')}\n"
+                f"[bold]Tags:[/bold] {', '.join(match.get('tags') or []) or '-'}\n"
+                f"[bold]Cost / 1M (in / out):[/bold] "
+                f"${cost_in:.2f} / ${cost_out:.2f}\n"
+                f"[bold]Default:[/bold] "
+                f"{'yes' if match.get('is_default') else 'no'}"
+            ),
+            title="Active Model",
+            border_style="cyan",
+        )
+        self.app.query_one("#event-log").write(panel)
+
+    async def _model_set(self, model_id: str) -> None:
+        """Select a model id for subsequent turns."""
+        model_id = model_id.strip()
+        if not model_id:
+            self.app.query_one("#event-log").write(
+                "[yellow]Usage: /model set <id>[/yellow]"
+            )
+            return
+
+        registry = await self.app._client.list_configured_models()
+        models = registry.get("models") or []
+        match = next((m for m in models if m.get("id") == model_id), None)
+
+        if match is None:
+            available = ", ".join(m.get("id", "") for m in models) or "<none>"
+            self.app.query_one("#event-log").write(
+                f"[red]Model id '{model_id}' not found.[/red]\n"
+                f"[dim]Available: {available}[/dim]"
+            )
+            return
+
+        self.app._current_model_id = model_id
+        # ``_current_model`` is the attribute already wired into the client
+        # stream call; keep it in sync so existing send paths pick up the
+        # override without code changes elsewhere.
+        self.app._current_model = model_id
+        self.app.notify(f"Switched to model: {model_id}", severity="information")
+        self.app.query_one("#event-log").write(
+            f"[green]Active model set to {model_id}[/green] "
+            f"([dim]{match.get('provider')}:{match.get('model_id')}[/dim])"
         )
 
     async def _submit_prompt(self, prompt: str) -> None:
@@ -357,12 +511,10 @@ class CommandProcessor:
                 )
         except Exception as e:
             logger.error(f"Failed to register skill commands: {e}")
-            try:
+            with contextlib.suppress(Exception):
                 self.app.query_one("#event-log").write(
                     f"[red]Failed to load skills: {e}[/red]"
                 )
-            except Exception:
-                pass
 
     async def _invoke_skill(self, skill: dict[str, Any], args: str) -> None:
         """Invoke a skill by submitting a prompt to use it.
@@ -474,12 +626,6 @@ class CommandProcessor:
         """Compact conversation context to save tokens."""
         await self._submit_prompt(f"Compact the conversation context. {args}")
 
-    async def cmd_branch(self, args: str) -> None:
-        """Branch or fork the current conversation. Usage: /branch [name]"""
-        self.app.notify(
-            "Conversation branching not yet implemented", severity="warning"
-        )
-
     async def cmd_context(self, args: str) -> None:
         """Visualize the current conversation context and token usage."""
         await self.cmd_stats(args)
@@ -488,39 +634,26 @@ class CommandProcessor:
         """Show an interactive diff viewer for recent changes."""
         await self._submit_prompt("Show a diff of recent changes.")
 
-    async def cmd_copy(self, args: str) -> None:
-        """Copy the last agent response to the clipboard. Usage: /copy [N]"""
-        self.app.notify(
-            "Copy to clipboard from slash command not yet implemented",
-            severity="warning",
-        )
-
     async def cmd_recap(self, args: str) -> None:
         """Summarize the session context."""
         await self._submit_prompt("Summarize our session so far.")
 
-    async def cmd_undo(self, args: str) -> None:
-        """Rewind the conversation to a previous state."""
-        self.app.notify("Undo/Rewind not yet implemented", severity="warning")
-
     async def cmd_export(self, args: str) -> None:
         """Export the current conversation history. Usage: /export [filename]"""
-        if not self.app.current_session_id:
+        if not self.app._current_session_id:
             self.app.notify("No active session to export", severity="warning")
             return
 
-        filename = args.strip() or f"session_{self.app.current_session_id[:8]}.md"
+        filename = args.strip() or f"session_{self.app._current_session_id[:8]}.md"
         if not filename.endswith(".md"):
             filename += ".md"
 
         try:
             self.app.notify(
-                f"Exporting session {self.app.current_session_id}...",
+                f"Exporting session {self.app._current_session_id}...",
                 severity="information",
             )
-            chat_data = await self.app.agent_client.get_chat(
-                self.app.current_session_id
-            )
+            chat_data = await self.app._client.get_chat(self.app._current_session_id)
 
             if not chat_data or "messages" not in chat_data:
                 self.app.notify(
@@ -529,7 +662,7 @@ class CommandProcessor:
                 return
 
             with open(filename, "w", encoding="utf-8") as f:
-                f.write(f"# Agent Session Export: {self.app.current_session_id}\n\n")
+                f.write(f"# Agent Session Export: {self.app._current_session_id}\n\n")
                 for msg in chat_data["messages"]:
                     role = msg.get("role", "unknown").upper()
                     content = msg.get("content", "")
@@ -547,36 +680,93 @@ class CommandProcessor:
         """Toggle fast mode (Haiku/Flash models). Usage: /fast [on|off]"""
         self.app.action_toggle_fast_mode()
 
-    async def cmd_permissions(self, args: str) -> None:
-        """View or update agent tool permissions."""
-        self.app.notify("Permission management not yet implemented", severity="warning")
-
-    async def cmd_effort(self, args: str) -> None:
-        """Set the reasoning effort level (low/medium/high/max)."""
-        self.app.notify("Effort level control not yet implemented", severity="warning")
-
-    async def cmd_color(self, args: str) -> None:
-        """Set the TUI accent color. Usage: /color [color]"""
-        self.app.notify(
-            "Dynamic color customization not yet implemented", severity="warning"
-        )
-
     async def cmd_keybindings(self, args: str) -> None:
         """View or customize keyboard shortcuts."""
         self.app.action_show_help()
 
-    async def cmd_memory(self, args: str) -> None:
-        """Manage project memory (AGENTS.md). Usage: /memory [view|edit|sync]"""
-        if not args or args == "view":
-            await self._submit_prompt(
-                "Show the contents of AGENTS.md and summarize project rules."
-            )
-        else:
-            await self._submit_prompt(f"Manage project memory: {args}")
+    async def cmd_logs(self, args: str) -> None:
+        """Toggle server logs visibility (Ctrl+V)."""
+        self.app.action_toggle_logs()
 
-    async def cmd_hooks(self, args: str) -> None:
-        """Manage lifecycle hooks for the agent."""
-        self.app.notify("Lifecycle hooks not yet implemented", severity="warning")
+    async def cmd_memory(self, args: str) -> None:
+        """Manage knowledge-graph memory nodes.
+
+        Usage: /memory [list | add <content> | get <id> | delete <id>
+                        | search <query> | review | <prompt>]
+        """
+        sub, rest = self._parse_subcommand(args)
+        log = self.app.query_one("#event-log")
+
+        if sub in ("", "list"):
+            try:
+                memories = await self.app._client.list_graph_nodes(node_type="Memory")
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "memory list", exc)
+                return
+            log.write(self._render_memory_list(memories))
+            return
+
+        if sub == "add":
+            if not rest.strip():
+                self.app.notify("Usage: /memory add <content>", severity="warning")
+                return
+            try:
+                created = await self.app._client.create_memory(
+                    {"content": rest.strip()}
+                )
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "memory add", exc)
+                return
+            mem_id = created.get("id", "<unknown>")
+            self.app.notify(f"Memory created: {mem_id}", severity="information")
+            log.write(f"[green]Memory created:[/green] {mem_id}")
+            return
+
+        if sub == "get":
+            if not rest.strip():
+                self.app.notify("Usage: /memory get <id>", severity="warning")
+                return
+            try:
+                memory = await self.app._client.get_memory(rest.strip())
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "memory get", exc)
+                return
+            log.write(self._render_memory_detail(memory))
+            return
+
+        if sub == "delete":
+            if not rest.strip():
+                self.app.notify("Usage: /memory delete <id>", severity="warning")
+                return
+            mem_id = rest.strip()
+            try:
+                await self.app._client.delete_memory(mem_id)
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "memory delete", exc)
+                return
+            self.app.notify(f"Memory deleted: {mem_id}", severity="warning")
+            log.write(f"[yellow]Memory deleted:[/yellow] {mem_id}")
+            return
+
+        if sub == "search":
+            if not rest.strip():
+                self.app.notify("Usage: /memory search <query>", severity="warning")
+                return
+            try:
+                hits = await self.app._client.search_graph(rest.strip())
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "memory search", exc)
+                return
+            log.write(self._render_graph_search(rest.strip(), hits))
+            return
+
+        if sub == "review":
+            await self._submit_prompt(
+                "Review the current knowledge-graph memories and summarize key items."
+            )
+            return
+
+        await self._submit_prompt(f"Manage project memory: {args}")
 
     async def cmd_agents(self, args: str) -> None:
         """Manage multi-agent configurations."""
@@ -590,15 +780,997 @@ class CommandProcessor:
             f"Analyze the following code/directory and suggest simplifications: {args}"
         )
 
-    async def cmd_loop(self, args: str) -> None:
-        """Setup a recurring task. Usage: /loop [interval] [prompt]"""
-        self.app.notify("Recurring tasks not yet implemented", severity="warning")
-
     async def cmd_add_dir(self, args: str) -> None:
         """Add a directory to the agent's working context. Usage: /add-dir <path>"""
         await self._submit_prompt(f"Add this directory to your working context: {args}")
 
-    async def cmd_btw(self, args: str) -> None:
-        """Ask a side question without adding it to the main conversation history."""
-        # This would require a special API call that doesn't persist to history
-        self.app.notify("Side-questions (/btw) not yet implemented", severity="warning")
+    async def cmd_graph(self, args: str) -> None:
+        """Explore the knowledge graph.
+
+        Usage: /graph [stats | nodes [type] | search <query> | impact <symbol>]
+        """
+        sub, rest = self._parse_subcommand(args)
+        log = self.app.query_one("#event-log")
+
+        if sub in ("", "stats"):
+            try:
+                stats = await self.app._client.get_graph_stats()
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "graph stats", exc)
+                return
+            log.write(self._render_graph_stats(stats))
+            return
+
+        if sub == "nodes":
+            node_type = rest.strip() or None
+            try:
+                nodes = await self.app._client.list_graph_nodes(node_type=node_type)
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "graph nodes", exc)
+                return
+            log.write(self._render_graph_nodes(nodes, node_type))
+            return
+
+        if sub == "search":
+            if not rest.strip():
+                self.app.notify("Usage: /graph search <query>", severity="warning")
+                return
+            try:
+                hits = await self.app._client.search_graph(rest.strip())
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "graph search", exc)
+                return
+            log.write(self._render_graph_search(rest.strip(), hits))
+            return
+
+        if sub == "impact":
+            if not rest.strip():
+                self.app.notify("Usage: /graph impact <symbol>", severity="warning")
+                return
+            symbol = rest.strip()
+            try:
+                impacts = await self.app._client.get_graph_impact(symbol)
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "graph impact", exc)
+                return
+            log.write(self._render_graph_impact(symbol, impacts))
+            return
+
+        self.app.notify(f"Unknown /graph subcommand: {sub}", severity="warning")
+
+    async def cmd_kb(self, args: str) -> None:
+        """Browse and ingest knowledge bases.
+
+        Usage: /kb [list | search <query> [--kb <id>]
+                    | article <id> | ingest <source> <kb_name>]
+        """
+        sub, rest = self._parse_subcommand(args)
+        log = self.app.query_one("#event-log")
+
+        if sub in ("", "list"):
+            try:
+                kbs = await self.app._client.list_kbs()
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "kb list", exc)
+                return
+            log.write(self._render_kb_list(kbs))
+            return
+
+        if sub == "search":
+            usage = "Usage: /kb search <query> [--kb <id>]"
+            if not rest.strip():
+                self.app.notify(usage, severity="warning")
+                return
+            query, kb_id = self._split_kb_flag(rest)
+            if not query:
+                self.app.notify(usage, severity="warning")
+                return
+            try:
+                hits = await self.app._client.search_kb(query, kb_id=kb_id)
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "kb search", exc)
+                return
+            log.write(self._render_kb_search(query, hits, kb_id))
+            return
+
+        if sub == "article":
+            if not rest.strip():
+                self.app.notify("Usage: /kb article <article_id>", severity="warning")
+                return
+            article_id = rest.strip()
+            try:
+                article = await self.app._client.get_kb_article(article_id)
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "kb article", exc)
+                return
+            log.write(self._render_kb_article(article))
+            return
+
+        if sub == "ingest":
+            parts = rest.split(maxsplit=1)
+            if len(parts) < 2:
+                self.app.notify(
+                    "Usage: /kb ingest <source> <kb_name>", severity="warning"
+                )
+                return
+            source, kb_name = parts[0], parts[1].strip()
+            try:
+                result = await self.app._client.ingest_kb(source, kb_name)
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "kb ingest", exc)
+                return
+            status = result.get("status", "ok")
+            self.app.notify(
+                f"Ingestion started: {kb_name} ({status})", severity="information"
+            )
+            log.write(
+                f"[green]Ingested[/green] [bold]{source}[/bold] "
+                f"into [cyan]{kb_name}[/cyan] (status: {status})"
+            )
+            return
+
+        self.app.notify(f"Unknown /kb subcommand: {sub}", severity="warning")
+
+    async def cmd_sdd(self, args: str) -> None:
+        """Inspect Spec-Driven Development artifacts.
+
+        Usage: /sdd [constitution | specs | plans | tasks [plan_id]]
+        """
+        sub, rest = self._parse_subcommand(args)
+        log = self.app.query_one("#event-log")
+
+        if sub == "constitution":
+            try:
+                constitution = await self.app._client.get_constitution()
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "sdd constitution", exc)
+                return
+            if not constitution:
+                log.write("[yellow]No constitution defined yet.[/yellow]")
+                return
+            log.write(self._render_constitution(constitution))
+            return
+
+        if sub == "specs":
+            try:
+                specs = await self.app._client.list_specs()
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "sdd specs", exc)
+                return
+            log.write(self._render_specs(specs))
+            return
+
+        if sub == "plans":
+            try:
+                plans = await self.app._client.list_plans()
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "sdd plans", exc)
+                return
+            log.write(self._render_plans(plans))
+            return
+
+        if sub == "tasks":
+            plan_id = rest.strip() or None
+            try:
+                tasks = await self.app._client.get_tasks(plan_id=plan_id)
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "sdd tasks", exc)
+                return
+            # Server may wrap tasks in {"tasks": [...]} or return a list directly.
+            if isinstance(tasks, dict) and "tasks" in tasks:
+                tasks = tasks["tasks"]
+            log.write(self._render_tasks(tasks, plan_id))
+            return
+
+        self.app.notify(
+            "Usage: /sdd [constitution | specs | plans | tasks [plan_id]]",
+            severity="warning",
+        )
+
+    async def cmd_impact(self, args: str) -> None:
+        """Inspect topological impact for a symbol. Usage: /impact <symbol>"""
+        log = self.app.query_one("#event-log")
+        query = args.strip()
+        if not query or query in ("-h", "--help"):
+            log.write(
+                "[bold blue]/impact <symbol>[/bold blue]\n"
+                "[dim]Example:[/dim] /impact pkg.module.func\n"
+                "Shows nodes impacted by a change to <symbol>."
+            )
+            return
+        try:
+            impacts = await self.app._client.get_impact(query)
+        except httpx.HTTPStatusError as exc:
+            self._write_http_error(log, "impact", exc)
+            return
+        except Exception as exc:
+            log.write(f"[red]Error (impact): {exc}[/red]")
+            return
+        log.write(self._render_impact_table(query, impacts))
+
+    async def cmd_mcp_reload(self, args: str) -> None:
+        """Hot-reload the backend MCP server configuration. Usage: /mcp:reload"""
+        log = self.app.query_one("#event-log")
+        try:
+            result = await self.app._client.reload_mcp()
+        except httpx.HTTPStatusError as exc:
+            self._write_http_error(log, "mcp:reload", exc)
+            return
+        except Exception as exc:
+            log.write(f"[red]Error (mcp:reload): {exc}[/red]")
+            return
+
+        status = result.get("status", "unknown")
+        if status == "error":
+            error = result.get("error", "unknown error")
+            self.app.notify(f"MCP reload failed: {error}", severity="error")
+            log.write(f"[red]MCP reload failed:[/red] {error}")
+            return
+
+        agent_count = result.get("agents", 0)
+        tool_count = result.get("tools", 0)
+        message = (
+            f"MCP config reloaded. {agent_count} servers active ({tool_count} tools)."
+        )
+        self.app.notify(message, severity="information")
+        log.write(f"[green]{message}[/green]")
+
+    async def cmd_codemap(self, args: str) -> None:
+        """Generate a codebase codemap. Usage: /codemap <prompt>"""
+        log = self.app.query_one("#event-log")
+        prompt = args.strip()
+        if not prompt:
+            self.app.notify("Usage: /codemap <prompt>", severity="warning")
+            return
+        try:
+            result = await self.app._client.generate_codemap(prompt)
+        except httpx.HTTPStatusError as exc:
+            self._write_http_error(log, "codemap", exc)
+            return
+        except Exception as exc:
+            log.write(f"[red]Error (codemap): {exc}[/red]")
+            return
+
+        if result.get("status") == "error":
+            error = result.get("message", "unknown error")
+            log.write(f"[red]Codemap generation failed:[/red] {error}")
+            return
+
+        artifact = result.get("artifact") or {}
+        mermaid = artifact.get("mermaid")
+        markdown = artifact.get("markdown")
+
+        codemap_id = result.get("codemap_id") or artifact.get("id", "")
+        header = f"[bold cyan]Codemap[/bold cyan] [dim]{codemap_id}[/dim]"
+        log.write(header)
+
+        if mermaid:
+            log.write(Syntax(mermaid, "mermaid", word_wrap=True))
+        if markdown:
+            log.write(Panel(markdown, title="Codemap (markdown)"))
+        if not mermaid and not markdown:
+            log.write("[yellow]Codemap returned no renderable content.[/yellow]")
+
+    async def cmd_resources(self, args: str) -> None:
+        """List or spawn callable resources.
+
+        Usage: /resources [list | spawn <json_spec>]
+        """
+        sub, rest = self._parse_subcommand(args)
+        log = self.app.query_one("#event-log")
+
+        if sub in ("", "list"):
+            try:
+                resources = await self.app._client.list_resources()
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "resources list", exc)
+                return
+            except Exception as exc:
+                log.write(f"[red]Error (resources list): {exc}[/red]")
+                return
+            log.write(self._render_resources_table(resources))
+            return
+
+        if sub == "spawn":
+            if not rest.strip():
+                self.app.notify(
+                    "Usage: /resources spawn <json_spec>", severity="warning"
+                )
+                return
+            try:
+                spec = json.loads(rest)
+            except json.JSONDecodeError as exc:
+                self.app.notify(
+                    f"Invalid JSON for /resources spawn: {exc}", severity="error"
+                )
+                log.write(f"[red]Invalid JSON for spawn spec:[/red] {exc}")
+                return
+            if not isinstance(spec, dict):
+                self.app.notify("Spawn spec must be a JSON object", severity="error")
+                return
+            try:
+                spawned = await self.app._client.spawn_resource(spec)
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "resources spawn", exc)
+                return
+            except Exception as exc:
+                log.write(f"[red]Error (resources spawn): {exc}[/red]")
+                return
+            spawned_id = spawned.get("id") or spawned.get("name", "<unknown>")
+            self.app.notify(f"Spawned resource: {spawned_id}", severity="information")
+            log.write(f"[green]Spawned resource:[/green] {spawned_id}")
+            return
+
+        self.app.notify(f"Unknown /resources subcommand: {sub}", severity="warning")
+
+    async def cmd_pipeline(self, args: str) -> None:
+        """Inspect or trigger the ingestion pipeline.
+
+        Usage: /pipeline [status | run [phase]]
+        """
+        sub, rest = self._parse_subcommand(args)
+        log = self.app.query_one("#event-log")
+
+        if sub in ("", "status"):
+            try:
+                status = await self.app._client.get_pipeline_status()
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "pipeline status", exc)
+                return
+            except Exception as exc:
+                log.write(f"[red]Error (pipeline status): {exc}[/red]")
+                return
+            log.write(self._render_pipeline_status(status))
+            return
+
+        if sub == "run":
+            phase = rest.strip() or None
+            label = phase or "full pipeline"
+            self.app.notify(f"Triggering pipeline: {label}", severity="information")
+            try:
+                result = await self.app._client.trigger_pipeline(phase)
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "pipeline run", exc)
+                return
+            except Exception as exc:
+                log.write(f"[red]Error (pipeline run): {exc}[/red]")
+                return
+            status_str = result.get("status", "unknown")
+            log.write(
+                f"[green]Pipeline triggered[/green] "
+                f"[bold]{label}[/bold] (status: {status_str})"
+            )
+            return
+
+        self.app.notify(f"Unknown /pipeline subcommand: {sub}", severity="warning")
+
+    async def cmd_maintenance(self, args: str) -> None:
+        """Inspect or trigger graph maintenance operations.
+
+        Usage: /maintenance [status | run [operation]]
+        """
+        sub, rest = self._parse_subcommand(args)
+        log = self.app.query_one("#event-log")
+
+        if sub in ("", "status"):
+            try:
+                status = await self.app._client.get_maintenance_status()
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "maintenance status", exc)
+                return
+            except Exception as exc:
+                log.write(f"[red]Error (maintenance status): {exc}[/red]")
+                return
+            log.write(self._render_maintenance_status(status))
+            return
+
+        if sub == "run":
+            operation = rest.strip() or None
+            label = operation or "full maintenance"
+            self.app.notify(f"Triggering maintenance: {label}", severity="information")
+            try:
+                result = await self.app._client.trigger_maintenance(operation)
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "maintenance run", exc)
+                return
+            except Exception as exc:
+                log.write(f"[red]Error (maintenance run): {exc}[/red]")
+                return
+            status_str = result.get("status", "unknown")
+            log.write(
+                f"[green]Maintenance triggered[/green] "
+                f"[bold]{label}[/bold] (status: {status_str})"
+            )
+            return
+
+        self.app.notify(f"Unknown /maintenance subcommand: {sub}", severity="warning")
+
+    async def cmd_cron(self, args: str) -> None:
+        """Inspect cron calendar and execution logs.
+
+        Usage: /cron [calendar | logs [limit]]
+        """
+        sub, rest = self._parse_subcommand(args)
+        log = self.app.query_one("#event-log")
+
+        if sub in ("", "calendar"):
+            try:
+                tasks = await self.app._client.get_cron_calendar()
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "cron calendar", exc)
+                return
+            except Exception as exc:
+                log.write(f"[red]Error (cron calendar): {exc}[/red]")
+                return
+            log.write(self._render_cron_calendar(tasks))
+            return
+
+        if sub == "logs":
+            limit = self._parse_positive_int(rest.strip(), default=20)
+            try:
+                logs = await self.app._client.get_cron_logs()
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "cron logs", exc)
+                return
+            except Exception as exc:
+                log.write(f"[red]Error (cron logs): {exc}[/red]")
+                return
+            log.write(self._render_cron_logs(logs[:limit], limit))
+            return
+
+        self.app.notify(f"Unknown /cron subcommand: {sub}", severity="warning")
+
+    async def cmd_config(self, args: str) -> None:
+        """Display or update the backend configuration.
+
+        Usage: /config [show | set <key> <value>]
+        """
+        sub, rest = self._parse_subcommand(args)
+        log = self.app.query_one("#event-log")
+
+        if sub in ("", "show"):
+            try:
+                config = await self.app._client.get_backend_config()
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "config show", exc)
+                return
+            except Exception as exc:
+                log.write(f"[red]Error (config show): {exc}[/red]")
+                return
+            log.write(self._render_backend_config(config))
+            return
+
+        if sub == "set":
+            key, _, value = rest.strip().partition(" ")
+            if not key or not value:
+                self.app.notify("Usage: /config set <key> <value>", severity="warning")
+                return
+            payload = {key: value.strip()}
+            try:
+                result = await self.app._client.update_backend_config(payload)
+            except httpx.HTTPStatusError as exc:
+                self._write_http_error(log, "config set", exc)
+                return
+            except Exception as exc:
+                log.write(f"[red]Error (config set): {exc}[/red]")
+                return
+            status = result.get("status", "ok")
+            message = result.get("message", "")
+            notice = f"Updated {key} -> {value.strip()} (status: {status})"
+            self.app.notify(notice, severity="information")
+            summary = f"[green]Config updated[/green] [bold]{key}[/bold]"
+            if message:
+                summary += f" [dim]{message}[/dim]"
+            log.write(summary)
+            return
+
+        self.app.notify("Usage: /config [show | set <key> <value>]", severity="warning")
+
+    @staticmethod
+    def _parse_positive_int(text: str, *, default: int) -> int:
+        """Parse ``text`` as a positive int, falling back to ``default``.
+
+        Used by ``/cron logs`` to accept an optional limit while tolerating
+        missing or malformed arguments.
+        """
+        if not text:
+            return default
+        try:
+            value = int(text)
+        except ValueError:
+            return default
+        return value if value > 0 else default
+
+    def _parse_subcommand(self, args: str) -> tuple[str, str]:
+        """Split ``args`` into ``(subcommand, remainder)``.
+
+        Args:
+            args: Raw argument string passed to a command handler.
+
+        Returns:
+            A tuple of the lower-cased first token and the remainder stripped
+            of leading whitespace. Returns ``("", "")`` when ``args`` is empty.
+        """
+        if not args or not args.strip():
+            return "", ""
+        parts = args.strip().split(maxsplit=1)
+        sub = parts[0].lower()
+        rest = parts[1] if len(parts) > 1 else ""
+        return sub, rest
+
+    def _split_kb_flag(self, rest: str) -> tuple[str, str | None]:
+        """Extract an optional ``--kb <id>`` flag from a ``/kb search`` arg.
+
+        Args:
+            rest: The argument string following ``/kb search``.
+
+        Returns:
+            A tuple of the remaining query text and the optional kb id.
+        """
+        tokens = rest.split()
+        kb_id: str | None = None
+        query_tokens: list[str] = []
+        i = 0
+        while i < len(tokens):
+            token = tokens[i]
+            # nosec B105 - CLI flag literal, not a password
+            if token == "--kb" and i + 1 < len(tokens):  # nosec B105
+                kb_id = tokens[i + 1]
+                i += 2
+                continue
+            query_tokens.append(token)
+            i += 1
+        return " ".join(query_tokens).strip(), kb_id
+
+    def _write_http_error(
+        self, log: Any, context: str, exc: httpx.HTTPStatusError
+    ) -> None:
+        """Render an HTTP error as a red system message in the event log.
+
+        Args:
+            log: The RichLog widget returned by ``query_one``.
+            context: Short description of the failing operation.
+            exc: The captured ``httpx.HTTPStatusError``.
+        """
+        status = exc.response.status_code if exc.response is not None else "?"
+        log.write(f"[red]Error ({context}): HTTP {status} - {exc}[/red]")
+
+    def _render_graph_stats(self, stats: dict[str, Any]) -> Table:
+        """Build a Rich table summarizing knowledge-graph statistics."""
+        table = Table(title="Knowledge Graph Stats", expand=True)
+        table.add_column("Metric", style="bold cyan")
+        table.add_column("Value", justify="right")
+
+        table.add_row("Total nodes", str(stats.get("total_nodes", 0)))
+        table.add_row("Total relationships", str(stats.get("total_relationships", 0)))
+        by_type = stats.get("by_type") or {}
+        if isinstance(by_type, dict):
+            for type_name in sorted(by_type):
+                table.add_row(f"  {type_name}", str(by_type[type_name]))
+        return table
+
+    def _render_graph_nodes(
+        self, nodes: list[dict[str, Any]], node_type: str | None
+    ) -> Table:
+        """Build a Rich table listing graph nodes."""
+        title = f"Graph Nodes ({node_type})" if node_type else "Graph Nodes"
+        table = Table(title=title, expand=True)
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Labels", style="magenta")
+        table.add_column("Name")
+
+        for node in nodes:
+            labels = node.get("labels") or []
+            labels_str = ", ".join(labels) if labels else node.get("type", "")
+            props = node.get("properties") or {}
+            name = (
+                props.get("name")
+                or props.get("title")
+                or props.get("content")
+                or node.get("name", "")
+            )
+            if isinstance(name, str) and len(name) > 80:
+                name = name[:77] + "..."
+            table.add_row(str(node.get("id", "")), str(labels_str), str(name))
+        return table
+
+    def _render_graph_search(self, query: str, hits: list[dict[str, Any]]) -> Table:
+        """Build a Rich table of graph-search hits."""
+        table = Table(title=f"Graph Search: {query}", expand=True)
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Type", style="magenta")
+        table.add_column("Score", justify="right")
+        table.add_column("Preview")
+
+        for hit in hits:
+            hit_id = str(hit.get("id", ""))
+            hit_type = str(hit.get("type") or hit.get("label", ""))
+            score = hit.get("score")
+            score_str = f"{score:.3f}" if isinstance(score, int | float) else ""
+            preview = hit.get("preview") or hit.get("content") or hit.get("name") or ""
+            if isinstance(preview, str) and len(preview) > 80:
+                preview = preview[:77] + "..."
+            table.add_row(hit_id, hit_type, score_str, str(preview))
+        return table
+
+    def _render_graph_impact(self, symbol: str, impacts: list[dict[str, Any]]) -> Table:
+        """Build a Rich table showing the impact set for ``symbol``."""
+        table = Table(title=f"Impact: {symbol}", expand=True)
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Type", style="magenta")
+        table.add_column("Path / Name")
+
+        for entry in impacts:
+            entry_id = str(entry.get("id", ""))
+            entry_type = str(entry.get("type") or entry.get("label", ""))
+            target = entry.get("path") or entry.get("name") or entry.get("symbol") or ""
+            table.add_row(entry_id, entry_type, str(target))
+        return table
+
+    def _render_memory_list(self, memories: list[dict[str, Any]]) -> Table:
+        """Build a Rich table listing memory nodes."""
+        table = Table(title="Memories", expand=True)
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Importance", justify="right")
+        table.add_column("Content")
+
+        for mem in memories:
+            props = mem.get("properties") or {}
+            mem_id = str(mem.get("id", ""))
+            importance = mem.get("importance", props.get("importance"))
+            importance_str = (
+                f"{importance:.2f}" if isinstance(importance, int | float) else ""
+            )
+            content = mem.get("content") or props.get("content") or ""
+            if isinstance(content, str) and len(content) > 80:
+                content = content[:77] + "..."
+            table.add_row(mem_id, importance_str, str(content))
+        return table
+
+    def _render_memory_detail(self, memory: dict[str, Any]) -> Table:
+        """Build a Rich table showing a single memory node's fields."""
+        table = Table(title=f"Memory: {memory.get('id', '')}", expand=True)
+        table.add_column("Field", style="bold cyan")
+        table.add_column("Value")
+
+        for field in ("id", "content", "importance", "created_at", "updated_at"):
+            if field in memory:
+                table.add_row(field, str(memory[field]))
+        tags = memory.get("tags")
+        if isinstance(tags, list) and tags:
+            table.add_row("tags", ", ".join(str(t) for t in tags))
+        return table
+
+    def _render_kb_list(self, kbs: list[dict[str, Any]]) -> Table:
+        """Build a Rich table listing knowledge bases."""
+        table = Table(title="Knowledge Bases", expand=True)
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Name", style="bold")
+        table.add_column("Articles", justify="right")
+        table.add_column("Status")
+
+        for kb in kbs:
+            table.add_row(
+                str(kb.get("id", "")),
+                str(kb.get("name", "")),
+                str(kb.get("article_count", 0)),
+                str(kb.get("health_status", "")),
+            )
+        return table
+
+    def _render_kb_search(
+        self, query: str, hits: list[dict[str, Any]], kb_id: str | None
+    ) -> Table:
+        """Build a Rich table of KB search hits."""
+        suffix = f" in {kb_id}" if kb_id else ""
+        table = Table(title=f"KB Search: {query}{suffix}", expand=True)
+        table.add_column("Article ID", style="cyan", no_wrap=True)
+        table.add_column("Title")
+        table.add_column("KB", style="magenta")
+        table.add_column("Score", justify="right")
+
+        for hit in hits:
+            score = hit.get("score")
+            score_str = f"{score:.3f}" if isinstance(score, int | float) else ""
+            table.add_row(
+                str(hit.get("id") or hit.get("article_id", "")),
+                str(hit.get("title", "")),
+                str(hit.get("kb_id", "")),
+                score_str,
+            )
+        return table
+
+    def _render_kb_article(self, article: dict[str, Any]) -> str:
+        """Render a KB article as a markdown-ready string for the event log."""
+        title = article.get("title", "Untitled Article")
+        kb_id = article.get("kb_id", "")
+        content = article.get("content", "")
+        header = f"[bold cyan]{title}[/bold cyan]"
+        if kb_id:
+            header += f"  [dim]({kb_id})[/dim]"
+        return f"{header}\n\n{content}"
+
+    def _render_constitution(self, constitution: dict[str, Any]) -> Table:
+        """Build a Rich table for the project constitution."""
+        table = Table(title="Project Constitution", expand=True)
+        table.add_column("Section", style="bold cyan")
+        table.add_column("Value")
+
+        rules = constitution.get("governance_rules") or []
+        for rule in rules:
+            table.add_row("governance_rule", str(rule))
+
+        tech_stack = constitution.get("tech_stack") or {}
+        if isinstance(tech_stack, dict):
+            for key in sorted(tech_stack):
+                table.add_row(f"tech_stack.{key}", str(tech_stack[key]))
+
+        gates = constitution.get("quality_gates") or []
+        for gate in gates:
+            table.add_row("quality_gate", str(gate))
+        return table
+
+    def _render_specs(self, specs: list[dict[str, Any]]) -> Table:
+        """Build a Rich table listing SDD specifications."""
+        table = Table(title="Specifications", expand=True)
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Title", style="bold")
+        table.add_column("Status", style="magenta")
+        table.add_column("Created")
+
+        for spec in specs:
+            table.add_row(
+                str(spec.get("id", "")),
+                str(spec.get("title", "")),
+                str(spec.get("status", "")),
+                str(spec.get("created_at", "")),
+            )
+        return table
+
+    def _render_plans(self, plans: list[dict[str, Any]]) -> Table:
+        """Build a Rich table listing implementation plans."""
+        table = Table(title="Implementation Plans", expand=True)
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Spec", style="magenta")
+        table.add_column("Status")
+        table.add_column("Approach")
+
+        for plan in plans:
+            approach = plan.get("technical_approach", "")
+            if isinstance(approach, str) and len(approach) > 60:
+                approach = approach[:57] + "..."
+            table.add_row(
+                str(plan.get("id", "")),
+                str(plan.get("spec_id", "")),
+                str(plan.get("status", "")),
+                str(approach),
+            )
+        return table
+
+    def _render_tasks(self, tasks: list[dict[str, Any]], plan_id: str | None) -> Table:
+        """Build a Rich table listing SDD tasks."""
+        title = f"Tasks ({plan_id})" if plan_id else "Tasks"
+        table = Table(title=title, expand=True)
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Plan", style="magenta")
+        table.add_column("Title", style="bold")
+        table.add_column("Status")
+        table.add_column("Parallel", justify="right")
+
+        for task in tasks:
+            table.add_row(
+                str(task.get("id", "")),
+                str(task.get("plan_id", "")),
+                str(task.get("title", "")),
+                str(task.get("status", "")),
+                "yes" if task.get("parallel") else "no",
+            )
+        return table
+
+    def _render_impact_table(self, symbol: str, impacts: list[dict[str, Any]]) -> Table:
+        """Build a Rich table for ``/impact`` output."""
+        table = Table(title=f"Impact: {symbol}", expand=True)
+        table.add_column("Name", style="bold cyan")
+        table.add_column("Type", style="magenta")
+        table.add_column("File")
+        table.add_column("Depth", justify="right")
+        table.add_column("Relationship")
+
+        for entry in impacts:
+            props = entry.get("properties") or {}
+            name = (
+                entry.get("name")
+                or props.get("name")
+                or entry.get("symbol")
+                or props.get("symbol")
+                or str(entry.get("id", ""))
+            )
+            node_type = (
+                entry.get("type")
+                or entry.get("label")
+                or (entry.get("labels") or [""])[0]
+                or props.get("type", "")
+            )
+            file_path = (
+                entry.get("file")
+                or entry.get("path")
+                or props.get("file")
+                or props.get("path")
+                or ""
+            )
+            depth = entry.get("depth") or entry.get("distance")
+            depth_str = str(depth) if depth is not None else ""
+            relationship = (
+                entry.get("relationship")
+                or entry.get("rel_type")
+                or entry.get("edge_type")
+                or ""
+            )
+            table.add_row(
+                str(name),
+                str(node_type),
+                str(file_path),
+                depth_str,
+                str(relationship),
+            )
+        return table
+
+    def _render_resources_table(self, resources: list[dict[str, Any]]) -> Table:
+        """Build a Rich table listing callable resources."""
+        table = Table(title="Callable Resources", expand=True)
+        table.add_column("Type", style="magenta", no_wrap=True)
+        table.add_column("Name", style="bold cyan")
+        table.add_column("Description")
+
+        for resource in resources:
+            r_type = (
+                resource.get("type")
+                or resource.get("resource_type")
+                or resource.get("kind", "")
+            )
+            name = resource.get("name") or resource.get("id", "")
+            description = resource.get("description", "")
+            if isinstance(description, str) and len(description) > 80:
+                description = description[:77] + "..."
+            table.add_row(str(r_type), str(name), str(description))
+        return table
+
+    def _render_pipeline_status(self, status: dict[str, Any]) -> Table:
+        """Build a Rich table of pipeline-phase status."""
+        title = f"Pipeline ({status.get('status', 'unknown')})"
+        table = Table(title=title, expand=True)
+        table.add_column("Phase", style="bold cyan", no_wrap=True)
+        table.add_column("State", style="magenta")
+        table.add_column("Last Run")
+        table.add_column("Progress", justify="right")
+
+        phases = status.get("phases") or []
+        if isinstance(phases, dict):
+            phases = [
+                {"name": name, **(info if isinstance(info, dict) else {})}
+                for name, info in phases.items()
+            ]
+        for phase in phases:
+            name = phase.get("name") or phase.get("phase", "")
+            state = phase.get("state") or phase.get("status", "")
+            last_run = phase.get("last_run") or phase.get("last_executed", "")
+            progress = phase.get("progress")
+            progress_str = (
+                f"{progress * 100:.0f}%"
+                if isinstance(progress, int | float) and progress <= 1
+                else str(progress)
+                if progress is not None
+                else ""
+            )
+            table.add_row(str(name), str(state), str(last_run), progress_str)
+        return table
+
+    def _render_maintenance_status(self, status: dict[str, Any]) -> Table:
+        """Build a Rich table of maintenance-operation status."""
+        title = f"Maintenance ({status.get('status', 'unknown')})"
+        table = Table(title=title, expand=True)
+        table.add_column("Operation", style="bold cyan", no_wrap=True)
+        table.add_column("Last Run")
+        table.add_column("Items Pruned", justify="right")
+        table.add_column("Items Updated", justify="right")
+
+        operations = status.get("operations") or []
+        if isinstance(operations, dict):
+            operations = [
+                {"name": name, **(info if isinstance(info, dict) else {})}
+                for name, info in operations.items()
+            ]
+        for operation in operations:
+            name = operation.get("name") or operation.get("operation", "")
+            last_run = operation.get("last_run") or operation.get("last_executed", "")
+            pruned = operation.get("items_pruned", operation.get("pruned", 0))
+            updated = operation.get("items_updated", operation.get("updated", 0))
+            table.add_row(str(name), str(last_run), str(pruned), str(updated))
+        return table
+
+    def _render_cron_calendar(self, tasks: list[dict[str, Any]]) -> Table:
+        """Build a Rich table of scheduled cron tasks."""
+        table = Table(title="Cron Calendar", expand=True)
+        table.add_column("Name", style="bold cyan")
+        table.add_column("Schedule", style="magenta")
+        table.add_column("Next Run")
+        table.add_column("Last Run")
+        table.add_column("Status")
+
+        for task in tasks:
+            name = task.get("name") or task.get("task_name") or task.get("id", "")
+            schedule = (
+                task.get("schedule")
+                or task.get("cron")
+                or task.get("cron_expression", "")
+            )
+            next_run = task.get("next_run") or task.get("next_execution", "")
+            last_run = task.get("last_run") or task.get("last_execution", "")
+            status = task.get("status") or task.get("state", "")
+            table.add_row(
+                str(name),
+                str(schedule),
+                str(next_run),
+                str(last_run),
+                str(status),
+            )
+        return table
+
+    def _render_cron_logs(self, logs: list[dict[str, Any]], limit: int) -> Table:
+        """Build a Rich table summarizing recent cron executions."""
+        table = Table(title=f"Cron Logs (latest {limit})", expand=True)
+        table.add_column("Name", style="bold cyan")
+        table.add_column("Started", style="magenta")
+        table.add_column("Duration", justify="right")
+        table.add_column("Status")
+        table.add_column("Output")
+
+        for entry in logs:
+            name = (
+                entry.get("task_name") or entry.get("name") or entry.get("task_id", "")
+            )
+            started = (
+                entry.get("started_at")
+                or entry.get("timestamp")
+                or entry.get("start_time", "")
+            )
+            duration = entry.get("duration") or entry.get("duration_ms", "")
+            if isinstance(duration, int | float):
+                duration_str = f"{duration}"
+            else:
+                duration_str = str(duration) if duration else ""
+            status = entry.get("status") or entry.get("result", "")
+            output = entry.get("output") or entry.get("message", "")
+            if isinstance(output, str) and len(output) > 80:
+                output = output[:77] + "..."
+            table.add_row(
+                str(name),
+                str(started),
+                duration_str,
+                str(status),
+                str(output),
+            )
+        return table
+
+    def _render_backend_config(self, config: dict[str, Any]) -> Panel:
+        """Render backend configuration as a Rich Panel of key/value lines."""
+        if not config:
+            return Panel(
+                "[yellow]No backend configuration reported.[/yellow]",
+                title="Backend Config",
+                expand=True,
+            )
+        lines: list[str] = []
+        for key in sorted(config):
+            value = config[key]
+            if isinstance(value, dict):
+                lines.append(f"[bold cyan]{key}[/bold cyan]:")
+                for sub_key in sorted(value):
+                    lines.append(f"  [cyan]{sub_key}[/cyan] = {value[sub_key]}")
+            else:
+                lines.append(f"[bold cyan]{key}[/bold cyan] = {value}")
+        return Panel(
+            "\n".join(lines),
+            title="Backend Config",
+            expand=True,
+        )

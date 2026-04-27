@@ -1,4 +1,9 @@
 # General Instructions
+
+> **Notice:** This project uses **Spec-Driven Development (SDD)**.
+> - Project constitution and governance: `.specify/memory/constitution.md`.
+> - Feature specifications and tasks: `.specify/specs/` and `.specify/tasks/`.
+> This file (`AGENTS.md`) is for system-prompt context; the SDD directory is the source of truth for architecture and new features.
 - This is a production-grade Python package. You must *always* follow best open-source Python practices.
 - Shortcuts are not appropriate. When in doubt, you must work with the user for guidance.
 - Any documentation you write, including in the README.md, should be clear, concise, and accurate like the official documentation of other production-grade Python packages.
@@ -30,6 +35,8 @@
 
 # Architecture
 
+> **Note:** The complete specification for the **Command Registry** and keyboard shortcuts is now formally tracked in `.specify/specs/command_registry.md`.
+
 `agent-terminal-ui` connects to `agent-utilities` via two protocols:
 
 - **AG-UI** (default): SSE streaming with sideband graph events (prefix `8:`). The TUI parses these events to render real-time graph activity in the workflow sidebar.
@@ -48,6 +55,7 @@ The backend uses **unified specialist discovery** (`discover_all_specialists()`)
 | `commands.py` | Slash command processor with comprehensive command set |
 | `terminal_ui.py` | CLI entry point for the `agent-tui` command |
 | `widgets/workflow.py` | Dynamic workflow sidebar with phase labels and completion markers |
+| `tui/input_text_area.py` | Multi-line input widget with slash-command suggestion overlay |
 | `tui/tool_display/` | Extensible tool formatter system (registry + per-tool formatters) |
 | `tui/tool_approval_screen.py` | Human-in-the-loop modal for confirming sensitive tool calls |
 | `tui/history_screen.py` | Session management and chat history browser |
@@ -83,7 +91,68 @@ The backend uses **unified specialist discovery** (`discover_all_specialists()`)
 |----------|---------|---------|
 | `AGENT_URL` | `http://localhost:8000` | Agent server URL |
 | `ENABLE_ACP` | `false` | Enable ACP protocol |
-| `ACP_URL` | `http://localhost:8001` | ACP server URL |
+| `ACP_URL` | `http://localhost:8001` | Documented but NOT read by `client.py`; effective ACP URL is derived as `{AGENT_URL}/acp` |
+
+## Slash Commands
+
+Registered in `commands.py` via the `self.commands` dict. Current registry: 31 commands plus 2 aliases.
+
+**Implemented**: `/help`, `/clear`, `/exit` (alias `/quit`), `/mcp`, `/history`, `/image`, `/plan`, `/chat`, `/build`, `/init`, `/review`, `/test`, `/search`, `/stats` (alias `/cost`), `/model`, `/theme`, `/queue`, `/queue:clear`, `/queue:toggle`, `/compact`, `/context`, `/diff`, `/recap`, `/export`, `/focus`, `/fast`, `/keybindings`, `/memory`, `/agents`, `/simplify`, `/add-dir`.
+
+### `/model` command
+
+The `/model` command is backed by the `agent-utilities` multi-model registry
+(`GET /models`):
+
+- `/model` or `/model list` -- render the configured models in a Rich table
+  (id, name, provider, tier, tags, default marker, per-1M cost).
+- `/model show` -- show a Panel with full metadata for the currently active
+  model (falls back to the registry default when no override is set).
+- `/model set <id>` -- pick a model id for subsequent turns. The chosen id
+  is stored on both `app._current_model_id` and `app._current_model`, and
+  the `AgentClient` propagates it as an `x-agent-model-id` header so the
+  backend can override the registry default for the session.
+
+Zero-cost / local models (`cost: {input: 0, output: 0}`) render as
+`$0.00 / $0.00` in the table rather than `-`, so tokens and tool counts
+remain visible even when the model itself is free.
+
+**Removed this session** (nine stub commands with no working implementation): `/effort`, `/permissions`, `/color`, `/hooks`, `/branch` / `/fork`, `/copy`, `/undo` / `/rewind`, `/loop` / `/proactive`, `/btw`. Removing them keeps the slash menu aligned with the actual supported feature set.
+
+Note: `/mcp`, `/history`, and `/export` are still listed as implemented but currently raise `AttributeError` at runtime due to missing `AgentClient` methods (see Known Issues).
+
+## Keyboard Shortcuts
+
+Claude-code parity bindings are wired in `agent_terminal_ui/app.py::BINDINGS`. Summary of the current mapping:
+
+| Binding | Action |
+|---|---|
+| `Ctrl+L` | Clear log |
+| `Ctrl+O` | Toggle sidebar |
+| `Ctrl+T` | Toggle sidebar (aliased to `Ctrl+O` so both work) |
+| `Ctrl+R` | Reverse search |
+| `Ctrl+U` / `Ctrl+Y` | Clear / restore input |
+| `Ctrl+H` | Show help |
+| `Ctrl+G` | Open in editor |
+| `Ctrl+B` | Background tasks |
+| `Alt+P` | Model picker |
+| `Alt+T` | Toggle extended thinking |
+| `Alt+O` | Toggle fast mode |
+| `Alt+Shift+T` | Switch theme (moved off `Ctrl+T`, which is now the sidebar alias) |
+| `Shift+Tab` | Cycle mode |
+| `Esc Esc` | Rewind |
+| `!` (input prefix) | Direct bash execution |
+
+**Planned (not yet implemented)**: `@` file-mention autocomplete prefix.
+
+## Known Issues
+
+**P3-CRITICAL**:
+- Three `AgentClient` methods are called by `commands.py` but not defined on the client: `get_mcp_config()`, `list_mcp_tools()`, `list_chats()`. Invoking `/mcp`, `/history`, or `/export` raises `AttributeError` at runtime.
+- `commands.py` references `self.app.current_session_id` and `self.app.agent_client`, but `app.py` exposes these as `_current_session_id` and `_client`. Access raises `AttributeError`.
+
+**P3-HIGH**:
+- `tests/test_enhanced_features.py::TestKeyboardShortcuts::test_theme_switch_shortcut` is failing (103 of 104 tests pass).
 
 ## Recent Changes
 
@@ -117,3 +186,17 @@ The backend uses **unified specialist discovery** (`discover_all_specialists()`)
 - Unified specialist discovery merging MCP agents and A2A peers
 - Real-time token and cost tracking in StatusLine widget
 - ACP protocol support for advanced session management and planning
+
+## Session Journal (consolidated)
+
+Single-read summary of what landed in the recent consolidation work. Detail lives in the sections above.
+
+- Removed nine stub slash commands (`/effort`, `/permissions`, `/color`, `/hooks`, `/branch`/`fork`, `/copy`, `/undo`/`rewind`, `/loop`/`proactive`, `/btw`). Registry now has 31 functional commands plus 2 aliases.
+- Theme switch keybind moved to `Alt+Shift+T` so `Ctrl+T` can alias `Ctrl+O` for sidebar toggle, matching Claude Code parity.
+- Workflow sidebar event parsing consumes the expanded `tools-bound` payload (`toolset_count`, `dev_tools`, `mcp_tools`) and the structured trace logs now emitted by the backend at `agent_utilities.graph.trace`.
+- Pruned unused imports via `ruff --select F401 --fix` in the local package.
+- Verified zero proprietary references in source, README.md, AGENTS.md, and the environment templates.
+- Known issues remain: three `AgentClient` methods missing (`get_mcp_config`, `list_mcp_tools`, `list_chats`), and one keyboard-shortcut test still failing. Both tracked as P3.
+- Pre-commit hardening pass completed (2026-04-23): all hooks (`ruff`, `ruff-format`, `mypy`, `vulture`, `bandit`, `codespell`) pass. `no-commit-to-branch` always fails on `main` — expected.
+
+*Last Updated: 2026-04-23*
