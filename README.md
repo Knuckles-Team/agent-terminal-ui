@@ -149,12 +149,6 @@ Create uv virtual environment and install dependencies:
 uv sync --frozen --all-groups
 ```
 
-Set up git hooks:
-
-```bash
-prek install
-```
-
 To update dependencies (updates the lock file):
 
 ```bash
