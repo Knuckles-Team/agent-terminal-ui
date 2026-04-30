@@ -1,0 +1,252 @@
+{
+  "feature_id": "code-enhancement-20260429",
+  "title": "Code Enhancement: agent-terminal-ui",
+  "created": "2026-04-29T21:54:39.162970+00:00",
+  "overview": "Automated code enhancement review for agent-terminal-ui. Covers 14 analysis domains.",
+  "user_stories": [
+    {
+      "role": "developer",
+      "action": "address Project Analysis findings (grade: D, score: 60)",
+      "value": "improve project project analysis from D to at least B (80+)"
+    },
+    {
+      "role": "developer",
+      "action": "address Dependency Audit findings (grade: A, score: 95)",
+      "value": "improve project dependency audit from A to at least B (80+)"
+    },
+    {
+      "role": "developer",
+      "action": "address Codebase Optimization findings (grade: F, score: 42)",
+      "value": "improve project codebase optimization from F to at least B (80+)"
+    },
+    {
+      "role": "developer",
+      "action": "address Security Analysis findings (grade: A, score: 100)",
+      "value": "improve project security analysis from A to at least B (80+)"
+    },
+    {
+      "role": "developer",
+      "action": "address Test Coverage findings (grade: C, score: 75)",
+      "value": "improve project test coverage from C to at least B (80+)"
+    },
+    {
+      "role": "developer",
+      "action": "address Documentation & Governance findings (grade: F, score: 51)",
+      "value": "improve project documentation & governance from F to at least B (80+)"
+    },
+    {
+      "role": "developer",
+      "action": "address Architecture & Design Patterns findings (grade: F, score: 55)",
+      "value": "improve project architecture & design patterns from F to at least B (80+)"
+    },
+    {
+      "role": "developer",
+      "action": "address Concept Traceability findings (grade: F, score: 0)",
+      "value": "improve project concept traceability from F to at least B (80+)"
+    },
+    {
+      "role": "developer",
+      "action": "address Linting & Formatting findings (grade: A, score: 95)",
+      "value": "improve project linting & formatting from A to at least B (80+)"
+    },
+    {
+      "role": "developer",
+      "action": "address Pre-Commit Compliance findings (grade: B, score: 89)",
+      "value": "improve project pre-commit compliance from B to at least B (80+)"
+    },
+    {
+      "role": "developer",
+      "action": "address Test Execution findings (grade: F, score: 25)",
+      "value": "improve project test execution from F to at least B (80+)"
+    },
+    {
+      "role": "developer",
+      "action": "address Directory Organization findings (grade: A, score: 100)",
+      "value": "improve project directory organization from A to at least B (80+)"
+    },
+    {
+      "role": "developer",
+      "action": "address UI/UX Quality findings (grade: A, score: 90)",
+      "value": "improve project ui/ux quality from A to at least B (80+)"
+    },
+    {
+      "role": "developer",
+      "action": "address Version Sync Analysis findings (grade: A, score: 100)",
+      "value": "improve project version sync analysis from A to at least B (80+)"
+    }
+  ],
+  "functional_requirements": [
+    {
+      "id": "FR-001",
+      "description": "Detected ecosystem marker: agent-utilities \u2192 Agent-Utilities Ecosystem",
+      "testable": true
+    },
+    {
+      "id": "FR-002",
+      "description": "Minor update: pytest-cov 7.0.0 -> 7.1.0",
+      "testable": true
+    },
+    {
+      "id": "FR-003",
+      "description": "192 functions exceed 50 lines",
+      "testable": true
+    },
+    {
+      "id": "FR-004",
+      "description": "18 monolithic files (>1000 lines) \u2014 consider splitting into packages or logical modules",
+      "testable": true
+    },
+    {
+      "id": "FR-005",
+      "description": "108 functions with nesting depth >4",
+      "testable": true
+    },
+    {
+      "id": "FR-006",
+      "description": "38 tests without assertions",
+      "testable": true
+    },
+    {
+      "id": "FR-007",
+      "description": "6 potential doc-test drift items",
+      "testable": true
+    },
+    {
+      "id": "FR-008",
+      "description": "README.md missing sections: overview, installation",
+      "testable": true
+    },
+    {
+      "id": "FR-009",
+      "description": "README.md is short (162 lines) \u2014 consider expanding",
+      "testable": true
+    },
+    {
+      "id": "FR-010",
+      "description": "README missing: Has a Table of Contents",
+      "testable": true
+    },
+    {
+      "id": "FR-011",
+      "description": "README missing: Has installation instructions",
+      "testable": true
+    },
+    {
+      "id": "FR-012",
+      "description": "README missing: Has architecture overview or diagram",
+      "testable": true
+    },
+    {
+      "id": "FR-013",
+      "description": "README missing: References /docs directory material",
+      "testable": true
+    },
+    {
+      "id": "FR-014",
+      "description": "AGENTS.md missing sections: tech stack, commands, project structure",
+      "testable": true
+    },
+    {
+      "id": "FR-015",
+      "description": "No LICENSE file found",
+      "testable": true
+    },
+    {
+      "id": "FR-016",
+      "description": "SRP: 60 modules exceed 500 lines (god modules)",
+      "testable": true
+    },
+    {
+      "id": "FR-017",
+      "description": "SRP: 18 classes have >15 methods",
+      "testable": true
+    },
+    {
+      "id": "FR-018",
+      "description": "No discernible layer architecture (no domain/service/adapter separation)",
+      "testable": true
+    },
+    {
+      "id": "FR-019",
+      "description": "Low dependency injection ratio: 3%",
+      "testable": true
+    },
+    {
+      "id": "FR-020",
+      "description": "26 Python files at top level \u2014 consider package organization",
+      "testable": true
+    },
+    {
+      "id": "FR-021",
+      "description": "No CONCEPT markers found \u2014 traceability not implemented",
+      "testable": true
+    },
+    {
+      "id": "FR-022",
+      "description": "375 test functions missing concept markers",
+      "testable": true
+    },
+    {
+      "id": "FR-023",
+      "description": "142 significant functions (>10 lines) missing concept markers in docstrings",
+      "testable": true
+    },
+    {
+      "id": "FR-024",
+      "description": "Total lint findings: 3 (high/error: 0, medium/warning: 2, low: 1)",
+      "testable": true
+    },
+    {
+      "id": "FR-025",
+      "description": "bandit: not available in PATH",
+      "testable": true
+    },
+    {
+      "id": "FR-026",
+      "description": "1/20 pre-commit hooks failed: don't commit to branch",
+      "testable": true
+    },
+    {
+      "id": "FR-027",
+      "description": "2 hook(s) may be outdated: ruff-pre-commit, uv-pre-commit",
+      "testable": true
+    },
+    {
+      "id": "FR-028",
+      "description": "Pytest hooks skipped (handled by CE-016 Test Execution): pytest, local-pytest",
+      "testable": true
+    },
+    {
+      "id": "FR-029",
+      "description": "No tests were executed (test framework detected but no tests found)",
+      "testable": true
+    },
+    {
+      "id": "FR-030",
+      "description": "Failed heuristic 'match_real_world': Help text in CLI arguments: False",
+      "testable": true
+    },
+    {
+      "id": "FR-031",
+      "description": "All version '0.1.36' declarations appear to be tracked correctly.",
+      "testable": true
+    }
+  ],
+  "success_criteria": [
+    {
+      "metric": "Overall GPA",
+      "current": 2.14,
+      "target": 3.0
+    },
+    {
+      "metric": "Domains at B or above",
+      "current": 7,
+      "target": 14
+    },
+    {
+      "metric": "Critical findings resolved",
+      "current": 0,
+      "target": 20
+    }
+  ]
+}
