@@ -48,8 +48,12 @@ class ToolsSidebar(Vertical):
             data = await client.list_tools()
             self._all_capabilities = data
             self.app.call_from_thread(self._populate_tree, data)
-        except Exception:
-            pass
+        except Exception as e:
+            # log or ignore safely. A simple print or notify works.
+            try:
+                self.app.notify(f"Failed to fetch tools: {e}", severity="warning")
+            except Exception:
+                pass  # nosec B110
 
     def _populate_tree(self, data: list[dict[str, Any]], filter_text: str = "") -> None:
         """Populate the tree with the filtered tools/skills."""
@@ -63,7 +67,9 @@ class ToolsSidebar(Vertical):
 
             # Simple case-insensitive filter
             if filter_text:
-                text_to_search = f"{item.get('name', '')} {item.get('description', '')} {source}".lower()
+                n = item.get("name", "")
+                d = item.get("description", "")
+                text_to_search = f"{n} {d} {source}".lower()
                 if filter_text.lower() not in text_to_search:
                     continue
 
