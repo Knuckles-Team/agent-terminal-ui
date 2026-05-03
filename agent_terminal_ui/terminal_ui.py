@@ -1,7 +1,7 @@
 #!/usr/bin/python
 """CLI entry point for the Agent Terminal UI.
 
-This module provides the ``agent-tui`` console script referenced
+This module provides the ``agent-terminal-ui`` console script referenced
 in ``pyproject.toml``.  It delegates immediately to :func:`app.main`.
 """
 

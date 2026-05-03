@@ -22,7 +22,7 @@ def mock_app() -> MagicMock:
     app = MagicMock()
     app.notify = MagicMock()
 
-    event_log = MagicMock()
+    event_log = AsyncMock()
     event_log.write = MagicMock()
     event_log.clear = MagicMock()
     app.query_one = MagicMock(return_value=event_log)
@@ -78,8 +78,8 @@ def client() -> AgentClient:
 def _last_written(mock_app: MagicMock) -> object:
     """Return the most recent argument passed to ``event_log.write``."""
     log = mock_app.query_one.return_value
-    assert log.write.called, "event log write was not called"
-    return log.write.call_args[0][0]
+    assert log.add_info.called, "event log write was not called"
+    return log.add_info.call_args[0][0]
 
 
 def _mock_response(payload: object, status_code: int = 200) -> MagicMock:

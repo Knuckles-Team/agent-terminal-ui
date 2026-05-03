@@ -181,6 +181,7 @@ async def test_handle_tool_approval_result_with_decisions(agent_app):
             decisions={"c1": "accept"}, feedback=None
         )
         agent_app._handle_tool_approval_result(result)
+        await pilot.pause()
         assert agent_app._is_processing is True
         agent_app._run_agent_turn_with_permissions.assert_called_once()
 

@@ -16,7 +16,7 @@ def mock_app():
     app.query_one = MagicMock()
 
     # Mock event log
-    event_log = MagicMock()
+    event_log = AsyncMock()
     event_log.write = MagicMock()
     event_log.clear = MagicMock()
     app.query_one.return_value = event_log
@@ -566,9 +566,9 @@ This skill tests the integration.
         # Get help output
         await command_processor.cmd_help("")
 
-        event_log = mock_app.query_one("#event-log")
-        event_log.write.assert_called()
-        written_text = event_log.write.call_args[0][0]
+        event_log = mock_app.query_one("Conversation")
+        event_log.add_info.assert_called()
+        written_text = event_log.add_info.call_args[0][0]
 
         # Check that the skill appears in help
         assert "test-help-skill" in written_text.lower()

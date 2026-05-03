@@ -69,7 +69,7 @@ def mock_app():
     app = MagicMock()
     app.notify = MagicMock()
 
-    event_log = MagicMock()
+    event_log = AsyncMock()
     event_log.write = MagicMock()
     event_log.clear = MagicMock()
     app.query_one.return_value = event_log
@@ -91,8 +91,8 @@ async def test_model_list_renders_registry(processor, mock_app):
     await processor.cmd_model("")
     mock_app._client.list_configured_models.assert_awaited_once()
     event_log = mock_app.query_one.return_value
-    assert event_log.write.called
-    args_written = [call.args[0] for call in event_log.write.call_args_list]
+    assert event_log.add_info.called
+    args_written = [call.args[0] for call in event_log.add_info.call_args_list]
     # First write is the rich Table, second write is the dim help hint.
     assert any(
         hasattr(a, "title") and "Configured Models" in str(a.title)
@@ -110,8 +110,8 @@ async def test_model_list_explicit_subcommand(processor, mock_app):
 async def test_model_show_defaults_to_registry_default(processor, mock_app):
     await processor.cmd_model("show")
     event_log = mock_app.query_one.return_value
-    assert event_log.write.called
-    (panel,) = event_log.write.call_args_list[-1].args
+    assert event_log.add_info.called
+    (panel,) = event_log.add_info.call_args_list[-1].args
     rendered = str(panel.renderable)
     assert "local-fast" in rendered
     assert "light" in rendered
@@ -122,7 +122,7 @@ async def test_model_show_reflects_current_override(processor, mock_app):
     mock_app._current_model_id = "cloud-opus"
     await processor.cmd_model("show")
     event_log = mock_app.query_one.return_value
-    (panel,) = event_log.write.call_args_list[-1].args
+    (panel,) = event_log.add_info.call_args_list[-1].args
     rendered = str(panel.renderable)
     assert "cloud-opus" in rendered
     assert "heavy" in rendered
@@ -137,7 +137,7 @@ async def test_model_set_updates_current_model(processor, mock_app):
     mock_app.notify.assert_called()
     event_log = mock_app.query_one.return_value
     # Last write must confirm the switch in green.
-    last_message = event_log.write.call_args_list[-1].args[0]
+    last_message = event_log.add_info.call_args_list[-1].args[0]
     assert "cloud-mini" in last_message
     assert "green" in last_message.lower()
 
@@ -148,7 +148,7 @@ async def test_model_set_rejects_unknown_id(processor, mock_app):
     # Override is NOT applied on failure.
     assert mock_app._current_model_id is None
     event_log = mock_app.query_one.return_value
-    last_message = event_log.write.call_args_list[-1].args[0]
+    last_message = event_log.add_info.call_args_list[-1].args[0]
     assert "does-not-exist" in last_message
     assert "not found" in last_message.lower()
 
@@ -157,7 +157,7 @@ async def test_model_set_rejects_unknown_id(processor, mock_app):
 async def test_model_set_requires_argument(processor, mock_app):
     await processor.cmd_model("set")
     event_log = mock_app.query_one.return_value
-    last_message = event_log.write.call_args_list[-1].args[0]
+    last_message = event_log.add_info.call_args_list[-1].args[0]
     assert "Usage" in last_message
     assert mock_app._current_model_id is None
 
@@ -169,7 +169,7 @@ async def test_model_list_empty_registry(processor, mock_app):
     )
     await processor.cmd_model("list")
     event_log = mock_app.query_one.return_value
-    last_message = event_log.write.call_args_list[-1].args[0]
+    last_message = event_log.add_info.call_args_list[-1].args[0]
     assert "No models configured" in last_message
 
 
@@ -193,5 +193,5 @@ async def test_model_legacy_shorthand_known_id_uses_set_flow(processor, mock_app
     await processor.cmd_model("cloud-mini")
     assert mock_app._current_model_id == "cloud-mini"
     event_log = mock_app.query_one.return_value
-    last_message = event_log.write.call_args_list[-1].args[0]
+    last_message = event_log.add_info.call_args_list[-1].args[0]
     assert "gpt-4o-mini" in last_message

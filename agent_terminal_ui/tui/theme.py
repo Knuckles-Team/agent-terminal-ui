@@ -278,84 +278,41 @@ def generate_css_from_theme(theme: ThemeConfig) -> str:
 
     css = f"""
 /* Theme: {theme.name} - Following restraint principles */
+$background: {c.background};
+$foreground: {c.foreground};
+$surface: {c.surface};
+
+$primary: {c.primary};
+$success: {c.success};
+$warning: {c.warning};
+$error: {c.error};
+$info: {c.info};
+
+$border: {c.border};
+$divider: {c.divider};
+$text-muted: {c.muted};
+$text-disabled: {c.subtle};
+
+/* Apply colors directly to core components to ensure inheritance on ModalScreens */
 Screen {{
     background: {c.background};
     color: {c.foreground};
 }}
 
-/* RichLog - Main content area with minimal styling */
-RichLog {{
-    background: {c.background};
-    scrollbar-background: {c.background};
-    scrollbar-color: {c.border};
-    scrollbar-color-hover: {c.muted};
+ExitConfirmScreen {{
+    background: {c.background} 50%;
+    color: {c.foreground};
 }}
 
-/* InputTextArea - Clean input with semantic focus state */
-InputTextArea {{
-    background: {c.input_background};
-    color: {c.input_foreground};
-    border-top: solid {c.border};
-    border-bottom: solid {c.border};
-    &>.text-area--cursor-line {{
-        background: {c.primary} 3%;
-    }}
-    &:focus {{
-        border-top: solid {c.border};
-        border-bottom: solid {c.border};
-    }}
+ChatModal {{
+    background: {c.background} 50%;
+    color: {c.foreground};
 }}
 
-/* StatusLine - Minimal status indicators */
-StatusLine {{
-    background: {c.background};
-    border-top: solid {c.border};
-}}
-
-/* WorkflowSidebar - Structured workflow visualization */
-WorkflowSidebar {{
-    background: {c.sidebar_background};
-    border-left: solid {c.border};
-    & WorkflowNode {{
-        background: {c.background};
-        border: solid {c.border};
-        color: {c.sidebar_foreground};
-    }}
-    & WorkflowNode.completed {{
-        background: {c.background};
-        border: solid {c.success};
-        color: {c.success};
-    }}
-    & WorkflowNode.active {{
-        background: {c.background};
-        border: solid {c.primary};
-        color: {c.primary};
-    }}
-}}
-
-/* Buttons - Semantic styling */
-Button {{
-    background: {c.primary};
-    color: {c.background};
-    &.-error {{
-        background: {c.error};
-    }}
-    &.-primary {{
-        background: {c.success};
-    }}
-}}
-
-/* Tool displays - Clean card styling */
-ToolCallDisplay {{
-    background: {c.background};
-    border: solid {c.border};
-    border-left: solid {c.primary};
-}}
-
-ToolOutputDisplay {{
-    background: {c.background};
-    border: solid {c.border};
-    border-left: solid {c.success};
-}}
+/* Legacy input / sidebar variables (in case they are needed) */
+$input-background: {c.input_background};
+$input-foreground: {c.input_foreground};
+$sidebar-background: {c.sidebar_background};
+$sidebar-foreground: {c.sidebar_foreground};
 """
     return css

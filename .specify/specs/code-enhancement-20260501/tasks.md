@@ -1,0 +1,91 @@
+# Tasks: Code Enhancement: agent-terminal-ui
+
+Generated: 2026-05-01T00:58:13.896070+00:00
+Skipped informational: 4
+
+- [ ] [P] **T001** [Codebase Optimization] 33 functions exceed 50 lines
+  - Priority: P2-Medium | Effort: Medium
+- [ ] [P] **T002** [Codebase Optimization] Monolithic: commands.py (1937L) — 3 functions with high complexity (worst: Comma
+  - Priority: P1-High | Effort: Large
+- [ ] [P] **T003** [Codebase Optimization] Monolithic: client.py (988L) — 2 functions with high complexity (worst: AgentCli
+  - Priority: P1-High | Effort: Large
+- [ ] [P] **T004** [Codebase Optimization] Monolithic: app.py (1115L) — 2 functions with high complexity (worst: AgentApp.o
+  - Priority: P1-High | Effort: Large
+- [ ] [P] **T005** [Codebase Optimization] Needs attention: text_universal_skills.py (608L) — 5 functions with high complex
+  - Priority: P2-Medium | Effort: Medium
+- [ ] [P] **T006** [Codebase Optimization] Needs attention: input_text_area.py (692L) — 1 functions with high complexity (w
+  - Priority: P2-Medium | Effort: Medium
+- [ ] [P] **T007** [Codebase Optimization] 19 functions with nesting depth >4
+  - Priority: P2-Medium | Effort: Medium
+- [ ] [P] **T008** [Security Analysis] 225 MEDIUM severity vulnerabilities found
+  - Priority: P2-Medium | Effort: Medium
+- [ ] [P] **T009** [Test Coverage] 67 tests without assertions
+  - Priority: P2-Medium | Effort: Medium
+- [ ] [P] **T010** [Test Coverage] 6 potential doc-test drift items
+  - Priority: P2-Medium | Effort: Medium
+- [ ] [P] **T011** [Documentation & Governance] README.md missing sections: overview, installation
+  - Priority: P2-Medium | Effort: Small
+- [ ] [P] **T012** [Documentation & Governance] README.md is short (162 lines) — consider expanding
+  - Priority: P2-Medium | Effort: Medium
+- [ ] [P] **T013** [Documentation & Governance] README missing: Has a Table of Contents
+  - Priority: P2-Medium | Effort: Small
+- [ ] [P] **T014** [Documentation & Governance] README missing: Has installation instructions
+  - Priority: P2-Medium | Effort: Small
+- [ ] [P] **T015** [Documentation & Governance] README missing: Has architecture overview or diagram
+  - Priority: P2-Medium | Effort: Small
+- [ ] [P] **T016** [Documentation & Governance] README missing: References /docs directory material
+  - Priority: P2-Medium | Effort: Small
+- [ ] [P] **T017** [Documentation & Governance] AGENTS.md missing sections: tech stack, commands, project structure
+  - Priority: P2-Medium | Effort: Small
+- [ ] [P] **T018** [Documentation & Governance] No LICENSE file found
+  - Priority: P2-Medium | Effort: Medium
+- [ ] [P] **T019** [Architecture & Design Patterns] SRP: 70 modules exceed 500 lines (god modules)
+  - Priority: P2-Medium | Effort: Large
+- [ ] [P] **T020** [Architecture & Design Patterns] SRP: 21 classes have >15 methods
+  - Priority: P2-Medium | Effort: Medium
+- [ ] [P] **T021** [Architecture & Design Patterns] No discernible layer architecture (no domain/service/adapter separation)
+  - Priority: P2-Medium | Effort: Medium
+- [ ] [P] **T022** [Architecture & Design Patterns] Low dependency injection ratio: 3%
+  - Priority: P2-Medium | Effort: Medium
+- [ ] [P] **T023** [Architecture & Design Patterns] 26 Python files at top level — consider package organization
+  - Priority: P2-Medium | Effort: Large
+- [ ] [P] **T024** [Concept Traceability] Low traceability ratio: 0% concepts fully traced
+  - Priority: P4-Enhancement | Effort: Medium
+- [ ] [P] **T025** [Concept Traceability] 6 orphaned concepts (only in one source)
+  - Priority: P4-Enhancement | Effort: Medium
+- [ ] [P] **T026** [Concept Traceability] 375 test functions missing concept markers
+  - Priority: P4-Enhancement | Effort: Small
+- [ ] [P] **T027** [Concept Traceability] 142 significant functions (>10 lines) missing concept markers in docstrings
+  - Priority: P4-Enhancement | Effort: Small
+- [ ] [P] **T028** [Linting & Formatting] Total lint findings: 3 (high/error: 0, medium/warning: 2, low: 1)
+  - Priority: P4-Enhancement | Effort: Medium
+- [ ] [P] **T029** [Pre-Commit Compliance] 2 hook(s) may be outdated: ruff-pre-commit, uv-pre-commit
+  - Priority: P2-Medium | Effort: Small
+- [ ] [P] **T030** [UI/UX Quality] Failed heuristic 'match_real_world': Help text in CLI arguments: False
+  - Priority: P4-Enhancement | Effort: Medium
+- [ ] [P] **T031** [Version Sync Analysis] Found 2 file(s) with version '0.2.0' that are NOT tracked in .bumpversion.cfg:
+  - Priority: P2-Medium | Effort: Small
+- [ ] [P] **T032** [Version Sync Analysis]   - .specify/reports/results.json
+  - Priority: P2-Medium | Effort: Medium
+- [ ] [P] **T033** [Version Sync Analysis]   - .specify/reports/code_enhancement_report.md
+  - Priority: P2-Medium | Effort: Medium
+- [ ] [P] **T034** [Pytest Quality] 5 test files exceed 500 lines — split into focused modules
+  - Priority: P2-Medium | Effort: Large
+- [ ] [P] **T035** [Pytest Quality] 4 test files have >30 tests — too dense
+  - Priority: P2-Medium | Effort: Medium
+- [ ] [P] **T036** [Pytest Quality] Test directory lacks subdirectory organization (consider unit/, integration/, e2
+  - Priority: P2-Medium | Effort: Medium
+- [ ] [P] **T037** [Pytest Quality] Missing conftest.py for shared fixtures
+  - Priority: P2-Medium | Effort: Small
+- [ ] [P] **T038** [Pytest Quality] No shared fixtures in conftest.py
+  - Priority: P2-Medium | Effort: Medium
+- [ ] [P] **T039** [Pytest Quality] 67 tests have no assertions
+  - Priority: P2-Medium | Effort: Medium
+- [ ] [P] **T040** [Pytest Quality] 33 tests use weak assertions (assert result is not None, assert True, etc.)
+  - Priority: P2-Medium | Effort: Medium
+- [ ] [P] **T041** [Environment Variables] Partial env var documentation: 50% coverage
+  - Priority: P2-Medium | Effort: Medium
+- [ ] [P] **T042** [Environment Variables] Undocumented env vars: AGENT_LOG_FILE, AGENT_THEME
+  - Priority: P2-Medium | Effort: Medium
+- [ ] [P] **T043** [Environment Variables] No .env.example file — create one for developer onboarding
+  - Priority: P2-Medium | Effort: Medium

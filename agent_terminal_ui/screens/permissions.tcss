@@ -1,0 +1,40 @@
+/* Permissions Screen Styles
+ *
+ * Concept: AU-018 (Tool Permissions Screen)
+ */
+
+#permissions-container {
+    width: 100%;
+    height: 100%;
+    padding: 2;
+    background: $background;
+}
+
+#permissions-title {
+    height: 1;
+    text-style: bold;
+    text-align: center;
+    margin: 0 0 1 0;
+}
+
+#permissions-help {
+    height: auto;
+    text-align: center;
+    margin: 0 0 2 0;
+}
+
+#permissions-list {
+    height: 1fr;
+    padding: 1;
+}
+
+#permissions-feedback {
+    height: 3;
+    dock: bottom;
+    padding: 1;
+    border-top: solid $primary 30%;
+}
+
+#permissions-feedback Input {
+    width: 100%;
+}

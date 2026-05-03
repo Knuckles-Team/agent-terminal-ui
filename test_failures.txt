@@ -1,0 +1,24 @@
+FAILED tests/test_app_workers.py::test_on_agent_event_received_tool_call_delegated
+FAILED tests/test_app_workers.py::test_turn_end_triggers_pending_tool_approval
+FAILED tests/test_app_workers.py::test_turn_end_processes_queued_message - As...
+FAILED tests/test_app_workers.py::test_switch_theme_updates_mode - AttributeE...
+FAILED tests/test_commands.py::TestClearCommand::test_cmd_clear - AssertionEr...
+FAILED tests/test_enhanced_features.py::TestKeyboardShortcuts::test_help_shortcut
+FAILED tests/test_enhanced_features.py::TestKeyboardShortcuts::test_theme_switch_shortcut
+FAILED tests/test_enhanced_features.py::TestKeyboardShortcuts::test_toggle_sidebar_ctrl_t
+FAILED tests/test_enhanced_features.py::TestHelpOverlay::test_help_overlay_shows_shortcuts
+FAILED tests/test_enhanced_features.py::TestHelpOverlay::test_help_overlay_shows_commands
+FAILED tests/test_enhanced_features.py::TestHelpOverlay::test_help_overlay_close_button
+FAILED tests/test_enhanced_features.py::TestHelpOverlay::test_help_overlay_escape_key
+FAILED tests/test_enhanced_features.py::TestErrorMessages::test_error_message_human_friendly
+FAILED tests/test_enhanced_features.py::TestErrorMessages::test_interrupt_message_human_friendly
+FAILED tests/test_enhanced_features.py::TestWelcomeMessageEnhancements::test_welcome_message_includes_help_hint
+FAILED tests/test_enhanced_features.py::TestWelcomeMessageEnhancements::test_welcome_message_includes_command_hint
+FAILED tests/test_enhanced_features.py::TestThemeSwitching::test_switch_theme_to_valid_theme
+FAILED tests/test_enhanced_features.py::TestThemeSwitching::test_switch_theme_to_invalid_theme
+FAILED tests/test_enhanced_features.py::TestThemeSwitching::test_switch_theme_cycles_themes
+FAILED tests/test_enhanced_features.py::TestCSSEnhancements::test_css_uses_standard_textual_variables
+FAILED tests/test_enhanced_features.py::TestAppIntegration::test_app_initializes_with_default_theme
+FAILED tests/test_enhanced_features.py::TestAppIntegration::test_app_initializes_with_custom_theme
+FAILED tests/test_enhanced_features.py::TestAppIntegration::test_app_theme_switching_updates_ui
+FAILED tests/test_enhanced_features.py::TestAppIntegration::test_app_help_overlay_integration

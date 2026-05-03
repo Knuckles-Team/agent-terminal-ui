@@ -35,3 +35,7 @@
 - **Networking**: httpx.
 - **Type Checking**: ty (Astral).
 - **Linting**: Ruff, Mypy.
+
+
+## First Principles Architecture
+- Four new foundational concepts (AU-024 through AU-027) that rewire the routing, dispatch, and feedback layers from first principles.
