@@ -61,14 +61,14 @@ class ExitConfirmScreen(ModalScreen[bool]):
     DEFAULT_CSS = """
     ExitConfirmScreen {
         align: center middle;
+        background: $background 50%;
     }
 
     #dialog {
-        width: auto;
-        max-width: 90;
-        height: auto;
-        padding: 2;
-        border: round $primary;
+        width: 40;
+        height: 9;
+        padding: 1 2;
+        border: tall $surface;
         background: $surface;
     }
 
@@ -76,7 +76,7 @@ class ExitConfirmScreen(ModalScreen[bool]):
         margin-bottom: 1;
         text-align: center;
         text-style: bold;
-        color: $primary;
+        color: $foreground;
     }
 
     #buttons {
@@ -87,21 +87,21 @@ class ExitConfirmScreen(ModalScreen[bool]):
         margin: 0 1;
         padding: 1 2;
         text-style: bold;
-        background: $primary;
-        color: $background;
+        background: $surface;
+        color: $foreground;
         border: solid $primary;
     }
 
     ClickableLabel#yes {
         background: $error;
         border: solid $error;
-        color: #ffffff;
+        color: $background;
     }
 
     ClickableLabel#no {
         background: $success;
         border: solid $success;
-        color: #000000;
+        color: $background;
     }
 
     ClickableLabel:hover {

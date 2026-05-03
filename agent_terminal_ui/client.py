@@ -249,6 +249,23 @@ class AgentClient:
             logger.error(f"Failed to fetch model registry: {e}")
             return {"models": [], "default_id": None}
 
+    async def list_tools(self) -> list[dict[str, Any]]:
+        """Fetch the loaded skills and tools from the backend Knowledge Graph.
+
+        Hits the core ``GET /tools`` endpoint exposed by ``agent_utilities.server``.
+        Returns a list of dicts representing Tool and Skill nodes.
+        """
+        try:
+            response = await self._http_client.get(f"{self.base_url}/tools")
+            response.raise_for_status()
+            data = response.json()
+            if isinstance(data, list):
+                return data
+            return []
+        except Exception as e:
+            logger.error(f"Failed to fetch tools registry: {e}")
+            return []
+
     async def get_chat(self, chat_id: str) -> dict[str, Any]:
         """Fetch full history for a specific chat session.
 
@@ -867,6 +884,117 @@ class AgentClient:
         )
         response.raise_for_status()
         return response.json()
+
+    # ─────────────────────────────────────────────────────────────────
+    #  Prompt Management (CONCEPT:KG-002)
+    # ─────────────────────────────────────────────────────────────────
+
+    async def list_prompts(self) -> list[dict[str, Any]]:
+        """List all prompts from the KG.
+
+        CONCEPT:KG-002 — Prompt Management
+        """
+        response = await self._http_client.get(f"{self.base_url}/api/enhanced/prompts")
+        response.raise_for_status()
+        return response.json()
+
+    async def get_prompt(self, prompt_id: str) -> dict[str, Any]:
+        """Get a single prompt by ID.
+
+        CONCEPT:KG-002 — Prompt Management
+        """
+        response = await self._http_client.get(
+            f"{self.base_url}/api/enhanced/prompts/{prompt_id}"
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def create_prompt(
+        self, name: str, content: str, description: str = ""
+    ) -> dict[str, Any]:
+        """Create a new prompt in the KG.
+
+        CONCEPT:KG-002 — Prompt Management
+        """
+        response = await self._http_client.post(
+            f"{self.base_url}/api/enhanced/prompts",
+            json={"name": name, "content": content, "description": description},
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def update_prompt(self, prompt_id: str, content: str) -> dict[str, Any]:
+        """Update a prompt (creates new version via SUPERSEDES).
+
+        CONCEPT:KG-002 — Prompt Management
+        """
+        response = await self._http_client.put(
+            f"{self.base_url}/api/enhanced/prompts/{prompt_id}",
+            json={"content": content},
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def get_prompt_versions(self, prompt_id: str) -> list[dict[str, Any]]:
+        """Get version history for a prompt.
+
+        CONCEPT:KG-002 — Prompt Management
+        """
+        response = await self._http_client.get(
+            f"{self.base_url}/api/enhanced/prompts/{prompt_id}/versions"
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def rollback_prompt(self, prompt_id: str, version_id: str) -> dict[str, Any]:
+        """Rollback a prompt to a previous version.
+
+        CONCEPT:KG-002 — Prompt Management (AHE Rollback)
+        """
+        response = await self._http_client.post(
+            f"{self.base_url}/api/enhanced/prompts/{prompt_id}/rollback/{version_id}"
+        )
+        response.raise_for_status()
+        return response.json()
+
+    # ─────────────────────────────────────────────────────────────────
+    #  Granular Resource Queries (CONCEPT:KG-003)
+    # ─────────────────────────────────────────────────────────────────
+
+    async def list_skills_only(self) -> list[dict[str, Any]]:
+        """List skills only (no MCP tools).
+
+        CONCEPT:KG-003 — Granular Resource Queries
+        """
+        response = await self._http_client.get(f"{self.base_url}/api/enhanced/skills")
+        response.raise_for_status()
+        return response.json()
+
+    async def list_tools_only(self) -> list[dict[str, Any]]:
+        """List MCP tools only (no skills).
+
+        CONCEPT:KG-003 — Granular Resource Queries
+        """
+        response = await self._http_client.get(f"{self.base_url}/api/enhanced/tools")
+        response.raise_for_status()
+        return response.json()
+
+    async def toggle_resource(self, resource_id: str) -> dict[str, Any]:
+        """Toggle enabled/disabled on any skill or tool.
+
+        CONCEPT:KG-003 — Granular Resource Queries
+        """
+        # Try skills first, then tools
+        for resource_type in ("skills", "tools"):
+            try:
+                response = await self._http_client.post(
+                    f"{self.base_url}/api/enhanced/{resource_type}/{resource_id}/toggle"
+                )
+                if response.status_code == 200:
+                    return response.json()
+            except Exception:
+                continue  # nosec B112
+        raise ValueError(f"Resource {resource_id} not found")
 
     async def close(self) -> None:
         """Close the client."""

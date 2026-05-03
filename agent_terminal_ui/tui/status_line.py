@@ -2,12 +2,10 @@
 """Status line component for the terminal UI.
 
 Displays session metadata such as the current interaction mode,
-active model information, token usage, and a thinking indicator
-following modern terminal UI design principles:
-- Minimal aesthetics: No powerline separators or emojis
-- Semantic colors: State communication through color
-- Clear hierarchy: Important information prominent
-- Calm design: Focus on content over decoration
+active model information, token usage, and a thinking indicator.
+Uses Textual design tokens for consistent theming.
+
+Concept: AU-018 (TUI Status Line)
 """
 
 from textual.app import ComposeResult
@@ -16,57 +14,86 @@ from textual.widgets import Static
 
 
 class StatusLine(Horizontal):
-    """Bottom status line for the Agent Terminal UI with minimal design.
+    """Bottom status line for the Agent Terminal UI.
 
     Maintains visual indicators for the current application state,
     including agent processing status and configured operational mode,
-    using restraint principles and semantic colors.
+    using Textual design tokens for theme consistency.
+    """
+
+    DEFAULT_CSS = """
+    StatusLine {
+        dock: bottom;
+        height: 1;
+        margin: 0;
+        padding: 0;
+        background: $surface;
+        border-top: solid $primary 20%;
+    }
+
+    StatusLine Static {
+        padding: 0 1;
+    }
+
+    #status-mode {
+        color: $primary;
+        text-style: bold;
+    }
+
+    #status-model {
+        color: $text-muted;
+    }
+
+    #status-tokens {
+        color: $text-muted;
+    }
+
+    #status-thinking {
+        color: $warning;
+    }
     """
 
     def compose(self) -> ComposeResult:
-        """Construct the status line components with minimal styling.
+        """Construct the status line components.
 
         Returns:
-            A Textual ComposeResult containing mode, model, and token widgets
-            with semantic colors and clear hierarchy.
+            A Textual ComposeResult containing mode, model, and token widgets.
         """
-        # Mode segment (semantic color based on mode)
-        yield Static("[bold]plan[/bold]", id="status-mode", markup=True)
+        # Mode segment
+        yield Static("[bold]ask[/bold]", id="status-mode", markup=True)
 
-        # Separator (simple vertical bar)
-        yield Static(" | ", id="status-separator-1", markup=True)
+        # Separator
+        yield Static(" │ ", id="status-separator-1", markup=True)
 
         # Thinking indicator (hidden by default)
         yield Static("", id="status-thinking", markup=True)
 
-        # Model segment (muted color)
-        yield Static("[dim]gpt-5.2[/dim]", id="status-model", markup=True)
+        # Model segment
+        yield Static("[dim]model[/dim]", id="status-model", markup=True)
 
         # Separator
-        yield Static(" | ", id="status-separator-2", markup=True)
+        yield Static(" │ ", id="status-separator-2", markup=True)
 
-        # Token segment (muted color)
-        yield Static("[dim]12234 tokens[/dim]", id="status-tokens", markup=True)
+        # Token segment
+        yield Static("[dim]0 tokens[/dim]", id="status-tokens", markup=True)
 
     def set_mode(self, mode: str) -> None:
-        """Update the displayed operational mode with semantic styling.
+        """Update the displayed operational mode.
 
         Args:
             mode: The name of the new mode (e.g., 'plan', 'code', 'chat').
-
         """
-        # Display mode with semantic color
         mode_widget = self.query_one("#status-mode", Static)
 
-        # Use semantic colors based on mode
+        # Use design token colors based on mode
         if mode == "plan":
-            mode_widget.update("[bold #cba6f7]plan[/bold #cba6f7]")
+            mode_widget.update(f"[$primary]{mode}[/$primary]")
         elif mode == "code":
-            mode_widget.update("[bold #89b4fa]code[/bold #89b4fa]")
+            mode_widget.update(f"[$secondary]{mode}[/$secondary]")
         elif mode in ("chat", "ask"):
-            mode_widget.update("[bold #a6e3a1]chat[/bold #a6e3a1]")
+            mode_widget.update(f"[$success]{mode}[/$success]")
         elif mode == "build":
-            mode_widget.update("[bold #fab387]build[/bold #fab387]")
+            mode_widget.update(f"[$warning]{mode}[/$warning]")
         else:
             mode_widget.update(f"[bold]{mode}[/bold]")
 
@@ -75,12 +102,10 @@ class StatusLine(Horizontal):
 
         Args:
             is_thinking: Whether the agent is currently processing a request.
-
         """
         thinking_widget = self.query_one("#status-thinking", Static)
         if is_thinking:
-            # Minimal thinking indicator
-            thinking_widget.update("[bold #f38ba8] processing...[/bold #f38ba8]")
+            thinking_widget.update("[$warning]⠋ processing...[/$warning]")
         else:
             thinking_widget.update("")
 
@@ -89,7 +114,6 @@ class StatusLine(Horizontal):
 
         Args:
             usage: A dictionary containing 'total_tokens' and 'estimated_cost_usd'.
-
         """
         tokens = usage.get("total_tokens", 0)
         cost = usage.get("estimated_cost_usd", 0.0)
@@ -101,7 +125,6 @@ class StatusLine(Horizontal):
         else:
             tokens_str = str(tokens)
 
-        # Minimal display with muted color
         tokens_widget.update(f"[dim]{tokens_str} tokens (${cost:.4f})[/dim]")
 
     def update_model(self, model_name: str) -> None:
@@ -109,7 +132,6 @@ class StatusLine(Horizontal):
 
         Args:
             model_name: The name of the current model.
-
         """
         model_widget = self.query_one("#status-model", Static)
         # Clean up model name for display

@@ -18,7 +18,7 @@ The backend uses **unified specialist discovery** (`discover_all_specialists()`)
 | `app.py` | Main Textual application, screen composition, message queuing, exit confirmation |
 | `client.py` | AG-UI + ACP protocol clients (SSE parsing, event dispatch) |
 | `commands.py` | Slash command processor with comprehensive command set |
-| `terminal_ui.py` | CLI entry point for the `agent-tui` command |
+| `terminal_ui.py` | CLI entry point for the `agent-terminal-ui` command |
 | `widgets/workflow.py` | Dynamic workflow sidebar with phase labels and completion markers |
 | `tui/input_text_area.py` | Multi-line input widget with slash-command suggestion overlay |
 | `tui/tool_display/` | Extensible tool formatter system (registry + per-tool formatters) |

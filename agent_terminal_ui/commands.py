@@ -37,6 +37,7 @@ class CommandProcessor:
 
         """
         self.app = app
+        self._log_widget = None  # cached reference
         self.commands: dict[str, Callable[..., Awaitable[None]]] = {
             "help": self.cmd_help,
             "clear": self.cmd_clear,
@@ -83,6 +84,9 @@ class CommandProcessor:
             "cron": self.cmd_cron,
             "config": self.cmd_config,
             "logs": self.cmd_logs,
+            "prompts": self.cmd_prompts,
+            "skills": self.cmd_skills_only,
+            "tools": self.cmd_tools_only,
         }
         # Define canonical command names (aliases map to these)
         self.canonical_commands: dict[str, str] = {
@@ -135,11 +139,11 @@ class CommandProcessor:
             doc = self.commands[cmd].__doc__ or "No description"
             help_text += f"- [bold]/{cmd}[/bold]: {doc}\n"
 
-        self.app.query_one("#event-log").write(help_text)
+        await self.app.query_one("Conversation").add_info(help_text)
 
     async def cmd_clear(self, args: str) -> None:
         """Clear the current event log."""
-        self.app.query_one("#event-log").clear()
+        await self.app.query_one("Conversation").clear_conversation()
 
     async def cmd_exit(self, args: str) -> None:
         """Exit the terminal application (also accepts 'quit' as alias)."""
@@ -213,7 +217,7 @@ class CommandProcessor:
             self.app._pending_parts.append({"image": img_b64, "media_type": media_type})
 
             self.app.notify(f"Attached image: {path.name}", severity="information")
-            self.app.query_one("#event-log").write(
+            await self.app.query_one("Conversation").add_info(
                 f"[dim]Attached image: {path.name}[/dim]"
             )
         except Exception as e:
@@ -242,7 +246,7 @@ class CommandProcessor:
 
         self.app.query_one(StatusLine).set_mode(display_mode)
         self.app.notify(f"Switched to [{display_mode}] mode", severity="information")
-        self.app.query_one("#event-log").write(
+        await self.app.query_one("Conversation").add_info(
             f"[dim]Switched to {display_mode} mode.[/dim]"
         )
 
@@ -291,7 +295,7 @@ class CommandProcessor:
                 "[yellow]Usage statistics not yet available for this session.[/yellow]"
             )
 
-        self.app.query_one("#event-log").write(stats)
+        await self.app.query_one("Conversation").add_info(stats)
 
     async def cmd_model(self, args: str) -> None:
         """List, select, or inspect configured models.
@@ -339,7 +343,7 @@ class CommandProcessor:
         self.app._current_model_id = model_id
         self.app._current_model = model_id
         self.app.notify(f"Switched to model: {model_id}", severity="information")
-        self.app.query_one("#event-log").write(
+        await self.app.query_one("Conversation").add_info(
             f"[dim]Switched to model: {model_id}[/dim]"
         )
 
@@ -355,7 +359,7 @@ class CommandProcessor:
         )
 
         if not models:
-            self.app.query_one("#event-log").write(
+            await self.app.query_one("Conversation").add_info(
                 "[yellow]No models configured on the backend. "
                 "Set MODELS_CONFIG or configure single-model kwargs.[/yellow]"
             )
@@ -390,9 +394,9 @@ class CommandProcessor:
                 cost_str,
             )
 
-        event_log = self.app.query_one("#event-log")
-        event_log.write(table)
-        event_log.write(
+        event_log = self.app.query_one("Conversation")
+        await event_log.add_info(table)
+        await event_log.add_info(
             "[dim]Use `/model set <id>` to switch, `/model show` to inspect.[/dim]"
         )
 
@@ -409,7 +413,7 @@ class CommandProcessor:
         match = next((m for m in models if m.get("id") == active_id), None)
 
         if match is None:
-            self.app.query_one("#event-log").write(
+            await self.app.query_one("Conversation").add_info(
                 "[yellow]No active model. "
                 "Run `/model list` to see what is configured.[/yellow]"
             )
@@ -434,13 +438,13 @@ class CommandProcessor:
             title="Active Model",
             border_style="cyan",
         )
-        self.app.query_one("#event-log").write(panel)
+        await self.app.query_one("Conversation").add_info(panel)
 
     async def _model_set(self, model_id: str) -> None:
         """Select a model id for subsequent turns."""
         model_id = model_id.strip()
         if not model_id:
-            self.app.query_one("#event-log").write(
+            await self.app.query_one("Conversation").add_info(
                 "[yellow]Usage: /model set <id>[/yellow]"
             )
             return
@@ -451,7 +455,7 @@ class CommandProcessor:
 
         if match is None:
             available = ", ".join(m.get("id", "") for m in models) or "<none>"
-            self.app.query_one("#event-log").write(
+            await self.app.query_one("Conversation").add_info(
                 f"[red]Model id '{model_id}' not found.[/red]\n"
                 f"[dim]Available: {available}[/dim]"
             )
@@ -463,7 +467,7 @@ class CommandProcessor:
         # override without code changes elsewhere.
         self.app._current_model = model_id
         self.app.notify(f"Switched to model: {model_id}", severity="information")
-        self.app.query_one("#event-log").write(
+        await self.app.query_one("Conversation").add_info(
             f"[green]Active model set to {model_id}[/green] "
             f"([dim]{match.get('provider')}:{match.get('model_id')}[/dim])"
         )
@@ -502,17 +506,17 @@ class CommandProcessor:
                 logger.info(f"Registered skill command: {skill_id}")
 
             if skills:
-                self.app.query_one("#event-log").write(
+                await self.app.query_one("Conversation").add_info(
                     f"[dim]Registered {len(skills)} skills as slash commands.[/dim]"
                 )
             else:
-                self.app.query_one("#event-log").write(
+                await self.app.query_one("Conversation").add_info(
                     "[yellow]No skills found on backend.[/yellow]"
                 )
         except Exception as e:
             logger.error(f"Failed to register skill commands: {e}")
             with contextlib.suppress(Exception):
-                self.app.query_one("#event-log").write(
+                await self.app.query_one("Conversation").add_info(
                     f"[red]Failed to load skills: {e}[/red]"
                 )
 
@@ -566,7 +570,7 @@ class CommandProcessor:
                 "[dim]Example: /theme tokyo_night[/dim]\n"
             )
 
-            self.app.query_one("#event-log").write(help_text)
+            await self.app.query_one("Conversation").add_info(help_text)
             return
 
         # Switch to the specified theme
@@ -579,7 +583,7 @@ class CommandProcessor:
         queue_enabled = getattr(self.app, "_queue_enabled", True)
 
         if not queue:
-            self.app.query_one("#event-log").write(
+            await self.app.query_one("Conversation").add_info(
                 "[bold blue]Message Queue:[/bold blue]\n[dim]No messages queued[/dim]"
             )
             return
@@ -598,7 +602,7 @@ class CommandProcessor:
             "[dim]/queue:toggle - Enable/disable queueing[/dim]\n"
         )
 
-        self.app.query_one("#event-log").write(status_text)
+        await self.app.query_one("Conversation").add_info(status_text)
 
     async def cmd_queue_clear(self, args: str) -> None:
         """Clear all queued messages. Usage: /queue:clear"""
@@ -606,11 +610,11 @@ class CommandProcessor:
         if queue:
             count = len(queue)
             self.app._user_message_queue.clear()
-            self.app.query_one("#event-log").write(
+            await self.app.query_one("Conversation").add_info(
                 f"[bold yellow]Cleared {count} queued message(s)[/bold yellow]"
             )
         else:
-            self.app.query_one("#event-log").write(
+            await self.app.query_one("Conversation").add_info(
                 "[dim]No queued messages to clear[/dim]"
             )
 
@@ -618,7 +622,7 @@ class CommandProcessor:
         """Toggle message queueing on/off. Usage: /queue:toggle"""
         self.app._queue_enabled = not self.app._queue_enabled
         status = "enabled" if self.app._queue_enabled else "disabled"
-        self.app.query_one("#event-log").write(
+        await self.app.query_one("Conversation").add_info(
             f"[bold green]Message queueing {status}[/bold green]"
         )
 
@@ -695,15 +699,15 @@ class CommandProcessor:
                         | search <query> | review | <prompt>]
         """
         sub, rest = self._parse_subcommand(args)
-        log = self.app.query_one("#event-log")
+        log = self.app.query_one("Conversation")
 
         if sub in ("", "list"):
             try:
                 memories = await self.app._client.list_graph_nodes(node_type="Memory")
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "memory list", exc)
+                await self._write_http_error(log, "memory list", exc)
                 return
-            log.write(self._render_memory_list(memories))
+            await log.add_info(self._render_memory_list(memories))
             return
 
         if sub == "add":
@@ -715,11 +719,11 @@ class CommandProcessor:
                     {"content": rest.strip()}
                 )
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "memory add", exc)
+                await self._write_http_error(log, "memory add", exc)
                 return
             mem_id = created.get("id", "<unknown>")
             self.app.notify(f"Memory created: {mem_id}", severity="information")
-            log.write(f"[green]Memory created:[/green] {mem_id}")
+            await log.add_info(f"[green]Memory created:[/green] {mem_id}")
             return
 
         if sub == "get":
@@ -729,9 +733,9 @@ class CommandProcessor:
             try:
                 memory = await self.app._client.get_memory(rest.strip())
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "memory get", exc)
+                await self._write_http_error(log, "memory get", exc)
                 return
-            log.write(self._render_memory_detail(memory))
+            await log.add_info(self._render_memory_detail(memory))
             return
 
         if sub == "delete":
@@ -742,10 +746,10 @@ class CommandProcessor:
             try:
                 await self.app._client.delete_memory(mem_id)
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "memory delete", exc)
+                await self._write_http_error(log, "memory delete", exc)
                 return
             self.app.notify(f"Memory deleted: {mem_id}", severity="warning")
-            log.write(f"[yellow]Memory deleted:[/yellow] {mem_id}")
+            await log.add_info(f"[yellow]Memory deleted:[/yellow] {mem_id}")
             return
 
         if sub == "search":
@@ -755,9 +759,9 @@ class CommandProcessor:
             try:
                 hits = await self.app._client.search_graph(rest.strip())
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "memory search", exc)
+                await self._write_http_error(log, "memory search", exc)
                 return
-            log.write(self._render_graph_search(rest.strip(), hits))
+            await log.add_info(self._render_graph_search(rest.strip(), hits))
             return
 
         if sub == "review":
@@ -790,15 +794,15 @@ class CommandProcessor:
         Usage: /graph [stats | nodes [type] | search <query> | impact <symbol>]
         """
         sub, rest = self._parse_subcommand(args)
-        log = self.app.query_one("#event-log")
+        log = self.app.query_one("Conversation")
 
         if sub in ("", "stats"):
             try:
                 stats = await self.app._client.get_graph_stats()
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "graph stats", exc)
+                await self._write_http_error(log, "graph stats", exc)
                 return
-            log.write(self._render_graph_stats(stats))
+            await log.add_info(self._render_graph_stats(stats))
             return
 
         if sub == "nodes":
@@ -806,9 +810,9 @@ class CommandProcessor:
             try:
                 nodes = await self.app._client.list_graph_nodes(node_type=node_type)
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "graph nodes", exc)
+                await self._write_http_error(log, "graph nodes", exc)
                 return
-            log.write(self._render_graph_nodes(nodes, node_type))
+            await log.add_info(self._render_graph_nodes(nodes, node_type))
             return
 
         if sub == "search":
@@ -818,9 +822,9 @@ class CommandProcessor:
             try:
                 hits = await self.app._client.search_graph(rest.strip())
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "graph search", exc)
+                await self._write_http_error(log, "graph search", exc)
                 return
-            log.write(self._render_graph_search(rest.strip(), hits))
+            await log.add_info(self._render_graph_search(rest.strip(), hits))
             return
 
         if sub == "impact":
@@ -831,9 +835,9 @@ class CommandProcessor:
             try:
                 impacts = await self.app._client.get_graph_impact(symbol)
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "graph impact", exc)
+                await self._write_http_error(log, "graph impact", exc)
                 return
-            log.write(self._render_graph_impact(symbol, impacts))
+            await log.add_info(self._render_graph_impact(symbol, impacts))
             return
 
         self.app.notify(f"Unknown /graph subcommand: {sub}", severity="warning")
@@ -845,15 +849,15 @@ class CommandProcessor:
                     | article <id> | ingest <source> <kb_name>]
         """
         sub, rest = self._parse_subcommand(args)
-        log = self.app.query_one("#event-log")
+        log = self.app.query_one("Conversation")
 
         if sub in ("", "list"):
             try:
                 kbs = await self.app._client.list_kbs()
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "kb list", exc)
+                await self._write_http_error(log, "kb list", exc)
                 return
-            log.write(self._render_kb_list(kbs))
+            await log.add_info(self._render_kb_list(kbs))
             return
 
         if sub == "search":
@@ -868,9 +872,9 @@ class CommandProcessor:
             try:
                 hits = await self.app._client.search_kb(query, kb_id=kb_id)
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "kb search", exc)
+                await self._write_http_error(log, "kb search", exc)
                 return
-            log.write(self._render_kb_search(query, hits, kb_id))
+            await log.add_info(self._render_kb_search(query, hits, kb_id))
             return
 
         if sub == "article":
@@ -881,9 +885,9 @@ class CommandProcessor:
             try:
                 article = await self.app._client.get_kb_article(article_id)
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "kb article", exc)
+                await self._write_http_error(log, "kb article", exc)
                 return
-            log.write(self._render_kb_article(article))
+            await log.add_info(self._render_kb_article(article))
             return
 
         if sub == "ingest":
@@ -897,13 +901,13 @@ class CommandProcessor:
             try:
                 result = await self.app._client.ingest_kb(source, kb_name)
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "kb ingest", exc)
+                await self._write_http_error(log, "kb ingest", exc)
                 return
             status = result.get("status", "ok")
             self.app.notify(
                 f"Ingestion started: {kb_name} ({status})", severity="information"
             )
-            log.write(
+            await log.add_info(
                 f"[green]Ingested[/green] [bold]{source}[/bold] "
                 f"into [cyan]{kb_name}[/cyan] (status: {status})"
             )
@@ -917,36 +921,36 @@ class CommandProcessor:
         Usage: /sdd [constitution | specs | plans | tasks [plan_id]]
         """
         sub, rest = self._parse_subcommand(args)
-        log = self.app.query_one("#event-log")
+        log = self.app.query_one("Conversation")
 
         if sub == "constitution":
             try:
                 constitution = await self.app._client.get_constitution()
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "sdd constitution", exc)
+                await self._write_http_error(log, "sdd constitution", exc)
                 return
             if not constitution:
-                log.write("[yellow]No constitution defined yet.[/yellow]")
+                await log.add_info("[yellow]No constitution defined yet.[/yellow]")
                 return
-            log.write(self._render_constitution(constitution))
+            await log.add_info(self._render_constitution(constitution))
             return
 
         if sub == "specs":
             try:
                 specs = await self.app._client.list_specs()
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "sdd specs", exc)
+                await self._write_http_error(log, "sdd specs", exc)
                 return
-            log.write(self._render_specs(specs))
+            await log.add_info(self._render_specs(specs))
             return
 
         if sub == "plans":
             try:
                 plans = await self.app._client.list_plans()
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "sdd plans", exc)
+                await self._write_http_error(log, "sdd plans", exc)
                 return
-            log.write(self._render_plans(plans))
+            await log.add_info(self._render_plans(plans))
             return
 
         if sub == "tasks":
@@ -954,12 +958,12 @@ class CommandProcessor:
             try:
                 tasks = await self.app._client.get_tasks(plan_id=plan_id)
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "sdd tasks", exc)
+                await self._write_http_error(log, "sdd tasks", exc)
                 return
             # Server may wrap tasks in {"tasks": [...]} or return a list directly.
             if isinstance(tasks, dict) and "tasks" in tasks:
                 tasks = tasks["tasks"]
-            log.write(self._render_tasks(tasks, plan_id))
+            await log.add_info(self._render_tasks(tasks, plan_id))
             return
 
         self.app.notify(
@@ -969,10 +973,10 @@ class CommandProcessor:
 
     async def cmd_impact(self, args: str) -> None:
         """Inspect topological impact for a symbol. Usage: /impact <symbol>"""
-        log = self.app.query_one("#event-log")
+        log = self.app.query_one("Conversation")
         query = args.strip()
         if not query or query in ("-h", "--help"):
-            log.write(
+            await log.add_info(
                 "[bold blue]/impact <symbol>[/bold blue]\n"
                 "[dim]Example:[/dim] /impact pkg.module.func\n"
                 "Shows nodes impacted by a change to <symbol>."
@@ -981,30 +985,30 @@ class CommandProcessor:
         try:
             impacts = await self.app._client.get_impact(query)
         except httpx.HTTPStatusError as exc:
-            self._write_http_error(log, "impact", exc)
+            await self._write_http_error(log, "impact", exc)
             return
         except Exception as exc:
-            log.write(f"[red]Error (impact): {exc}[/red]")
+            await log.add_info(f"[red]Error (impact): {exc}[/red]")
             return
-        log.write(self._render_impact_table(query, impacts))
+        await log.add_info(self._render_impact_table(query, impacts))
 
     async def cmd_mcp_reload(self, args: str) -> None:
         """Hot-reload the backend MCP server configuration. Usage: /mcp:reload"""
-        log = self.app.query_one("#event-log")
+        log = self.app.query_one("Conversation")
         try:
             result = await self.app._client.reload_mcp()
         except httpx.HTTPStatusError as exc:
-            self._write_http_error(log, "mcp:reload", exc)
+            await self._write_http_error(log, "mcp:reload", exc)
             return
         except Exception as exc:
-            log.write(f"[red]Error (mcp:reload): {exc}[/red]")
+            await log.add_info(f"[red]Error (mcp:reload): {exc}[/red]")
             return
 
         status = result.get("status", "unknown")
         if status == "error":
             error = result.get("error", "unknown error")
             self.app.notify(f"MCP reload failed: {error}", severity="error")
-            log.write(f"[red]MCP reload failed:[/red] {error}")
+            await log.add_info(f"[red]MCP reload failed:[/red] {error}")
             return
 
         agent_count = result.get("agents", 0)
@@ -1013,11 +1017,11 @@ class CommandProcessor:
             f"MCP config reloaded. {agent_count} servers active ({tool_count} tools)."
         )
         self.app.notify(message, severity="information")
-        log.write(f"[green]{message}[/green]")
+        await log.add_info(f"[green]{message}[/green]")
 
     async def cmd_codemap(self, args: str) -> None:
         """Generate a codebase codemap. Usage: /codemap <prompt>"""
-        log = self.app.query_one("#event-log")
+        log = self.app.query_one("Conversation")
         prompt = args.strip()
         if not prompt:
             self.app.notify("Usage: /codemap <prompt>", severity="warning")
@@ -1025,15 +1029,15 @@ class CommandProcessor:
         try:
             result = await self.app._client.generate_codemap(prompt)
         except httpx.HTTPStatusError as exc:
-            self._write_http_error(log, "codemap", exc)
+            await self._write_http_error(log, "codemap", exc)
             return
         except Exception as exc:
-            log.write(f"[red]Error (codemap): {exc}[/red]")
+            await log.add_info(f"[red]Error (codemap): {exc}[/red]")
             return
 
         if result.get("status") == "error":
             error = result.get("message", "unknown error")
-            log.write(f"[red]Codemap generation failed:[/red] {error}")
+            await log.add_info(f"[red]Codemap generation failed:[/red] {error}")
             return
 
         artifact = result.get("artifact") or {}
@@ -1042,14 +1046,16 @@ class CommandProcessor:
 
         codemap_id = result.get("codemap_id") or artifact.get("id", "")
         header = f"[bold cyan]Codemap[/bold cyan] [dim]{codemap_id}[/dim]"
-        log.write(header)
+        await log.add_info(header)
 
         if mermaid:
-            log.write(Syntax(mermaid, "mermaid", word_wrap=True))
+            await log.add_info(Syntax(mermaid, "mermaid", word_wrap=True))
         if markdown:
-            log.write(Panel(markdown, title="Codemap (markdown)"))
+            await log.add_info(Panel(markdown, title="Codemap (markdown)"))
         if not mermaid and not markdown:
-            log.write("[yellow]Codemap returned no renderable content.[/yellow]")
+            await log.add_info(
+                "[yellow]Codemap returned no renderable content.[/yellow]"
+            )
 
     async def cmd_resources(self, args: str) -> None:
         """List or spawn callable resources.
@@ -1057,18 +1063,18 @@ class CommandProcessor:
         Usage: /resources [list | spawn <json_spec>]
         """
         sub, rest = self._parse_subcommand(args)
-        log = self.app.query_one("#event-log")
+        log = self.app.query_one("Conversation")
 
         if sub in ("", "list"):
             try:
                 resources = await self.app._client.list_resources()
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "resources list", exc)
+                await self._write_http_error(log, "resources list", exc)
                 return
             except Exception as exc:
-                log.write(f"[red]Error (resources list): {exc}[/red]")
+                await log.add_info(f"[red]Error (resources list): {exc}[/red]")
                 return
-            log.write(self._render_resources_table(resources))
+            await log.add_info(self._render_resources_table(resources))
             return
 
         if sub == "spawn":
@@ -1083,7 +1089,7 @@ class CommandProcessor:
                 self.app.notify(
                     f"Invalid JSON for /resources spawn: {exc}", severity="error"
                 )
-                log.write(f"[red]Invalid JSON for spawn spec:[/red] {exc}")
+                await log.add_info(f"[red]Invalid JSON for spawn spec:[/red] {exc}")
                 return
             if not isinstance(spec, dict):
                 self.app.notify("Spawn spec must be a JSON object", severity="error")
@@ -1091,14 +1097,14 @@ class CommandProcessor:
             try:
                 spawned = await self.app._client.spawn_resource(spec)
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "resources spawn", exc)
+                await self._write_http_error(log, "resources spawn", exc)
                 return
             except Exception as exc:
-                log.write(f"[red]Error (resources spawn): {exc}[/red]")
+                await log.add_info(f"[red]Error (resources spawn): {exc}[/red]")
                 return
             spawned_id = spawned.get("id") or spawned.get("name", "<unknown>")
             self.app.notify(f"Spawned resource: {spawned_id}", severity="information")
-            log.write(f"[green]Spawned resource:[/green] {spawned_id}")
+            await log.add_info(f"[green]Spawned resource:[/green] {spawned_id}")
             return
 
         self.app.notify(f"Unknown /resources subcommand: {sub}", severity="warning")
@@ -1109,18 +1115,18 @@ class CommandProcessor:
         Usage: /pipeline [status | run [phase]]
         """
         sub, rest = self._parse_subcommand(args)
-        log = self.app.query_one("#event-log")
+        log = self.app.query_one("Conversation")
 
         if sub in ("", "status"):
             try:
                 status = await self.app._client.get_pipeline_status()
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "pipeline status", exc)
+                await self._write_http_error(log, "pipeline status", exc)
                 return
             except Exception as exc:
-                log.write(f"[red]Error (pipeline status): {exc}[/red]")
+                await log.add_info(f"[red]Error (pipeline status): {exc}[/red]")
                 return
-            log.write(self._render_pipeline_status(status))
+            await log.add_info(self._render_pipeline_status(status))
             return
 
         if sub == "run":
@@ -1130,13 +1136,13 @@ class CommandProcessor:
             try:
                 result = await self.app._client.trigger_pipeline(phase)
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "pipeline run", exc)
+                await self._write_http_error(log, "pipeline run", exc)
                 return
             except Exception as exc:
-                log.write(f"[red]Error (pipeline run): {exc}[/red]")
+                await log.add_info(f"[red]Error (pipeline run): {exc}[/red]")
                 return
             status_str = result.get("status", "unknown")
-            log.write(
+            await log.add_info(
                 f"[green]Pipeline triggered[/green] "
                 f"[bold]{label}[/bold] (status: {status_str})"
             )
@@ -1150,18 +1156,18 @@ class CommandProcessor:
         Usage: /maintenance [status | run [operation]]
         """
         sub, rest = self._parse_subcommand(args)
-        log = self.app.query_one("#event-log")
+        log = self.app.query_one("Conversation")
 
         if sub in ("", "status"):
             try:
                 status = await self.app._client.get_maintenance_status()
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "maintenance status", exc)
+                await self._write_http_error(log, "maintenance status", exc)
                 return
             except Exception as exc:
-                log.write(f"[red]Error (maintenance status): {exc}[/red]")
+                await log.add_info(f"[red]Error (maintenance status): {exc}[/red]")
                 return
-            log.write(self._render_maintenance_status(status))
+            await log.add_info(self._render_maintenance_status(status))
             return
 
         if sub == "run":
@@ -1171,13 +1177,13 @@ class CommandProcessor:
             try:
                 result = await self.app._client.trigger_maintenance(operation)
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "maintenance run", exc)
+                await self._write_http_error(log, "maintenance run", exc)
                 return
             except Exception as exc:
-                log.write(f"[red]Error (maintenance run): {exc}[/red]")
+                await log.add_info(f"[red]Error (maintenance run): {exc}[/red]")
                 return
             status_str = result.get("status", "unknown")
-            log.write(
+            await log.add_info(
                 f"[green]Maintenance triggered[/green] "
                 f"[bold]{label}[/bold] (status: {status_str})"
             )
@@ -1191,18 +1197,18 @@ class CommandProcessor:
         Usage: /cron [calendar | logs [limit]]
         """
         sub, rest = self._parse_subcommand(args)
-        log = self.app.query_one("#event-log")
+        log = self.app.query_one("Conversation")
 
         if sub in ("", "calendar"):
             try:
                 tasks = await self.app._client.get_cron_calendar()
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "cron calendar", exc)
+                await self._write_http_error(log, "cron calendar", exc)
                 return
             except Exception as exc:
-                log.write(f"[red]Error (cron calendar): {exc}[/red]")
+                await log.add_info(f"[red]Error (cron calendar): {exc}[/red]")
                 return
-            log.write(self._render_cron_calendar(tasks))
+            await log.add_info(self._render_cron_calendar(tasks))
             return
 
         if sub == "logs":
@@ -1210,12 +1216,12 @@ class CommandProcessor:
             try:
                 logs = await self.app._client.get_cron_logs()
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "cron logs", exc)
+                await self._write_http_error(log, "cron logs", exc)
                 return
             except Exception as exc:
-                log.write(f"[red]Error (cron logs): {exc}[/red]")
+                await log.add_info(f"[red]Error (cron logs): {exc}[/red]")
                 return
-            log.write(self._render_cron_logs(logs[:limit], limit))
+            await log.add_info(self._render_cron_logs(logs[:limit], limit))
             return
 
         self.app.notify(f"Unknown /cron subcommand: {sub}", severity="warning")
@@ -1226,18 +1232,18 @@ class CommandProcessor:
         Usage: /config [show | set <key> <value>]
         """
         sub, rest = self._parse_subcommand(args)
-        log = self.app.query_one("#event-log")
+        log = self.app.query_one("Conversation")
 
         if sub in ("", "show"):
             try:
                 config = await self.app._client.get_backend_config()
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "config show", exc)
+                await self._write_http_error(log, "config show", exc)
                 return
             except Exception as exc:
-                log.write(f"[red]Error (config show): {exc}[/red]")
+                await log.add_info(f"[red]Error (config show): {exc}[/red]")
                 return
-            log.write(self._render_backend_config(config))
+            await log.add_info(self._render_backend_config(config))
             return
 
         if sub == "set":
@@ -1249,10 +1255,10 @@ class CommandProcessor:
             try:
                 result = await self.app._client.update_backend_config(payload)
             except httpx.HTTPStatusError as exc:
-                self._write_http_error(log, "config set", exc)
+                await self._write_http_error(log, "config set", exc)
                 return
             except Exception as exc:
-                log.write(f"[red]Error (config set): {exc}[/red]")
+                await log.add_info(f"[red]Error (config set): {exc}[/red]")
                 return
             status = result.get("status", "ok")
             message = result.get("message", "")
@@ -1261,7 +1267,7 @@ class CommandProcessor:
             summary = f"[green]Config updated[/green] [bold]{key}[/bold]"
             if message:
                 summary += f" [dim]{message}[/dim]"
-            log.write(summary)
+            await log.add_info(summary)
             return
 
         self.app.notify("Usage: /config [show | set <key> <value>]", severity="warning")
@@ -1322,7 +1328,7 @@ class CommandProcessor:
             i += 1
         return " ".join(query_tokens).strip(), kb_id
 
-    def _write_http_error(
+    async def _write_http_error(
         self, log: Any, context: str, exc: httpx.HTTPStatusError
     ) -> None:
         """Render an HTTP error as a red system message in the event log.
@@ -1333,7 +1339,7 @@ class CommandProcessor:
             exc: The captured ``httpx.HTTPStatusError``.
         """
         status = exc.response.status_code if exc.response is not None else "?"
-        log.write(f"[red]Error ({context}): HTTP {status} - {exc}[/red]")
+        await log.add_info(f"[red]Error ({context}): HTTP {status} - {exc}[/red]")
 
     def _render_graph_stats(self, stats: dict[str, Any]) -> Table:
         """Build a Rich table summarizing knowledge-graph statistics."""
@@ -1774,3 +1780,165 @@ class CommandProcessor:
             title="Backend Config",
             expand=True,
         )
+
+    # ─────────────────────────────────────────────────────────────────
+    #  KG-Native Commands (CONCEPT:KG-002 / KG-003)
+    # ─────────────────────────────────────────────────────────────────
+
+    async def cmd_prompts(self, args: str) -> None:
+        """Manage system prompts: list, get, set, versions, rollback, add."""
+        parts = args.strip().split(maxsplit=2)
+        subcmd = parts[0].lower() if parts else ""
+
+        if not subcmd or subcmd == "list":
+            prompts = await self.app._client.list_prompts()
+            if not prompts:
+                await self.app.query_one("Conversation").add_info(
+                    "[yellow]No prompts found in KG.[/yellow]"
+                )
+                return
+            table = Table(title="Prompts (CONCEPT:KG-002)", expand=True)
+            table.add_column("ID", style="cyan", no_wrap=True)
+            table.add_column("Name", style="bold")
+            table.add_column("Description")
+            table.add_column("Version", justify="right")
+            for p in prompts:
+                table.add_row(
+                    str(p.get("id", "")),
+                    str(p.get("name", "")),
+                    str(p.get("description", ""))[:60],
+                    str(p.get("version_number", "1")),
+                )
+            await self.app.query_one("Conversation").add_info(table)
+
+        elif subcmd == "get" and len(parts) >= 2:
+            prompt = await self.app._client.get_prompt(parts[1])
+            content = prompt.get("content", "")
+            syntax = Syntax(content, "markdown", theme="monokai")
+            await self.app.query_one("Conversation").add_info(
+                Panel(syntax, title=f"Prompt: {prompt.get('name', parts[1])}")
+            )
+
+        elif subcmd == "set" and len(parts) >= 3:
+            result = await self.app._client.update_prompt(parts[1], parts[2])
+            version = result.get("version_number", "?")
+            await self.app.query_one("Conversation").add_info(
+                f"[green]✓ Updated prompt → version {version}[/green]"
+            )
+
+        elif subcmd == "versions" and len(parts) >= 2:
+            versions = await self.app._client.get_prompt_versions(parts[1])
+            if not versions:
+                await self.app.query_one("Conversation").add_info(
+                    "[yellow]No versions found.[/yellow]"
+                )
+                return
+            table = Table(title=f"Version History: {parts[1]}", expand=True)
+            table.add_column("Version", justify="right")
+            table.add_column("ID", style="cyan")
+            table.add_column("Author")
+            table.add_column("Timestamp")
+            for v in versions:
+                table.add_row(
+                    str(v.get("version_number", "?")),
+                    str(v.get("id", "")),
+                    str(v.get("author", "")),
+                    str(v.get("timestamp", "")),
+                )
+            await self.app.query_one("Conversation").add_info(table)
+
+        elif subcmd == "rollback" and len(parts) >= 3:
+            result = await self.app._client.rollback_prompt(parts[1], parts[2])
+            version = result.get("version_number", "?")
+            await self.app.query_one("Conversation").add_info(
+                f"[green]✓ Rolled back to version {version}[/green]"
+            )
+
+        elif subcmd == "add" and len(parts) >= 3:
+            name = parts[1]
+            content = parts[2]
+            result = await self.app._client.create_prompt(name, content)
+            prompt_name = result.get("name", name)
+            prompt_id = result.get("id", "?")
+            await self.app.query_one("Conversation").add_info(
+                f"[green]✓ Created prompt '{prompt_name}' ({prompt_id})[/green]"
+            )
+
+        else:
+            await self.app.query_one("Conversation").add_info(
+                "[bold blue]Usage:[/bold blue]\n"
+                "  /prompts                     — list all prompts\n"
+                "  /prompts get <id>             — show prompt content\n"
+                "  /prompts set <id> <content>   — update prompt\n"
+                "  /prompts versions <id>        — show version history\n"
+                "  /prompts rollback <id> <ver>  — rollback to version\n"
+                "  /prompts add <name> <content> — create new prompt"
+            )
+
+    async def cmd_skills_only(self, args: str) -> None:
+        """List and manage agent skills (pre-baked capabilities)."""
+        parts = args.strip().split(maxsplit=1)
+        subcmd = parts[0].lower() if parts else ""
+
+        if subcmd == "toggle" and len(parts) >= 2:
+            result = await self.app._client.toggle_resource(parts[1])
+            status = "enabled" if result.get("enabled") else "disabled"
+            await self.app.query_one("Conversation").add_info(
+                f"[green]✓ {parts[1]} is now {status}[/green]"
+            )
+            return
+
+        skills = await self.app._client.list_skills_only()
+        if not skills:
+            await self.app.query_one("Conversation").add_info(
+                "[yellow]No skills discovered.[/yellow]"
+            )
+            return
+        table = Table(title="Agent Skills (CONCEPT:KG-003)", expand=True)
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Name", style="bold")
+        table.add_column("Source")
+        table.add_column("Enabled", justify="center")
+        for s in skills:
+            enabled = "✅" if s.get("enabled", True) else "❌"
+            table.add_row(
+                str(s.get("id", "")),
+                str(s.get("name", "")),
+                str(s.get("source", "custom")),
+                enabled,
+            )
+        await self.app.query_one("Conversation").add_info(table)
+
+    async def cmd_tools_only(self, args: str) -> None:
+        """List and manage MCP tools."""
+        parts = args.strip().split(maxsplit=1)
+        subcmd = parts[0].lower() if parts else ""
+
+        if subcmd == "toggle" and len(parts) >= 2:
+            result = await self.app._client.toggle_resource(parts[1])
+            status = "enabled" if result.get("enabled") else "disabled"
+            await self.app.query_one("Conversation").add_info(
+                f"[green]✓ {parts[1]} is now {status}[/green]"
+            )
+            return
+
+        tools = await self.app._client.list_tools_only()
+        if not tools:
+            await self.app.query_one("Conversation").add_info(
+                "[yellow]No MCP tools discovered.[/yellow]"
+            )
+            return
+        table = Table(title="MCP Tools (CONCEPT:KG-003)", expand=True)
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Name", style="bold")
+        table.add_column("Server/Source")
+        table.add_column("Enabled", justify="center")
+        for t in tools:
+            enabled = "✅" if t.get("enabled", True) else "❌"
+            table.add_row(
+                str(t.get("id", "")),
+                str(t.get("name", "")),
+                str(t.get("source", t.get("endpoint", "unknown"))),
+                enabled,
+            )
+        await self.app.query_one("Conversation").add_info(table)

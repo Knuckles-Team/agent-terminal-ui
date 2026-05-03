@@ -17,7 +17,7 @@ def mock_app():
     app.query_one = MagicMock()
 
     # Mock event log
-    event_log = MagicMock()
+    event_log = AsyncMock()
     event_log.write = MagicMock()
     event_log.clear = MagicMock()
     app.query_one.return_value = event_log
@@ -150,9 +150,9 @@ class TestHelpCommand:
         """Test the help command displays available commands."""
         await command_processor.cmd_help("")
 
-        event_log = mock_app.query_one("#event-log")
-        event_log.write.assert_called()
-        written_text = event_log.write.call_args[0][0]
+        event_log = mock_app.query_one("Conversation")
+        event_log.add_info.assert_called()
+        written_text = event_log.add_info.call_args[0][0]
         assert "Available Commands" in written_text
         assert "/help" in written_text
         assert "/clear" in written_text
@@ -167,8 +167,8 @@ class TestClearCommand:
         """Test the clear command clears the event log."""
         await command_processor.cmd_clear("")
 
-        event_log = mock_app.query_one("#event-log")
-        event_log.clear.assert_called_once()
+        event_log = mock_app.query_one("Conversation")
+        event_log.clear_conversation.assert_called_once()
 
 
 class TestExitCommand:
@@ -380,9 +380,9 @@ class TestStatsCommand:
 
         await command_processor.cmd_stats("")
 
-        event_log = mock_app.query_one("#event-log")
-        event_log.write.assert_called()
-        written_text = event_log.write.call_args[0][0]
+        event_log = mock_app.query_one("Conversation")
+        event_log.add_info.assert_called()
+        written_text = event_log.add_info.call_args[0][0]
         assert "Session Statistics" in written_text
         assert "1000" in written_text
         assert "0.05" in written_text
@@ -396,9 +396,9 @@ class TestStatsCommand:
 
         await command_processor.cmd_stats("")
 
-        event_log = mock_app.query_one("#event-log")
-        event_log.write.assert_called()
-        written_text = event_log.write.call_args[0][0]
+        event_log = mock_app.query_one("Conversation")
+        event_log.add_info.assert_called()
+        written_text = event_log.add_info.call_args[0][0]
         assert "not yet available" in written_text
 
     @pytest.mark.asyncio
@@ -418,9 +418,9 @@ class TestModelCommand:
         await command_processor.cmd_model("")
 
         mock_app._client.list_configured_models.assert_awaited()
-        event_log = mock_app.query_one("#event-log")
-        event_log.write.assert_called()
-        written_text = event_log.write.call_args[0][0]
+        event_log = mock_app.query_one("Conversation")
+        event_log.add_info.assert_called()
+        written_text = event_log.add_info.call_args[0][0]
         assert "No models configured" in written_text
 
     @pytest.mark.asyncio
@@ -444,9 +444,9 @@ class TestThemeCommand:
         """Test theme command without args lists available themes."""
         await command_processor.cmd_theme("")
 
-        event_log = mock_app.query_one("#event-log")
-        event_log.write.assert_called()
-        written_text = event_log.write.call_args[0][0]
+        event_log = mock_app.query_one("Conversation")
+        event_log.add_info.assert_called()
+        written_text = event_log.add_info.call_args[0][0]
         assert "Theme System" in written_text
         assert "Available themes" in written_text
 
@@ -473,9 +473,9 @@ class TestSkillCommands:
         await command_processor.register_skill_commands()
 
         assert "test-skill" in command_processor.commands
-        event_log = mock_app.query_one("#event-log")
-        event_log.write.assert_called()
-        written_text = event_log.write.call_args[0][0]
+        event_log = mock_app.query_one("Conversation")
+        event_log.add_info.assert_called()
+        written_text = event_log.add_info.call_args[0][0]
         assert "1 skills" in written_text
 
     @pytest.mark.asyncio
@@ -485,9 +485,9 @@ class TestSkillCommands:
 
         await command_processor.register_skill_commands()
 
-        event_log = mock_app.query_one("#event-log")
-        event_log.write.assert_called()
-        written_text = event_log.write.call_args[0][0]
+        event_log = mock_app.query_one("Conversation")
+        event_log.add_info.assert_called()
+        written_text = event_log.add_info.call_args[0][0]
         assert "No skills" in written_text
 
     @pytest.mark.asyncio
@@ -497,9 +497,9 @@ class TestSkillCommands:
 
         await command_processor.register_skill_commands()
 
-        event_log = mock_app.query_one("#event-log")
-        event_log.write.assert_called()
-        written_text = event_log.write.call_args[0][0]
+        event_log = mock_app.query_one("Conversation")
+        event_log.add_info.assert_called()
+        written_text = event_log.add_info.call_args[0][0]
         assert "Failed" in written_text
 
     @pytest.mark.asyncio
@@ -650,8 +650,8 @@ class TestQueueCommand:
         await command_processor.cmd_queue("")
 
         # Should write message about empty queue
-        event_log = mock_app.query_one("#event-log")
-        event_log.write.assert_called_once()
+        event_log = mock_app.query_one("Conversation")
+        event_log.add_info.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_cmd_queue_with_messages(self, command_processor, mock_app):
@@ -663,8 +663,8 @@ class TestQueueCommand:
         await command_processor.cmd_queue("")
 
         # Should write message showing queued messages
-        event_log = mock_app.query_one("#event-log")
-        event_log.write.assert_called_once()
+        event_log = mock_app.query_one("Conversation")
+        event_log.add_info.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_cmd_queue_clear(self, command_processor, mock_app):
@@ -704,8 +704,8 @@ class TestCommandEdgeCases:
     async def test_command_case_insensitive(self, command_processor, mock_app):
         """Test that commands are case-insensitive."""
         await command_processor.process("/HELP")
-        event_log = mock_app.query_one("#event-log")
-        event_log.write.assert_called()
+        event_log = mock_app.query_one("Conversation")
+        event_log.add_info.assert_called()
 
     @pytest.mark.asyncio
     async def test_command_with_extra_spaces(self, command_processor, mock_app):

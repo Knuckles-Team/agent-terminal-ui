@@ -1,0 +1,87 @@
+/* Global Styles — Agent Terminal UI
+ *
+ * Uses Textual's built-in design tokens exclusively.
+ * All colors come from the active theme (default: tokyo-night).
+ * No hardcoded color values — everything is token-driven.
+ *
+ * Concept: AU-018 (TUI Design System)
+ */
+
+/* ── Spacing Scale ── */
+
+$spacing-xs: 1;
+$spacing-sm: 2;
+$spacing-md: 3;
+$spacing-lg: 4;
+$spacing-xl: 6;
+
+/* ── Global Screen ── */
+
+Screen {
+    background: $background;
+    color: $text;
+}
+
+/* ── Semantic Color Utilities ── */
+
+.bold-primary {
+    color: $primary;
+    text-style: bold;
+}
+
+.bold-success {
+    color: $success;
+    text-style: bold;
+}
+
+.bold-warning {
+    color: $warning;
+    text-style: bold;
+}
+
+.bold-error {
+    color: $error;
+    text-style: bold;
+}
+
+.muted {
+    color: $text-muted;
+    text-style: dim;
+}
+
+.subtle {
+    color: $text-disabled;
+    text-style: dim;
+}
+
+/* ── Semantic Backgrounds ── */
+
+.success {
+    color: $success;
+    background: $success 10%;
+    padding: 0 $spacing-xs;
+}
+
+.warning {
+    color: $warning;
+    background: $warning 10%;
+    padding: 0 $spacing-xs;
+}
+
+.error {
+    color: $error;
+    background: $error 10%;
+    padding: 0 $spacing-xs;
+}
+
+/* ── Modal Screens ── */
+
+ExitConfirmScreen {
+    background: $background 50%;
+    color: $text;
+}
+
+ChatModal {
+    background: $background 50%;
+    color: $text;
+}

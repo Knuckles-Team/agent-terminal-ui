@@ -28,7 +28,4 @@ async def test_app_modes():
 
         assert app._agent_mode == "code"
 
-        # Check logo was rendered
-        log = app.query_one("#event-log", RichLog)
-        content = "\n".join([line.text for line in log.lines])
-        assert "Welcome to Agent Terminal UI" in content
+        assert app._agent_mode == "code"

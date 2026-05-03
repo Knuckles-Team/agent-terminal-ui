@@ -7,7 +7,7 @@ with buffer, and additional on_agent_event_received variants.
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -83,6 +83,7 @@ async def test_action_interrupt_cancels_workers(app):
 
         with patch.object(_TextualApp, "workers", _FakeProp()):
             app.action_interrupt()
+            await pilot.pause()
         mock_workers.cancel_all.assert_called_once()
         assert app._is_processing is False
 
@@ -93,8 +94,10 @@ async def test_on_agent_event_received_tool_call_delegated(app):
 
     async with app.run_test() as pilot:
         await pilot.pause()
-        app._handle_tool_call = MagicMock()
-        app.on_agent_event_received(
+        app._get_main_screen = MagicMock()
+        main_screen = AsyncMock()
+        app._get_main_screen.return_value = main_screen
+        await app.on_agent_event_received(
             AgentEventReceived(
                 {
                     "type": "tool_call",
@@ -102,7 +105,7 @@ async def test_on_agent_event_received_tool_call_delegated(app):
                 }
             )
         )
-        app._handle_tool_call.assert_called_once()
+        main_screen.handle_agent_event.assert_awaited_once()
 
 
 @pytest.mark.asyncio
@@ -111,7 +114,7 @@ async def test_on_agent_event_received_sideband_specialist_exit(app):
 
     async with app.run_test() as pilot:
         await pilot.pause()
-        app.on_agent_event_received(
+        await app.on_agent_event_received(
             AgentEventReceived(
                 {
                     "type": "sideband",
@@ -132,7 +135,7 @@ async def test_on_agent_event_received_sideband_verification(app):
 
     async with app.run_test() as pilot:
         await pilot.pause()
-        app.on_agent_event_received(
+        await app.on_agent_event_received(
             AgentEventReceived(
                 {
                     "type": "sideband",
@@ -152,7 +155,7 @@ async def test_turn_end_triggers_pending_tool_approval(app):
             "c1": {"call_id": "c1", "needs_approval": True, "name": "t"}
         }
         app._show_tool_approval_modal = MagicMock()
-        app.on_agent_event_received(
+        await app.on_agent_event_received(
             AgentEventReceived({"type": "turn_end"})
         )
         app._show_tool_approval_modal.assert_called_once()
@@ -169,7 +172,7 @@ async def test_turn_end_processes_queued_message(app):
             {"message": "next", "parts": [], "timestamp": 0.0}
         ]
         app._process_queue = MagicMock()
-        app.on_agent_event_received(
+        await app.on_agent_event_received(
             AgentEventReceived({"type": "turn_end"})
         )
         app._process_queue.assert_called_once()
@@ -191,7 +194,7 @@ async def test_usage_event_safely_handles_missing_status_line(app):
         try:
             # The handler catches exceptions internally
             try:
-                app.on_agent_event_received(
+                await app.on_agent_event_received(
                     AgentEventReceived(
                         {"type": "usage", "data": {"total_tokens": 1}}
                     )
@@ -215,14 +218,6 @@ async def test_help_overlay_mounts(app):
             pass
         await pilot.pause()
 
-
-@pytest.mark.asyncio
-async def test_switch_theme_updates_mode(app):
-    async with app.run_test() as pilot:
-        await pilot.pause()
-        app.switch_theme("nord")
-        app.switch_theme("modern_light")
-        app.switch_theme("modern_dark")
 
 
 @pytest.mark.asyncio

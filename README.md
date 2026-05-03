@@ -78,13 +78,13 @@ A [Textual](https://textual.textualize.io/)-based terminal interface for interac
 Start the `agent-utilities` backend server, then launch the TUI:
 
 ```bash
-agent-tui
+agent-terminal-ui
 ```
 
 Or run with `uv` if installed locally:
 
 ```bash
-uv run agent-tui
+uv run agent-terminal-ui
 ```
 
 ### Keyboard Shortcuts
