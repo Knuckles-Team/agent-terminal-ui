@@ -29,6 +29,78 @@ A [Textual](https://textual.textualize.io/)-based terminal interface for interac
 - **Session management and chat history** -- browse and resume previous conversations
 - **MCP server browser** -- inspect connected MCP servers and their tools
 
+#### Session Persistence & Crash Recovery (TUI-1)
+- **SQLite-backed sessions** -- durable session storage at `~/.config/agent-terminal-ui/agent_terminal_ui.db`
+- **Pre-turn checkpointing** -- automatic checkpoints before each turn for crash recovery
+- **Session fork/resume** -- fork sessions at any turn number with `fork_session()`
+- **Offline queue** -- messages queued during disconnection survive process restarts
+- **Session archive** -- archive, search, and filter sessions by status
+
+#### Workspace Snapshots & Rollback (TUI-2)
+- **Side-git snapshots** -- pre/post-turn workspace snapshots without touching your `.git`
+- **Snapshot restore** -- `/restore N` to roll back workspace to any previous turn
+- **Diff viewer** -- view changes between snapshot points
+- **Auto-pruning** -- snapshots older than configurable max age are cleaned up
+
+#### Reasoning Effort Tiers & Auto Routing (TUI-3)
+- **Three-tier reasoning** -- OFF / HIGH / MAX with `Shift+Tab` cycling
+- **Auto model routing** -- lightweight heuristic selects optimal model and thinking level per turn
+- **Mode-aware defaults** -- plan/code modes default to higher reasoning
+
+#### Context Compaction Engine (TUI-4)
+- **Multi-tier compaction** -- L1 (summarize tools), L2 (summarize old turns), L3 (drop old), Cycle (hard reset)
+- **Configurable thresholds** -- token-based triggers at 192k/384k/576k/768k
+- **Auto-compact toggle** -- automatic compaction when context window pressure is detected
+- **Manual `/compact`** -- force compaction at any tier
+
+#### Durable Task Queue (TUI-5)
+- **SQLite-backed tasks** -- background tasks survive process restarts
+- **Bounded concurrency** -- configurable maximum concurrent tasks
+- **Timeline events** -- full event log per task (created, started, progress, completed/failed)
+- **Checklist tracking** -- structured checklist state per task
+- **Crash recovery** -- interrupted tasks are automatically marked as failed on restart
+
+#### Lifecycle Hooks (TUI-6)
+- **TOML-configured hooks** -- shell commands triggered on lifecycle events
+- **Supported events** -- `session_start`, `session_end`, `message_submit`, `tool_call_before/after`, `mode_change`, `on_error`, `shell_env`
+- **Timeout protection** -- hooks are killed after configurable timeout
+- **Conditional triggers** -- hooks can fire only for specific tool categories or modes
+- **Shell env injection** -- `shell_env` hooks inject environment variables into tool execution
+
+#### Desktop Notifications (TUI-7)
+- **OSC 9 / BEL notifications** -- terminal-native notifications on long-running turn completion
+- **Auto-detection** -- detects iTerm2, Ghostty, WezTerm, Kitty, and falls back to BEL
+- **Configurable threshold** -- only fires when turn exceeds N seconds (default: 30s)
+
+#### Workspace Boundary & Trust Mode (TUI-8)
+- **Three sandbox modes** -- `read-only`, `workspace-write` (default), `danger-full-access`
+- **Trust mode** -- bypass approval for non-destructive reads outside workspace
+- **Explicit allow/deny lists** -- fine-grained path-level control
+- **Violation tracking** -- all policy violations are logged
+
+#### Draft Stash System (TUI-9)
+- **Multi-entry stash** -- `Ctrl+S` to stash, `/stash list` and `/stash pop` to manage
+- **Buffer management** -- `Ctrl+U` clear + `Ctrl+Y` restore for single buffer
+
+#### Enhanced Cost Tracking (TUI-10)
+- **Per-turn breakdown** -- input/output/cached/reasoning token counts with cost
+- **Cache hit rate** -- per-turn and session-level cache utilization metrics
+- **Pricing registry** -- configurable per-model pricing (built-in for GPT-4o, Claude, DeepSeek)
+- **Session aggregation** -- total cost, tokens, and by-model grouping
+- **Status line display** -- compact token/cost indicator
+
+#### Approval Policy Engine (TUI-11)
+- **Three policies** -- `on-request` (ask per command), `auto` (YOLO), `never` (block all)
+- **Auto-allow prefixes** -- commands matching configured prefixes bypass approval
+- **Mode-aware strictness** -- plan mode requires approval for unknown commands
+- **Integration** -- extends existing `danger.py` 4-level classification
+
+#### Job Center (TUI-12)
+- **Shell job registry** -- tracks all shell commands with status, output, and timing
+- **Output tailing** -- last 50 lines of output per job
+- **Linked tasks** -- jobs can reference durable task IDs
+- **Job lifecycle** -- running → completed/failed/cancelled with cleanup
+
 #### User Experience
 - **Message queuing** -- queue messages while agent is processing; related queries are intelligently combined using regex patterns for conjunctions, sequential actions, and similar structure
 - **Exit confirmation** -- modal dialog prevents accidental termination via Ctrl+C or `/exit`
@@ -60,6 +132,15 @@ A [Textual](https://textual.textualize.io/)-based terminal interface for interac
   - `/memory` -- manage project memory (AGENTS.md)
   - `/agents` -- list available specialized agents
   - `/add-dir` -- add a directory to the agent's working context
+  - `/restore N` -- restore workspace to snapshot at turn N
+  - `/sessions` -- list and manage durable sessions
+  - `/trust` -- toggle trust mode
+  - `/sandbox` -- set sandbox mode (read-only / workspace-write / danger-full-access)
+  - `/approve` -- set approval policy (on-request / auto / never)
+  - `/jobs` -- list and manage shell jobs
+  - `/tasks` -- list and manage background tasks
+  - `/stash` -- manage input draft stash
+  - `/hooks` -- show lifecycle hook status
   - `/exit`, `/quit` -- exit the application with confirmation
 
 #### Input Prefixes
@@ -93,12 +174,14 @@ uv run agent-terminal-ui
 - **Ctrl+D** -- Exit session (with confirmation)
 - **Ctrl+L** -- Clear the event log
 - **Ctrl+O** -- Toggle workflow sidebar
+- **Ctrl+S** -- Stash current input draft
 - **Ctrl+T** -- Toggle task list view
 - **Ctrl+U** -- Clear input buffer
 - **Ctrl+Y** -- Restore cleared input buffer
 - **Alt+P** -- Switch AI model
 - **Alt+T** -- Toggle Extended Thinking (for reasoning models)
 - **Alt+O** -- Toggle Fast Mode
+- **Shift+Tab** -- Cycle reasoning effort (OFF → HIGH → MAX)
 - **Ctrl+R** -- Reverse history search
 - **Ctrl+H** -- Show help overlay
 - **Tab** -- Navigate between focusable elements

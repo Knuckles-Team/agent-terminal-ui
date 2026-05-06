@@ -33,6 +33,20 @@
 
 @pyproject.toml
 
+## New Modules (DeepSeek-TUI Parity)
+
+- **session_manager.py** (TUI-1) -- SQLite-backed session persistence, checkpoints, crash recovery, offline queue
+- **workspace_snapshots.py** (TUI-2) -- Side-git workspace snapshots for turn-level rollback
+- **reasoning.py** (TUI-3) -- Reasoning effort tiers (OFF/HIGH/MAX) and auto model routing
+- **compaction.py** (TUI-4) -- Multi-tier context compaction engine (L1/L2/L3/Cycle)
+- **task_manager.py** (TUI-5) -- Durable task queue with SQLite persistence and bounded concurrency
+- **hooks.py** (TUI-6) -- Lifecycle hooks with TOML config and timeout-protected execution
+- **notifications.py** (TUI-7) -- Desktop notifications via OSC 9/BEL
+- **workspace_policy.py** (TUI-8) -- Workspace boundary enforcement and trust mode
+- **cost_tracker.py** (TUI-10) -- Per-turn cost tracking with pricing registry
+- **danger.py** (TUI-11) -- Extended with ApprovalPolicy/ApprovalEngine
+- **shell.py** (TUI-12) -- Extended with JobRecord/JobCenter
+
 ## Detailed Documentation
 
 For comprehensive documentation, see the `docs/` directory:
@@ -40,3 +54,5 @@ For comprehensive documentation, see the `docs/` directory:
 - **[Architecture](docs/architecture.md)** -- Protocols, key components, environment variables, implementation details
 - **[Features](docs/features.md)** -- Slash commands, keyboard shortcuts, model picker
 - **[Agents & Issues](docs/agents.md)** -- Known issues, recent changes, session journal
+- **[Session Management](docs/session_management.md)** -- Session persistence, crash recovery, snapshots
+- **[Configuration](docs/configuration.md)** -- Settings reference, hooks config, sandbox modes
