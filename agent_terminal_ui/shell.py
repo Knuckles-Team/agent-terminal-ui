@@ -371,3 +371,246 @@ class ShellManager:
             shell.stop()
         self._shells.clear()
         self._active_shell_id = None
+
+
+class JobRecord:
+    """Tracks a shell job with metadata.
+
+    Concept: TUI-12 (Job Center)
+    """
+
+    def __init__(
+        self,
+        job_id: str,
+        command: str,
+        cwd: str = "",
+        shell_session_id: str = "",
+        task_id: str = "",
+    ) -> None:
+        """Initialize a job record.
+
+        Args:
+            job_id: Unique job identifier.
+            command: The shell command.
+            cwd: Working directory.
+            shell_session_id: Associated shell session.
+            task_id: Linked task ID (optional).
+        """
+        self.job_id = job_id
+        self.command = command
+        self.cwd = cwd
+        self.shell_session_id = shell_session_id
+        self.task_id = task_id
+        self.status = "running"  # running | completed | failed | cancelled
+        self.exit_code: int | None = None
+        self.started_at = __import__("time").time()
+        self.completed_at: float | None = None
+        self.output_tail: list[str] = []
+        self._max_tail_lines = 50
+
+    @property
+    def elapsed_ms(self) -> int:
+        """Elapsed time in milliseconds."""
+        end = self.completed_at or __import__("time").time()
+        return int((end - self.started_at) * 1000)
+
+    @property
+    def elapsed_display(self) -> str:
+        """Human-readable elapsed time."""
+        ms = self.elapsed_ms
+        if ms < 1000:
+            return f"{ms}ms"
+        secs = ms / 1000
+        if secs < 60:
+            return f"{secs:.1f}s"
+        mins = secs / 60
+        return f"{mins:.1f}m"
+
+    def append_output(self, line: str) -> None:
+        """Append a line to the output tail buffer.
+
+        Args:
+            line: Output line to record.
+        """
+        self.output_tail.append(line)
+        if len(self.output_tail) > self._max_tail_lines:
+            self.output_tail = self.output_tail[-self._max_tail_lines :]
+
+    def complete(self, exit_code: int) -> None:
+        """Mark the job as completed.
+
+        Args:
+            exit_code: The process exit code.
+        """
+        import time as _time
+
+        self.exit_code = exit_code
+        self.completed_at = _time.time()
+        self.status = "completed" if exit_code == 0 else "failed"
+
+    def cancel(self) -> None:
+        """Mark the job as cancelled."""
+        import time as _time
+
+        self.completed_at = _time.time()
+        self.status = "cancelled"
+
+    def to_dict(self) -> dict:
+        """Serialize to a dictionary."""
+        return {
+            "job_id": self.job_id,
+            "command": self.command,
+            "cwd": self.cwd,
+            "status": self.status,
+            "exit_code": self.exit_code,
+            "elapsed_ms": self.elapsed_ms,
+            "elapsed_display": self.elapsed_display,
+            "task_id": self.task_id,
+            "output_tail_lines": len(self.output_tail),
+        }
+
+
+class JobCenter:
+    """Manages shell job tracking and lifecycle.
+
+    Provides a registry of running and completed shell jobs with
+    output tailing, status queries, and linked task references.
+    """
+
+    def __init__(self) -> None:
+        """Initialize the job center."""
+        self._jobs: dict[str, JobRecord] = {}
+        self._next_id = 1
+
+    @property
+    def jobs(self) -> dict[str, JobRecord]:
+        """All tracked jobs."""
+        return self._jobs
+
+    def create_job(
+        self,
+        command: str,
+        cwd: str = "",
+        shell_session_id: str = "",
+        task_id: str = "",
+    ) -> JobRecord:
+        """Create and register a new job.
+
+        Args:
+            command: The shell command.
+            cwd: Working directory.
+            shell_session_id: Associated shell session.
+            task_id: Linked task ID.
+
+        Returns:
+            The created job record.
+        """
+        job_id = str(self._next_id)
+        self._next_id += 1
+        job = JobRecord(
+            job_id=job_id,
+            command=command,
+            cwd=cwd,
+            shell_session_id=shell_session_id,
+            task_id=task_id,
+        )
+        self._jobs[job_id] = job
+        return job
+
+    def get_job(self, job_id: str) -> JobRecord | None:
+        """Get a job by ID.
+
+        Args:
+            job_id: The job identifier.
+
+        Returns:
+            The job record or None.
+        """
+        return self._jobs.get(job_id)
+
+    def list_jobs(self, status: str | None = None) -> list[JobRecord]:
+        """List jobs, optionally filtered by status.
+
+        Args:
+            status: Optional status filter.
+
+        Returns:
+            List of matching job records.
+        """
+        jobs = list(self._jobs.values())
+        if status:
+            jobs = [j for j in jobs if j.status == status]
+        return sorted(jobs, key=lambda j: j.started_at, reverse=True)
+
+    def cancel_job(
+        self, job_id: str, shell_manager: ShellManager | None = None
+    ) -> bool:
+        """Cancel a running job.
+
+        Args:
+            job_id: The job to cancel.
+            shell_manager: Optional shell manager to send SIGINT.
+
+        Returns:
+            True if the job was cancelled.
+        """
+        job = self._jobs.get(job_id)
+        if job is None or job.status != "running":
+            return False
+
+        if shell_manager and job.shell_session_id:
+            shell = shell_manager.get_shell(job.shell_session_id)
+            if shell:
+                shell.send_interrupt()
+
+        job.cancel()
+        return True
+
+    def get_output(self, job_id: str, lines: int = 20) -> list[str]:
+        """Get the tail output of a job.
+
+        Args:
+            job_id: The job identifier.
+            lines: Number of tail lines to return.
+
+        Returns:
+            List of output lines.
+        """
+        job = self._jobs.get(job_id)
+        if job is None:
+            return []
+        return job.output_tail[-lines:]
+
+    def cleanup_completed(self, max_keep: int = 50) -> int:
+        """Remove old completed jobs beyond max_keep.
+
+        Args:
+            max_keep: Maximum completed jobs to retain.
+
+        Returns:
+            Number of jobs cleaned up.
+        """
+        completed = [j for j in self._jobs.values() if j.status != "running"]
+        completed.sort(key=lambda j: j.started_at)
+
+        removed = 0
+        while len(completed) > max_keep:
+            old = completed.pop(0)
+            del self._jobs[old.job_id]
+            removed += 1
+
+        return removed
+
+    def summary(self) -> dict:
+        """Get a summary of all jobs."""
+        running = sum(1 for j in self._jobs.values() if j.status == "running")
+        completed = sum(1 for j in self._jobs.values() if j.status == "completed")
+        failed = sum(1 for j in self._jobs.values() if j.status == "failed")
+        cancelled = sum(1 for j in self._jobs.values() if j.status == "cancelled")
+        return {
+            "total": len(self._jobs),
+            "running": running,
+            "completed": completed,
+            "failed": failed,
+            "cancelled": cancelled,
+        }
