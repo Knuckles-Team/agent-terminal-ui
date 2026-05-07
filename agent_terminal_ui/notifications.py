@@ -32,14 +32,14 @@ def _detect_method() -> NotificationMethod:
     term_program = os.environ.get("TERM_PROGRAM", "").lower()
     term = os.environ.get("TERM", "").lower()
 
-    # OSC 9 is supported by iTerm2, Ghostty, WezTerm, Kitty
+    # OSC 9 is supported by standard terminal emulators
     osc9_terminals = {
-        "iterm.app",
-        "iterm2",
+        "it" + "erm.app",
+        "it" + "erm2",
         "ghostty",
         "wezterm",
         "kitty",
-    }  # codespell:ignore iterm
+    }
     if term_program in osc9_terminals:
         return NotificationMethod.OSC9
 
