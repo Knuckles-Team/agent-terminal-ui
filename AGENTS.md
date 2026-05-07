@@ -4,6 +4,12 @@
 > - Project constitution and governance: `.specify/memory/constitution.md`.
 > - Feature specifications and tasks: `.specify/specs/` and `.specify/tasks/`.
 > This file (`AGENTS.md`) is for system-prompt context; the SDD directory is the source of truth for architecture and new features.
+
+<!-- Ecosystem Concepts (cross-project, from agent-utilities kernel) -->
+<!-- CONCEPT:ECO-4.7 Ecosystem Topology Map — classified as FrontendPackage -->
+<!-- CONCEPT:KG-2.13 Cross-Session Chat Recall — consumed via kernel API -->
+<!-- CONCEPT:KG-2.14 Project-Aware Context — AGENTS.md auto-loaded by kernel -->
+<!-- CONCEPT:KG-2.19 Cross-Pillar Synergy Engine — topology consumer -->
 - This is a production-grade Python package. You must *always* follow best open-source Python practices.
 - Shortcuts are not appropriate. When in doubt, you must work with the user for guidance.
 - Any documentation you write, including in the README.md, should be clear, concise, and accurate like the official documentation of other production-grade Python packages.

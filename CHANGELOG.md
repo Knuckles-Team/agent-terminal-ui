@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Ecosystem Integration (CONCEPT:ECO-4.7)** — Classified as `FrontendPackage` in the kernel ecosystem topology. Inherits cross-session chat recall (KG-2.13) and project-aware context (KG-2.14) from `agent-utilities` kernel.
 - **TUI-1:** SQLite-backed session persistence with crash recovery, checkpoints, session fork/resume, and durable offline queue at `~/.config/agent-terminal-ui/agent_terminal_ui.db`
 - **TUI-2:** Side-git workspace snapshots for pre/post-turn rollback with `/restore N`, diff viewer, and auto-pruning
 - **TUI-3:** Three-tier reasoning effort system (OFF/HIGH/MAX) with `Shift+Tab` cycling and auto model routing via complexity heuristics

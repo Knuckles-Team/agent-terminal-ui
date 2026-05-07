@@ -360,7 +360,7 @@ class SessionManager:
 
         conn = self._get_conn()
         conn.execute(
-            f"UPDATE sessions SET {set_clause} WHERE id = ?",  # noqa: S608
+            f"UPDATE sessions SET {set_clause} WHERE id = ?",  # nosec B608
             values,
         )
         conn.commit()

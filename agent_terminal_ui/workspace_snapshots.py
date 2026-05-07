@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import shutil
 import subprocess
 import time
 from dataclasses import dataclass, field
@@ -100,13 +101,14 @@ class WorkspaceSnapshotManager:
         Returns:
             The completed process result.
         """
+        git_cmd = shutil.which("git") or "git"
         cmd = [
-            "git",
+            git_cmd,
             f"--git-dir={self._git_dir}",
             f"--work-tree={self._workspace}",
             *args,
         ]
-        return subprocess.run(  # noqa: S603
+        return subprocess.run(  # nosec B603
             cmd,
             capture_output=True,
             text=True,
@@ -125,8 +127,9 @@ class WorkspaceSnapshotManager:
             # Initialize the git-dir as a bare repo, then configure it
             # to work with our workspace as work-tree via --git-dir/--work-tree flags
             self._git_dir.mkdir(parents=True, exist_ok=True)
-            subprocess.run(  # noqa: S603
-                ["git", "init", "--bare", str(self._git_dir)],
+            git_cmd = shutil.which("git") or "git"
+            subprocess.run(  # nosec B603 B607
+                [git_cmd, "init", "--bare", str(self._git_dir)],
                 capture_output=True,
                 text=True,
                 check=True,
