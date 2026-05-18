@@ -10,6 +10,7 @@
 <!-- CONCEPT:KG-2.13 Cross-Session Chat Recall — consumed via kernel API -->
 <!-- CONCEPT:KG-2.14 Project-Aware Context — AGENTS.md auto-loaded by kernel -->
 <!-- CONCEPT:KG-2.19 Cross-Pillar Synergy Engine — topology consumer -->
+<!-- CONCEPT:ECO-4.5 Terminal Agent Launcher — --prompt and --override CLI flags for tmux-spawned one-shot execution -->
 - This is a production-grade Python package. You must *always* follow best open-source Python practices.
 - Shortcuts are not appropriate. When in doubt, you must work with the user for guidance.
 - Any documentation you write, including in the README.md, should be clear, concise, and accurate like the official documentation of other production-grade Python packages.
@@ -52,6 +53,15 @@
 - **cost_tracker.py** (TUI-10) -- Per-turn cost tracking with pricing registry
 - **danger.py** (TUI-11) -- Extended with ApprovalPolicy/ApprovalEngine
 - **shell.py** (TUI-12) -- Extended with JobRecord/JobCenter
+- **screens/agent_view.py** (TUI-20) -- Agent View multi-session dashboard with peek panel
+- **background_runner.py** (TUI-21) -- Background session runner for detached async agents
+- **widgets/goal_status.py** (ORCH-5.0) -- Live goal progress widget
+
+## CLI Flags (ECO-4.5)
+
+- `--prompt TEXT` -- Inject an initial task on launch. Auto-submitted via `on_mount` once the TUI is ready.
+- `--override` -- Yolo mode. Auto-approves all pending tool calls, bypassing `ToolApprovalScreen`.
+- `--bg` -- Start in Agent View (background mode). Launches session as background worker.
 
 ## Detailed Documentation
 
@@ -62,3 +72,5 @@ For comprehensive documentation, see the `docs/` directory:
 - **[Agents & Issues](docs/agents.md)** -- Known issues, recent changes, session journal
 - **[Session Management](docs/session_management.md)** -- Session persistence, crash recovery, snapshots
 - **[Configuration](docs/configuration.md)** -- Settings reference, hooks config, sandbox modes
+- **[Goal Command](docs/goal_command.md)** -- Autonomous `/goal` loop with KG-native integration
+- **[Agent View](docs/agent_view.md)** -- Multi-session dashboard and background agent management

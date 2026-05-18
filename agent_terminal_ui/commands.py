@@ -87,6 +87,13 @@ class CommandProcessor:
             "prompts": self.cmd_prompts,
             "skills": self.cmd_skills_only,
             "tools": self.cmd_tools_only,
+            # --- Agent View & Goal commands (TUI-20, ORCH-5.0) ---
+            "goal": self.cmd_goal,
+            "goal:status": self.cmd_goal_status,
+            "goal:cancel": self.cmd_goal_cancel,
+            "goal:history": self.cmd_goal_history,
+            "bg": self.cmd_bg,
+            "attach": self.cmd_attach,
         }
         # Define canonical command names (aliases map to these)
         self.canonical_commands: dict[str, str] = {
@@ -773,10 +780,143 @@ class CommandProcessor:
         await self._submit_prompt(f"Manage project memory: {args}")
 
     async def cmd_agents(self, args: str) -> None:
-        """Manage multi-agent configurations."""
-        await self._submit_prompt(
-            "List available specialized agents and their configurations."
+        """Open the Agent View — multi-session dashboard (TUI-20)."""
+        if hasattr(self.app, "switch_mode"):
+            self.app.switch_mode("agents")
+        else:
+            self.app.notify(
+                "Agent View requires screen modes. Use /history instead.",
+                severity="warning",
+            )
+
+    async def cmd_goal(self, args: str) -> None:
+        """
+        Start an autonomous goal loop.
+        Usage: /goal <objective> [until <end_state>] [without <constraints>]
+        """
+        if not args.strip():
+            self.app.notify(
+                "Usage: /goal <objective> until <end_state> [without <constraints>]",
+                severity="warning",
+            )
+            return
+
+        from agent_utilities.models.goal import GoalSpec
+
+        spec = GoalSpec.parse_goal_input(args)
+        spec.session_id = getattr(self.app, "_session_id", "")
+
+        log = self.app.query_one("Conversation")
+        await log.add_info(
+            f"🎯 **Goal Started**\n"
+            f"**Objective:** {spec.objective}\n"
+            + (f"**Success Criteria:** {spec.end_state}\n" if spec.end_state else "")
+            + (
+                f"**Constraints:** {', '.join(spec.constraints)}\n"
+                if spec.constraints
+                else ""
+            )
+            + (
+                f"**Validation:** `{spec.validation_cmd}`\n"
+                if spec.validation_cmd
+                else ""
+            )
+            + f"**Max Iterations:** {spec.max_iterations}\n"
+            + f"**Auto-approve:** {spec.auto_approve}"
         )
+
+        # Store the active goal on the app and submit the first prompt
+        self.app._active_goal = spec
+        goal_prompt = (
+            spec.to_system_prompt() + f"\n\nBegin working on: {spec.objective}"
+        )
+        await self._submit_prompt(goal_prompt)
+
+    async def cmd_goal_status(self, args: str) -> None:
+        """Show the status of the current goal."""
+        goal = getattr(self.app, "_active_goal", None)
+        if goal is None:
+            self.app.notify("No active goal.", severity="information")
+            return
+
+        log = self.app.query_one("Conversation")
+        iteration = getattr(self.app, "_goal_iteration", 0)
+        await log.add_info(
+            f"🎯 **Goal Status**\n"
+            f"**Objective:** {goal.objective}\n"
+            f"**Iteration:** {iteration}/{goal.max_iterations}\n"
+            f"**Session:** {goal.session_id}"
+        )
+
+    async def cmd_goal_cancel(self, args: str) -> None:
+        """Cancel the current goal."""
+        goal = getattr(self.app, "_active_goal", None)
+        if goal is None:
+            self.app.notify("No active goal to cancel.", severity="information")
+            return
+
+        self.app._active_goal = None
+        self.app._goal_iteration = 0
+        log = self.app.query_one("Conversation")
+        await log.add_info("🚫 **Goal Cancelled**")
+        self.app.notify("Goal cancelled.", severity="information")
+
+    async def cmd_goal_history(self, args: str) -> None:
+        """Show history of completed goals."""
+        log = self.app.query_one("Conversation")
+        await log.add_info(
+            "📋 **Goal History**\n"
+            "Goal history is stored in the Knowledge Graph as GoalNode entities.\n"
+            "Use `/graph search goal` to browse past goals."
+        )
+
+    async def cmd_bg(self, args: str) -> None:
+        """Background the current session. The agent continues working autonomously."""
+        log = self.app.query_one("Conversation")
+        session_id = getattr(self.app, "_session_id", "")
+        if not session_id:
+            self.app.notify("No active session to background.", severity="warning")
+            return
+
+        # Mark session as backgrounded in session manager
+        if hasattr(self.app, "_session_manager") and self.app._session_manager:
+            conn = self.app._session_manager._get_conn()
+            with contextlib.suppress(Exception):
+                conn.execute(
+                    "UPDATE sessions SET background = 1 WHERE id = ?",
+                    (session_id,),
+                )
+                conn.commit()
+
+        await log.add_info(
+            "⬇️ **Session Backgrounded**\n"
+            "This session will continue running autonomously.\n"
+            "Use `/agents` or press `←` to view all sessions."
+        )
+        self.app.notify(
+            f"Session {session_id[:8]} backgrounded.", severity="information"
+        )
+
+        # Switch to agent view if available
+        if hasattr(self.app, "switch_mode"):
+            self.app.switch_mode("agents")
+
+    async def cmd_attach(self, args: str) -> None:
+        """Attach to a specific session. Usage: /attach <session_id>"""
+        session_id = args.strip()
+        if not session_id:
+            self.app.notify(
+                "Usage: /attach <session_id>",
+                severity="warning",
+            )
+            return
+        self.app.notify(
+            f"Attaching to session {session_id[:8]}...",
+            severity="information",
+        )
+        # Switch to the specified session
+        if hasattr(self.app, "_switch_session"):
+            await self.app._switch_session(session_id)
 
     async def cmd_simplify(self, args: str) -> None:
         """Analyze code and propose simplifications."""

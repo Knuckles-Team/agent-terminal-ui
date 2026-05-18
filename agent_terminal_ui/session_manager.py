@@ -22,7 +22,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 DEFAULT_DB_DIR = Path.home() / ".config" / "agent-terminal-ui"
 DEFAULT_DB_PATH = DEFAULT_DB_DIR / "agent_terminal_ui.db"
 
@@ -39,7 +39,11 @@ class SessionRecord:
     mode: str = "ask"
     workspace: str = ""
     turn_count: int = 0
-    status: str = "active"  # active | completed | archived
+    status: str = "active"
+    background: bool = False
+    needs_input: bool = False
+    last_response_preview: str = ""
+    goal_id: str = ""  # active | completed | archived
     metadata_json: str = "{}"
 
     def to_dict(self) -> dict[str, Any]:
@@ -169,7 +173,11 @@ class SessionManager:
                 workspace TEXT DEFAULT '',
                 turn_count INTEGER DEFAULT 0,
                 status TEXT DEFAULT 'active',
-                metadata_json TEXT DEFAULT '{}'
+                metadata_json TEXT DEFAULT '{}',
+                background INTEGER DEFAULT 0,
+                needs_input INTEGER DEFAULT 0,
+                last_response_preview TEXT DEFAULT '',
+                goal_id TEXT DEFAULT ''
             );
 
             CREATE TABLE IF NOT EXISTS turns (
@@ -222,14 +230,41 @@ class SessionManager:
             conn.execute(
                 "INSERT INTO schema_version (version) VALUES (?)", (SCHEMA_VERSION,)
             )
-        elif row["version"] > SCHEMA_VERSION:
-            msg = (
-                f"Database schema version {row['version']} is newer than "
-                f"supported version {SCHEMA_VERSION}. Please upgrade."
-            )
-            raise RuntimeError(msg)
+        else:
+            current = row["version"]
+            if current > SCHEMA_VERSION:
+                msg = (
+                    f"Database schema version {current} is newer than "
+                    f"supported version {SCHEMA_VERSION}. Please upgrade."
+                )
+                raise RuntimeError(msg)
+            if current < 2:
+                self._migrate_v1_to_v2(conn)
+                conn.execute("UPDATE schema_version SET version = ?", (SCHEMA_VERSION,))
 
         conn.commit()
+
+    def _migrate_v1_to_v2(self, conn: sqlite3.Connection) -> None:
+        """Migrate schema from v1 to v2.
+
+        Adds columns needed by Agent View (TUI-20) and /goal (ORCH-5.0):
+        - background: whether session is running in background
+        - needs_input: whether session is waiting for user input
+        - last_response_preview: truncated last assistant response
+        - goal_id: linked GoalNode ID for goal sessions
+        """
+        migrations = [
+            "ALTER TABLE sessions ADD COLUMN background INTEGER DEFAULT 0",
+            "ALTER TABLE sessions ADD COLUMN needs_input INTEGER DEFAULT 0",
+            "ALTER TABLE sessions ADD COLUMN last_response_preview TEXT DEFAULT ''",
+            "ALTER TABLE sessions ADD COLUMN goal_id TEXT DEFAULT ''",
+        ]
+        for sql in migrations:
+            try:
+                conn.execute(sql)
+            except sqlite3.OperationalError:
+                pass  # Column already exists
+        logger.info("SessionManager: Migrated schema from v1 to v2")
 
     # -- Session CRUD --
 
