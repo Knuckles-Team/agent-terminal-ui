@@ -99,7 +99,30 @@ A [Textual](https://textual.textualize.io/)-based terminal interface for interac
 - **Shell job registry** -- tracks all shell commands with status, output, and timing
 - **Output tailing** -- last 50 lines of output per job
 - **Linked tasks** -- jobs can reference durable task IDs
-- **Job lifecycle** -- running → completed/failed/cancelled with cleanup
+- **Job lifecycle** -- running -> completed/failed/cancelled with cleanup
+
+#### Agent View - Multi-Session Dashboard (TUI-20)
+- **Session dashboard** -- at-a-glance view of all concurrent agent sessions with status indicators
+- **Peek panel** -- preview the last response of any session without switching context
+- **Inline reply** -- respond to waiting sessions directly from the dashboard
+- **Background sessions** -- send any session to the background with `/bg`
+- **Session types** -- distinguishes Chat and Goal sessions with visual indicators
+- **Auto-refresh** -- session statuses update every 2 seconds
+
+#### Background Agent Runner (TUI-21)
+- **Async workers** -- up to 10 concurrent background agent sessions
+- **State persistence** -- session state survives TUI restarts via TaskManager
+- **Crash recovery** -- interrupted sessions are marked as failed on restart
+
+#### Autonomous Goal Loop (ORCH-5.0)
+- **`/goal` command** -- define an objective and let the agent work autonomously
+- **Natural language parsing** -- supports `until <end_state>` and `without <constraints>` patterns
+- **KG-native goals** -- goals are persisted as GoalNode entities in the Knowledge Graph
+- **Context enrichment** -- goals are auto-enriched with codebase context from the KG
+- **Rule validation** -- goals are checked against the project constitution before execution
+- **Historical leverage** -- prior goal outcomes inform new goal planning
+- **Durable checkpoints** -- goal state is checkpointed for crash recovery
+- **Validation commands** -- auto-extracts shell commands from end-state criteria
 
 #### User Experience
 - **Message queuing** -- queue messages while agent is processing; related queries are intelligently combined using regex patterns for conjunctions, sequential actions, and similar structure
@@ -142,6 +165,13 @@ A [Textual](https://textual.textualize.io/)-based terminal interface for interac
   - `/stash` -- manage input draft stash
   - `/hooks` -- show lifecycle hook status
   - `/exit`, `/quit` -- exit the application with confirmation
+  - `/goal <text>` -- start an autonomous goal loop
+  - `/goal:status` -- show current goal progress
+  - `/goal:cancel` -- cancel the active goal
+  - `/goal:history` -- browse past goals from the Knowledge Graph
+  - `/agents` -- open the Agent View multi-session dashboard
+  - `/bg` -- background the current session
+  - `/attach <id>` -- attach to a specific session
 
 #### Input Prefixes
 - **`!`** -- Direct Bash execution (e.g., `!ls -la`)
@@ -186,6 +216,8 @@ uv run agent-terminal-ui
 - **Ctrl+H** -- Show help overlay
 - **Tab** -- Navigate between focusable elements
 - **Esc Esc** -- Rewind/Undo (experimental)
+- **Left Arrow** -- Switch to Agent View dashboard
+- **Right Arrow / Enter** -- Attach to selected session (from Agent View)
 
 ### Message Queuing
 

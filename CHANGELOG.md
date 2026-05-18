@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Override Mode (CONCEPT:ECO-4.5)** — `--override` CLI flag enables auto-approval of all tool calls (yolo mode), bypassing the `ToolApprovalScreen` modal for high-trust automation scenarios. When active, pending tool calls are immediately accepted without user interaction.
+- **Initial Prompt Injection** — `--prompt` CLI flag to pass an initial task directly on launch. The prompt is auto-submitted via an `on_mount` startup hook once the TUI is ready, enabling one-shot headless execution.
+- **GitHub Pages Workflow** — Added `.github/workflows/pages.yml` for automated documentation deployment on push to `main`.
+- **Pytest Markers and Warnings** — Added `integration` marker and `RuntimeWarning` filter to `pytest.ini` for cleaner test output.
 - **Ecosystem Integration (CONCEPT:ECO-4.7)** — Classified as `FrontendPackage` in the kernel ecosystem topology. Inherits cross-session chat recall (KG-2.13) and project-aware context (KG-2.14) from `agent-utilities` kernel.
 - **TUI-1:** SQLite-backed session persistence with crash recovery, checkpoints, session fork/resume, and durable offline queue at `~/.config/agent-terminal-ui/agent_terminal_ui.db`
 - **TUI-2:** Side-git workspace snapshots for pre/post-turn rollback with `/restore N`, diff viewer, and auto-pruning

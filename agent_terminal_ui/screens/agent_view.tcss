@@ -1,0 +1,80 @@
+/* Agent View Screen Styles
+ *
+ * Concept: TUI-20 (Agent View)
+ */
+
+AgentViewScreen {
+    layout: vertical;
+}
+
+/* Header banner */
+AgentViewScreen #agent-view-header {
+    height: 3;
+    padding: 0 2;
+    background: $primary 15%;
+    color: $primary;
+    text-style: bold;
+    content-align: center middle;
+    border-bottom: solid $primary 30%;
+}
+
+/* Session list container */
+AgentViewScreen #session-list-container {
+    height: 60%;
+    border-bottom: solid $primary 20%;
+}
+
+/* DataTable styling */
+AgentViewScreen DataTable {
+    height: 1fr;
+    scrollbar-size: 1 1;
+}
+
+AgentViewScreen DataTable > .datatable--cursor {
+    background: $primary 25%;
+    color: $text;
+    text-style: bold;
+}
+
+AgentViewScreen DataTable > .datatable--header {
+    background: $surface;
+    color: $primary;
+    text-style: bold;
+}
+
+/* Empty state */
+AgentViewScreen #empty-state {
+    height: 1fr;
+    content-align: center middle;
+    color: $text-muted;
+    text-style: italic;
+    padding: 4;
+}
+
+/* Peek panel */
+PeekPanel {
+    height: 40%;
+    border-top: solid $primary 50%;
+    padding: 1 2;
+    background: $surface;
+    overflow-y: auto;
+}
+
+PeekPanel #peek-title {
+    text-style: bold;
+    color: $primary;
+    margin-bottom: 1;
+}
+
+PeekPanel #peek-content {
+    height: 1fr;
+    overflow-y: auto;
+    color: $text;
+}
+
+PeekPanel #peek-hint {
+    color: $text-muted;
+    text-style: italic;
+    dock: bottom;
+    padding-top: 1;
+}

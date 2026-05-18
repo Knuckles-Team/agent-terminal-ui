@@ -111,14 +111,24 @@ class AgentApp(App):
 
     MODES = {
         "main": MainScreen,
+        "agents": "agent_view",  # Lazy import — resolved in on_mount
     }
     DEFAULT_MODE = "main"
 
-    def __init__(self, theme_name: str = "tokyo-night") -> None:
+    def __init__(
+        self,
+        theme_name: str = "tokyo-night",
+        initial_prompt: str | None = None,
+        auto_approve: bool = False,
+        start_bg: bool = False,
+    ) -> None:
         """Initialize the Agent application and its internal state.
 
         Args:
             theme_name: The Textual built-in theme name (default: tokyo-night).
+            initial_prompt: An optional prompt to execute immediately on startup.
+            auto_approve: If True, bypass tool approval modals and auto-accept.
+            start_bg: If True, start in Agent View (background mode).
         """
         super().__init__()
         self._last_ctrl_c: float = 0.0
@@ -133,6 +143,9 @@ class AgentApp(App):
         # Message queue support
         self._user_message_queue: list[dict[str, Any]] = []
         self._queue_enabled: bool = True
+
+        self.initial_prompt = initial_prompt
+        self.auto_approve = auto_approve
 
         # Set built-in theme (tokyo-night = blue palette)
         self.theme = theme_name
@@ -168,6 +181,12 @@ class AgentApp(App):
         except Exception:  # nosec B110
             pass
         return None
+
+    def on_mount(self) -> None:
+        """Handle application startup."""
+        if self.initial_prompt:
+            # Enqueue the prompt and let the main screen process it once ready
+            self.call_after_refresh(self._submit_prompt, self.initial_prompt)
 
     # ── Message Queue ──
 
@@ -517,6 +536,18 @@ class AgentApp(App):
         if not pending:
             return
 
+        if self.auto_approve:
+            from typing import Literal
+
+            from agent_terminal_ui.tui.tool_approval_screen import ToolApprovalResult
+
+            decisions: dict[str, Literal["accept", "deny"]] = {
+                cid: "accept" for cid in pending.keys()
+            }
+            result = ToolApprovalResult(decisions=decisions, feedback=None)
+            self._handle_tool_approval_result(result)
+            return
+
         class MockEvent:
             def __init__(self, d: dict[str, Any]) -> None:
                 self.__dict__.update(d)
@@ -769,10 +800,19 @@ def lazy_import(module_path: str, class_name: str):
     return getattr(module, class_name)
 
 
-def main() -> None:
+def main(
+    initial_prompt: str | None = None,
+    auto_approve: bool = False,
+    start_bg: bool = False,
+) -> None:
     """The application entry point."""
     theme_name = os.getenv("AGENT_THEME", "tokyo-night")
-    AgentApp(theme_name=theme_name).run()
+    AgentApp(
+        theme_name=theme_name,
+        initial_prompt=initial_prompt,
+        auto_approve=auto_approve,
+        start_bg=start_bg,
+    ).run()
 
 
 if __name__ == "__main__":

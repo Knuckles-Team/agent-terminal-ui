@@ -592,7 +592,7 @@ async def test_cmd_simplify_and_memory_and_agents(processor, mock_app):
     await processor.cmd_memory("")
     await processor.cmd_memory("edit")
     await processor.cmd_agents("")
-    assert mock_app.on_input_text_area_submitted.await_count >= 3
+    assert mock_app.on_input_text_area_submitted.await_count >= 2
 
 
 @pytest.mark.asyncio
@@ -843,11 +843,12 @@ async def test_exit_confirm_screen_callback_errors_are_swallowed():
 
 
 def test_terminal_ui_entry_calls_main(monkeypatch):
+    monkeypatch.setattr("sys.argv", ["agent-terminal-ui"])
     from agent_terminal_ui import terminal_ui as ui_module
 
     called = {}
 
-    def fake_main():
+    def fake_main(*args, **kwargs):
         called["hit"] = True
 
     monkeypatch.setattr(ui_module, "main", fake_main)
@@ -856,13 +857,14 @@ def test_terminal_ui_entry_calls_main(monkeypatch):
 
 
 def test_app_main_constructs_and_runs(monkeypatch):
+    monkeypatch.setattr("sys.argv", ["agent-terminal-ui"])
     from agent_terminal_ui import app as app_module
 
     monkeypatch.setenv("AGENT_THEME", "modern_dark")
     instances = []
 
     class _AppStub:
-        def __init__(self, theme_name: str = "modern_dark"):
+        def __init__(self, theme_name: str = "modern_dark", **kwargs):
             instances.append(theme_name)
 
         def run(self):
