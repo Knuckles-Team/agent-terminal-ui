@@ -42,11 +42,15 @@ class TestCompactionThresholds:
 
 class TestCompactionResult:
     def test_tokens_saved(self) -> None:
-        r = CompactionResult(tier=CompactionTier.L1, tokens_before=1000, tokens_after=700)
+        r = CompactionResult(
+            tier=CompactionTier.L1, tokens_before=1000, tokens_after=700
+        )
         assert r.tokens_saved == 300
 
     def test_reduction_pct(self) -> None:
-        r = CompactionResult(tier=CompactionTier.L1, tokens_before=1000, tokens_after=500)
+        r = CompactionResult(
+            tier=CompactionTier.L1, tokens_before=1000, tokens_after=500
+        )
         assert r.reduction_pct == 50.0
 
     def test_zero_before(self) -> None:
@@ -54,7 +58,12 @@ class TestCompactionResult:
         assert r.reduction_pct == 0.0
 
     def test_to_dict(self) -> None:
-        r = CompactionResult(tier=CompactionTier.L2, tokens_before=2000, tokens_after=1000, turns_removed=5)
+        r = CompactionResult(
+            tier=CompactionTier.L2,
+            tokens_before=2000,
+            tokens_after=1000,
+            turns_removed=5,
+        )
         d = r.to_dict()
         assert d["tier"] == "l2"
         assert d["tokens_saved"] == 1000
@@ -97,7 +106,10 @@ class TestContextCompactionEngine:
         assert result.tier == CompactionTier.L2
         assert result.turns_removed > 0
         # Should have a summary turn + recent turns
-        assert any("summary" in str(t.get("content", "")).lower() or t.get("role") == "system" for t in compacted)
+        assert any(
+            "summary" in str(t.get("content", "")).lower() or t.get("role") == "system"
+            for t in compacted
+        )
 
     def test_compact_l3_drops(self) -> None:
         engine = ContextCompactionEngine()

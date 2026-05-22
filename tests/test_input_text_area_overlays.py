@@ -114,9 +114,7 @@ async def test_file_overlay_on_list_view_selected_dispatches(tmp_path, monkeypat
 
 
 @pytest.mark.asyncio
-async def test_input_text_area_show_file_popup_triggers_overlay(
-    tmp_path, monkeypatch
-):
+async def test_input_text_area_show_file_popup_triggers_overlay(tmp_path, monkeypatch):
     (tmp_path / "a.py").write_text("")
     monkeypatch.chdir(tmp_path)
 

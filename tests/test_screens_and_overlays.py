@@ -326,9 +326,7 @@ async def test_history_screen_row_selected_and_escape():
         screen = app.screen
         table = screen.query_one(DataTable)
         # Row 0 is implicit, simulate row selection event
-        screen.on_data_table_row_selected(
-            SimpleNamespace(cursor_row=0)
-        )
+        screen.on_data_table_row_selected(SimpleNamespace(cursor_row=0))
         await pilot.pause()
     assert picked == ["c1"]
 
@@ -420,9 +418,7 @@ async def test_tool_approval_accept_all():
 @pytest.mark.asyncio
 async def test_tool_approval_reject_all_on_escape():
     results: list[ToolApprovalResult | None] = []
-    pending = cast(
-        dict[str, AgentToolCallEvent], {"c1": _mock_tool_event("c1")}
-    )
+    pending = cast(dict[str, AgentToolCallEvent], {"c1": _mock_tool_event("c1")})
 
     class _Host(App):
         def on_mount(self) -> None:
@@ -442,9 +438,7 @@ async def test_tool_approval_reject_all_on_escape():
 @pytest.mark.asyncio
 async def test_tool_approval_feedback_submit_rejects():
     results: list[ToolApprovalResult | None] = []
-    pending = cast(
-        dict[str, AgentToolCallEvent], {"c1": _mock_tool_event("c1")}
-    )
+    pending = cast(dict[str, AgentToolCallEvent], {"c1": _mock_tool_event("c1")})
 
     class _Host(App):
         def on_mount(self) -> None:
@@ -470,9 +464,7 @@ async def test_tool_approval_feedback_submit_rejects():
 @pytest.mark.asyncio
 async def test_tool_approval_feedback_empty_accepts():
     results: list[ToolApprovalResult | None] = []
-    pending = cast(
-        dict[str, AgentToolCallEvent], {"c1": _mock_tool_event("c1")}
-    )
+    pending = cast(dict[str, AgentToolCallEvent], {"c1": _mock_tool_event("c1")})
 
     class _Host(App):
         def on_mount(self) -> None:
@@ -512,13 +504,9 @@ async def test_tool_approval_button_press_individual():
         screen = app.screen
 
         # Simulate pressing accept on c1 via _mark_decision
-        btn_evt = SimpleNamespace(
-            button=SimpleNamespace(id="accept-c1")
-        )
+        btn_evt = SimpleNamespace(button=SimpleNamespace(id="accept-c1"))
         screen.on_button_pressed(btn_evt)
-        btn_evt2 = SimpleNamespace(
-            button=SimpleNamespace(id="reject-c2")
-        )
+        btn_evt2 = SimpleNamespace(button=SimpleNamespace(id="reject-c2"))
         screen.on_button_pressed(btn_evt2)
         await pilot.pause()
     assert results
@@ -532,9 +520,7 @@ async def test_tool_approval_button_press_individual():
 
 @pytest.mark.asyncio
 async def test_tool_approval_button_with_no_id_skipped():
-    pending = cast(
-        dict[str, AgentToolCallEvent], {"c1": _mock_tool_event("c1")}
-    )
+    pending = cast(dict[str, AgentToolCallEvent], {"c1": _mock_tool_event("c1")})
 
     class _Host(App):
         def on_mount(self) -> None:

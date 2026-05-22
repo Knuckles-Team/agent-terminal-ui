@@ -75,7 +75,9 @@ class TestDesktopNotifier:
     def test_include_summary(self, monkeypatch: pytest.MonkeyPatch) -> None:
         buffer = io.StringIO()
         monkeypatch.setattr(sys, "stdout", buffer)
-        notifier = DesktopNotifier(method="osc9", threshold_secs=1, include_summary=True)
+        notifier = DesktopNotifier(
+            method="osc9", threshold_secs=1, include_summary=True
+        )
         notifier.notify_turn_complete(elapsed_secs=45.3, cost_usd=0.0123)
         output = buffer.getvalue()
         assert "45.3s" in output

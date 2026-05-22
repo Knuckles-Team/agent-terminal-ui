@@ -155,9 +155,7 @@ async def test_turn_end_triggers_pending_tool_approval(app):
             "c1": {"call_id": "c1", "needs_approval": True, "name": "t"}
         }
         app._show_tool_approval_modal = MagicMock()
-        await app.on_agent_event_received(
-            AgentEventReceived({"type": "turn_end"})
-        )
+        await app.on_agent_event_received(AgentEventReceived({"type": "turn_end"}))
         app._show_tool_approval_modal.assert_called_once()
 
 
@@ -168,13 +166,9 @@ async def test_turn_end_processes_queued_message(app):
     async with app.run_test() as pilot:
         await pilot.pause()
         app._pending_tool_calls = {}
-        app._user_message_queue = [
-            {"message": "next", "parts": [], "timestamp": 0.0}
-        ]
+        app._user_message_queue = [{"message": "next", "parts": [], "timestamp": 0.0}]
         app._process_queue = MagicMock()
-        await app.on_agent_event_received(
-            AgentEventReceived({"type": "turn_end"})
-        )
+        await app.on_agent_event_received(AgentEventReceived({"type": "turn_end"}))
         app._process_queue.assert_called_once()
 
 
@@ -195,9 +189,7 @@ async def test_usage_event_safely_handles_missing_status_line(app):
             # The handler catches exceptions internally
             try:
                 await app.on_agent_event_received(
-                    AgentEventReceived(
-                        {"type": "usage", "data": {"total_tokens": 1}}
-                    )
+                    AgentEventReceived({"type": "usage", "data": {"total_tokens": 1}})
                 )
             except Exception:
                 pass
@@ -219,15 +211,12 @@ async def test_help_overlay_mounts(app):
         await pilot.pause()
 
 
-
 @pytest.mark.asyncio
 async def test_try_combine_returns_none_for_non_combinable(app):
     async with app.run_test() as pilot:
         await pilot.pause()
         # Two unrelated messages without a conjunction keyword
-        app._user_message_queue = [
-            {"message": "foo", "parts": [], "timestamp": 0.0}
-        ]
+        app._user_message_queue = [{"message": "foo", "parts": [], "timestamp": 0.0}]
         out = app._try_combine_queries("totally unrelated different thing here")
         # Conjunction regex pattern matches almost anything → either a combined
         # string or None. Either branch is acceptable; we just exercise the

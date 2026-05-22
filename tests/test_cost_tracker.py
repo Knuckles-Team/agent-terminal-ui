@@ -23,7 +23,9 @@ class TestTurnUsage:
         assert usage.cache_hit_rate == 0.0
 
     def test_to_dict(self) -> None:
-        usage = TurnUsage(turn_number=1, model="gpt-4o", input_tokens=100, output_tokens=50)
+        usage = TurnUsage(
+            turn_number=1, model="gpt-4o", input_tokens=100, output_tokens=50
+        )
         d = usage.to_dict()
         assert d["turn_number"] == 1
         assert d["model"] == "gpt-4o"
@@ -33,7 +35,9 @@ class TestTurnUsage:
 class TestCostTracker:
     def test_compute_cost_default(self) -> None:
         tracker = CostTracker()
-        cost = tracker.compute_cost("default", input_tokens=1_000_000, output_tokens=500_000)
+        cost = tracker.compute_cost(
+            "default", input_tokens=1_000_000, output_tokens=500_000
+        )
         assert cost > 0
 
     def test_compute_cost_with_cache(self) -> None:
@@ -50,7 +54,15 @@ class TestCostTracker:
 
     def test_record_turn(self) -> None:
         tracker = CostTracker()
-        usage = tracker.record_turn(1, "pro", 1000, 500, cached_tokens=200, reasoning_tokens=100, duration_ms=5000)
+        usage = tracker.record_turn(
+            1,
+            "pro",
+            1000,
+            500,
+            cached_tokens=200,
+            reasoning_tokens=100,
+            duration_ms=5000,
+        )
         assert usage.turn_number == 1
         assert usage.cost_usd > 0
         assert len(tracker.turns) == 1

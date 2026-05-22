@@ -140,9 +140,7 @@ class TestP3Registration:
             "maintenance",
         ],
     )
-    def test_command_registered(
-        self, processor: CommandProcessor, name: str
-    ) -> None:
+    def test_command_registered(self, processor: CommandProcessor, name: str) -> None:
         """Every P3 slash command must appear in ``processor.commands``."""
         assert name in processor.commands
 
@@ -241,9 +239,7 @@ class TestCodemapCommand:
     ) -> None:
         """``/codemap <prompt>`` calls ``generate_codemap`` with the prompt."""
         await processor.cmd_codemap("render auth flow")
-        mock_app._client.generate_codemap.assert_awaited_once_with(
-            "render auth flow"
-        )
+        mock_app._client.generate_codemap.assert_awaited_once_with("render auth flow")
 
     @pytest.mark.asyncio
     async def test_codemap_requires_prompt(

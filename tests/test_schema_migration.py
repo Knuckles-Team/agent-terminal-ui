@@ -113,6 +113,7 @@ class TestSchemaV2Migration:
 
         # Insert a v1 session
         import time
+
         now = time.time()
         conn.execute(
             "INSERT INTO sessions (id, title, created_at, updated_at) "
