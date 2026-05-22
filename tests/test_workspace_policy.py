@@ -47,7 +47,9 @@ class TestWorkspacePolicy:
 
     def test_workspace_write_allows_inside(self, workspace: Path) -> None:
         policy = WorkspacePolicy(workspace, SandboxMode.WORKSPACE_WRITE)
-        result = policy.check_operation(FileOperation.WRITE, workspace / "src" / "main.py")
+        result = policy.check_operation(
+            FileOperation.WRITE, workspace / "src" / "main.py"
+        )
         assert result is None
 
     def test_workspace_write_blocks_outside(self, workspace: Path) -> None:
@@ -66,7 +68,9 @@ class TestWorkspacePolicy:
         assert result is None
 
     def test_trust_mode_allows_reads_outside(self, workspace: Path) -> None:
-        policy = WorkspacePolicy(workspace, SandboxMode.WORKSPACE_WRITE, trust_mode=True)
+        policy = WorkspacePolicy(
+            workspace, SandboxMode.WORKSPACE_WRITE, trust_mode=True
+        )
         result = policy.check_operation(FileOperation.READ, "/etc/hosts")
         assert result is None
 
@@ -86,7 +90,9 @@ class TestWorkspacePolicy:
         policy = WorkspacePolicy(workspace, SandboxMode.DANGER_FULL_ACCESS)
         policy.add_allowed_path("/data")
         policy.add_denied_path("/data/sensitive")
-        result = policy.check_operation(FileOperation.READ, "/data/sensitive/secret.txt")
+        result = policy.check_operation(
+            FileOperation.READ, "/data/sensitive/secret.txt"
+        )
         assert result is not None
 
     def test_is_within_workspace(self, workspace: Path) -> None:
@@ -117,7 +123,9 @@ class TestWorkspacePolicy:
         assert len(policy.violations) == 0
 
     def test_get_status(self, workspace: Path) -> None:
-        policy = WorkspacePolicy(workspace, SandboxMode.WORKSPACE_WRITE, trust_mode=True)
+        policy = WorkspacePolicy(
+            workspace, SandboxMode.WORKSPACE_WRITE, trust_mode=True
+        )
         status = policy.get_status()
         assert status["sandbox_mode"] == "workspace-write"
         assert status["trust_mode"] is True
@@ -125,13 +133,20 @@ class TestWorkspacePolicy:
 
 class TestPolicyViolation:
     def test_str(self) -> None:
-        v = PolicyViolation(FileOperation.WRITE, "/etc/hosts", SandboxMode.READ_ONLY, "Blocked")
+        v = PolicyViolation(
+            FileOperation.WRITE, "/etc/hosts", SandboxMode.READ_ONLY, "Blocked"
+        )
         s = str(v)
         assert "read-only" in s
         assert "write" in s
 
     def test_to_dict(self) -> None:
-        v = PolicyViolation(FileOperation.DELETE, "/data", SandboxMode.WORKSPACE_WRITE, "Outside workspace")
+        v = PolicyViolation(
+            FileOperation.DELETE,
+            "/data",
+            SandboxMode.WORKSPACE_WRITE,
+            "Outside workspace",
+        )
         d = v.to_dict()
         assert d["operation"] == "delete"
         assert d["sandbox"] == "workspace-write"

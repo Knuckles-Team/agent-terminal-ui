@@ -6,12 +6,22 @@ from pathlib import Path
 
 import pytest
 
-from agent_terminal_ui.hooks import HookDefinition, HookManager, HookResult, VALID_EVENTS
+from agent_terminal_ui.hooks import (
+    HookDefinition,
+    HookManager,
+    HookResult,
+    VALID_EVENTS,
+)
 
 
 class TestHookDefinition:
     def test_from_dict(self) -> None:
-        data = {"name": "test-hook", "event": "session_start", "command": "echo hello", "timeout_secs": 10}
+        data = {
+            "name": "test-hook",
+            "event": "session_start",
+            "command": "echo hello",
+            "timeout_secs": 10,
+        }
         hook = HookDefinition.from_dict(data)
         assert hook.name == "test-hook"
         assert hook.event == "session_start"
@@ -26,7 +36,13 @@ class TestHookDefinition:
 
 class TestHookResult:
     def test_to_dict(self) -> None:
-        result = HookResult(hook_name="test", event="session_start", success=True, stdout="output", exit_code=0)
+        result = HookResult(
+            hook_name="test",
+            event="session_start",
+            success=True,
+            stdout="output",
+            exit_code=0,
+        )
         d = result.to_dict()
         assert d["success"] is True
         assert d["stdout"] == "output"
@@ -73,7 +89,9 @@ class TestHookManager:
     @pytest.mark.asyncio
     async def test_fire_echo(self) -> None:
         mgr = HookManager(hooks_file=Path("/nonexistent"))
-        hook = HookDefinition(name="echo-test", event="session_start", command="echo hello")
+        hook = HookDefinition(
+            name="echo-test", event="session_start", command="echo hello"
+        )
         mgr.register_hook(hook)
         results = await mgr.fire("session_start")
         assert len(results) == 1
@@ -83,7 +101,9 @@ class TestHookManager:
     @pytest.mark.asyncio
     async def test_fire_timeout(self) -> None:
         mgr = HookManager(hooks_file=Path("/nonexistent"))
-        hook = HookDefinition(name="slow", event="session_start", command="sleep 10", timeout_secs=1)
+        hook = HookDefinition(
+            name="slow", event="session_start", command="sleep 10", timeout_secs=1
+        )
         mgr.register_hook(hook)
         results = await mgr.fire("session_start")
         assert len(results) == 1
@@ -103,7 +123,9 @@ class TestHookManager:
     @pytest.mark.asyncio
     async def test_fire_shell_env(self) -> None:
         mgr = HookManager(hooks_file=Path("/nonexistent"))
-        hook = HookDefinition(name="env", event="shell_env", command='echo "FOO=bar\nBAZ=qux"')
+        hook = HookDefinition(
+            name="env", event="shell_env", command='echo "FOO=bar\nBAZ=qux"'
+        )
         mgr.register_hook(hook)
         env_vars = await mgr.fire_shell_env()
         assert env_vars.get("FOO") == "bar"
@@ -112,7 +134,9 @@ class TestHookManager:
     @pytest.mark.asyncio
     async def test_history_tracking(self) -> None:
         mgr = HookManager(hooks_file=Path("/nonexistent"))
-        hook = HookDefinition(name="track", event="session_start", command="echo tracked")
+        hook = HookDefinition(
+            name="track", event="session_start", command="echo tracked"
+        )
         mgr.register_hook(hook)
         await mgr.fire("session_start")
         assert len(mgr.history) == 1
@@ -155,5 +179,14 @@ command = "echo started"
 
 class TestValidEvents:
     def test_all_events_present(self) -> None:
-        expected = {"session_start", "session_end", "message_submit", "tool_call_before", "tool_call_after", "mode_change", "on_error", "shell_env"}
+        expected = {
+            "session_start",
+            "session_end",
+            "message_submit",
+            "tool_call_before",
+            "tool_call_after",
+            "mode_change",
+            "on_error",
+            "shell_env",
+        }
         assert VALID_EVENTS == expected

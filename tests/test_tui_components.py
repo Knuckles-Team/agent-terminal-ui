@@ -73,7 +73,9 @@ def test_bullet_markdown_renders_with_and_without_agent():
     console = Console(width=40, record=True)
     console.print(BulletMarkdown("hello world", agent_name="main"))
     console.print(BulletMarkdown("hello world", agent_name="researcher"))
-    console.print(BulletMarkdown("hello", agent_name="main", dim=True, show_bullet=False))
+    console.print(
+        BulletMarkdown("hello", agent_name="main", dim=True, show_bullet=False)
+    )
     # Ensure no exception + some output produced
     assert console.export_text().strip() != ""
 
@@ -320,9 +322,7 @@ async def test_stream_maps_event_types():
 @pytest.mark.asyncio
 async def test_stream_surfaces_exception_as_error_event():
     c = AgentClient()
-    with patch.object(
-        c, "create_session", AsyncMock(side_effect=RuntimeError("nope"))
-    ):
+    with patch.object(c, "create_session", AsyncMock(side_effect=RuntimeError("nope"))):
         events = [e async for e in c.stream("q")]
     assert events[-1] == {"type": "error", "message": "nope"}
     await c.close()
@@ -364,7 +364,7 @@ async def test_stream_passes_model_through_rpc():
 async def test_stream_events_parses_sse():
     c = AgentClient()
     sse_lines = [
-        "data: {\"type\": \"text\", \"content\": \"hi\"}",
+        'data: {"type": "text", "content": "hi"}',
         "data: not-json",  # swallowed
         "ignored",
     ]
@@ -406,7 +406,9 @@ async def test_send_decision_happy_path():
         patch.object(
             c,
             "stream_events",
-            side_effect=lambda sid: _AsyncGen([{"type": "text", "content": "x"}]) if sid else _AsyncGen([]),
+            side_effect=lambda sid: (
+                _AsyncGen([{"type": "text", "content": "x"}]) if sid else _AsyncGen([])
+            ),
         ),
     ):
         events = [
@@ -442,10 +444,7 @@ class _AsyncGen:
 async def test_send_decision_swallow_error():
     c = AgentClient()
     with patch.object(c, "send_rpc", AsyncMock(side_effect=RuntimeError("bad"))):
-        events = [
-            e
-            async for e in c.send_decision({"c1": "accept"}, session_id="s")
-        ]
+        events = [e async for e in c.send_decision({"c1": "accept"}, session_id="s")]
     assert events[-1]["type"] == "error"
     await c.close()
 
@@ -453,9 +452,7 @@ async def test_send_decision_swallow_error():
 @pytest.mark.asyncio
 async def test_get_metadata_and_get_chat_error_paths():
     c = AgentClient()
-    with patch.object(
-        c._http_client, "get", new_callable=AsyncMock
-    ) as mock_get:
+    with patch.object(c._http_client, "get", new_callable=AsyncMock) as mock_get:
         mock_get.side_effect = RuntimeError("network")
         assert await c.get_metadata() == {}
         assert await c.get_chat("cid") == {}
@@ -963,15 +960,11 @@ async def test_agent_app_on_agent_event_received_variants():
         )
         # usage
         await app.on_agent_event_received(
-            AgentEventReceived(
-                {"type": "usage", "data": {"total_tokens": 10}}
-            )
+            AgentEventReceived({"type": "usage", "data": {"total_tokens": 10}})
         )
         # sideband with node
         await app.on_agent_event_received(
-            AgentEventReceived(
-                {"type": "sideband", "data": {"node": "researcher"}}
-            )
+            AgentEventReceived({"type": "sideband", "data": {"node": "researcher"}})
         )
         # sideband with graph_event
         await app.on_agent_event_received(
@@ -1002,9 +995,7 @@ async def test_agent_app_on_agent_event_received_variants():
         )
         # turn_end
         await app.on_agent_event_received(
-            AgentEventReceived(
-                {"type": "turn_end", "usage": {"total_tokens": 1}}
-            )
+            AgentEventReceived({"type": "turn_end", "usage": {"total_tokens": 1}})
         )
         await pilot.pause()
 
@@ -1023,7 +1014,9 @@ async def test_agent_app_handle_tool_call_and_output():
             "agent_name": "main",
             "arguments": '{"file_path": "x.py"}',
         }
-        await app.on_agent_event_received(AgentEventReceived({"type": "tool_call", "data": call_data}))
+        await app.on_agent_event_received(
+            AgentEventReceived({"type": "tool_call", "data": call_data})
+        )
         assert "c1" in app._pending_tool_calls
 
         # Since we use AG-UI, outputs are typically not routed through pending tool calls directly

@@ -29,14 +29,18 @@ def snapshot_base(tmp_path: Path) -> Path:
 
 class TestSnapshotRecord:
     def test_to_dict(self) -> None:
-        record = SnapshotRecord(tag="pre-turn-1", turn_number=1, phase="pre", workspace="/project")
+        record = SnapshotRecord(
+            tag="pre-turn-1", turn_number=1, phase="pre", workspace="/project"
+        )
         d = record.to_dict()
         assert d["tag"] == "pre-turn-1"
         assert d["turn_number"] == 1
         assert d["phase"] == "pre"
 
     def test_fields(self) -> None:
-        record = SnapshotRecord(tag="post-turn-5", turn_number=5, phase="post", commit_hash="abc123")
+        record = SnapshotRecord(
+            tag="post-turn-5", turn_number=5, phase="post", commit_hash="abc123"
+        )
         assert record.commit_hash == "abc123"
 
 
@@ -113,9 +117,13 @@ class TestWorkspaceSnapshotManager:
         # Only initial commit tag-less
         assert isinstance(snapshots, list)
 
-    def test_snapshot_failure_returns_none(self, workspace: Path, snapshot_base: Path) -> None:
+    def test_snapshot_failure_returns_none(
+        self, workspace: Path, snapshot_base: Path
+    ) -> None:
         mgr = WorkspaceSnapshotManager(workspace, snapshot_base)
-        with patch.object(mgr, "_run_git", side_effect=subprocess.CalledProcessError(1, "git")):
+        with patch.object(
+            mgr, "_run_git", side_effect=subprocess.CalledProcessError(1, "git")
+        ):
             mgr._initialized = True
             result = mgr._take_snapshot(1, "pre")
             assert result is None
@@ -125,7 +133,9 @@ class TestWorkspaceSnapshotManager:
         mgr2 = WorkspaceSnapshotManager(workspace, snapshot_base)
         assert mgr1.snapshot_dir == mgr2.snapshot_dir
 
-    def test_different_workspace_different_dir(self, tmp_path: Path, snapshot_base: Path) -> None:
+    def test_different_workspace_different_dir(
+        self, tmp_path: Path, snapshot_base: Path
+    ) -> None:
         ws1 = tmp_path / "project1"
         ws1.mkdir()
         ws2 = tmp_path / "project2"

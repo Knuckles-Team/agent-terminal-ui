@@ -193,14 +193,20 @@ class TestWidgetUtils:
 
     def test_agent_prefix_main(self):
         """Main agent should have empty prefix."""
-        from agent_terminal_ui.widgets.utils import format_agent_prefix, format_agent_prefix_markup
+        from agent_terminal_ui.widgets.utils import (
+            format_agent_prefix,
+            format_agent_prefix_markup,
+        )
 
         assert format_agent_prefix("main") == ""
         assert format_agent_prefix_markup("main") == ""
 
     def test_agent_prefix_named(self):
         """Named agents should have parenthesized prefix."""
-        from agent_terminal_ui.widgets.utils import format_agent_prefix, format_agent_prefix_markup
+        from agent_terminal_ui.widgets.utils import (
+            format_agent_prefix,
+            format_agent_prefix_markup,
+        )
 
         assert format_agent_prefix("researcher") == "(researcher) "
         markup = format_agent_prefix_markup("researcher")
@@ -457,9 +463,7 @@ class TestAgentApp:
         thinking_event = app._map_acp_event({"type": "thinking"})
         assert thinking_event is None
 
-        tool_event = app._map_acp_event(
-            {"type": "tool-call", "call": {"name": "test"}}
-        )
+        tool_event = app._map_acp_event({"type": "tool-call", "call": {"name": "test"}})
         assert tool_event == {"type": "tool_call", "data": {"name": "test"}}
 
         turn_end = app._map_acp_event(
@@ -722,6 +726,7 @@ class TestModelConfiguration:
         # Line 148 of app.py: server_url = os.getenv("AGENT_URL", "http://localhost:8000")
         with patch.dict(os.environ, {"AGENT_URL": expected_url}):
             from agent_terminal_ui.app import AgentApp
+
             app = AgentApp()
             assert app._client.base_url == expected_url
 
@@ -732,5 +737,6 @@ class TestModelConfiguration:
         client = AgentClient(base_url="http://localhost:8000")
         # The stream method accepts model parameter and sends it as header
         import inspect
+
         sig = inspect.signature(client.stream)
         assert "model" in sig.parameters
