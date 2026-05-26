@@ -1,0 +1,101 @@
+/* Dashboard Screen Styles */
+
+DashboardScreen {
+    layout: vertical;
+}
+
+#dashboard-header {
+    width: 100%;
+    height: 3;
+    background: $surface;
+    padding: 0 2;
+    layout: horizontal;
+}
+
+#dashboard-header .header-title {
+    width: auto;
+    text-style: bold;
+    color: $primary;
+    padding: 1 0;
+}
+
+#dashboard-header .header-stats {
+    width: 1fr;
+    text-align: right;
+    color: $text-muted;
+    padding: 1 0;
+}
+
+#dashboard-scroll {
+    width: 100%;
+    height: 1fr;
+    padding: 1 2;
+}
+
+#dashboard-empty {
+    width: 100%;
+    height: 100%;
+    content-align: center middle;
+    color: $text-muted;
+    text-style: italic;
+}
+
+/* Category Group */
+CategoryGroup {
+    width: 100%;
+    height: auto;
+    margin: 0 0 1 0;
+}
+
+CategoryGroup .group-header {
+    text-style: bold;
+    color: $primary;
+    padding: 0 1;
+    width: 100%;
+    margin: 0 0 1 0;
+}
+
+CategoryGroup .group-cards {
+    layout: horizontal;
+    width: 100%;
+    height: auto;
+}
+
+/* Service Card */
+ServiceCard {
+    width: 1fr;
+    min-width: 28;
+    max-width: 50;
+    height: auto;
+    min-height: 7;
+    border: solid $primary 20%;
+    background: $surface;
+    padding: 1 2;
+    margin: 0 1 1 0;
+}
+
+ServiceCard:hover {
+    border: solid $primary 60%;
+    background: $surface 90%;
+}
+
+ServiceCard:focus {
+    border: solid $primary;
+}
+
+ServiceCard .card-title {
+    text-style: bold;
+    width: 100%;
+}
+
+ServiceCard .card-status {
+    color: $text-muted;
+    width: 100%;
+    text-style: italic;
+}
+
+ServiceCard .card-field {
+    color: $text-muted;
+    width: 100%;
+    margin: 1 0 0 0;
+}

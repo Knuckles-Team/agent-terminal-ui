@@ -123,6 +123,11 @@ class MainScreen(Screen):
         self.query_one(StatusLine).can_focus = False
         self.query_one(InputTextArea).focus()
 
+        # Limit RichLog max lines
+        with contextlib.suppress(Exception):
+            max_log_lines = self.agent_app.settings.get("max_log_lines", 1000)
+            self.query_one("#server-log", RichLog).max_lines = max_log_lines
+
         # Hide progress bar initially
         pb = self.query_one("#mcp-progress", ProgressBar)
         pb.display = False
@@ -324,10 +329,10 @@ class MainScreen(Screen):
 
     # ── Log Tailing ──
 
-    @work(exclusive=True, thread=True)
-    def _tail_server_logs(self, log_file: str) -> None:
+    @work(exclusive=True)
+    async def _tail_server_logs(self, log_file: str) -> None:
         """Background worker to tail the server log file."""
-        import time
+        import asyncio
 
         try:
             with open(log_file) as f:
@@ -335,11 +340,13 @@ class MainScreen(Screen):
                 while True:
                     line = f.readline()
                     if not line:
-                        time.sleep(0.1)
+                        await asyncio.sleep(0.1)
                         continue
-                    self.app.call_from_thread(self._write_server_log, line.strip())
+                    self._write_server_log(line.strip())
+        except asyncio.CancelledError:
+            pass
         except Exception as e:
-            self.app.call_from_thread(self._write_server_log, f"Log error: {e}")
+            self._write_server_log(f"Log error: {e}")
 
     def _write_server_log(self, text: str) -> None:
         """Write a line to the server log widget."""

@@ -98,6 +98,7 @@ class Conversation(VerticalScroll):
             logo: The welcome text/logo to display.
         """
         await self.window.mount(Static(logo, classes="welcome-banner", markup=True))
+        self._prune_old_widgets()
         self.scroll_end(animate=False)
 
     async def add_user_message(self, content: str) -> None:
@@ -109,6 +110,7 @@ class Conversation(VerticalScroll):
         self._finalize_current_response()
         widget = UserMessage(content)
         await self.window.mount(widget)
+        self._prune_old_widgets()
         self.scroll_end(animate=False)
 
     async def add_agent_response(self, content: str, agent_name: str = "main") -> None:
@@ -124,6 +126,7 @@ class Conversation(VerticalScroll):
         widget = AgentResponse(content, agent_name=agent_name)
         await self.window.mount(widget)
         self._current_response = None
+        self._prune_old_widgets()
         self.scroll_end(animate=False)
 
     async def start_agent_response(self, agent_name: str = "main") -> None:
@@ -136,6 +139,7 @@ class Conversation(VerticalScroll):
         widget = AgentResponse("", agent_name=agent_name)
         await self.window.mount(widget)
         self._current_response = widget
+        self._prune_old_widgets()
         self.scroll_end(animate=False)
 
     async def append_to_response(self, delta: str) -> None:
@@ -187,6 +191,7 @@ class Conversation(VerticalScroll):
         )
         self._tool_blocks[call_id] = block
         await self.window.mount(block)
+        self._prune_old_widgets()
         self.scroll_end(animate=False)
 
     async def update_tool_call(
@@ -220,6 +225,7 @@ class Conversation(VerticalScroll):
         """
         self._finalize_current_response()
         await self.window.mount(Static(text, classes="info-message", markup=True))
+        self._prune_old_widgets()
         self.scroll_end(animate=False)
 
     async def add_error(self, text: str) -> None:
@@ -236,6 +242,7 @@ class Conversation(VerticalScroll):
                 markup=True,
             )
         )
+        self._prune_old_widgets()
         self.scroll_end(animate=False)
 
     def start_thinking(self, label: str = "Thinking") -> None:
@@ -267,3 +274,31 @@ class Conversation(VerticalScroll):
     def _finalize_current_response(self) -> None:
         """Finalize any in-progress streaming response."""
         self._current_response = None
+
+    def _prune_old_widgets(self) -> None:
+        """Prune older message widgets to maintain a lightweight DOM."""
+        try:
+            max_widgets = self.app.settings.get("max_conversation_widgets", 50)
+        except Exception:
+            max_widgets = 50
+
+        # Gather eligible children for pruning
+        children = list(self.window.children)
+        eligible = []
+        for child in children:
+            if child is self._throbber:
+                continue
+            if child is self._current_response:
+                continue
+            eligible.append(child)
+
+        # If we exceed the limit, remove the oldest ones
+        excess = len(eligible) - max_widgets
+        if excess > 0:
+            for i in range(excess):
+                widget_to_remove = eligible[i]
+                # If it's a tool block, also remove it from our active tool blocks map
+                for call_id, block in list(self._tool_blocks.items()):
+                    if block is widget_to_remove:
+                        self._tool_blocks.pop(call_id, None)
+                widget_to_remove.remove()
