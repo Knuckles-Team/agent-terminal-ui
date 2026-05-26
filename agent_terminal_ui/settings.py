@@ -207,7 +207,54 @@ SETTINGS_SCHEMA: list[SettingDef] = [
         type="integer",
         default=5,
     ),
+    SettingDef(
+        key="max_conversation_widgets",
+        title="Max Conversation Widgets",
+        help=(
+            "Maximum number of active message widgets in the "
+            "conversation before pruning"
+        ),
+        type="integer",
+        default=50,
+    ),
+    SettingDef(
+        key="max_log_lines",
+        title="Max Log Lines",
+        help="Maximum lines to keep in the RichLog log viewer",
+        type="integer",
+        default=1000,
+    ),
 ]
+
+
+def get_agent_utilities_config_dir() -> Path:
+    """Resolve agent-utilities config directory."""
+    override = os.environ.get("AGENT_UTILITIES_CONFIG_DIR")
+    if override:
+        return Path(override).expanduser()
+    try:
+        import platformdirs
+
+        return Path(platformdirs.user_config_path("agent-utilities", "knuckles-team"))
+    except ImportError:
+        return Path.home() / ".config" / "agent-utilities"
+
+
+def load_agent_utilities_config() -> dict[str, Any]:
+    """Load settings from the global agent-utilities config.json if it exists."""
+    import json
+
+    cfg_dir = get_agent_utilities_config_dir()
+    cfg_file = cfg_dir / "config.json"
+    if cfg_file.exists():
+        try:
+            with open(cfg_file) as f:
+                return json.load(f)
+        except Exception as e:
+            logger.warning(
+                f"Failed to load global agent-utilities config from {cfg_file}: {e}"
+            )
+    return {}
 
 
 class AppSettings:
@@ -234,7 +281,12 @@ class AppSettings:
         for setting in SETTINGS_SCHEMA:
             self._data[setting.key] = setting.default
 
-        # Override with file values
+        # Override with global config.json values if present
+        global_cfg = load_agent_utilities_config()
+        for k, v in global_cfg.items():
+            self._data[k.lower()] = v
+
+        # Override with file values (local settings.toml takes precedence)
         if self._file.exists():
             try:
                 import tomllib
@@ -265,7 +317,7 @@ class AppSettings:
             logger.warning(f"Failed to save settings to {self._file}: {e}")
 
     def get(self, key: str, default: Any = None, expand: bool = True) -> Any:
-        """Get a setting value.
+        """Get a setting value, checking environment variables first.
 
         Args:
             key: The setting key.
@@ -275,6 +327,21 @@ class AppSettings:
         Returns:
             The setting value.
         """
+        # 1. Check environment variables first (case-insensitively)
+        env_val = os.environ.get(key) or os.environ.get(key.upper())
+        if env_val is not None:
+            # Coerce types based on Schema if available
+            schema_def = self._schema.get(key)
+            if schema_def:
+                if schema_def.type == "boolean":
+                    return env_val.lower() in ("true", "1", "yes", "on")
+                elif schema_def.type == "integer":
+                    try:
+                        return int(env_val)
+                    except ValueError:
+                        pass
+            return env_val
+
         value = self._data.get(key, default)
         if expand and isinstance(value, str):
             value = os.path.expandvars(value)

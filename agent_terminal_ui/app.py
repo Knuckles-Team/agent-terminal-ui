@@ -106,6 +106,7 @@ class AgentApp(App):
         Binding("alt+p", "switch_model_picker", "Model", show=False, priority=True),
         Binding("alt+t", "toggle_thinking", "Thinking", show=False, priority=True),
         Binding("alt+o", "toggle_fast_mode", "Fast", show=False, priority=True),
+        Binding("alt+d", "switch_dashboard", "Dashboard", show=True, priority=True),
         Binding("escape,escape", "rewind", "Rewind", show=False, priority=True),
     ]
 
@@ -161,6 +162,7 @@ class AgentApp(App):
             self._acp_session_id: str | None = None
 
         self._cmd_processor = CommandProcessor(self)
+        self.workspace_files: list[str] = []
 
     @property
     def current_session_id(self) -> str | None:
@@ -184,9 +186,24 @@ class AgentApp(App):
 
     def on_mount(self) -> None:
         """Handle application startup."""
+        self._scan_workspace_files()
         if self.initial_prompt:
             # Enqueue the prompt and let the main screen process it once ready
             self.call_after_refresh(self._submit_prompt, self.initial_prompt)
+
+    async def on_unmount(self) -> None:
+        """Clean up resources on unmount."""
+        if hasattr(self, "_client") and self._client is not None:
+            try:
+                await self._client.close()
+            except Exception as e:
+                logger.warning(f"Failed to close AgentClient connection pool: {e}")
+
+        if hasattr(self, "_acp_client") and self._acp_client is not None:
+            try:
+                await self._acp_client.close()
+            except Exception as e:
+                logger.warning(f"Failed to close ACPClient connection pool: {e}")
 
     # ── Message Queue ──
 
@@ -771,6 +788,15 @@ class AgentApp(App):
         status = "enabled" if self._fast_mode else "disabled"
         self.notify(f"Fast mode {status}", severity="information")
 
+    def action_switch_dashboard(self) -> None:
+        """Switch to the service dashboard screen (Alt+D)."""
+        try:
+            from agent_terminal_ui.screens.dashboard import DashboardScreen
+
+            self.push_screen(DashboardScreen())
+        except ImportError:
+            self.notify("Dashboard requires service-dashboard-core", severity="warning")
+
     def action_rewind(self) -> None:
         """Rewind conversation or code checkpoint (Esc Esc)."""
         self.notify("Rewind functionality coming soon", severity="warning")
@@ -782,6 +808,34 @@ class AgentApp(App):
         messages = event.data.get("messages", [])
         title = event.data.get("title", "Subgraph Chat")
         self.push_screen(ChatModal(title=title, messages=messages))
+
+    @work(exclusive=True, thread=True)
+    def _scan_workspace_files(self) -> None:
+        """Scan workspace files in the background."""
+        import os
+
+        files = []
+        try:
+            for root, dirs, filenames in os.walk("."):
+                # Exclude common noisy directories
+                dirs[:] = [
+                    d
+                    for d in dirs
+                    if not d.startswith(".")
+                    and d not in ("node_modules", "__pycache__", "venv", ".git")
+                ]
+                for f in filenames:
+                    rel_path = os.path.relpath(os.path.join(root, f), ".")
+                    if not rel_path.startswith("."):
+                        files.append(rel_path)
+                    # We can cap at a reasonable large limit (e.g. 5000)
+                    if len(files) > 5000:
+                        break
+                if len(files) > 5000:
+                    break
+            self.workspace_files = sorted(files)
+        except Exception as e:
+            logger.warning(f"Failed to scan workspace files in background: {e}")
 
 
 def lazy_import(module_path: str, class_name: str):

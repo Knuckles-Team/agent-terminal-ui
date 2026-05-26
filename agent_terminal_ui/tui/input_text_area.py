@@ -228,32 +228,38 @@ class FileSuggestionsOverlay(Widget):
         self._all_files: list[str] = []
         self._filtered_files: list[str] = []
         self._initial_query = initial_query
-        self._load_files()
 
     def _load_files(self):
         """Load files from the current workspace."""
-        import os
+        # Try to use pre-cached workspace files from parent App
+        try:
+            self._all_files = getattr(self.app, "workspace_files", [])
+        except Exception:
+            self._all_files = []
 
-        # Simple heuristic: list files in current dir, excluding hidden ones
-        files: list[str] = []
-        with contextlib.suppress(Exception):
-            for root, dirs, filenames in os.walk("."):
-                # Exclude common noisy directories
-                dirs[:] = [
-                    d
-                    for d in dirs
-                    if not d.startswith(".")
-                    and d not in ("node_modules", "__pycache__", "venv")
-                ]
-                for f in filenames:
-                    rel_path = os.path.relpath(os.path.join(root, f), ".")
-                    if not rel_path.startswith("."):
-                        files.append(rel_path)
-                    if len(files) > 1000:  # Limit for performance
+        if not self._all_files:
+            # Fallback to local scan just in case
+            import os
+
+            files: list[str] = []
+            with contextlib.suppress(Exception):
+                for root, dirs, filenames in os.walk("."):
+                    # Exclude common noisy directories
+                    dirs[:] = [
+                        d
+                        for d in dirs
+                        if not d.startswith(".")
+                        and d not in ("node_modules", "__pycache__", "venv")
+                    ]
+                    for f in filenames:
+                        rel_path = os.path.relpath(os.path.join(root, f), ".")
+                        if not rel_path.startswith("."):
+                            files.append(rel_path)
+                        if len(files) > 1000:  # Limit for performance
+                            break
+                    if len(files) > 1000:
                         break
-                if len(files) > 1000:
-                    break
-        self._all_files = sorted(files)
+            self._all_files = sorted(files)
         self._filtered_files = self._all_files
 
     def compose(self):
@@ -266,6 +272,7 @@ class FileSuggestionsOverlay(Widget):
 
     def on_mount(self):
         """Set up the overlay when mounted."""
+        self._load_files()
         if self._initial_query:
             self.filter_files(self._initial_query)
         else:

@@ -19,8 +19,40 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_DB_DIR = Path.home() / ".config" / "agent-terminal-ui"
-DEFAULT_DB_PATH = DEFAULT_DB_DIR / "agent_terminal_ui.db"
+import os
+
+
+def get_shared_db_path(db_filename: str) -> Path:
+    """Resolve shared XDG path from agent-utilities data directory."""
+    # 1. Check AGENT_UTILITIES_DATA_DIR environment variable
+    override_data = os.environ.get("AGENT_UTILITIES_DATA_DIR")
+    if override_data:
+        return Path(override_data).expanduser() / db_filename
+
+    # 2. Check AGENT_UTILITIES_CONFIG_DIR environment variable (as fallback config path)
+    override_config = os.environ.get("AGENT_UTILITIES_CONFIG_DIR")
+    if override_config:
+        return (
+            Path(override_config).expanduser().parent
+            / "share"
+            / "agent-utilities"
+            / db_filename
+        )
+
+    # 3. Fallback to platformdirs standard XDG local share path for agent-utilities
+    try:
+        import platformdirs
+
+        return (
+            Path(platformdirs.user_data_path("agent-utilities", "knuckles-team"))
+            / db_filename
+        )
+    except ImportError:
+        return Path.home() / ".local" / "share" / "agent-utilities" / db_filename
+
+
+DEFAULT_DB_PATH = get_shared_db_path("agent_terminal_ui.db")
+DEFAULT_DB_DIR = DEFAULT_DB_PATH.parent
 
 
 @dataclass

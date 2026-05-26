@@ -560,6 +560,7 @@ def mock_app():
     app.switch_theme = MagicMock()
     app.on_input_text_area_submitted = AsyncMock()
     app.current_session_id = None
+    app._current_session_id = None
     app._user_message_queue = []
     app._queue_enabled = True
     return app
@@ -626,8 +627,10 @@ async def test_cmd_queue_clear_and_toggle(processor, mock_app):
 
 
 @pytest.mark.asyncio
-async def test_cmd_export_no_session(processor, mock_app):
+async def test_cmd_export_no_session(processor, mock_app, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     mock_app.current_session_id = None
+    mock_app._current_session_id = None
     await processor.cmd_export("")
     mock_app.notify.assert_called()
 

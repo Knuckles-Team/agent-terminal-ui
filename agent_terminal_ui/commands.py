@@ -136,8 +136,50 @@ class CommandProcessor:
                 )
             return True
         else:
-            self.app.notify(f"Unknown command: /{cmd_name}", severity="warning")
-            return True
+            # Try to query the gateway commands/execute endpoint
+            try:
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        f"{self.app.agent_client.base_url}/api/enhanced/commands/execute",
+                        json={"command": text},
+                        timeout=15.0,
+                    )
+                    if response.status_code == 200:
+                        data = response.json()
+                        response_markdown = data.get("response_markdown", "")
+                        client_actions = data.get("client_actions", [])
+
+                        try:
+                            conv = self.app.query_one("Conversation")
+                            await conv.add_agent_response(response_markdown)
+                        except Exception:
+                            self.app.notify(
+                                response_markdown[:100], severity="information"
+                            )
+
+                        # Handle client actions
+                        for action_dict in client_actions:
+                            action = action_dict.get("action")
+                            if action == "clear_chat":
+                                with contextlib.suppress(Exception):
+                                    conv = self.app.query_one("Conversation")
+                                    await conv.clear_conversation()
+                                    await conv.add_info(
+                                        "🧹 Chat log cleared via slash command."
+                                    )
+                        return True
+                    else:
+                        self.app.notify(
+                            f"Gateway command failed: Code {response.status_code}",
+                            severity="error",
+                        )
+                        return True
+            except Exception as e:
+                self.app.notify(
+                    f"Unknown command: /{cmd_name} (Gateway offline: {e})",
+                    severity="warning",
+                )
+                return True
 
     async def cmd_help(self, args: str) -> None:
         """Show available commands and their descriptions."""
@@ -651,20 +693,20 @@ class CommandProcessor:
 
     async def cmd_export(self, args: str) -> None:
         """Export the current conversation history. Usage: /export [filename]"""
-        if not self.app._current_session_id:
+        if not self.app.current_session_id:
             self.app.notify("No active session to export", severity="warning")
             return
 
-        filename = args.strip() or f"session_{self.app._current_session_id[:8]}.md"
+        filename = args.strip() or f"session_{self.app.current_session_id[:8]}.md"
         if not filename.endswith(".md"):
             filename += ".md"
 
         try:
             self.app.notify(
-                f"Exporting session {self.app._current_session_id}...",
+                f"Exporting session {self.app.current_session_id}...",
                 severity="information",
             )
-            chat_data = await self.app._client.get_chat(self.app._current_session_id)
+            chat_data = await self.app._client.get_chat(self.app.current_session_id)
 
             if not chat_data or "messages" not in chat_data:
                 self.app.notify(
@@ -673,7 +715,7 @@ class CommandProcessor:
                 return
 
             with open(filename, "w", encoding="utf-8") as f:
-                f.write(f"# Agent Session Export: {self.app._current_session_id}\n\n")
+                f.write(f"# Agent Session Export: {self.app.current_session_id}\n\n")
                 for msg in chat_data["messages"]:
                     role = msg.get("role", "unknown").upper()
                     content = msg.get("content", "")
