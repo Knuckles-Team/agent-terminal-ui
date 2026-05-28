@@ -40,6 +40,7 @@ def _status_icon(status: str) -> str:
 
 # ── ServiceCard ──────────────────────────────────────────────────────
 
+
 class ServiceCard(Static):
     """A single service card that displays service name, status, and field data."""
 
@@ -118,7 +119,9 @@ class ServiceCard(Static):
             id=f"fields-{self.service_id}",
         )
 
-    def update_data(self, status: str, fields: list[tuple[str, str]], error: str | None = None) -> None:
+    def update_data(
+        self, status: str, fields: list[tuple[str, str]], error: str | None = None
+    ) -> None:
         """Update card with new widget data."""
         self._status = status
         self._fields = fields
@@ -145,6 +148,7 @@ class ServiceCard(Static):
 
 
 # ── CategoryGroup ────────────────────────────────────────────────────
+
 
 class CategoryGroup(Vertical):
     """A collapsible section containing service cards for a single category."""
@@ -179,10 +183,14 @@ class CategoryGroup(Vertical):
             f"▸ {self.category_name.upper()}",
             classes="group-header",
         )
-        yield Horizontal(classes="group-cards", id=f"cards-{self.category_name.replace(' ', '-').lower()}")
+        yield Horizontal(
+            classes="group-cards",
+            id=f"cards-{self.category_name.replace(' ', '-').lower()}",
+        )
 
 
 # ── DashboardScreen ──────────────────────────────────────────────────
+
 
 class DashboardScreen(Screen):
     """Homepage-style service dashboard screen.
@@ -271,10 +279,11 @@ class DashboardScreen(Screen):
         """Lazy-import and initialize the aggregator."""
         try:
             from agent_utilities.gateway.aggregator import Aggregator
+
             self._aggregator = Aggregator()
         except ImportError:
             logger.warning(
-                "agent-utilities gateway not available — dashboard will show placeholder."
+                "agent-utilities gateway not available — showing placeholder."
             )
 
     async def _populate_dashboard(self) -> None:
