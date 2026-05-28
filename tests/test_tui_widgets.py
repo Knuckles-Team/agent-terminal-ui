@@ -661,7 +661,7 @@ class TestModelConfiguration:
                     name="Qwen 3.5 9B",
                     provider="openai",
                     model_id="qwen/qwen3.5-9b",
-                    base_url="http://10.0.0.18:1234/v1",
+                    base_url="http://vllm.arpa/v1",
                     tier="medium",
                     tags=["code", "local"],
                     cost=ModelCostRate(input=0.0, output=0.0),
@@ -677,7 +677,7 @@ class TestModelConfiguration:
         assert payload["default_id"] == "qwen-local"
         assert len(payload["models"]) == 1
         assert payload["models"][0]["model_id"] == "qwen/qwen3.5-9b"
-        assert payload["models"][0]["base_url"] == "http://10.0.0.18:1234/v1"
+        assert payload["models"][0]["base_url"] == "http://vllm.arpa/v1"
 
     def test_model_tier_routing(self):
         """ModelRegistry should route by tier correctly."""
