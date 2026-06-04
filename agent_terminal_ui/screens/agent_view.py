@@ -140,7 +140,7 @@ class AgentViewScreen(Screen):
             super().__init__()
 
     class NewSessionRequested(Message):
-        pass
+        __slots__ = ()
 
     class SessionDeleteRequested(Message):
         def __init__(self, session_id: str) -> None:

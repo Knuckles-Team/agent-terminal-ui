@@ -40,7 +40,7 @@ class ToolDisplayFormatter(Protocol):
             A string representing the visual header (e.g., "Update(file.py)").
 
         """
-        ...
+        raise RuntimeError("Protocol method called directly")
 
     def format_output_summary(self, event: AgentToolOutputEvent) -> str | None:
         """Format a one-line summary of the tool output.
@@ -52,7 +52,7 @@ class ToolDisplayFormatter(Protocol):
             A one-line summary string, or None if no summary is needed.
 
         """
-        ...
+        raise RuntimeError("Protocol method called directly")
 
     def format_output_details(self, event: AgentToolOutputEvent) -> str | None:
         """Format detailed output (e.g., diff view, file contents).
@@ -64,7 +64,7 @@ class ToolDisplayFormatter(Protocol):
             The detailed output string, or None if no details are needed.
 
         """
-        ...
+        raise RuntimeError("Protocol method called directly")
 
 
 class DefaultToolDisplayFormatter:

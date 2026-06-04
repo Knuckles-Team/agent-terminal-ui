@@ -28,11 +28,11 @@ async def test_command_overlay_docstring_variants():
         Usage: /dummy something
         """
 
-        pass
+        __slots__ = ()
 
     async def call_doc(args):
         """A callable command. Usage: /call"""
-        pass
+        return None
 
     dict_cmd = {"description": "dict description"}
 
@@ -139,7 +139,7 @@ async def test_input_text_area_show_file_popup_triggers_overlay(tmp_path, monkey
 async def test_input_text_area_show_suggestion_popup_triggers_overlay():
     async def help_cmd(args):
         """Help command."""
-        pass
+        return None
 
     class _Host(App):
         def compose(self) -> ComposeResult:
@@ -176,7 +176,7 @@ async def test_input_text_area_show_suggestion_popup_no_commands():
 async def test_input_text_area_show_suggestion_popup_not_slash():
     async def help_cmd(args):
         """Help."""
-        pass
+        return None
 
     class _Host(App):
         def compose(self) -> ComposeResult:
@@ -194,7 +194,7 @@ async def test_input_text_area_show_suggestion_popup_not_slash():
 async def test_input_text_area_show_command_suggestions_autocomplete_single():
     async def helpme(args):
         """Helpme."""
-        pass
+        return None
 
     class _Host(App):
         def compose(self) -> ComposeResult:
@@ -213,7 +213,7 @@ async def test_input_text_area_show_command_suggestions_autocomplete_single():
 async def test_input_text_area_show_command_suggestions_no_matches():
     async def foo(args):
         """foo."""
-        pass
+        return None
 
     class _Host(App):
         def compose(self) -> ComposeResult:
@@ -258,7 +258,7 @@ async def test_input_text_area_show_file_suggestions_no_at():
 async def test_input_text_area_update_suggestion_popup():
     async def cmd(args):
         """A cmd."""
-        pass
+        return None
 
     class _Host(App):
         def compose(self) -> ComposeResult:
