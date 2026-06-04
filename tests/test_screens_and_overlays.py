@@ -36,15 +36,15 @@ from textual.widgets import DataTable
 def _make_commands() -> dict:
     async def _help(args):
         """Show help."""
-        pass
+        return None
 
     async def _clear(args):
         """Clear log."""
-        pass
+        return None
 
     async def _quit(args):
         """Quit. Usage: /quit"""
-        pass
+        return None
 
     return {"help": _help, "clear": _clear, "quit": _quit}
 
@@ -212,7 +212,7 @@ async def test_input_text_area_tab_triggers_command_overlay():
 
     async def dummy(args):
         """A dummy command."""
-        pass
+        return None
 
     class _Host(App):
         def compose(self) -> ComposeResult:
@@ -250,7 +250,7 @@ async def test_input_text_area_autocomplete_single_match():
 
     async def help_cmd(args):
         """Help."""
-        pass
+        return None
 
     class _Host(App):
         def compose(self) -> ComposeResult:
@@ -288,7 +288,7 @@ async def test_input_text_area_at_char_shows_file_overlay(tmp_path, monkeypatch)
 async def test_input_text_area_close_overlays_directly():
     async def cmd(args):
         """A cmd."""
-        pass
+        return None
 
     class _Host(App):
         def compose(self) -> ComposeResult:

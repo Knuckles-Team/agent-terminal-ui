@@ -114,7 +114,7 @@ class ToolApprovalScreen(ModalScreen[ToolApprovalResult]):
 
     def on_mount(self) -> None:
         """Handle screen initialization. Shortcuts work without focusing input."""
-        pass
+        return None
 
     def on_input_submitted(self, _event: Input.Submitted) -> None:
         """Handle submission of the feedback input.

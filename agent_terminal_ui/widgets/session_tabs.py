@@ -90,7 +90,7 @@ class SessionTabs(HorizontalGroup):
     class SessionCreated(Message):
         """Posted when a new session is requested."""
 
-        pass
+        __slots__ = ()
 
     active_session: var[str] = var("")
 

@@ -1,5 +1,8 @@
 # General Instructions
 
+> Claude Code loads this file via `CLAUDE.md` (`@AGENTS.md` import) — the two stay in sync. Edit this file, not `CLAUDE.md`.
+
+
 > **Notice:** This project uses **Spec-Driven Development (SDD)**.
 > - Project constitution and governance: `.specify/memory/constitution.md`.
 > - Feature specifications and tasks: `.specify/specs/` and `.specify/tasks/`.
@@ -9,7 +12,7 @@
 <!-- CONCEPT:ECO-4.7 Ecosystem Topology Map — classified as FrontendPackage -->
 <!-- CONCEPT:KG-2.13 Cross-Session Chat Recall — consumed via kernel API -->
 <!-- CONCEPT:KG-2.14 Project-Aware Context — AGENTS.md auto-loaded by kernel -->
-<!-- CONCEPT:KG-2.19 Cross-Pillar Synergy Engine — topology consumer -->
+<!-- CONCEPT:KG-2.11 Cross-Pillar Synergy Engine — topology consumer -->
 <!-- CONCEPT:ECO-4.5 Terminal Agent Launcher — --prompt and --override CLI flags for tmux-spawned one-shot execution -->
 - This is a production-grade Python package. You must *always* follow best open-source Python practices.
 - Shortcuts are not appropriate. When in doubt, you must work with the user for guidance.
@@ -90,3 +93,15 @@ For comprehensive documentation, see the `docs/` directory:
 - Use `~/workspace/scratch/` for temporary scripts and experiments
 - Use `~/workspace/reports/` for command output and reports
 - Keep test scripts in the `tests/` directory following proper pytest conventions
+
+
+## ⛔ Keep the Repository Root Pristine
+
+The repository root must contain only canonical project files. The only hidden
+directories allowed at root are `.git/`, `.github/`, `.specify/` (plus a local,
+git-ignored `.venv/`). NEVER write scratch/debug/migration files to the repo —
+especially the root: no `fix_*.py`/`migrate_*.py`/`refactor_*.py`/root `test_*.py`,
+no `*.db`/`*.log`/scratch `*.txt`/`*.orig`/`*.rej`/`*.bak`, no build artifacts
+(`*.tsbuildinfo`), and no AI scratch dirs (`.agent/`, `.agents/`, `.agent_data/`,
+`.tmp/`, `.hypothesis/`). Put experiments in `~/workspace/scratch/`, tests in
+`tests/`. Run `git status` before finishing and confirm no stray root files.
