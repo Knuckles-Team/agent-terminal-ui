@@ -16,6 +16,10 @@ A [Textual](https://textual.textualize.io/)-based terminal interface for interac
 > [!NOTE]
 > This library is in early development and subject to change.
 
+> **Documentation** — Architecture, configuration, durable session management, and
+> the autonomous goal and multi-session workflows are maintained in the
+> [official documentation](https://knuckles-team.github.io/agent-terminal-ui/).
+
 ### Features
 
 #### Core Functionality
