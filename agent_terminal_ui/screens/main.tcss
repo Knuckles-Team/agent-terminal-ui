@@ -119,6 +119,11 @@ WorkflowSidebar .phase-label {
     background: $surface;
     border-top: solid $primary 30%;
     padding: 0;
+    transition: border 200ms in_out_cubic;
+}
+
+#prompt-container:focus-within {
+    border-top: solid $primary;
 }
 
 InputTextArea {
@@ -129,14 +134,16 @@ InputTextArea {
     color: $text;
     border: none;
     padding: 1;
+    transition: background 200ms in_out_cubic;
 }
 
 InputTextArea > .text-area--cursor-line {
-    background: $primary 5%;
+    background: $primary 8%;
 }
 
 InputTextArea:focus {
     border: none;
+    background: $primary 4%;
 }
 
 /* ── Status Line ── */
@@ -155,8 +162,10 @@ StatusLine Static {
 }
 
 #status-mode {
-    color: $primary;
+    color: $background;
+    background: $primary;
     text-style: bold;
+    padding: 0 1;
 }
 
 #status-model {

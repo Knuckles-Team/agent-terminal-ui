@@ -89,4 +89,7 @@ class Throbber(Static):
     def _update_display(self) -> None:
         """Update the displayed text."""
         frame = THROBBER_FRAMES[self._frame_index]
-        self.update(f"[$warning]{frame}[/$warning] {self._label}...")
+        self.update(
+            f"[$primary]{frame}[/$primary] [$text-muted]{self._label}[/$text-muted]"
+            "[$primary]…[/$primary]"
+        )

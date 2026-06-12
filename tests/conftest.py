@@ -11,8 +11,16 @@ from pathlib import Path
 from unittest.mock import AsyncMock
 
 import pytest
+import textual.constants
 
 os.environ.setdefault("AGENT_UTILITIES_TESTING", "true")
+
+# Disable entrance animations for all tests so widgets render at their resting
+# state (deterministic snapshots, no opacity-0 captures). Textual reads this
+# constant into App.animation_level at construction time, so patching the module
+# attribute here is order-independent (the TEXTUAL_ANIMATIONS env var is captured
+# at textual import time, which may precede pytest-env).
+textual.constants.TEXTUAL_ANIMATIONS = "none"
 
 
 @pytest.fixture(autouse=True)
