@@ -110,3 +110,31 @@ Built-in pricing registry (USD per million tokens):
 | claude-sonnet | $3.00 | $15.00 | $1.50 |
 
 Custom pricing can be set via `tracker.set_pricing(model, input, output, cached)`.
+
+## Environment Variables
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `AGENT_URL` | `http://localhost:8000` | Agent backend URL (interactive and headless). |
+| `ENABLE_ACP` | `false` | Use the ACP protocol instead of AG-UI. |
+| `ACP_URL` | `http://localhost:8001` | Documented but NOT read; the effective ACP URL is `{AGENT_URL}/acp`. |
+| `AGENT_THEME` | `tokyo-night` | Startup theme (any Textual built-in theme name). |
+| `TEXTUAL_ANIMATIONS` | `full` | Set to `none` to disable entrance animations (reduced motion). |
+| `AGENT_UTILITIES_DATA_DIR` | platform default | Override the directory for the SQLite session store. |
+
+## CLI Flags
+
+```bash
+agent-terminal-ui [--prompt TEXT] [--override] [--bg] [--headless] [--model ID]
+```
+
+| Flag | Purpose |
+|------|---------|
+| `--prompt TEXT` | Inject an initial task on launch (auto-submitted once ready). |
+| `--override` | Auto-approve all tool calls (yolo mode), bypassing the approval modal. |
+| `--bg` | Start in Agent View (background/multi-session mode). |
+| `--headless` | Run `--prompt` without the TUI, streaming to stdout (requires `--prompt`). |
+| `--model ID` | Model id to use for a headless run. |
+
+See [Architecture](architecture.md#run-modes) for the interactive vs headless
+footprint comparison.

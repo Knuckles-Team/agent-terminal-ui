@@ -216,6 +216,7 @@ knowledge_graph.db-shm
 *.lbug/
 .lbug/
 session_*.md
+!docs/session_management.md
 
 # AI agent scratch (do not commit) — keep repo roots pristine
 .agent/

@@ -11,6 +11,19 @@ This site is the official documentation for the client: its architecture, config
 surface, durable session infrastructure, and the autonomous goal and multi-session
 workflows it supports.
 
+## Highlights
+
+- **Lightweight by design** — the client is a thin frontend (~60–85 MB interactive,
+  ~30 MB headless). It never imports the heavy `agent_utilities` backend; all weight
+  stays in one shared backend service reached over HTTP/SSE.
+- **Interactive or headless** — run the full TUI, or
+  `agent-terminal-ui --headless --prompt "…"` for many concurrent non-interactive
+  sessions against one backend.
+- **Live workflow & tools** — a dynamic workflow sidebar, streaming Markdown
+  responses, expandable tool-call blocks, and human-in-the-loop approvals.
+- **Durable & recoverable** — SQLite-backed sessions, pre-turn checkpoints, and
+  side-git workspace snapshots with `/restore N`.
+
 ## Documentation map
 
 - **[Architecture](architecture.md)** — protocol connectivity, key components,
