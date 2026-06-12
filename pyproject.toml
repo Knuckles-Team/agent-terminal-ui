@@ -36,7 +36,8 @@ test = [
     "pytest-env",
     "pytest-cov>=7.0.0,<8.0.0",
     "pytest-textual-snapshot>=1.0.0",
-    "pytest-benchmark>=4.0.0"
+    "pytest-benchmark>=4.0.0",
+    "pytest-timeout>=2.3.0"
 ]
 profile = [
     "memray>=1.12.0",

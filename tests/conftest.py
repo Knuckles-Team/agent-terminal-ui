@@ -15,9 +15,9 @@ import pytest
 os.environ.setdefault("AGENT_UTILITIES_TESTING", "true")
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def isolated_data_dir(tmp_path: Path) -> Iterator[Path]:
-    """Point session/task persistence at a throwaway directory."""
+    """Point session/task persistence at a throwaway directory (applied to all tests)."""
     prev = os.environ.get("AGENT_UTILITIES_DATA_DIR")
     os.environ["AGENT_UTILITIES_DATA_DIR"] = str(tmp_path)
     try:
@@ -53,8 +53,12 @@ def fake_client() -> AsyncMock:
 
 
 @pytest.fixture
-def app(fake_client: AsyncMock, isolated_data_dir: Path):
-    """A fresh ``AgentApp`` wired to the fake client (not yet mounted)."""
+def app(fake_client: AsyncMock):
+    """A fresh ``AgentApp`` wired to the fake client (not yet mounted).
+
+    Data-dir isolation is applied automatically via the autouse
+    ``isolated_data_dir`` fixture.
+    """
     from agent_terminal_ui.app import AgentApp
 
     return AgentApp(client=fake_client)
