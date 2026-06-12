@@ -27,8 +27,9 @@ from typing import Any, ClassVar
 try:
     from textual import work
 except ImportError:
-    # Fallback for older Textual versions
-    def work(_exclusive=False, _group="default", _exit_on_error=True, _name=""):
+    # Fallback for older Textual versions: accept and ignore any work() kwargs
+    # (exclusive, thread, group, ...) so call sites type-check and run unchanged.
+    def work(*_args, **_kwargs):
         def decorator(func):
             return func
 
@@ -122,6 +123,7 @@ class AgentApp(App):
         initial_prompt: str | None = None,
         auto_approve: bool = False,
         start_bg: bool = False,
+        client: AgentClient | None = None,
     ) -> None:
         """Initialize the Agent application and its internal state.
 
@@ -130,6 +132,8 @@ class AgentApp(App):
             initial_prompt: An optional prompt to execute immediately on startup.
             auto_approve: If True, bypass tool approval modals and auto-accept.
             start_bg: If True, start in Agent View (background mode).
+            client: An optional pre-built client (for testing or a custom
+                transport); defaults to an ``AgentClient`` bound to ``AGENT_URL``.
         """
         super().__init__()
         self._last_ctrl_c: float = 0.0
@@ -153,7 +157,7 @@ class AgentApp(App):
 
         # Initialize client
         server_url = os.getenv("AGENT_URL", "http://localhost:8000")
-        self._client = AgentClient(base_url=server_url)
+        self._client = client or AgentClient(base_url=server_url)
         self._acp_client: ACPClient | None = None
         self._enable_acp: bool = os.getenv("ENABLE_ACP", "false").lower() == "true"
 

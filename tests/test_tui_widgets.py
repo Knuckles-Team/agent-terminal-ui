@@ -21,6 +21,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+import pytest
+
 # ── Danger Level Tests ──
 
 
@@ -647,6 +649,7 @@ class TestModelConfiguration:
 
     def test_model_registry_integration(self):
         """ModelRegistry from agent-utilities should be importable."""
+        pytest.importorskip("agent_utilities")
         from agent_utilities.models.model_registry import (
             ModelCostRate,
             ModelDefinition,
@@ -681,6 +684,7 @@ class TestModelConfiguration:
 
     def test_model_tier_routing(self):
         """ModelRegistry should route by tier correctly."""
+        pytest.importorskip("agent_utilities")
         from agent_utilities.models.model_registry import (
             ModelDefinition,
             ModelRegistry,
