@@ -1,53 +1,109 @@
 # Features
 
-## Slash Commands
+## Slash commands
 
-Registered in `commands.py` via the `self.commands` dict. Current registry: 31 commands plus 2 aliases.
+Commands are registered in `commands.py` (`CommandProcessor.commands`) and surfaced
+through the input overlay: type `/` to open a fuzzy-filtered menu (ESC to close,
+TAB to cycle, Enter to run). Aliases are collapsed in the menu, so `/exit` and its
+alias `/quit` appear once.
 
-**Implemented**: `/help`, `/clear`, `/exit` (alias `/quit`), `/mcp`, `/history`, `/image`, `/plan`, `/chat`, `/build`, `/init`, `/review`, `/test`, `/search`, `/stats` (alias `/cost`), `/model`, `/theme`, `/queue`, `/queue:clear`, `/queue:toggle`, `/compact`, `/context`, `/diff`, `/recap`, `/export`, `/focus`, `/fast`, `/keybindings`, `/memory`, `/agents`, `/simplify`, `/add-dir`.
+The registry currently exposes 54 entries (including aliases and `:`-suffixed
+subcommands). By area:
 
-### `/model` command
+| Area | Commands |
+|------|----------|
+| Core | `/help`, `/clear`, `/exit` (alias `/quit`), `/config`, `/keybindings` |
+| Modes | `/plan`, `/chat`, `/build` |
+| Conversation | `/compact`, `/context`, `/recap`, `/export`, `/diff`, `/focus`, `/fast`, `/image` |
+| Models & cost | `/model`, `/stats` (alias `/cost`) |
+| Theme | `/theme` |
+| Queue | `/queue`, `/queue:clear`, `/queue:toggle` |
+| Goals (autonomous) | `/goal`, `/goal:status`, `/goal:cancel`, `/goal:history` |
+| Sessions & agents | `/agents`, `/attach`, `/bg`, `/history` |
+| Knowledge graph | `/graph`, `/kb`, `/impact`, `/codemap`, `/search` |
+| Project & SDD | `/init`, `/sdd`, `/memory`, `/add-dir`, `/prompts`, `/review`, `/test`, `/simplify` |
+| MCP & tools | `/mcp`, `/mcp:reload`, `/tools`, `/skills`, `/resources` |
+| Ops | `/logs`, `/cron`, `/pipeline`, `/maintenance` |
 
-The `/model` command is backed by the `agent-utilities` multi-model registry
-(`GET /models`):
+Some commands depend on optional backend endpoints and degrade or report an error
+when the backend does not expose them — see [Known Issues](agents.md#known-issues).
 
-- `/model` or `/model list` -- render the configured models in a Rich table
-  (id, name, provider, tier, tags, default marker, per-1M cost).
-- `/model show` -- show a Panel with full metadata for the currently active
-  model (falls back to the registry default when no override is set).
-- `/model set <id>` -- pick a model id for subsequent turns. The chosen id
-  is stored on both `app._current_model_id` and `app._current_model`, and
-  the `AgentClient` propagates it as an `x-agent-model-id` header so the
-  backend can override the registry default for the session.
+### `/model`
 
-Zero-cost / local models (`cost: {input: 0, output: 0}`) render as
-`$0.00 / $0.00` in the table rather than `-`, so tokens and tool counts
-remain visible even when the model itself is free.
+Backed by the `agent-utilities` multi-model registry (`GET /models`):
 
-**Removed** (nine stub commands with no working implementation): `/effort`, `/permissions`, `/color`, `/hooks`, `/branch` / `/fork`, `/copy`, `/undo` / `/rewind`, `/loop` / `/proactive`, `/btw`. Removing them keeps the slash menu aligned with the actual supported feature set.
+- `/model` or `/model list` — render the configured models in a table (id, name,
+  provider, tier, tags, default marker, per-1M cost).
+- `/model show` — show full metadata for the active model (falls back to the
+  registry default when no override is set).
+- `/model set <id>` — pick a model id for subsequent turns. The id is stored on the
+  app and propagated by `AgentClient` as an `x-agent-model-id` header so the backend
+  can override the registry default for the session.
 
-Note: `/mcp`, `/history`, and `/export` are still listed as implemented but currently raise `AttributeError` at runtime due to missing `AgentClient` methods (see [Known Issues](agents.md#known-issues)).
+Zero-cost / local models render as `$0.00 / $0.00` rather than `-`.
 
-## Keyboard Shortcuts
+### `/goal`
 
-Claude-code parity bindings are wired in `agent_terminal_ui/app.py::BINDINGS`. Summary of the current mapping:
+Starts an autonomous goal loop. The objective string is parsed locally by the
+dependency-free `goal.py` parser — `/goal <objective> until <end_state> without
+<constraints>` — and submitted to the backend. See [Goal Command](goal_command.md).
+
+## Keyboard shortcuts
+
+Application bindings (`app.py::BINDINGS`):
 
 | Binding | Action |
 |---|---|
-| `Ctrl+L` | Clear log |
-| `Ctrl+O` | Toggle sidebar |
-| `Ctrl+T` | Toggle sidebar (aliased to `Ctrl+O` so both work) |
-| `Ctrl+R` | Reverse search |
-| `Ctrl+U` / `Ctrl+Y` | Clear / restore input |
+| `Ctrl+C` | Interrupt the current operation |
+| `Ctrl+D` | Exit session (with confirmation) |
+| `Ctrl+A` | Select all |
+| `Ctrl+Q` | Quit |
 | `Ctrl+H` | Show help |
-| `Ctrl+G` | Open in editor |
-| `Ctrl+B` | Background tasks |
+| `Ctrl+U` / `Ctrl+Y` | Clear / restore input |
+| `Ctrl+G` | Open input in `$EDITOR` |
+| `Ctrl+R` | Reverse history search |
 | `Alt+P` | Model picker |
 | `Alt+T` | Toggle extended thinking |
 | `Alt+O` | Toggle fast mode |
-| `Alt+Shift+T` | Switch theme (moved off `Ctrl+T`, which is now the sidebar alias) |
-| `Shift+Tab` | Cycle mode |
-| `Esc Esc` | Rewind |
-| `!` (input prefix) | Direct bash execution |
+| `Alt+D` | Service dashboard |
+| `Shift+Tab` | Cycle reasoning effort / mode |
+| `Esc Esc` | Rewind (experimental) |
 
-**Planned (not yet implemented)**: `@` file-mention autocomplete prefix.
+Main-screen bindings (`screens/main.py::BINDINGS`):
+
+| Binding | Action |
+|---|---|
+| `Ctrl+B` | Toggle workflow sidebar |
+| `Ctrl+L` | Clear conversation |
+| `Ctrl+V` | Toggle server-log panel |
+
+## Input prefixes
+
+- `!` — run the rest of the line as a shell command (e.g. `!ls -la`).
+- `@` — fuzzy file-mention autocomplete (e.g. `@app.py`), via the file
+  suggestions overlay.
+
+## Headless mode
+
+Run a single prompt without the TUI, streaming output to stdout:
+
+```bash
+agent-terminal-ui --headless --prompt "summarize the open PRs"
+agent-terminal-ui --headless --prompt "run the tests" --model claude-opus-4-8
+```
+
+No Textual widget tree is loaded, so a headless instance is lightweight (~30MB) —
+suited to running many concurrent, non-interactive sessions against one shared
+backend. See [Architecture](architecture.md#run-modes).
+
+## Conversation UI
+
+- Structured message blocks: user messages, agent responses (streaming Markdown),
+  and expandable tool-call blocks with status-colored borders.
+- New blocks fade in on mount (`tui/animation.py`); motion is disabled
+  automatically under `TEXTUAL_ANIMATIONS=none` / reduced-motion environments.
+- The conversation prunes to `max_conversation_widgets` (default 50) to bound
+  memory; full history is persisted in SQLite (see
+  [Session Management](session_management.md)).
+- Themes: default `tokyo-night`; switch live with `/theme <name>` across Textual's
+  built-in themes, or set the startup theme via `AGENT_THEME`.

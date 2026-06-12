@@ -59,6 +59,10 @@
 - **screens/agent_view.py** (TUI-20) -- Agent View multi-session dashboard with peek panel
 - **background_runner.py** (TUI-21) -- Background session runner for detached async agents
 - **widgets/goal_status.py** (ORCH-5.0) -- Live goal progress widget
+- **headless.py** -- `HeadlessRunner` + `StreamSink` + `RenderSink` protocol for the no-widget-tree `--headless` run path (lazy-imported from `terminal_ui.py`)
+- **goal.py** -- Dependency-free `GoalSpec` parser for `/goal` (keeps the frontend free of an `agent_utilities` import)
+- **tui/animation.py** -- Shared `animate_in()` entrance fade for conversation widgets (honors `TEXTUAL_ANIMATIONS` / reduced motion)
+- **screens/dashboard.py** -- Alt+D service dashboard, fed over HTTP via `AgentClient.get_dashboard_full()` (no in-process gateway)
 
 ## CLI Flags (ECO-4.5)
 
