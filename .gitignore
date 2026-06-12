@@ -224,3 +224,6 @@ session_*.md
 .tmp/
 .pytest_tmp/
 .hypothesis/
+
+# pytest-textual-snapshot generated report
+snapshot_report.html
