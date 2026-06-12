@@ -1,5 +1,6 @@
 """Tests for the HTTP-backed service dashboard data handling."""
 
+from typing import cast
 from unittest.mock import MagicMock
 
 from agent_terminal_ui.screens.dashboard import DashboardScreen
@@ -25,7 +26,7 @@ def test_apply_data_handles_dict_fields() -> None:
             }
         }
     )
-    card = screen._cards["portainer-1"]
+    card = cast(MagicMock, screen._cards["portainer-1"])
     card.update_data.assert_called_once()
     kwargs = card.update_data.call_args.kwargs
     assert kwargs["status"] == "ok"
@@ -45,7 +46,7 @@ def test_apply_data_handles_list_fields_and_errors() -> None:
             "unknown-service": {"status": "ok", "fields": {}},  # no card; ignored
         }
     )
-    card = screen._cards["svc"]
+    card = cast(MagicMock, screen._cards["svc"])
     kwargs = card.update_data.call_args.kwargs
     assert kwargs["status"] == "error"
     assert kwargs["error"] == "unreachable"

@@ -10,6 +10,8 @@ from textual.app import ComposeResult
 from textual.containers import HorizontalGroup
 from textual.widgets import Static
 
+from agent_terminal_ui.tui.animation import animate_in
+
 
 class UserMessage(HorizontalGroup):
     """A structured widget representing a user message in the conversation.
@@ -23,6 +25,8 @@ class UserMessage(HorizontalGroup):
         height: auto;
         margin: 0 0 1 0;
         padding: 0 1;
+        background: $primary 8%;
+        border-left: thick $primary;
     }
 
     UserMessage .user-prefix {
@@ -34,8 +38,13 @@ class UserMessage(HorizontalGroup):
     UserMessage .user-content {
         width: 1fr;
         color: $text;
+        text-style: bold;
     }
     """
+
+    def on_mount(self) -> None:
+        """Animate the message into view."""
+        animate_in(self)
 
     def __init__(
         self,

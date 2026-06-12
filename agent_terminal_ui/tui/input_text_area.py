@@ -26,9 +26,9 @@ class CommandSuggestionsOverlay(Widget):
         dock: top;
         height: auto;
         max-height: 40%;
-        padding: 1;
+        padding: 0 1 1 1;
         background: $surface;
-        border: solid $border;
+        border: round $primary 60%;
     }
 
     #suggestions-title {
@@ -40,14 +40,22 @@ class CommandSuggestionsOverlay(Widget):
 
     #suggestions-list {
         height: auto;
+        background: transparent;
     }
 
     ListItem {
         padding: 0 1;
+        background: transparent;
     }
 
+    ListView > ListItem.--highlight,
     ListItem.-selected {
-        background: $primary;
+        background: $primary 25%;
+        border-left: thick $primary;
+    }
+
+    ListView:focus > ListItem.--highlight {
+        background: $primary 30%;
     }
     """
 
@@ -73,7 +81,11 @@ class CommandSuggestionsOverlay(Widget):
         self._canonical_commands = canonical_commands or {}
         self._on_select = on_select
         self._on_close = on_close
-        self._filtered_commands = list(commands.keys())
+        # Collapse aliases (e.g. ``quit`` -> ``exit``) so each command appears once.
+        self._command_keys = [
+            cmd for cmd in commands if self._canonical_commands.get(cmd, cmd) == cmd
+        ]
+        self._filtered_commands = list(self._command_keys)
         self._initial_query = initial_query
         self._selected_index = 0
 
@@ -87,6 +99,9 @@ class CommandSuggestionsOverlay(Widget):
 
     def on_mount(self):
         """Set up the overlay when mounted."""
+        from agent_terminal_ui.tui.animation import animate_in
+
+        animate_in(self)
         if self._initial_query:
             self.filter_commands(self._initial_query)
         else:
@@ -99,10 +114,10 @@ class CommandSuggestionsOverlay(Widget):
             query: The current input after the slash
         """
         if not query:
-            self._filtered_commands = sorted(self._commands.keys())
+            self._filtered_commands = sorted(self._command_keys)
         else:
             self._filtered_commands = sorted(
-                [cmd for cmd in self._commands.keys() if cmd.startswith(query)]
+                [cmd for cmd in self._command_keys if cmd.startswith(query)]
             )
         self._update_list()
 

@@ -11,6 +11,7 @@ from textual.app import ComposeResult
 from textual.containers import VerticalGroup
 from textual.widgets import Markdown, Static
 
+from agent_terminal_ui.tui.animation import animate_in
 from agent_terminal_ui.widgets.utils import get_agent_color
 
 
@@ -27,6 +28,8 @@ class AgentResponse(VerticalGroup):
         height: auto;
         margin: 0 0 1 0;
         padding: 0 1;
+        background: $boost;
+        border-left: thick $success 60%;
     }
 
     AgentResponse .agent-prefix {
@@ -40,6 +43,10 @@ class AgentResponse(VerticalGroup):
         margin: 0 0 0 2;
     }
     """
+
+    def on_mount(self) -> None:
+        """Animate the response into view."""
+        animate_in(self)
 
     def __init__(
         self,
