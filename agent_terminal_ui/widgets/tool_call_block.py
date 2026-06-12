@@ -176,6 +176,12 @@ class ToolCallBlock(VerticalGroup):
             if self._details:
                 yield Static(self._details, classes="tool-details", markup=False)
 
+    def on_mount(self) -> None:
+        """Animate the tool call block into view."""
+        from agent_terminal_ui.tui.animation import animate_in
+
+        animate_in(self)
+
     def watch_expanded(self) -> None:
         """React to expansion state changes."""
         try:
