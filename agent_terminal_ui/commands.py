@@ -55,6 +55,7 @@ class CommandProcessor:
             "search": self.cmd_search,
             "stats": self.cmd_stats,
             "cost": self.cmd_stats,
+            "usage": self.cmd_usage,
             "model": self.cmd_model,
             "theme": self.cmd_theme,
             "queue": self.cmd_queue,
@@ -330,9 +331,25 @@ class CommandProcessor:
         await self._submit_prompt(f"Search the codebase for: {args}")
 
     async def cmd_stats(self, args: str) -> None:
-        """Show usage statistics and cost for the current session."""
-        # In a real app, this would fetch data from the server
-        # For now, we use a placeholder or check app state if available
+        """Show live token/cost stats for the current session (CONCEPT:ECO-4.41)."""
+        tracker = getattr(self.app, "cost_tracker", None)
+        if tracker is not None:
+            try:
+                s = tracker.get_session_summary()
+                stats = (
+                    f"[bold blue]This session (live):[/bold blue]\n"
+                    f"- Turns: {s.total_turns}\n"
+                    f"- Tokens: {s.total_input_tokens} in / "
+                    f"{s.total_output_tokens} out\n"
+                    f"- Cache hit: {s.cache_hit_rate * 100:.0f}%\n"
+                    f"- Cost: ${s.total_cost_usd:.4f}\n"
+                    f"[dim]Run /usage (or Alt+U) for cross-agent history.[/dim]"
+                )
+                await self.app.query_one("Conversation").add_info(stats)
+                return
+            except Exception:  # noqa: BLE001
+                pass
+        # Fallback to any server-provided usage snapshot.
         usage = getattr(self.app, "_last_usage", None)
         if usage:
             stats = (
@@ -342,10 +359,18 @@ class CommandProcessor:
             )
         else:
             stats = (
-                "[yellow]Usage statistics not yet available for this session.[/yellow]"
+                "[yellow]No usage yet. Run /usage (Alt+U) for the full "
+                "cross-agent dashboard.[/yellow]"
             )
-
         await self.app.query_one("Conversation").add_info(stats)
+
+    async def cmd_usage(self, args: str) -> None:
+        """Open the full Usage & Cost dashboard (live + cross-agent history)."""
+        action = getattr(self.app, "action_switch_usage", None)
+        if action is not None:
+            action()
+        else:
+            await self.cmd_stats(args)
 
     async def cmd_fleet(self, args: str) -> None:
         """Show fleet topology and approvals, or grant one with ``grant <id>``."""
