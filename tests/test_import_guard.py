@@ -54,3 +54,20 @@ def test_goal_parsing_does_not_import_backend() -> None:
         "GoalSpec.parse_goal_input('fix tests until pytest passes without touching db')"
     )
     assert leaked == set(), f"goal parsing leaked heavy modules: {sorted(leaked)}"
+
+
+def test_dashboard_screen_does_not_import_backend() -> None:
+    """The dashboard fetches over HTTP; importing it must not pull the backend."""
+    leaked = _run_probe("import agent_terminal_ui.screens.dashboard")
+    assert leaked == set(), f"dashboard import leaked heavy modules: {sorted(leaked)}"
+
+
+def test_headless_runner_is_thin() -> None:
+    """Headless mode must not import the TUI (textual) or the backend."""
+    leaked = _run_probe(
+        "import agent_terminal_ui.headless\n"
+        "import sys\n"
+        "tx = [m for m in sys.modules if m == 'textual' or m.startswith('textual.')]\n"
+        "assert not tx, f'headless pulled in textual: {tx}'\n"
+    )
+    assert leaked == set(), f"headless import leaked heavy modules: {sorted(leaked)}"
