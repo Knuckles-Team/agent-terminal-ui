@@ -146,6 +146,7 @@ A [Textual](https://textual.textualize.io/)-based terminal interface for interac
   - `/test` -- run tests on the current codebase
   - `/search` -- search through code and documentation
   - `/stats` -- show statistics about the current session
+  - `/fleet` -- show fleet topology and pending approvals; `/fleet grant <id>` to approve
   - `/cost` -- show token and cost tracking information
   - `/queue` -- show current message queue status
   - `/queue:clear` -- clear all queued messages

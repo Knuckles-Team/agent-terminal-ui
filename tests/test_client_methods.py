@@ -406,3 +406,42 @@ async def test_get_tasks_with_plan(client: AgentClient) -> None:
             "http://localhost:8000/api/enhanced/sdd/tasks",
             params={"plan_id": "plan-1"},
         )
+
+
+@pytest.mark.asyncio
+async def test_get_fleet_topology(client: AgentClient) -> None:
+    """``get_fleet_topology`` GETs ``/api/fleet/topology`` and returns the JSON."""
+    payload = {"workers": [{"host": "r820"}], "replicas": 3}
+    with patch.object(client._http_client, "get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = _mock_response(payload)
+
+        result = await client.get_fleet_topology()
+
+        mock_get.assert_awaited_once_with("http://localhost:8000/api/fleet/topology")
+        assert result == payload
+
+
+@pytest.mark.asyncio
+async def test_get_fleet_approvals_unwraps_dict_envelope(client: AgentClient) -> None:
+    """``get_fleet_approvals`` returns the ``approvals`` list from a dict envelope."""
+    with patch.object(client._http_client, "get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = _mock_response({"approvals": [{"id": "a1"}]})
+
+        result = await client.get_fleet_approvals()
+
+        assert result == [{"id": "a1"}]
+
+
+@pytest.mark.asyncio
+async def test_grant_fleet_approval_posts_id(client: AgentClient) -> None:
+    """``grant_fleet_approval`` POSTs the approval id to the grant endpoint."""
+    with patch.object(client._http_client, "post", new_callable=AsyncMock) as mock_post:
+        mock_post.return_value = _mock_response({"granted": "a1"})
+
+        result = await client.grant_fleet_approval("a1")
+
+        mock_post.assert_awaited_once_with(
+            "http://localhost:8000/api/fleet/approvals/grant",
+            json={"approval_id": "a1"},
+        )
+        assert result == {"granted": "a1"}
