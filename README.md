@@ -34,7 +34,7 @@ A [Textual](https://textual.textualize.io/)-based terminal interface for interac
 - **MCP server browser** -- inspect connected MCP servers and their tools
 
 #### Session Persistence & Crash Recovery (TUI-1)
-- **SQLite-backed sessions** -- durable session storage at `~/.config/agent-terminal-ui/agent_terminal_ui.db`
+- **SQLite-backed sessions** -- durable session storage at `~/.local/share/agent-utilities/agent_terminal_ui.db` (override the directory with `AGENT_UTILITIES_DATA_DIR`)
 - **Pre-turn checkpointing** -- automatic checkpoints before each turn for crash recovery
 - **Session fork/resume** -- fork sessions at any turn number with `fork_session()`
 - **Offline queue** -- messages queued during disconnection survive process restarts
@@ -132,7 +132,7 @@ A [Textual](https://textual.textualize.io/)-based terminal interface for interac
 - **Message queuing** -- queue messages while agent is processing; related queries are intelligently combined using regex patterns for conjunctions, sequential actions, and similar structure
 - **Exit confirmation** -- modal dialog prevents accidental termination via Ctrl+C or `/exit`
 - **Terminal transparency** -- UI respects your terminal's transparency settings for seamless integration
-- **Theme system** -- multiple built-in themes (modern_dark, modern_light, nord, gruvbox) with proper color semantics
+- **Theme system** -- Textual's built-in themes (default tokyo-night; nord, gruvbox, dracula, and more) switchable with `/theme`
 
 #### Commands
 - **Slash commands** -- comprehensive command set for common operations:
@@ -213,6 +213,21 @@ agent-terminal-ui --headless --prompt "summarize the open PRs"
 agent-terminal-ui --headless --prompt "run the tests" --model claude-opus-4-8
 ```
 
+### Docker
+
+A slim, runtime-only image (`Dockerfile`, `python:3.13-slim`) ships the frontend
+without test/shell extras or the `agent_utilities` backend. Point it at a shared
+backend with `AGENT_URL`:
+
+```bash
+docker build -t agent-terminal-ui .
+docker run --rm -e AGENT_URL=http://agent-utilities:8000 \
+  agent-terminal-ui --headless --prompt "status report"
+```
+
+Because the backend is the heavy component, run one backend service and many
+lightweight frontends against it.
+
 ### Keyboard Shortcuts
 
 - **Ctrl+C** -- Interrupt generation or cancel current operation
@@ -248,20 +263,19 @@ Example: If you type "fix the bug in app.py" followed by "and add a test for it"
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `AGENT_URL` | `http://localhost:8000` | Agent server URL |
+| `AGENT_URL` | `http://localhost:8000` | Agent server URL (interactive and headless) |
 | `ENABLE_ACP` | `false` | Enable ACP protocol instead of AG-UI |
-| `ACP_URL` | `http://localhost:8001` | ACP server URL (when ACP is enabled) |
+| `ACP_URL` | `http://localhost:8001` | Documented but not read; effective ACP URL is `{AGENT_URL}/acp` |
+| `AGENT_THEME` | `tokyo-night` | Startup theme (any Textual built-in theme name) |
 
 ### Themes
 
-The TUI supports multiple themes that respect terminal transparency:
+The TUI uses Textual's built-in themes. The default is **tokyo-night**; others
+include **nord**, **gruvbox**, **dracula**, **monokai**, **textual-dark**, and
+**textual-light**.
 
-- **modern_dark** (default) -- Dark theme with blue accents
-- **modern_light** -- Light theme with proper contrast
-- **nord** -- Nord color palette with frosty aesthetics
-- **gruvbox** -- Gruvbox retro color scheme
-
-Switch themes using `/theme <name>` command.
+Switch themes live with the `/theme <name>` command, or set the startup theme via
+the `AGENT_THEME` environment variable.
 
 
 ## Development
