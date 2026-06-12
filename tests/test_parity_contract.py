@@ -88,10 +88,10 @@ def _public_async_methods(cls: type) -> list[str]:
 
     Includes both plain coroutines and async generators (e.g. ``stream``,
     ``stream_events``) since both dispatch real HTTP traffic. Private
-    helpers and cleanup coroutines (``close``) are filtered because they
-    are not required to reference a backend endpoint.
+    helpers and cleanup coroutines (``close``, ``aclose``) are filtered
+    because they are not required to reference a backend endpoint.
     """
-    skip = {"close"}
+    skip = {"close", "aclose"}
     names: list[str] = []
     for name, value in inspect.getmembers(cls, predicate=callable):
         if name.startswith("_") or name in skip:
