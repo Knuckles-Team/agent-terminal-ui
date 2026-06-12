@@ -76,6 +76,7 @@ class CommandProcessor:
             "kb": self.cmd_kb,
             "sdd": self.cmd_sdd,
             "impact": self.cmd_impact,
+            "fleet": self.cmd_fleet,
             "mcp:reload": self.cmd_mcp_reload,
             "codemap": self.cmd_codemap,
             "resources": self.cmd_resources,
@@ -345,6 +346,53 @@ class CommandProcessor:
             )
 
         await self.app.query_one("Conversation").add_info(stats)
+
+    async def cmd_fleet(self, args: str) -> None:
+        """Show fleet topology and approvals, or grant one with ``grant <id>``."""
+        conversation = self.app.query_one("Conversation")
+        client = getattr(self.app, "agent_client", None)
+        if client is None:
+            await conversation.add_info(
+                "[yellow]Fleet view requires an agent backend connection.[/yellow]"
+            )
+            return
+
+        parts = args.strip().split()
+        if parts and parts[0] == "grant":
+            if len(parts) < 2:
+                await conversation.add_info(
+                    "[yellow]Usage: /fleet grant <approval_id>[/yellow]"
+                )
+                return
+            try:
+                await client.grant_fleet_approval(parts[1])
+            except Exception as exc:
+                await conversation.add_info(f"[red]Grant failed: {exc}[/red]")
+                return
+            await conversation.add_info(f"[green]Granted approval {parts[1]}.[/green]")
+            return
+
+        try:
+            topology = await client.get_fleet_topology()
+            approvals = await client.get_fleet_approvals()
+        except Exception as exc:
+            await conversation.add_info(f"[red]Fleet unavailable: {exc}[/red]")
+            return
+
+        lines = ["[bold blue]Fleet Supervisor[/bold blue]"]
+        if topology:
+            lines.append("[bold]Topology[/bold]")
+            for key, value in topology.items():
+                lines.append(f"- {key}: {value}")
+        lines.append(f"[bold]Pending approvals:[/bold] {len(approvals)}")
+        for approval in approvals:
+            approval_id = approval.get("id") or approval.get("approval_id") or "?"
+            action = approval.get("action", "")
+            target = approval.get("target") or approval.get("subject") or ""
+            lines.append(f"- {approval_id}: {action} {target}".rstrip())
+        if approvals:
+            lines.append("[dim]Grant with /fleet grant <id>[/dim]")
+        await conversation.add_info("\n".join(lines))
 
     async def cmd_model(self, args: str) -> None:
         """List, select, or inspect configured models.

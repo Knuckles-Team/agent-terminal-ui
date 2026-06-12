@@ -458,6 +458,45 @@ class AgentClient:
         response.raise_for_status()
         return response.json()
 
+    async def get_fleet_topology(self) -> dict[str, Any]:
+        """Fetch the fleet worker and placement topology (OS-5.10).
+
+        Returns:
+            Dictionary describing fleet workers and their placement.
+        """
+        response = await self._http_client.get(f"{self.base_url}/api/fleet/topology")
+        response.raise_for_status()
+        return response.json()
+
+    async def get_fleet_approvals(self) -> list[dict[str, Any]]:
+        """Fetch pending ActionPolicy approvals awaiting a decision (OS-5.24).
+
+        Returns:
+            List of pending approval dictionaries.
+        """
+        response = await self._http_client.get(f"{self.base_url}/api/fleet/approvals")
+        response.raise_for_status()
+        data = response.json()
+        if isinstance(data, dict):
+            return data.get("approvals", [])
+        return data if isinstance(data, list) else []
+
+    async def grant_fleet_approval(self, approval_id: str) -> dict[str, Any]:
+        """Grant a pending fleet approval by identifier.
+
+        Args:
+            approval_id: The identifier of the approval to grant.
+
+        Returns:
+            The gateway response payload.
+        """
+        response = await self._http_client.post(
+            f"{self.base_url}/api/fleet/approvals/grant",
+            json={"approval_id": approval_id},
+        )
+        response.raise_for_status()
+        return response.json()
+
     async def list_graph_nodes(
         self, node_type: str | None = None
     ) -> list[dict[str, Any]]:
