@@ -843,7 +843,7 @@ class CommandProcessor:
             )
             return
 
-        from agent_utilities.models.goal import GoalSpec
+        from agent_terminal_ui.goal import GoalSpec
 
         spec = GoalSpec.parse_goal_input(args)
         spec.session_id = getattr(self.app, "_session_id", "")
