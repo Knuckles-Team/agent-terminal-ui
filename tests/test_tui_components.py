@@ -844,6 +844,7 @@ async def test_exit_confirm_screen_callback_errors_are_swallowed():
 
 def test_terminal_ui_entry_calls_main(monkeypatch):
     monkeypatch.setattr("sys.argv", ["agent-terminal-ui"])
+    from agent_terminal_ui import app as app_module
     from agent_terminal_ui import terminal_ui as ui_module
 
     called = {}
@@ -851,9 +852,28 @@ def test_terminal_ui_entry_calls_main(monkeypatch):
     def fake_main(*args, **kwargs):
         called["hit"] = True
 
-    monkeypatch.setattr(ui_module, "main", fake_main)
+    # ``main`` is imported lazily inside terminal_ui() (so headless runs stay
+    # light), so patch it at its source module.
+    monkeypatch.setattr(app_module, "main", fake_main)
     ui_module.terminal_ui()
     assert called.get("hit") is True
+
+
+def test_terminal_ui_headless_runs_without_tui(monkeypatch):
+    monkeypatch.setattr(
+        "sys.argv", ["agent-terminal-ui", "--headless", "--prompt", "hi there"]
+    )
+    from agent_terminal_ui import headless as headless_module
+    from agent_terminal_ui import terminal_ui as ui_module
+
+    captured = {}
+
+    async def fake_run_headless(prompt, **kwargs):
+        captured["prompt"] = prompt
+
+    monkeypatch.setattr(headless_module, "run_headless", fake_run_headless)
+    ui_module.terminal_ui()
+    assert captured["prompt"] == "hi there"
 
 
 def test_app_main_constructs_and_runs(monkeypatch):

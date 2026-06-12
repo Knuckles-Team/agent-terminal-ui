@@ -550,6 +550,32 @@ class AgentClient:
         response.raise_for_status()
         return response.json()
 
+    async def aclose(self) -> None:
+        """Close the underlying HTTP client and release its connections."""
+        await self._http_client.aclose()
+
+    async def get_dashboard_full(self) -> dict[str, Any]:
+        """Fetch the service dashboard layout and widget data in one request.
+
+        Returns:
+            ``{"layout": {...}, "data": {service_id: {...}}}`` from the backend
+            gateway's ``/api/dashboard/full`` endpoint. Fetching over HTTP keeps
+            the frontend free of the heavy ``agent_utilities`` gateway package.
+        """
+        response = await self._http_client.get(f"{self.base_url}/api/dashboard/full")
+        response.raise_for_status()
+        return response.json()
+
+    async def get_dashboard_data(self) -> dict[str, Any]:
+        """Fetch current widget data for all configured dashboard services.
+
+        Returns:
+            Mapping of ``service_id`` to its widget-data dictionary.
+        """
+        response = await self._http_client.get(f"{self.base_url}/api/dashboard/data")
+        response.raise_for_status()
+        return response.json()
+
     async def generate_codemap(self, prompt: str) -> dict[str, Any]:
         """Generate a codebase codemap artifact for ``prompt``.
 

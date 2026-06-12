@@ -202,6 +202,17 @@ Or run with `uv` if installed locally:
 uv run agent-terminal-ui
 ```
 
+### Headless mode
+
+Run a single prompt without the TUI, streaming the response to stdout. No Textual
+widget tree is loaded, so a headless instance is lightweight (~30MB) -- suited to
+running many concurrent, non-interactive sessions against one shared backend.
+
+```bash
+agent-terminal-ui --headless --prompt "summarize the open PRs"
+agent-terminal-ui --headless --prompt "run the tests" --model claude-opus-4-8
+```
+
 ### Keyboard Shortcuts
 
 - **Ctrl+C** -- Interrupt generation or cancel current operation

@@ -65,6 +65,7 @@
 - `--prompt TEXT` -- Inject an initial task on launch. Auto-submitted via `on_mount` once the TUI is ready.
 - `--override` -- Yolo mode. Auto-approves all pending tool calls, bypassing `ToolApprovalScreen`.
 - `--bg` -- Start in Agent View (background mode). Launches session as background worker.
+- `--headless` -- Run `--prompt` without the TUI, streaming output to stdout (`headless.py`: `HeadlessRunner` + `StreamSink`). No Textual is imported, so a headless instance stays light (~30MB) -- the substrate for many concurrent non-interactive sessions against one shared backend. Requires `--prompt`; optional `--model`.
 
 ## Detailed Documentation
 
