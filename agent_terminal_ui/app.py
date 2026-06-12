@@ -108,6 +108,7 @@ class AgentApp(App):
         Binding("alt+t", "toggle_thinking", "Thinking", show=False, priority=True),
         Binding("alt+o", "toggle_fast_mode", "Fast", show=False, priority=True),
         Binding("alt+d", "switch_dashboard", "Dashboard", show=True, priority=True),
+        Binding("alt+u", "switch_usage", "Usage", show=True, priority=True),
         Binding("escape,escape", "rewind", "Rewind", show=False, priority=True),
     ]
 
@@ -800,6 +801,33 @@ class AgentApp(App):
             self.push_screen(DashboardScreen())
         except ImportError:
             self.notify("Dashboard requires service-dashboard-core", severity="warning")
+
+    def action_switch_usage(self) -> None:
+        """Switch to the Usage & Cost screen (Alt+U / /usage). CONCEPT:ECO-4.41."""
+        try:
+            from agent_terminal_ui.screens.usage import UsageScreen
+
+            self.push_screen(UsageScreen())
+        except Exception as e:  # noqa: BLE001
+            self.notify(f"Usage screen unavailable: {e}", severity="warning")
+
+    @property
+    def cost_tracker(self):
+        """Lazily-instantiated local per-session cost ledger (CONCEPT:ECO-4.41).
+
+        Lives on the app so both the Usage screen and the status line read one
+        instance. Returns None if the tracker module is unavailable.
+        """
+        existing = getattr(self, "_cost_tracker", None)
+        if existing is not None:
+            return existing
+        try:
+            from agent_terminal_ui.cost_tracker import CostTracker
+
+            self._cost_tracker = CostTracker()
+        except Exception:  # noqa: BLE001
+            self._cost_tracker = None
+        return self._cost_tracker
 
     def action_rewind(self) -> None:
         """Rewind conversation or code checkpoint (Esc Esc)."""

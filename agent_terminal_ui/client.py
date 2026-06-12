@@ -266,6 +266,37 @@ class AgentClient:
             logger.error(f"Failed to fetch tools registry: {e}")
             return []
 
+    async def _obs_get(self, path: str, params: dict | None = None) -> Any:
+        """GET an /api/observability/* endpoint (CONCEPT:ECO-4.41)."""
+        try:
+            response = await self._http_client.get(
+                f"{self.base_url}/api/observability{path}",
+                params={k: v for k, v in (params or {}).items() if v},
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            logger.debug(f"observability {path} failed: {e}")
+            return None
+
+    async def get_usage_summary(self, **f: Any) -> dict[str, Any]:
+        return await self._obs_get("/summary", f) or {}
+
+    async def get_usage_by_model(self, **f: Any) -> list[dict[str, Any]]:
+        return await self._obs_get("/by-model", f) or []
+
+    async def get_usage_tools(self, **f: Any) -> list[dict[str, Any]]:
+        return await self._obs_get("/analytics/tools", f) or []
+
+    async def get_usage_activity(self, **f: Any) -> list[dict[str, Any]]:
+        return await self._obs_get("/analytics/activity", f) or []
+
+    async def get_usage_top_sessions(self, *, limit: int = 20, **f: Any) -> list[dict[str, Any]]:
+        return await self._obs_get("/top-sessions", {"limit": limit, **f}) or []
+
+    async def get_usage_traces(self) -> dict[str, Any]:
+        return await self._obs_get("/traces") or {"enabled": False, "traces": []}
+
     async def get_chat(self, chat_id: str) -> dict[str, Any]:
         """Fetch full history for a specific chat session.
 
