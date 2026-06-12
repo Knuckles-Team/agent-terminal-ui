@@ -244,7 +244,7 @@ class DashboardScreen(Screen):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
-        self._aggregator = None
+        self._available = False
         self._cards: dict[str, ServiceCard] = {}
         self._streaming = False
         self._refresh_task: asyncio.Task | None = None
@@ -270,50 +270,35 @@ class DashboardScreen(Screen):
         yield Footer()
 
     async def on_mount(self) -> None:
-        """Initialize the aggregator and populate the dashboard."""
-        await self._init_aggregator()
+        """Populate the dashboard from the backend over HTTP."""
         await self._populate_dashboard()
         self._start_streaming()
 
-    async def _init_aggregator(self) -> None:
-        """Lazy-import and initialize the aggregator."""
-        try:
-            from agent_utilities.gateway.aggregator import Aggregator
-
-            self._aggregator = Aggregator()
-        except ImportError:
-            logger.warning(
-                "agent-utilities gateway not available — showing placeholder."
-            )
-
     async def _populate_dashboard(self) -> None:
-        """Build the initial dashboard layout from config."""
+        """Build the initial dashboard layout from the backend gateway.
+
+        Fetches layout + data over HTTP via the shared ``AgentClient`` so the
+        frontend never imports the heavy ``agent_utilities`` gateway in-process.
+        """
         container = self.query_one("#dashboard-scroll", ScrollableContainer)
 
-        if not self._aggregator:
-            await container.mount(
-                Label(
-                    "⚠ agent-utilities gateway not available.\n"
-                    "Install it with: pip install agent-utilities",
-                    id="dashboard-empty",
-                )
-            )
-            return
-
-        # Load layout and build groups
         try:
-            layout = self._aggregator.get_layout()
+            full = await self.app.agent_client.get_dashboard_full()
         except Exception as e:
-            logger.error("Failed to load dashboard layout: %s", e)
+            logger.warning("Dashboard backend unavailable: %s", e)
             await container.mount(
                 Label(
-                    f"⚠ Failed to load dashboard config: {e}",
+                    "⚠ Dashboard backend unavailable.\n"
+                    f"Could not reach {self.app.agent_client.base_url}"
+                    "/api/dashboard/full",
                     id="dashboard-empty",
                 )
             )
             return
 
-        if not layout.groups:
+        layout = full.get("layout", {})
+        groups = layout.get("groups", [])
+        if not groups:
             await container.mount(
                 Label(
                     "No services configured.\n"
@@ -323,47 +308,44 @@ class DashboardScreen(Screen):
             )
             return
 
-        for group in layout.groups:
-            cat_group = CategoryGroup(
-                category_name=group.name,
-                id=f"group-{group.name.replace(' ', '-').lower()}",
-            )
+        for group in groups:
+            group_name = group.get("name", "")
+            slug = group_name.replace(" ", "-").lower()
+            cat_group = CategoryGroup(category_name=group_name, id=f"group-{slug}")
             await container.mount(cat_group)
 
-            cards_container = cat_group.query_one(
-                f"#cards-{group.name.replace(' ', '-').lower()}", Horizontal
-            )
+            cards_container = cat_group.query_one(f"#cards-{slug}", Horizontal)
 
-            for svc in group.services:
-                if not svc.visible:
+            for svc in group.get("services", []):
+                if not svc.get("visible", True):
                     continue
+                svc_id = svc.get("id", "")
                 card = ServiceCard(
-                    service_id=svc.id,
-                    display_name=svc.name,
-                    url=svc.url or "",
-                    id=f"card-{svc.id}",
+                    service_id=svc_id,
+                    display_name=svc.get("name", svc_id),
+                    url=svc.get("url", ""),
+                    id=f"card-{svc_id}",
                 )
-                self._cards[svc.id] = card
+                self._cards[svc_id] = card
                 await cards_container.mount(card)
 
-        # Update header stats
-        total = len(self._cards)
-        self._update_stats(total, 0, 0)
-
-        # Initial fetch
-        await self._refresh_data()
+        self._available = True
+        self._update_stats(len(self._cards), 0, 0)
+        self._apply_data(full.get("data", {}))
 
     async def _refresh_data(self) -> None:
-        """Fetch all widget data and update cards."""
-        if not self._aggregator:
+        """Fetch all widget data over HTTP and update cards."""
+        if not self._available:
             return
-
         try:
-            data = await self._aggregator.fetch_all()
+            data = await self.app.agent_client.get_dashboard_data()
         except Exception as e:
             logger.error("Dashboard refresh failed: %s", e)
             return
+        self._apply_data(data)
 
+    def _apply_data(self, data: dict[str, Any]) -> None:
+        """Update cards from a ``{service_id: widget_data}`` mapping."""
         ok_count = 0
         err_count = 0
 
@@ -372,20 +354,24 @@ class DashboardScreen(Screen):
             if not card:
                 continue
 
-            fields = []
-            if widget_data.fields:
-                for f in widget_data.fields:
-                    fields.append((f.label, str(f.value)))
+            raw_fields = widget_data.get("fields") or {}
+            if isinstance(raw_fields, dict):
+                fields = [(label, str(value)) for label, value in raw_fields.items()]
+            else:
+                fields = [
+                    (f.get("label", ""), str(f.get("value", ""))) for f in raw_fields
+                ]
 
+            status = widget_data.get("status", "unknown")
             card.update_data(
-                status=widget_data.status,
+                status=status,
                 fields=fields,
-                error=widget_data.error,
+                error=widget_data.get("error"),
             )
 
-            if widget_data.status == "ok":
+            if status == "ok":
                 ok_count += 1
-            elif widget_data.status == "error":
+            elif status == "error":
                 err_count += 1
 
         self._update_stats(len(self._cards), ok_count, err_count)
@@ -402,7 +388,7 @@ class DashboardScreen(Screen):
 
     def _start_streaming(self) -> None:
         """Start background streaming refresh."""
-        if not self._streaming and self._aggregator:
+        if not self._streaming and self._available:
             self._streaming = True
             self._run_stream()
 

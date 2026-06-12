@@ -43,6 +43,10 @@ def fake_client() -> AsyncMock:
     )
     client.get_graph_stats = AsyncMock(return_value={})
     client.search_graph = AsyncMock(return_value=[])
+    client.get_dashboard_full = AsyncMock(
+        return_value={"layout": {"groups": []}, "data": {}}
+    )
+    client.get_dashboard_data = AsyncMock(return_value={})
 
     async def _empty_stream(*_args, **_kwargs):
         for _ in ():
