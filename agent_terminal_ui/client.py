@@ -83,6 +83,41 @@ class AgentClient:
                     except json.JSONDecodeError:
                         continue
 
+    async def submit_extraction(
+        self, *, text: str = "", url: str = "", rounds: int = 1, dedup: bool = True
+    ) -> dict[str, Any]:
+        """Submit a document fact-extraction job to the gateway (ECO-4.43)."""
+        resp = await self._http_client.post(
+            f"{self.base_url}/api/enhanced/extract/submit",
+            json={"text": text, "url": url, "rounds": rounds, "dedup": dedup},
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+    async def stream_extraction(
+        self, job_id: str
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        """Stream a job's extraction events (round_start|fact|…|job_done)."""
+        async with self._http_client.stream(
+            "GET",
+            f"{self.base_url}/api/enhanced/extract/stream/{job_id}",
+            timeout=None,
+        ) as stream:
+            async for line in stream.aiter_lines():
+                if line.startswith("data: "):
+                    try:
+                        yield json.loads(line[6:])
+                    except json.JSONDecodeError:
+                        continue
+
+    async def extraction_jsonl(self, job_id: str) -> str:
+        """Fetch a job's facts as JSONL text (upstream parity)."""
+        resp = await self._http_client.get(
+            f"{self.base_url}/api/enhanced/extract/jsonl/{job_id}"
+        )
+        resp.raise_for_status()
+        return resp.text
+
     async def stream(
         self,
         query: str,
@@ -291,7 +326,9 @@ class AgentClient:
     async def get_usage_activity(self, **f: Any) -> list[dict[str, Any]]:
         return await self._obs_get("/analytics/activity", f) or []
 
-    async def get_usage_top_sessions(self, *, limit: int = 20, **f: Any) -> list[dict[str, Any]]:
+    async def get_usage_top_sessions(
+        self, *, limit: int = 20, **f: Any
+    ) -> list[dict[str, Any]]:
         return await self._obs_get("/top-sessions", {"limit": limit, **f}) or []
 
     async def get_usage_traces(self) -> dict[str, Any]:
