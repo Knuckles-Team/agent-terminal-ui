@@ -74,6 +74,7 @@ class CommandProcessor:
             "simplify": self.cmd_simplify,
             "add-dir": self.cmd_add_dir,
             "graph": self.cmd_graph,
+            "ingest": self.cmd_ingest,
             "kb": self.cmd_kb,
             "sdd": self.cmd_sdd,
             "impact": self.cmd_impact,
@@ -371,6 +372,121 @@ class CommandProcessor:
             action()
         else:
             await self.cmd_stats(args)
+
+    async def cmd_ingest(self, args: str) -> None:
+        """Extract a knowledge graph from a URL, file, or text (live).
+
+        Usage:
+            /ingest <url>              extract from a web page (readability)
+            /ingest <path>             extract from a local file
+            /ingest -- <text>          extract from inline text
+            /ingest jsonl <job_id>     download a finished job's facts as JSONL
+
+        Facts stream in live as (subject)-[predicate]->(object) rows with
+        confidence, tags, and evidence. Backed by the GPU-slot scheduler
+        (ECO-4.43).
+        """
+        conversation = self.app.query_one("Conversation")
+        client = getattr(self.app, "agent_client", None)
+        if client is None:
+            await conversation.add_info(
+                "[yellow]/ingest requires an agent backend connection.[/yellow]"
+            )
+            return
+
+        raw = args.strip()
+        if not raw:
+            await conversation.add_info(
+                "[yellow]Usage: /ingest <url|path>  |  /ingest -- <text>  |  "
+                "/ingest jsonl <job_id>[/yellow]"
+            )
+            return
+
+        parts = raw.split(maxsplit=1)
+        if parts[0] == "jsonl":
+            if len(parts) < 2:
+                await conversation.add_info(
+                    "[yellow]Usage: /ingest jsonl <job_id>[/yellow]"
+                )
+                return
+            try:
+                jsonl = await client.extraction_jsonl(parts[1].strip())
+            except Exception as exc:
+                await conversation.add_info(f"[red]JSONL fetch failed: {exc}[/red]")
+                return
+            lines = jsonl.strip().splitlines()
+            await conversation.add_info(
+                f"[green]{len(lines)} facts[/green] (job {parts[1].strip()}):\n"
+                + "\n".join(f"[dim]{ln}[/dim]" for ln in lines[:50])
+                + ("\n…" if len(lines) > 50 else "")
+            )
+            return
+
+        text = ""
+        url = ""
+        if parts[0] == "--":
+            text = parts[1] if len(parts) > 1 else ""
+        elif raw.startswith(("http://", "https://")):
+            url = raw
+        else:
+            from pathlib import Path
+
+            p = Path(raw).expanduser()
+            if p.is_file():
+                text = p.read_text(encoding="utf-8", errors="ignore")
+            else:
+                url = raw  # let the gateway's reader try it as a URL
+
+        try:
+            res = await client.submit_extraction(text=text, url=url)
+        except Exception as exc:
+            await conversation.add_info(f"[red]Extraction submit failed: {exc}[/red]")
+            return
+        job_id = res.get("job_id")
+        if res.get("status") != "submitted" or not job_id:
+            msg = res.get("message", "engine cold?")
+            await conversation.add_info(
+                f"[yellow]Extraction unavailable: {msg}[/yellow]"
+            )
+            return
+
+        await conversation.add_info(
+            f"[bold blue]Extracting[/bold blue] (job [cyan]{job_id}[/cyan])… "
+            "facts stream below; `/ingest jsonl " + job_id + "` to export."
+        )
+
+        kept = 0
+        dupes = 0
+        try:
+            async for ev in client.stream_extraction(job_id):
+                etype = ev.get("type")
+                if etype == "fact":
+                    f = ev.get("fact", {})
+                    is_dup = bool(ev.get("is_duplicate"))
+                    if is_dup:
+                        dupes += 1
+                        continue
+                    kept += 1
+                    tags = " ".join(f"#{t}" for t in (f.get("tags") or [])[:4])
+                    conf = f.get("confidence", "–")
+                    line = (
+                        f"[blue]{f.get('subject', '')}[/blue] "
+                        f"[magenta]{f.get('predicate', '')}[/magenta] "
+                        f"[green]{f.get('object', '')}[/green]  "
+                        f"[dim]conf {conf}%  {tags}[/dim]"
+                    )
+                    await conversation.add_info(line)
+                elif etype == "job_done":
+                    break
+        except Exception as exc:
+            await conversation.add_info(f"[red]Stream error: {exc}[/red]")
+            return
+
+        await conversation.add_info(
+            f"[green]Done[/green] — {kept} facts"
+            + (f" ([dim]{dupes} duplicates suppressed[/dim])" if dupes else "")
+            + f". Export: /ingest jsonl {job_id}"
+        )
 
     async def cmd_fleet(self, args: str) -> None:
         """Show fleet topology and approvals, or grant one with ``grant <id>``."""
