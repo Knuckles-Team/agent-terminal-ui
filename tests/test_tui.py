@@ -1,5 +1,4 @@
 import pytest
-from textual.widgets import RichLog
 
 from agent_terminal_ui.app import AgentApp
 from agent_terminal_ui.tui.input_text_area import InputTextArea

@@ -25,7 +25,7 @@ textual.constants.TEXTUAL_ANIMATIONS = "none"
 
 @pytest.fixture(autouse=True)
 def isolated_data_dir(tmp_path: Path) -> Iterator[Path]:
-    """Point session/task persistence at a throwaway directory (applied to all tests)."""
+    """Point session/task persistence at a throwaway dir (applied to all tests)."""
     prev = os.environ.get("AGENT_UTILITIES_DATA_DIR")
     os.environ["AGENT_UTILITIES_DATA_DIR"] = str(tmp_path)
     try:

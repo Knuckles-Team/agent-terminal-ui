@@ -10,12 +10,13 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import pytest
+from textual.app import App, ComposeResult
+
 from agent_terminal_ui.tui.input_text_area import (
     CommandSuggestionsOverlay,
     FileSuggestionsOverlay,
     InputTextArea,
 )
-from textual.app import App, ComposeResult
 
 
 @pytest.mark.asyncio
@@ -165,7 +166,7 @@ async def test_input_text_area_show_suggestion_popup_no_commands():
             yield InputTextArea(commands={})
 
     app = _Host()
-    async with app.run_test() as pilot:
+    async with app.run_test():
         area = app.query_one(InputTextArea)
         area.text = "/unknown"
         area._show_suggestion_popup()
@@ -183,7 +184,7 @@ async def test_input_text_area_show_suggestion_popup_not_slash():
             yield InputTextArea(commands={"help": help_cmd})
 
     app = _Host()
-    async with app.run_test() as pilot:
+    async with app.run_test():
         area = app.query_one(InputTextArea)
         area.text = "no slash"
         area._show_suggestion_popup()
@@ -220,7 +221,7 @@ async def test_input_text_area_show_command_suggestions_no_matches():
             yield InputTextArea(commands={"foo": foo})
 
     app = _Host()
-    async with app.run_test() as pilot:
+    async with app.run_test():
         area = app.query_one(InputTextArea)
         area.text = "/nope"
         area._show_command_suggestions()  # no matches → no-op
@@ -233,7 +234,7 @@ async def test_input_text_area_show_command_suggestions_not_slash():
             yield InputTextArea(commands={})
 
     app = _Host()
-    async with app.run_test() as pilot:
+    async with app.run_test():
         area = app.query_one(InputTextArea)
         area.text = "notaslash"
         area._show_command_suggestions()
@@ -247,7 +248,7 @@ async def test_input_text_area_show_file_suggestions_no_at():
             yield InputTextArea(commands={})
 
     app = _Host()
-    async with app.run_test() as pilot:
+    async with app.run_test():
         area = app.query_one(InputTextArea)
         area.text = "no at here"
         area._show_file_suggestions()  # early return
@@ -265,7 +266,7 @@ async def test_input_text_area_update_suggestion_popup():
             yield InputTextArea(commands={"cmd": cmd})
 
     app = _Host()
-    async with app.run_test() as pilot:
+    async with app.run_test():
         area = app.query_one(InputTextArea)
         area.text = "/c"
         area._update_suggestion_popup()  # delegates to _show_suggestion_popup

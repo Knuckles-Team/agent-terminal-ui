@@ -12,9 +12,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
+
 from agent_terminal_ui.client import AgentClient
 from agent_terminal_ui.commands import CommandProcessor
-from agent_terminal_ui.tui.agent_timer import AgentTimer, SPINNER_FRAMES
+from agent_terminal_ui.tui.agent_timer import SPINNER_FRAMES, AgentTimer
 from agent_terminal_ui.tui.exit_confirm_screen import (
     ClickableLabel,
     ExitConfirmScreen,
@@ -35,7 +36,6 @@ from agent_terminal_ui.tui.tool_display._formatters import (
 )
 from agent_terminal_ui.tui.tool_display._registry import get_formatter
 from agent_terminal_ui.widgets.workflow import WorkflowSidebar
-
 
 # ---------------------------------------------------------------------------
 # Formatters: get_agent_color + format_agent_prefix* (pure helpers)
@@ -1042,6 +1042,7 @@ async def test_agent_app_handle_tool_call_and_output():
         )
         assert "c1" in app._pending_tool_calls
 
-        # Since we use AG-UI, outputs are typically not routed through pending tool calls directly
+        # Since we use AG-UI, outputs are typically not routed through pending
+        # tool calls directly
         # but just handled via sideband/MainScreen in the new architecture.
         # We just verify pending calls was updated.

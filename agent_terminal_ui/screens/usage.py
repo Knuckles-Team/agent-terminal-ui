@@ -108,7 +108,9 @@ class UsageScreen(Screen):
             sessions = await client.get_usage_top_sessions(limit=15)
             traces = await client.get_usage_traces()
         except Exception as e:  # noqa: BLE001
-            self.query_one("#usage-hist", Static).update(f"[red]gateway error: {e}[/red]")
+            self.query_one("#usage-hist", Static).update(
+                f"[red]gateway error: {e}[/red]"
+            )
             return
 
         totals = (summary or {}).get("totals", {})

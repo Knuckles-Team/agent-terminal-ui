@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-import pytest
-
 from agent_terminal_ui.danger import (
     ApprovalEngine,
     ApprovalPolicy,
     DangerLevel,
-    classify_command,
 )
 
 
