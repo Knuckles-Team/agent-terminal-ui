@@ -399,7 +399,7 @@ class TestStatsCommand:
         event_log = mock_app.query_one("Conversation")
         event_log.add_info.assert_called()
         written_text = event_log.add_info.call_args[0][0]
-        assert "not yet available" in written_text
+        assert "No usage yet" in written_text
 
     @pytest.mark.asyncio
     async def test_cmd_cost_alias(self, command_processor, mock_app):

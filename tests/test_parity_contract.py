@@ -194,7 +194,30 @@ class TestClientMethodsReferenceBackendRoutes:
                 if match in public and match != name
             }
 
-            if not has_path and not has_documented_verb and not delegates:
+            # Also accept delegation to a routed helper on ``self`` (public or
+            # private, e.g. ``_obs_get``) whose own source references a backend
+            # route — the path is just assembled one hop away.
+            routed_helper = False
+            for match in set(_SELF_DELEGATION_PATTERN.findall(source)):
+                if match == name:
+                    continue
+                helper = getattr(AgentClient, match, None)
+                if helper is None:
+                    continue
+                try:
+                    helper_source = inspect.getsource(helper)
+                except (OSError, TypeError):
+                    continue
+                if _PATH_IN_SOURCE_PATTERN.search(helper_source):
+                    routed_helper = True
+                    break
+
+            if (
+                not has_path
+                and not has_documented_verb
+                and not delegates
+                and not routed_helper
+            ):
                 violators.append(name)
 
         if violators:
