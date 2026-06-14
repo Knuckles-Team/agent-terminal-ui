@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 
 import pytest
 
@@ -45,7 +45,7 @@ class TestTaskCRUD:
         assert len(tasks) == 2
 
     def test_list_tasks_by_status(self, tm: TaskManager) -> None:
-        t1 = tm.create_task("Queued")
+        tm.create_task("Queued")
         t2 = tm.create_task("Will Run")
         tm.start_task(t2.id)
         queued = tm.list_tasks(status="queued")

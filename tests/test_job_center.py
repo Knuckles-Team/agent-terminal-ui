@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from agent_terminal_ui.shell import JobCenter, JobRecord, ShellManager
 
 
@@ -87,7 +85,7 @@ class TestJobCenter:
 
     def test_list_jobs_by_status(self) -> None:
         center = JobCenter()
-        j1 = center.create_job("running-1")
+        center.create_job("running-1")
         j2 = center.create_job("done-1")
         j2.complete(0)
         running = center.list_jobs(status="running")
@@ -136,7 +134,7 @@ class TestJobCenter:
 
     def test_summary(self) -> None:
         center = JobCenter()
-        j1 = center.create_job("running")
+        center.create_job("running")
         j2 = center.create_job("completed")
         j2.complete(0)
         j3 = center.create_job("failed")

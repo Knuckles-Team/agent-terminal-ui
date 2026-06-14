@@ -7,11 +7,14 @@ first-pass tests.
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from typing import cast
 from unittest.mock import MagicMock
-from types import SimpleNamespace
 
 import pytest
+from textual.app import App, ComposeResult
+from textual.widgets import DataTable
+
 from agent_terminal_ui.tui.history_screen import HistoryScreen
 from agent_terminal_ui.tui.input_text_area import (
     CommandSuggestionsOverlay,
@@ -24,9 +27,6 @@ from agent_terminal_ui.tui.tool_approval_screen import (
     ToolApprovalScreen,
 )
 from agent_terminal_ui.tui.tool_display._formatters import AgentToolCallEvent
-from textual.app import App, ComposeResult
-from textual.widgets import DataTable
-
 
 # ---------------------------------------------------------------------------
 # Command/File suggestion overlays
@@ -277,7 +277,7 @@ async def test_input_text_area_at_char_shows_file_overlay(tmp_path, monkeypatch)
 
     app = _Host()
     async with app.run_test() as pilot:
-        area = app.query_one(InputTextArea)
+        app.query_one(InputTextArea)
         await pilot.press("@")
         await pilot.pause()
         await pilot.press("escape")
@@ -324,7 +324,7 @@ async def test_history_screen_row_selected_and_escape():
     async with app.run_test() as pilot:
         await pilot.pause()
         screen = app.screen
-        table = screen.query_one(DataTable)
+        screen.query_one(DataTable)
         # Row 0 is implicit, simulate row selection event
         screen.on_data_table_row_selected(SimpleNamespace(cursor_row=0))
         await pilot.pause()

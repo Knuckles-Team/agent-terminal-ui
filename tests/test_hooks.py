@@ -7,10 +7,10 @@ from pathlib import Path
 import pytest
 
 from agent_terminal_ui.hooks import (
+    VALID_EVENTS,
     HookDefinition,
     HookManager,
     HookResult,
-    VALID_EVENTS,
 )
 
 

@@ -13,13 +13,10 @@ Tests the core widgets introduced in the Toad-inspired refactor:
 Concept: AU-018 (TUI Widget Testing)
 """
 
-import asyncio
 import os
 import tempfile
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
-
-import pytest
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -150,7 +147,7 @@ class TestSettings:
 
     def test_schema_keys(self):
         """All schema keys should be present in defaults."""
-        from agent_terminal_ui.settings import AppSettings, SETTINGS_SCHEMA
+        from agent_terminal_ui.settings import SETTINGS_SCHEMA, AppSettings
 
         with tempfile.NamedTemporaryFile(suffix=".toml", delete=False) as f:
             settings = AppSettings(settings_file=Path(f.name))
@@ -386,10 +383,9 @@ class TestBackwardCompatibility:
     def test_formatters_import(self):
         """Legacy formatter imports should still work."""
         from agent_terminal_ui.tui.formatters import (
-            BulletMarkdown,
+            format_agent_prefix_markup,
             format_user_message,
             get_agent_color,
-            format_agent_prefix_markup,
         )
 
         assert callable(get_agent_color)
@@ -406,8 +402,9 @@ class TestBackwardCompatibility:
 
     def test_format_user_message(self):
         """format_user_message should return a Rich Text object."""
-        from agent_terminal_ui.tui.formatters import format_user_message
         from rich.text import Text
+
+        from agent_terminal_ui.tui.formatters import format_user_message
 
         result = format_user_message("Hello world")
         assert isinstance(result, Text)
@@ -550,8 +547,6 @@ class TestWidgetExports:
             Throbber,
             ToolCallBlock,
             UserMessage,
-            format_agent_prefix,
-            format_agent_prefix_markup,
             get_agent_color,
         )
 
@@ -624,7 +619,6 @@ class TestModelConfiguration:
     def test_model_command_exists(self):
         """CommandProcessor should have /model command."""
         from agent_terminal_ui.commands import CommandProcessor
-        from unittest.mock import MagicMock
 
         mock_app = MagicMock()
         mock_app._client = MagicMock()
@@ -635,7 +629,6 @@ class TestModelConfiguration:
     def test_model_command_subcommands(self):
         """Model command should support list/show/set subcommands."""
         from agent_terminal_ui.commands import CommandProcessor
-        from unittest.mock import MagicMock
 
         mock_app = MagicMock()
         mock_app._client = MagicMock()

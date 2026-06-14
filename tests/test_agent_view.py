@@ -7,7 +7,7 @@ import time
 import pytest
 
 from agent_terminal_ui.background_runner import BackgroundAgentRunner, BackgroundSession
-from agent_terminal_ui.screens.agent_view import AgentSessionRow, PeekPanel
+from agent_terminal_ui.screens.agent_view import AgentSessionRow
 
 
 class TestAgentSessionRow:

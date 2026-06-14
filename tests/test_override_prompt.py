@@ -6,7 +6,7 @@ and auto_approve (yolo) mode for tool call bypass.
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 
