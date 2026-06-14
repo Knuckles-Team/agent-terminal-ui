@@ -55,6 +55,16 @@ def fake_client() -> AsyncMock:
         return_value={"layout": {"groups": []}, "data": {}}
     )
     client.get_dashboard_data = AsyncMock(return_value={})
+    # Usage/cost dashboard methods (ECO-4.41) — proper empty shapes so the
+    # UsageScreen worker renders without a backend.
+    client.get_usage_summary = AsyncMock(
+        return_value={"totals": {}, "session_count": 0, "cache_hit_rate": 0.0}
+    )
+    client.get_usage_by_model = AsyncMock(return_value=[])
+    client.get_usage_tools = AsyncMock(return_value=[])
+    client.get_usage_activity = AsyncMock(return_value=[])
+    client.get_usage_top_sessions = AsyncMock(return_value=[])
+    client.get_usage_traces = AsyncMock(return_value={"enabled": False, "traces": []})
 
     async def _empty_stream(*_args, **_kwargs):
         for _ in ():
