@@ -824,7 +824,7 @@ class AgentApp(App):
         try:
             from agent_terminal_ui.cost_tracker import CostTracker
 
-            self._cost_tracker = CostTracker()
+            self._cost_tracker: CostTracker | None = CostTracker()
         except Exception:  # noqa: BLE001
             self._cost_tracker = None
         return self._cost_tracker
