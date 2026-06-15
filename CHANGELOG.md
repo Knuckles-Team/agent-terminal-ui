@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`/ingest` live fact-extraction command (CONCEPT:ECO-4.43)** — runs KG fact extraction from the
+  TUI over the backend extraction pipeline. Documented in the KG extraction feature guide.
+- **Usage & Cost screen (CONCEPT:ECO-4.41)** — agentsview-parity usage/cost view surfacing per-model
+  token and cost aggregation.
 - **Headless mode** — `--headless` (with `--prompt`, optional `--model`) runs a single agent turn over `AgentClient` with no Textual widget tree, streaming events to stdout. New `headless.py` (`HeadlessRunner`, `StreamSink`, `RenderSink` protocol); the Textual app is imported lazily so headless instances stay ~30MB. Added `AgentClient.aclose()`.
 - **Slim Dockerfile** — runtime-only `python:3.13-slim` image shipping the frontend without test/shell extras or `agent_utilities`; point it at a shared backend via `AGENT_URL`.
 - **Conversation polish & motion** — visual hierarchy for user/agent/tool message blocks, a status-mode badge, input focus accents, and a shared `tui/animation.py` `animate_in()` entrance fade (honors `TEXTUAL_ANIMATIONS` / reduced motion).
