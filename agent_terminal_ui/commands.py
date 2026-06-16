@@ -335,7 +335,7 @@ class CommandProcessor:
         """Show live token/cost stats for the current session (CONCEPT:ECO-4.41)."""
         tracker = getattr(self.app, "cost_tracker", None)
         if tracker is not None:
-            try:
+            with contextlib.suppress(Exception):
                 s = tracker.get_session_summary()
                 stats = (
                     f"[bold blue]This session (live):[/bold blue]\n"
@@ -348,8 +348,6 @@ class CommandProcessor:
                 )
                 await self.app.query_one("Conversation").add_info(stats)
                 return
-            except Exception:  # noqa: BLE001
-                pass
         # Fallback to any server-provided usage snapshot.
         usage = getattr(self.app, "_last_usage", None)
         if usage:
