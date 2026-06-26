@@ -26,6 +26,7 @@ from agent_terminal_ui.tui.input_text_area import InputTextArea
 from agent_terminal_ui.tui.status_line import StatusLine
 from agent_terminal_ui.widgets.conversation import Conversation
 from agent_terminal_ui.widgets.graph_tree import GraphTree
+from agent_terminal_ui.widgets.temporal_graph import TemporalGraph
 from agent_terminal_ui.widgets.workflow import WorkflowSidebar
 
 logger = logging.getLogger(__name__)
@@ -76,6 +77,8 @@ class MainScreen(Screen):
                         yield WorkflowSidebar()
                     with TabPane("Agent Graph", id="graph-tab"):
                         yield GraphTree("Swarm", id="agent-graph")
+                    with TabPane("Temporal", id="temporal-tab"):
+                        yield TemporalGraph(id="temporal-graph")
 
         cmd_processor = getattr(self.agent_app, "_cmd_processor", None)
         input_commands = cmd_processor.commands if cmd_processor is not None else {}

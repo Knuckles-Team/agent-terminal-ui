@@ -618,6 +618,27 @@ class AgentClient:
         response.raise_for_status()
         return response.json()
 
+    async def query_graph_as_of(self, query: str) -> list[dict[str, Any]]:
+        """Execute a (UQL) graph query verbatim, returning result rows.
+
+        Thin pass-through to ``POST /api/enhanced/graph/query`` used by the
+        temporal scrubber, which appends the engine's ``|> AS OF @<ts>``
+        bi-temporal operator (KG-2.250) to the query string client-side. The
+        backend passes the query through to the engine unchanged.
+
+        Args:
+            query: The full UQL query string (already carrying any AS OF suffix).
+
+        Returns:
+            List of result-row dictionaries.
+        """
+        response = await self._http_client.post(
+            f"{self.base_url}/api/enhanced/graph/query",
+            json={"query": query},
+        )
+        response.raise_for_status()
+        return response.json()
+
     async def get_graph_impact(self, symbol: str) -> list[dict[str, Any]]:
         """Return the topological impact set for ``symbol``.
 
