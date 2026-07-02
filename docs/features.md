@@ -7,7 +7,7 @@ through the input overlay: type `/` to open a fuzzy-filtered menu (ESC to close,
 TAB to cycle, Enter to run). Aliases are collapsed in the menu, so `/exit` and its
 alias `/quit` appear once.
 
-The registry currently exposes 54 entries (including aliases and `:`-suffixed
+The registry currently exposes 62 entries (including aliases and `:`-suffixed
 subcommands). By area:
 
 | Area | Commands |
@@ -21,9 +21,29 @@ subcommands). By area:
 | Goals (autonomous) | `/goal`, `/goal:status`, `/goal:cancel`, `/goal:history` |
 | Sessions & agents | `/agents`, `/attach`, `/bg`, `/history` |
 | Knowledge graph | `/graph`, `/kb`, `/impact`, `/codemap`, `/search` |
+| Engine surface | `/ask`, `/nl`, `/obs`, `/broker`, `/kvcache` |
 | Project & SDD | `/init`, `/sdd`, `/memory`, `/add-dir`, `/prompts`, `/review`, `/test`, `/simplify` |
 | MCP & tools | `/mcp`, `/mcp:reload`, `/tools`, `/skills`, `/resources` |
 | Ops | `/logs`, `/cron`, `/pipeline`, `/maintenance` |
+
+### Engine-surface commands (`/graph/*` gateway routes)
+
+These wrap the epistemic-graph engine surfaces exposed over the AU gateway
+(action-routed `/graph/*` twins of the `graph_*` MCP tools). Each degrades cleanly
+to an inline error when the engine build lacks that surface.
+
+- `/ask <question>` — DB-GPT-style data-analyst loop (`POST /graph/ask-data`,
+  KG-2.308): schema-link → plan → execute → self-correct → synthesized answer.
+- `/nl <question>` — NL→query planned by the AU fleet LLM (`POST /graph/nl-query`,
+  KG-2.305); shows the generated query plus rows. Prefix `preview ` to dry-run the
+  query without executing it.
+- `/obs <promql>` — PromQL instant query (`POST /graph/promql`, KG-2.310);
+  `/obs range <promql>` runs a range query over the last 15m and renders a Unicode
+  sparkline; `/obs traces [service]` searches distributed traces (`POST /graph/traces`).
+- `/broker [stats|queues|exchanges]` — engine message-broker status
+  (`POST /graph/broker`, KG-2.310).
+- `/kvcache` — shared content-addressed KV-cache occupancy and dedup counters
+  (`POST /graph/kvcache`, KG-2.306).
 
 Some commands depend on optional backend endpoints and degrade or report an error
 when the backend does not expose them — see [Known Issues](agents.md#known-issues).

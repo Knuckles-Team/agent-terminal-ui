@@ -45,7 +45,7 @@ _HTTP_VERB_PATTERN = re.compile(r"\b(GET|POST|PUT|DELETE|PATCH)\b")
 _PATH_IN_SOURCE_PATTERN = re.compile(
     r"""["'`][^"'`]*?"""
     r"""(?:/api/|/mcp/|/acp|/a2a|/chats|/health|/stream|/ag-ui"""
-    r"""|/sessions|/rpc/|/api/approve)[^"'`]*["'`]"""
+    r"""|/sessions|/rpc/|/api/approve|/graph/)[^"'`]*["'`]"""
 )
 
 _SELF_DELEGATION_PATTERN = re.compile(r"self\.(\w+)\s*\(")

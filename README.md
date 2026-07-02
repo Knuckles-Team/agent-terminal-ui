@@ -145,6 +145,11 @@ A [Textual](https://textual.textualize.io/)-based terminal interface for interac
   - `/review` -- review code and suggest improvements
   - `/test` -- run tests on the current codebase
   - `/search` -- search through code and documentation
+  - `/ask <question>` -- answer a data question in plain English (multi-step analyst)
+  - `/nl <question>` -- translate a question into a graph query and run it (`/nl preview ...` to dry-run)
+  - `/obs <promql>` -- query observability metrics; `/obs range <promql>` (sparkline), `/obs traces [service]`
+  - `/broker` -- engine message-broker status (`stats` / `queues` / `exchanges`)
+  - `/kvcache` -- shared KV-cache occupancy and dedup stats
   - `/stats` -- show statistics about the current session
   - `/fleet` -- show fleet topology and pending approvals; `/fleet grant <id>` to approve
   - `/cost` -- show token and cost tracking information
