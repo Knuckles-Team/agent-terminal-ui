@@ -667,6 +667,173 @@ class AgentClient:
         """
         return await self.get_graph_impact(symbol)
 
+    async def _graph_post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
+        """POST to a gateway ``/graph/*`` engine-surface route and unwrap it.
+
+        The action-routed twins in :data:`ACTION_TOOL_ROUTES` (KG-2.310)
+        respond with ``{"status": "success", "result": <tool-json>}``; this
+        helper returns the inner ``result`` object. Tool-level failures degrade
+        cleanly into ``result`` as ``{"error": "..."}`` (HTTP 200), while
+        transport/gateway failures raise ``httpx.HTTPStatusError`` for the
+        caller to render.
+
+        Args:
+            path: A ``/graph/*`` route path (e.g. ``/graph/promql``).
+            payload: The tool keyword arguments to send as the JSON body.
+
+        Returns:
+            The unwrapped ``result`` object (empty dict when absent).
+        """
+        response = await self._http_client.post(f"{self.base_url}{path}", json=payload)
+        response.raise_for_status()
+        data = response.json()
+        if isinstance(data, dict):
+            result = data.get("result", data)
+            return result if isinstance(result, dict) else {"result": result}
+        return {}
+
+    async def graph_nl_query(
+        self,
+        text: str,
+        *,
+        dialect: str = "auto",
+        execute: bool = True,
+        limit: int = 50,
+    ) -> dict[str, Any]:
+        """Translate a natural-language request into a query (KG-2.305).
+
+        Hits ``POST /graph/nl-query``; the AU fleet LLM plans a single
+        read-only query (UQL/cypher/sql/sparql), which the engine executes.
+
+        Returns:
+            The tool payload: generated ``query``, ``rows``/``result``,
+            ``citations``, or ``error``.
+        """
+        return await self._graph_post(
+            "/graph/nl-query",
+            {
+                "text": text,
+                "dialect": dialect,
+                "execute": execute,
+                "limit": limit,
+            },
+        )
+
+    async def graph_ask_data(
+        self,
+        question: str,
+        *,
+        dialect: str = "auto",
+        max_corrections: int = 2,
+        limit: int = 50,
+    ) -> dict[str, Any]:
+        """Answer a data question with the multi-step analyst loop (KG-2.308).
+
+        Hits ``POST /graph/ask-data``; a bounded ReAct agent schema-links,
+        plans, executes, self-corrects, then synthesizes a NL answer.
+
+        Returns:
+            The tool payload: synthesized ``answer``, ``query``, result rows,
+            ``citations``, ``schema``, attempt trace, or ``error``.
+        """
+        return await self._graph_post(
+            "/graph/ask-data",
+            {
+                "question": question,
+                "dialect": dialect,
+                "max_corrections": max_corrections,
+                "limit": limit,
+            },
+        )
+
+    async def graph_promql(
+        self,
+        query: str,
+        *,
+        action: str = "instant",
+        time: str = "",
+        start: str = "",
+        end: str = "",
+        step: str = "",
+    ) -> dict[str, Any]:
+        """Query engine observability metrics with PromQL (KG-2.310).
+
+        Hits ``POST /graph/promql``; ``action='instant'`` evaluates once,
+        ``action='range'`` evaluates over ``start..end`` at ``step``.
+
+        Returns:
+            The tool payload (metric samples under ``result``) or ``error``.
+        """
+        payload: dict[str, Any] = {"query": query, "action": action}
+        for key, value in (
+            ("time", time),
+            ("start", start),
+            ("end", end),
+            ("step", step),
+        ):
+            if value:
+                payload[key] = value
+        return await self._graph_post("/graph/promql", payload)
+
+    async def graph_traces(
+        self,
+        *,
+        action: str = "search",
+        trace_id: str = "",
+        service: str = "",
+        operation: str = "",
+        query: str = "",
+        limit: int = 20,
+    ) -> dict[str, Any]:
+        """Search or fetch distributed traces (KG-2.310).
+
+        Hits ``POST /graph/traces``; ``action='search'`` filters by
+        ``service``/``operation``/``query``, ``action='get'`` fetches one
+        ``trace_id``.
+
+        Returns:
+            The tool payload (matched traces under ``result``) or ``error``.
+        """
+        payload: dict[str, Any] = {"action": action, "limit": limit}
+        for key, value in (
+            ("trace_id", trace_id),
+            ("service", service),
+            ("operation", operation),
+            ("query", query),
+        ):
+            if value:
+                payload[key] = value
+        return await self._graph_post("/graph/traces", payload)
+
+    async def graph_broker(
+        self, *, action: str = "stats", params: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Inspect the engine message broker (KG-2.310).
+
+        Hits ``POST /graph/broker``; ``action`` is a broker method such as
+        ``stats``, ``list_queues``, or ``list_exchanges``. Extra keyword
+        arguments are forwarded via ``params_json``.
+
+        Returns:
+            The tool payload (broker stats/listing under ``result``) or
+            ``error``.
+        """
+        payload: dict[str, Any] = {"action": action}
+        if params:
+            payload["params_json"] = json.dumps(params)
+        return await self._graph_post("/graph/broker", payload)
+
+    async def graph_kvcache(self, *, action: str = "stats") -> dict[str, Any]:
+        """Read shared content-addressed KV-cache stats (KG-2.306/2.310).
+
+        Hits ``POST /graph/kvcache``; ``action='stats'`` returns occupancy and
+        dedup counters.
+
+        Returns:
+            The tool payload (cache stats under ``result``) or ``error``.
+        """
+        return await self._graph_post("/graph/kvcache", {"action": action})
+
     async def reload_mcp(self) -> dict[str, Any]:
         """Hot-reload the backend MCP configuration.
 
