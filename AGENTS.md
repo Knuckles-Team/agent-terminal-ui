@@ -9,11 +9,11 @@
 > This file (`AGENTS.md`) is for system-prompt context; the SDD directory is the source of truth for architecture and new features.
 
 <!-- Ecosystem Concepts (cross-project, from agent-utilities kernel) -->
-<!-- CONCEPT:ECO-4.7 Ecosystem Topology Map — classified as FrontendPackage -->
-<!-- CONCEPT:KG-2.13 Cross-Session Chat Recall — consumed via kernel API -->
-<!-- CONCEPT:KG-2.14 Project-Aware Context — AGENTS.md auto-loaded by kernel -->
-<!-- CONCEPT:KG-2.11 Cross-Pillar Synergy Engine — topology consumer -->
-<!-- CONCEPT:ECO-4.5 Terminal Agent Launcher — --prompt and --override CLI flags for tmux-spawned one-shot execution -->
+<!-- CONCEPT:AU-OS.deployment.infra-orchestration Ecosystem Topology Map — classified as FrontendPackage -->
+<!-- CONCEPT:AU-KG.memory.background-learning-engine Cross-Session Chat Recall — consumed via kernel API -->
+<!-- CONCEPT:AU-KG.memory.ground-truth-preamble-declaring Project-Aware Context — AGENTS.md auto-loaded by kernel -->
+<!-- CONCEPT:AU-KG.temporal.bi-temporal-memory-layers Cross-Pillar Synergy Engine — topology consumer -->
+<!-- CONCEPT:AU-ECO.toolkit.journey-map-milestones Terminal Agent Launcher — --prompt and --override CLI flags for tmux-spawned one-shot execution -->
 - This is a production-grade Python package. You must *always* follow best open-source Python practices.
 - Shortcuts are not appropriate. When in doubt, you must work with the user for guidance.
 - Any documentation you write, including in the README.md, should be clear, concise, and accurate like the official documentation of other production-grade Python packages.
@@ -58,13 +58,13 @@
 - **shell.py** (TUI-12) -- Extended with JobRecord/JobCenter
 - **screens/agent_view.py** (TUI-20) -- Agent View multi-session dashboard with peek panel
 - **background_runner.py** (TUI-21) -- Background session runner for detached async agents
-- **widgets/goal_status.py** (ORCH-5.0) -- Live goal progress widget
+- **widgets/goal_status.py** (AU-ORCH.session.durable-session-autonomous-goal) -- Live goal progress widget
 - **headless.py** -- `HeadlessRunner` + `StreamSink` + `RenderSink` protocol for the no-widget-tree `--headless` run path (lazy-imported from `terminal_ui.py`)
 - **goal.py** -- Dependency-free `GoalSpec` parser for `/goal` (keeps the frontend free of an `agent_utilities` import)
 - **tui/animation.py** -- Shared `animate_in()` entrance fade for conversation widgets (honors `TEXTUAL_ANIMATIONS` / reduced motion)
 - **screens/dashboard.py** -- Alt+D service dashboard, fed over HTTP via `AgentClient.get_dashboard_full()` (no in-process gateway)
 
-## CLI Flags (ECO-4.5)
+## CLI Flags (AU-ECO.toolkit.journey-map-milestones)
 
 - `--prompt TEXT` -- Inject an initial task on launch. Auto-submitted via `on_mount` once the TUI is ready.
 - `--override` -- Yolo mode. Auto-approves all pending tool calls, bypassing `ToolApprovalScreen`.
@@ -192,7 +192,7 @@ alone).
 Working in parallel with other sessions/worktrees? **Reserve a concept id before you write its `CONCEPT:` marker** so two sessions never collide:
 
 ```bash
-agent-utilities --json concept reserve --ns KG-2   # or a package prefix, e.g. KEY
+agent-utilities --json concept reserve --ns EG-KG.compute.backend   # or a package prefix, e.g. KEY
 ```
 
 Full protocol (ledger, merge=union, reconcile, MCP/REST): <https://knuckles-team.github.io/agent-utilities/concept_coordination/>

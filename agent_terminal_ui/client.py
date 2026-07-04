@@ -302,7 +302,7 @@ class AgentClient:
             return []
 
     async def _obs_get(self, path: str, params: dict | None = None) -> Any:
-        """GET an /api/observability/* endpoint (CONCEPT:ECO-4.41)."""
+        """GET an /api/observability/* endpoint (CONCEPT:AU-ECO.mcp.usage-cost-observability-surface)."""
         try:
             response = await self._http_client.get(
                 f"{self.base_url}/api/observability{path}",
@@ -1207,13 +1207,13 @@ class AgentClient:
         return response.json()
 
     # ─────────────────────────────────────────────────────────────────
-    #  Prompt Management (CONCEPT:KG-002)
+    #  Prompt Management (CONCEPT:TU-KG.compute.prompt-management-ahe-rollback)
     # ─────────────────────────────────────────────────────────────────
 
     async def list_prompts(self) -> list[dict[str, Any]]:
         """List all prompts from the KG.
 
-        CONCEPT:KG-002 — Prompt Management
+        CONCEPT:TU-KG.compute.prompt-management-ahe-rollback — Prompt Management
         """
         response = await self._http_client.get(f"{self.base_url}/api/enhanced/prompts")
         response.raise_for_status()
@@ -1222,7 +1222,7 @@ class AgentClient:
     async def get_prompt(self, prompt_id: str) -> dict[str, Any]:
         """Get a single prompt by ID.
 
-        CONCEPT:KG-002 — Prompt Management
+        CONCEPT:TU-KG.compute.prompt-management-ahe-rollback — Prompt Management
         """
         response = await self._http_client.get(
             f"{self.base_url}/api/enhanced/prompts/{prompt_id}"
@@ -1235,7 +1235,7 @@ class AgentClient:
     ) -> dict[str, Any]:
         """Create a new prompt in the KG.
 
-        CONCEPT:KG-002 — Prompt Management
+        CONCEPT:TU-KG.compute.prompt-management-ahe-rollback — Prompt Management
         """
         response = await self._http_client.post(
             f"{self.base_url}/api/enhanced/prompts",
@@ -1247,7 +1247,7 @@ class AgentClient:
     async def update_prompt(self, prompt_id: str, content: str) -> dict[str, Any]:
         """Update a prompt (creates new version via SUPERSEDES).
 
-        CONCEPT:KG-002 — Prompt Management
+        CONCEPT:TU-KG.compute.prompt-management-ahe-rollback — Prompt Management
         """
         response = await self._http_client.put(
             f"{self.base_url}/api/enhanced/prompts/{prompt_id}",
@@ -1259,7 +1259,7 @@ class AgentClient:
     async def get_prompt_versions(self, prompt_id: str) -> list[dict[str, Any]]:
         """Get version history for a prompt.
 
-        CONCEPT:KG-002 — Prompt Management
+        CONCEPT:TU-KG.compute.prompt-management-ahe-rollback — Prompt Management
         """
         response = await self._http_client.get(
             f"{self.base_url}/api/enhanced/prompts/{prompt_id}/versions"
@@ -1270,7 +1270,7 @@ class AgentClient:
     async def rollback_prompt(self, prompt_id: str, version_id: str) -> dict[str, Any]:
         """Rollback a prompt to a previous version.
 
-        CONCEPT:KG-002 — Prompt Management (AHE Rollback)
+        CONCEPT:TU-KG.compute.prompt-management-ahe-rollback — Prompt Management (AHE Rollback)
         """
         response = await self._http_client.post(
             f"{self.base_url}/api/enhanced/prompts/{prompt_id}/rollback/{version_id}"
@@ -1279,13 +1279,13 @@ class AgentClient:
         return response.json()
 
     # ─────────────────────────────────────────────────────────────────
-    #  Granular Resource Queries (CONCEPT:KG-003)
+    #  Granular Resource Queries (CONCEPT:TU-KG.compute.granular-resource-queries)
     # ─────────────────────────────────────────────────────────────────
 
     async def list_skills_only(self) -> list[dict[str, Any]]:
         """List skills only (no MCP tools).
 
-        CONCEPT:KG-003 — Granular Resource Queries
+        CONCEPT:TU-KG.compute.granular-resource-queries — Granular Resource Queries
         """
         response = await self._http_client.get(f"{self.base_url}/api/enhanced/skills")
         response.raise_for_status()
@@ -1294,7 +1294,7 @@ class AgentClient:
     async def list_tools_only(self) -> list[dict[str, Any]]:
         """List MCP tools only (no skills).
 
-        CONCEPT:KG-003 — Granular Resource Queries
+        CONCEPT:TU-KG.compute.granular-resource-queries — Granular Resource Queries
         """
         response = await self._http_client.get(f"{self.base_url}/api/enhanced/tools")
         response.raise_for_status()
@@ -1303,7 +1303,7 @@ class AgentClient:
     async def toggle_resource(self, resource_id: str) -> dict[str, Any]:
         """Toggle enabled/disabled on any skill or tool.
 
-        CONCEPT:KG-003 — Granular Resource Queries
+        CONCEPT:TU-KG.compute.granular-resource-queries — Granular Resource Queries
         """
         # Try skills first, then tools
         for resource_type in ("skills", "tools"):

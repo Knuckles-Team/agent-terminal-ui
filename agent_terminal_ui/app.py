@@ -803,7 +803,7 @@ class AgentApp(App):
             self.notify("Dashboard requires service-dashboard-core", severity="warning")
 
     def action_switch_usage(self) -> None:
-        """Switch to the Usage & Cost screen (Alt+U / /usage). CONCEPT:ECO-4.41."""
+        """Switch to the Usage & Cost screen (Alt+U / /usage). CONCEPT:AU-ECO.mcp.usage-cost-observability-surface."""
         try:
             from agent_terminal_ui.screens.usage import UsageScreen
 
@@ -813,7 +813,7 @@ class AgentApp(App):
 
     @property
     def cost_tracker(self):
-        """Lazily-instantiated local per-session cost ledger (CONCEPT:ECO-4.41).
+        """Lazily-instantiated local per-session cost ledger (CONCEPT:AU-ECO.mcp.usage-cost-observability-surface).
 
         Lives on the app so both the Usage screen and the status line read one
         instance. Returns None if the tracker module is unavailable.

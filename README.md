@@ -118,7 +118,7 @@ A [Textual](https://textual.textualize.io/)-based terminal interface for interac
 - **State persistence** -- session state survives TUI restarts via TaskManager
 - **Crash recovery** -- interrupted sessions are marked as failed on restart
 
-#### Autonomous Goal Loop (ORCH-5.0)
+#### Autonomous Goal Loop (AU-ORCH.session.durable-session-autonomous-goal)
 - **`/goal` command** -- define an objective and let the agent work autonomously
 - **Natural language parsing** -- supports `until <end_state>` and `without <constraints>` patterns
 - **KG-native goals** -- goals are persisted as GoalNode entities in the Knowledge Graph
