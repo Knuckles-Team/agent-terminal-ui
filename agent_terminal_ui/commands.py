@@ -192,7 +192,7 @@ class CommandProcessor:
 
     async def cmd_help(self, args: str) -> None:
         """Show available commands and their descriptions."""
-        # CONCEPT:ECO-4.71 — descriptions for cross-surface commands come from the ONE
+        # CONCEPT:AU-ECO.messaging.shared-by-every-messaging — descriptions for cross-surface commands come from the ONE
         # agent-utilities command registry, so the TUI and messaging bots stay aligned;
         # TUI-only commands fall back to their handler docstring.
         try:
@@ -349,7 +349,7 @@ class CommandProcessor:
         await self._submit_prompt(f"Search the codebase for: {args}")
 
     async def cmd_stats(self, args: str) -> None:
-        """Show live token/cost stats for the current session (CONCEPT:ECO-4.41)."""
+        """Show live token/cost stats for the current session (CONCEPT:AU-ECO.mcp.usage-cost-observability-surface)."""
         tracker = getattr(self.app, "cost_tracker", None)
         if tracker is not None:
             with contextlib.suppress(Exception):
@@ -2516,7 +2516,7 @@ class CommandProcessor:
         )
 
     # ─────────────────────────────────────────────────────────────────
-    #  KG-Native Commands (CONCEPT:KG-002 / KG-003)
+    #  KG-Native Commands (CONCEPT:TU-KG.compute.prompt-management-ahe-rollback / KG-003)
     # ─────────────────────────────────────────────────────────────────
 
     async def cmd_prompts(self, args: str) -> None:
@@ -2531,7 +2531,7 @@ class CommandProcessor:
                     "[yellow]No prompts found in KG.[/yellow]"
                 )
                 return
-            table = Table(title="Prompts (CONCEPT:KG-002)", expand=True)
+            table = Table(title="Prompts (CONCEPT:TU-KG.compute.prompt-management-ahe-rollback)", expand=True)
             table.add_column("ID", style="cyan", no_wrap=True)
             table.add_column("Name", style="bold")
             table.add_column("Description")
@@ -2628,7 +2628,7 @@ class CommandProcessor:
                 "[yellow]No skills discovered.[/yellow]"
             )
             return
-        table = Table(title="Agent Skills (CONCEPT:KG-003)", expand=True)
+        table = Table(title="Agent Skills (CONCEPT:TU-KG.compute.granular-resource-queries)", expand=True)
         table.add_column("ID", style="cyan", no_wrap=True)
         table.add_column("Name", style="bold")
         table.add_column("Source")
@@ -2662,7 +2662,7 @@ class CommandProcessor:
                 "[yellow]No MCP tools discovered.[/yellow]"
             )
             return
-        table = Table(title="MCP Tools (CONCEPT:KG-003)", expand=True)
+        table = Table(title="MCP Tools (CONCEPT:TU-KG.compute.granular-resource-queries)", expand=True)
         table.add_column("ID", style="cyan", no_wrap=True)
         table.add_column("Name", style="bold")
         table.add_column("Server/Source")
