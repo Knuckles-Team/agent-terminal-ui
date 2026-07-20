@@ -11,7 +11,7 @@
     <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
 </p>
 
-A [Textual](https://textual.textualize.io/)-based terminal interface for interacting with AI agents. Connects to an [agent-utilities](https://github.com/pydantic/agent-utilities) backend via dual protocol support: AG-UI (SSE streaming) and ACP (JSON-RPC + SSE).
+A [Textual](https://textual.textualize.io/)-based terminal interface for interacting with AI agents. Connects to an [agent-utilities](https://github.com/pydantic/agent-utilities) backend through a normalized transport adapter. The currently shipped adapter uses ACP (JSON-RPC + SSE).
 
 > [!NOTE]
 > This library is in early development and subject to change.
@@ -23,7 +23,7 @@ A [Textual](https://textual.textualize.io/)-based terminal interface for interac
 ### Features
 
 #### Core Functionality
-- **Dual protocol support** -- AG-UI (SSE streaming, default) and ACP (JSON-RPC + SSE, opt-in)
+- **Normalized protocol adapter** -- ACP JSON-RPC + SSE events are translated into one UI event vocabulary for interactive and headless clients
 - **Dynamic workflow sidebar** -- discovers graph nodes from sideband events at runtime; nodes are never hardcoded
 - **Phase labels** -- Planning, Discovery, Execution, Validation
 - **Completed node markers** -- checkmarks on finished specialists
@@ -32,6 +32,9 @@ A [Textual](https://textual.textualize.io/)-based terminal interface for interac
 - **Multi-modal image attachment** -- attach images to messages for visual reasoning
 - **Session management and chat history** -- browse and resume previous conversations
 - **MCP server browser** -- inspect connected MCP servers and their tools
+- **Live capability palette** -- search the gateway catalog from Alt+C, the global command palette, the sidebar, or `/capabilities`; forms are generated from action schemas
+- **Governed generic invocation** -- every action is preflighted, acknowledged as a canonical run, followed through events, and safely resumed when approval is pending
+- **Live run Mission Control** -- `/run` discovers recent runs and follows versioned events by cursor, with sequence deduplication and bounded-history gap notices
 
 #### Session Persistence & Crash Recovery (TUI-1)
 - **SQLite-backed sessions** -- durable session storage at `~/.local/share/agent-utilities/agent_terminal_ui.db` (override the directory with `AGENT_UTILITIES_DATA_DIR`)
@@ -118,7 +121,7 @@ A [Textual](https://textual.textualize.io/)-based terminal interface for interac
 - **State persistence** -- session state survives TUI restarts via TaskManager
 - **Crash recovery** -- interrupted sessions are marked as failed on restart
 
-#### Autonomous Goal Loop (ORCH-5.0)
+#### Autonomous Goal Loop (AU-ORCH.session.durable-session-autonomous-goal)
 - **`/goal` command** -- define an objective and let the agent work autonomously
 - **Natural language parsing** -- supports `until <end_state>` and `without <constraints>` patterns
 - **KG-native goals** -- goals are persisted as GoalNode entities in the Knowledge Graph
@@ -145,6 +148,14 @@ A [Textual](https://textual.textualize.io/)-based terminal interface for interac
   - `/review` -- review code and suggest improvements
   - `/test` -- run tests on the current codebase
   - `/search` -- search through code and documentation
+  - `/ask <question>` -- answer a data question in plain English (multi-step analyst)
+  - `/nl <question>` -- translate a question into a graph query and run it (`/nl preview ...` to dry-run)
+  - `/obs <promql>` -- query observability metrics; `/obs range <promql>` (sparkline), `/obs traces [service]`
+  - `/broker` -- engine message-broker status (`stats` / `queues` / `exchanges`)
+  - `/kvcache` -- shared KV-cache occupancy and dedup stats
+  - `/capabilities [query]` -- search the live catalog and generate an action form
+  - `/capability <id>` -- inspect one live capability descriptor
+  - `/run [run_id]` -- follow a run in Mission Control, or browse recent runs when no ID is known
   - `/stats` -- show statistics about the current session
   - `/fleet` -- show fleet topology and pending approvals; `/fleet grant <id>` to approve
   - `/cost` -- show token and cost tracking information
@@ -265,7 +276,7 @@ Example: If you type "fix the bug in app.py" followed by "and add a test for it"
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `AGENT_URL` | `http://localhost:8000` | Agent server URL (interactive and headless) |
-| `ENABLE_ACP` | `false` | Enable ACP protocol instead of AG-UI |
+| `ENABLE_ACP` | `false` | Legacy explicit-ACP selector; both default/auto and explicit paths currently use the shipped ACP adapter |
 | `ACP_URL` | `http://localhost:8001` | Documented but not read; effective ACP URL is `{AGENT_URL}/acp` |
 | `AGENT_THEME` | `tokyo-night` | Startup theme (any Textual built-in theme name) |
 

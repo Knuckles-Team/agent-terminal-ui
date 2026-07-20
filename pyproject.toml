@@ -7,7 +7,7 @@ name = "agent-terminal-ui"
 version = "1.0.0"
 description = "Terminal UI for Agentic AI!"
 readme = "README.md"
-authors = [{ name = "Audel Rouhi", email = "knucklessg1@gmail.com" }]
+authors = [{ name = "Project maintainers" }]
 license = { text = "MIT" }
 classifiers = [
     "Development Status :: 4 - Beta",

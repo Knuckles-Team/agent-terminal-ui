@@ -32,6 +32,8 @@ flowchart LR
     C -->|"stream() turns"| GW
     C -->|"/api/dashboard/full"| DASH
     C -->|"/api/enhanced/graph/*"| GW
+    C -->|"/api/capabilities/*"| GW
+    C -->|"/api/runs/*"| GW
 
     classDef heavy fill:#3a1f1f,stroke:#a44;
     classDef light fill:#1f2a3a,stroke:#48a;
@@ -58,12 +60,12 @@ the headless `StreamSink` present the same event vocabulary.
 
 ## Protocol connection
 
-`agent-terminal-ui` connects to `agent-utilities` via two protocols:
-
-- **AG-UI** (default): SSE streaming with sideband graph events. The TUI parses
-  these to render real-time graph activity in the workflow sidebar.
-- **ACP** (opt-in via `ENABLE_ACP=true`): JSON-RPC + SSE for advanced session
-  management, planning, and mode switching.
+`agent-terminal-ui` consumes one normalized event vocabulary through
+`AgentClient`. The adapter currently shipped by this package uses **ACP**
+(JSON-RPC + SSE). The default/auto path and the legacy explicit
+`ENABLE_ACP=true` path therefore resolve to the same initialized adapter; the
+flag no longer creates a deferred second client. A future AG-UI adapter can
+implement the same normalized stream contract without changing screen code.
 
 The workflow sidebar discovers graph nodes from sideband events at runtime — nodes
 are never hardcoded. They appear as the graph emits `specialist_enter` /
@@ -75,6 +77,60 @@ The backend uses **unified specialist discovery** (`discover_all_specialists()`)
 to merge MCP agents and A2A peers into a single roster. Both emit the same
 sideband events, so the TUI does not distinguish between them. The `tools-bound`
 event includes `toolset_count`, `dev_tools`, and `mcp_tools` fields.
+
+## Capability platform and run events
+
+The capability UI consumes the gateway-owned schema 2.0 contract through
+`AgentClient`: catalog search, detail, preflight, and governed invocation. Action
+legacy REST routes are descriptive and `frontend_executable=false`; the frontend
+executes exclusively through `execution.governed_invoke_route` at
+`POST /api/capabilities/{capability_id}/invoke`. Lightweight dataclasses
+in `capabilities.py` isolate widgets from raw payload drift without importing
+`agent_utilities`. Textual's global command
+palette, the Capabilities sidebar tab, and `/capabilities` converge on one
+schema-generated form.
+
+Availability and readiness are distinct. An `available` capability with
+`readiness=cold` stays invocable and is rendered as a first-call warm-up. Only an
+active but broken backend is degraded; blocked or disabled tools are unavailable.
+
+Preflight requests contain only `action`, `inputs`, and `target`. They never send
+a caller-selected actor identity. A preview is not authorization: invocation is
+blocked unless the gateway reports it executable now. Unknown side effects fail
+closed, allowed mutations require operator confirmation, and execution performs
+the authoritative policy check.
+
+HTTP 202 approval responses are modeled as pending rather than success. The UI
+freezes the exact input request, requires an explicit grant, then resumes with
+the gateway-bound `approval_id`, `run_id`, and `session_id`.
+A normal HTTP 202 `running` response is an asynchronous acknowledgement. The UI
+does not label it complete; the authoritative result arrives later as a
+`tool_result` run event.
+
+Run discovery and inspection consume event schema 1.0 through `GET /api/runs`,
+`GET /api/runs/{run_id}`, and cursor replay at
+`GET /api/runs/{run_id}/events`. Stream metadata observed on normal ACP turns is
+preserved so `/run` can inspect the current run. Mission Control polls from the
+last sequence cursor, drains `has_more` pages without delay, deduplicates by
+sequence, and renders `retained_from` gaps as explicit replay resets. The replay
+buffer is bounded and process-local; the UI labels missing, expired, empty,
+degraded, and truncated states rather than implying durable history.
+
+The shared terminal predicate contains exactly `run_completed`, `run_failed`,
+`run_interrupted`, `run_cancelled`, and `error`. Graph-level lifecycle and output
+events are progress: in particular, `graph_complete` cannot stop follow because
+`final_output` and `run_completed` may still arrive.
+
+Sensitive results remain gateway-redacted in this inspector. It does not
+silently follow a claim URL or retain a revealed value; reveal-once is a
+separate, explicitly gated extension rather than part of generic replay.
+
+`session_id` is stable conversation continuity, while `run_id` identifies one
+execution; neither the adapter nor the inspector assumes they are equal.
+
+The support contract is published in
+[`capability-coverage.json`](capability-coverage.json). Catalog entries default to
+generated forms; dedicated Terminal UI commands are declared as native overrides.
 
 ## Service dashboard over HTTP
 
@@ -92,7 +148,9 @@ a placeholder.
 | `app.py` | Main Textual application: screen composition, message queuing, exit confirmation, key bindings. Accepts an injectable `client` for testing. |
 | `terminal_ui.py` | CLI entry point; parses flags and lazily dispatches to the TUI or the headless runner. |
 | `headless.py` | `HeadlessRunner` + `StreamSink` + `RenderSink` protocol — the no-widget-tree run path. |
-| `client.py` | AG-UI + ACP client (SSE parsing), graph and dashboard HTTP methods, `aclose()`. |
+| `client.py` | ACP client, normalized SSE parsing, and capability/run/dashboard HTTP methods. |
+| `capabilities.py` | Typed catalog, preflight, schema-field, invocation, and run-event models. |
+| `capability_provider.py` | Live capability provider for Textual's global command palette. |
 | `commands.py` | Slash-command processor with the full command set. |
 | `goal.py` | Dependency-free `GoalSpec` parser for the `/goal` command (no backend import). |
 | `screens/main.py` | Primary conversation screen and layout (`main.tcss`). |
@@ -101,10 +159,13 @@ a placeholder.
 | `widgets/conversation.py` | Structured message container with widget pruning. |
 | `widgets/user_message.py`, `agent_response.py`, `tool_call_block.py`, `throbber.py` | Conversation message blocks. |
 | `widgets/workflow.py` | Dynamic workflow sidebar with phase labels and completion markers. |
+| `widgets/capability_sidebar.py` | Searchable live catalog tab with availability states. |
 | `tui/animation.py` | Shared `animate_in()` entrance fade for conversation widgets (honors reduced-motion / `TEXTUAL_ANIMATIONS`). |
 | `tui/input_text_area.py` | Multi-line input with the slash-command + file suggestion overlays. |
 | `tui/tool_display/` | Extensible tool formatter system (registry + per-tool formatters). |
 | `tui/tool_approval_screen.py` | Human-in-the-loop modal for confirming sensitive tool calls. |
+| `tui/capability_palette.py` | Schema-generated action forms, preflight confirmation, and generic invocation. |
+| `tui/run_inspector.py` | Run Mission Control: discovery, cursor replay, live polling, gap reporting, and terminal-aware follow. |
 | `tui/status_line.py` | Mode / model / token status bar. |
 | `tui/theme.py` | Theme helpers. |
 
@@ -113,7 +174,7 @@ a placeholder.
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `AGENT_URL` | `http://localhost:8000` | Agent backend URL (used by both interactive and headless modes). |
-| `ENABLE_ACP` | `false` | Use the ACP protocol instead of AG-UI. |
+| `ENABLE_ACP` | `false` | Legacy explicit-ACP selector; default/auto and explicit paths currently resolve to the shipped ACP adapter. |
 | `ACP_URL` | `http://localhost:8001` | Documented but NOT read by `client.py`; the effective ACP URL is derived as `{AGENT_URL}/acp`. |
 | `AGENT_THEME` | `tokyo-night` | Initial theme (any Textual built-in theme name). |
 

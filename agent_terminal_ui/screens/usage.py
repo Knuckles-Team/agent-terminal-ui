@@ -1,4 +1,6 @@
-"""Usage & Cost screen for the Agent Terminal UI (CONCEPT:ECO-4.41).
+"""Usage & Cost screen for Agent Terminal UI.
+
+CONCEPT:AU-ECO.mcp.usage-cost-observability-surface
 
 Two clearly-labeled regions:
   * "This session (live)" — the local per-session ``CostTracker`` (no network).

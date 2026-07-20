@@ -1,6 +1,6 @@
 {
   "project": "agent-terminal-ui",
-  "path": "/home/apps/workspace/agent-packages/agent-terminal-ui",
+  "path": "<repository-root>",
   "domain_results": [
     {
       "domain": "Project Analysis",
@@ -25,7 +25,7 @@
         {
           "criterion": "externalized_prompts",
           "points": 0,
-          "evidence": "/home/apps/workspace/agent-packages/agent-terminal-ui",
+          "evidence": "<repository-root>",
           "reasoning": "No prompts/ directory found. Prompts may be hardcoded in source."
         },
         {
@@ -43,25 +43,25 @@
         {
           "criterion": "agents_md",
           "points": 10,
-          "evidence": "/home/apps/workspace/agent-packages/agent-terminal-ui/AGENTS.md (3074 bytes)",
+          "evidence": "<repository-root>/AGENTS.md (3074 bytes)",
           "reasoning": "AGENTS.md exists with comprehensive content"
         },
         {
           "criterion": "pre_commit_hooks",
           "points": 10,
-          "evidence": "/home/apps/workspace/agent-packages/agent-terminal-ui/.pre-commit-config.yaml",
+          "evidence": "<repository-root>/.pre-commit-config.yaml",
           "reasoning": "Pre-commit configuration found for automated code quality checks"
         },
         {
           "criterion": "gitignore",
           "points": 10,
-          "evidence": "/home/apps/workspace/agent-packages/agent-terminal-ui/.gitignore",
+          "evidence": "<repository-root>/.gitignore",
           "reasoning": ".gitignore exists to prevent committing build artifacts and secrets"
         },
         {
           "criterion": "env_template",
           "points": 0,
-          "evidence": "/home/apps/workspace/agent-packages/agent-terminal-ui",
+          "evidence": "<repository-root>",
           "reasoning": "No .env.example or .env.template \u2014 may hinder developer onboarding"
         },
         {
@@ -89,7 +89,7 @@
         {
           "criterion": "dependency_freshness",
           "points": 99,
-          "evidence": "source=/home/apps/workspace/agent-packages/agent-terminal-ui/pyproject.toml total=9 major=0 minor=0 patch=1 not_installed=0",
+          "evidence": "source=<repository-root>/pyproject.toml total=9 major=0 minor=0 patch=1 not_installed=0",
           "reasoning": "Audited 9 deps (9 installed, 0 constraint-only). 0 major, 0 minor, 1 patch updates."
         }
       ],
@@ -223,7 +223,7 @@
           "length": 129,
           "complexity": 26,
           "nesting_depth": 4,
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/tui/input_text_area.py"
+          "file": "<repository-root>/agent_terminal_ui/tui/input_text_area.py"
         },
         {
           "name": "test_multiple_skills_loading",
@@ -231,7 +231,7 @@
           "length": 96,
           "complexity": 23,
           "nesting_depth": 8,
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py"
+          "file": "<repository-root>/tests/text_universal_skills.py"
         },
         {
           "name": "test_real_universal_skills_structure",
@@ -239,7 +239,7 @@
           "length": 99,
           "complexity": 23,
           "nesting_depth": 8,
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py"
+          "file": "<repository-root>/tests/text_universal_skills.py"
         },
         {
           "name": "test_yaml_frontmatter_parsing",
@@ -247,7 +247,7 @@
           "length": 99,
           "complexity": 21,
           "nesting_depth": 8,
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py"
+          "file": "<repository-root>/tests/text_universal_skills.py"
         },
         {
           "name": "test_skill_without_yaml_frontmatter",
@@ -255,7 +255,7 @@
           "length": 96,
           "complexity": 21,
           "nesting_depth": 8,
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py"
+          "file": "<repository-root>/tests/text_universal_skills.py"
         }
       ],
       "top_long": [
@@ -265,7 +265,7 @@
           "length": 129,
           "complexity": 26,
           "nesting_depth": 4,
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/tui/input_text_area.py"
+          "file": "<repository-root>/agent_terminal_ui/tui/input_text_area.py"
         },
         {
           "name": "action_show_help",
@@ -273,7 +273,7 @@
           "length": 125,
           "complexity": 3,
           "nesting_depth": 2,
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/app.py"
+          "file": "<repository-root>/agent_terminal_ui/app.py"
         },
         {
           "name": "stream",
@@ -281,7 +281,7 @@
           "length": 100,
           "complexity": 19,
           "nesting_depth": 8,
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/client.py"
+          "file": "<repository-root>/agent_terminal_ui/client.py"
         },
         {
           "name": "test_yaml_frontmatter_parsing",
@@ -289,7 +289,7 @@
           "length": 99,
           "complexity": 21,
           "nesting_depth": 8,
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py"
+          "file": "<repository-root>/tests/text_universal_skills.py"
         },
         {
           "name": "test_real_universal_skills_structure",
@@ -297,13 +297,13 @@
           "length": 99,
           "complexity": 23,
           "nesting_depth": 8,
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py"
+          "file": "<repository-root>/tests/text_universal_skills.py"
         }
       ],
       "structural_issues": [
         {
           "file": "commands.py",
-          "path": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/commands.py",
+          "path": "<repository-root>/agent_terminal_ui/commands.py",
           "lines": 1937,
           "issues": [
             "3 functions with high complexity (worst: CommandProcessor.cmd_prompts at 85L, CC=17)",
@@ -333,7 +333,7 @@
         },
         {
           "file": "client.py",
-          "path": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/client.py",
+          "path": "<repository-root>/agent_terminal_ui/client.py",
           "lines": 988,
           "issues": [
             "2 functions with high complexity (worst: AgentClient.stream at 100L, CC=19)",
@@ -357,7 +357,7 @@
         },
         {
           "file": "app.py",
-          "path": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/app.py",
+          "path": "<repository-root>/agent_terminal_ui/app.py",
           "lines": 1115,
           "issues": [
             "2 functions with high complexity (worst: AgentApp.on_agent_event_received at 81L, CC=20)",
@@ -381,7 +381,7 @@
         },
         {
           "file": "text_universal_skills.py",
-          "path": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py",
+          "path": "<repository-root>/tests/text_universal_skills.py",
           "lines": 608,
           "issues": [
             "5 functions with high complexity (worst: TestUniversalSkillsIntegration.test_yaml_frontmatter_parsing at 99L, CC=21)"
@@ -422,7 +422,7 @@
         },
         {
           "file": "input_text_area.py",
-          "path": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/tui/input_text_area.py",
+          "path": "<repository-root>/agent_terminal_ui/tui/input_text_area.py",
           "lines": 692,
           "issues": [
             "1 functions with high complexity (worst: InputTextArea.on_key at 129L, CC=26)"
@@ -460,7 +460,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/scripts/img2ansi.py",
+          "file": "<repository-root>/scripts/img2ansi.py",
           "line": 10,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -468,7 +468,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py",
+          "file": "<repository-root>/tests/text_universal_skills.py",
           "line": 109,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -476,7 +476,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py",
+          "file": "<repository-root>/tests/text_universal_skills.py",
           "line": 206,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -484,7 +484,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py",
+          "file": "<repository-root>/tests/text_universal_skills.py",
           "line": 366,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -492,7 +492,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py",
+          "file": "<repository-root>/tests/text_universal_skills.py",
           "line": 505,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -500,7 +500,7 @@
           "cwe": "CWE-400",
           "name": "Resource Exhaustion",
           "severity": "Low",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_parity_contract.py",
+          "file": "<repository-root>/tests/test_parity_contract.py",
           "line": 41,
           "detail": "re.compile() called. Ensure the pattern avoids catastrophic backtracking."
         },
@@ -508,7 +508,7 @@
           "cwe": "CWE-400",
           "name": "Resource Exhaustion",
           "severity": "Low",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_parity_contract.py",
+          "file": "<repository-root>/tests/test_parity_contract.py",
           "line": 43,
           "detail": "re.compile() called. Ensure the pattern avoids catastrophic backtracking."
         },
@@ -516,7 +516,7 @@
           "cwe": "CWE-400",
           "name": "Resource Exhaustion",
           "severity": "Low",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_parity_contract.py",
+          "file": "<repository-root>/tests/test_parity_contract.py",
           "line": 45,
           "detail": "re.compile() called. Ensure the pattern avoids catastrophic backtracking."
         },
@@ -524,7 +524,7 @@
           "cwe": "CWE-400",
           "name": "Resource Exhaustion",
           "severity": "Low",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_parity_contract.py",
+          "file": "<repository-root>/tests/test_parity_contract.py",
           "line": 51,
           "detail": "re.compile() called. Ensure the pattern avoids catastrophic backtracking."
         },
@@ -532,7 +532,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_app_workers.py",
+          "file": "<repository-root>/tests/test_app_workers.py",
           "line": 212,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -540,7 +540,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_app_workers.py",
+          "file": "<repository-root>/tests/test_app_workers.py",
           "line": 199,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -548,7 +548,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/commands.py",
+          "file": "<repository-root>/agent_terminal_ui/commands.py",
           "line": 222,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -556,7 +556,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/commands.py",
+          "file": "<repository-root>/agent_terminal_ui/commands.py",
           "line": 675,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -564,7 +564,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/commands.py",
+          "file": "<repository-root>/agent_terminal_ui/commands.py",
           "line": 989,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -572,7 +572,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/commands.py",
+          "file": "<repository-root>/agent_terminal_ui/commands.py",
           "line": 1002,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -580,7 +580,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/commands.py",
+          "file": "<repository-root>/agent_terminal_ui/commands.py",
           "line": 1033,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -588,7 +588,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/commands.py",
+          "file": "<repository-root>/agent_terminal_ui/commands.py",
           "line": 125,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -596,7 +596,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/commands.py",
+          "file": "<repository-root>/agent_terminal_ui/commands.py",
           "line": 1071,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -604,7 +604,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/commands.py",
+          "file": "<repository-root>/agent_terminal_ui/commands.py",
           "line": 1099,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -612,7 +612,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/commands.py",
+          "file": "<repository-root>/agent_terminal_ui/commands.py",
           "line": 1123,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -620,7 +620,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/commands.py",
+          "file": "<repository-root>/agent_terminal_ui/commands.py",
           "line": 1138,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -628,7 +628,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/commands.py",
+          "file": "<repository-root>/agent_terminal_ui/commands.py",
           "line": 1164,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -636,7 +636,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/commands.py",
+          "file": "<repository-root>/agent_terminal_ui/commands.py",
           "line": 1179,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -644,7 +644,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/commands.py",
+          "file": "<repository-root>/agent_terminal_ui/commands.py",
           "line": 1205,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -652,7 +652,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/commands.py",
+          "file": "<repository-root>/agent_terminal_ui/commands.py",
           "line": 1218,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -660,7 +660,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/commands.py",
+          "file": "<repository-root>/agent_terminal_ui/commands.py",
           "line": 1240,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -668,7 +668,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/commands.py",
+          "file": "<repository-root>/agent_terminal_ui/commands.py",
           "line": 1257,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -676,7 +676,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/client.py",
+          "file": "<repository-root>/agent_terminal_ui/client.py",
           "line": 224,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -684,7 +684,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/client.py",
+          "file": "<repository-root>/agent_terminal_ui/client.py",
           "line": 292,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -692,7 +692,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/client.py",
+          "file": "<repository-root>/agent_terminal_ui/client.py",
           "line": 309,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -700,7 +700,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/client.py",
+          "file": "<repository-root>/agent_terminal_ui/client.py",
           "line": 978,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -708,7 +708,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/app.py",
+          "file": "<repository-root>/agent_terminal_ui/app.py",
           "line": 938,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -716,7 +716,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/app.py",
+          "file": "<repository-root>/agent_terminal_ui/app.py",
           "line": 982,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -724,7 +724,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/tui/input_text_area.py",
+          "file": "<repository-root>/agent_terminal_ui/tui/input_text_area.py",
           "line": 537,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -732,7 +732,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/tui/input_text_area.py",
+          "file": "<repository-root>/agent_terminal_ui/tui/input_text_area.py",
           "line": 586,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -740,7 +740,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/tui/input_text_area.py",
+          "file": "<repository-root>/agent_terminal_ui/tui/input_text_area.py",
           "line": 680,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -748,7 +748,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/tui/input_text_area.py",
+          "file": "<repository-root>/agent_terminal_ui/tui/input_text_area.py",
           "line": 689,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -756,7 +756,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/build/lib/scripts/img2ansi.py",
+          "file": "<repository-root>/build/lib/scripts/img2ansi.py",
           "line": 10,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -764,7 +764,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/build/lib/tests/text_universal_skills.py",
+          "file": "<repository-root>/build/lib/tests/text_universal_skills.py",
           "line": 109,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -772,7 +772,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/build/lib/tests/text_universal_skills.py",
+          "file": "<repository-root>/build/lib/tests/text_universal_skills.py",
           "line": 206,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -780,7 +780,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/build/lib/tests/text_universal_skills.py",
+          "file": "<repository-root>/build/lib/tests/text_universal_skills.py",
           "line": 366,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -788,7 +788,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/build/lib/tests/text_universal_skills.py",
+          "file": "<repository-root>/build/lib/tests/text_universal_skills.py",
           "line": 505,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -796,7 +796,7 @@
           "cwe": "CWE-400",
           "name": "Resource Exhaustion",
           "severity": "Low",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/build/lib/tests/test_parity_contract.py",
+          "file": "<repository-root>/build/lib/tests/test_parity_contract.py",
           "line": 41,
           "detail": "re.compile() called. Ensure the pattern avoids catastrophic backtracking."
         },
@@ -804,7 +804,7 @@
           "cwe": "CWE-400",
           "name": "Resource Exhaustion",
           "severity": "Low",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/build/lib/tests/test_parity_contract.py",
+          "file": "<repository-root>/build/lib/tests/test_parity_contract.py",
           "line": 43,
           "detail": "re.compile() called. Ensure the pattern avoids catastrophic backtracking."
         },
@@ -812,7 +812,7 @@
           "cwe": "CWE-400",
           "name": "Resource Exhaustion",
           "severity": "Low",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/build/lib/tests/test_parity_contract.py",
+          "file": "<repository-root>/build/lib/tests/test_parity_contract.py",
           "line": 45,
           "detail": "re.compile() called. Ensure the pattern avoids catastrophic backtracking."
         },
@@ -820,7 +820,7 @@
           "cwe": "CWE-400",
           "name": "Resource Exhaustion",
           "severity": "Low",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/build/lib/tests/test_parity_contract.py",
+          "file": "<repository-root>/build/lib/tests/test_parity_contract.py",
           "line": 51,
           "detail": "re.compile() called. Ensure the pattern avoids catastrophic backtracking."
         },
@@ -828,7 +828,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/build/lib/tests/test_app_workers.py",
+          "file": "<repository-root>/build/lib/tests/test_app_workers.py",
           "line": 212,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -836,7 +836,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/build/lib/tests/test_app_workers.py",
+          "file": "<repository-root>/build/lib/tests/test_app_workers.py",
           "line": 199,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -844,7 +844,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/build/lib/agent_terminal_ui/commands.py",
+          "file": "<repository-root>/build/lib/agent_terminal_ui/commands.py",
           "line": 219,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         },
@@ -852,7 +852,7 @@
           "cwe": "CWE-390",
           "name": "Error Swallowing",
           "severity": "Medium",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/build/lib/agent_terminal_ui/commands.py",
+          "file": "<repository-root>/build/lib/agent_terminal_ui/commands.py",
           "line": 672,
           "detail": "Broad 'except Exception' block without logging or raising the error"
         }
@@ -898,7 +898,7 @@
       "tests": [
         {
           "name": "test_create_session",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_client.py",
+          "file": "<repository-root>/tests/test_client.py",
           "line": 15,
           "length": 11,
           "intent": "unit",
@@ -910,7 +910,7 @@
         },
         {
           "name": "test_stream_mode_injection",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_client.py",
+          "file": "<repository-root>/tests/test_client.py",
           "line": 29,
           "length": 21,
           "intent": "unit",
@@ -922,7 +922,7 @@
         },
         {
           "name": "test_app_modes",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_tui.py",
+          "file": "<repository-root>/tests/test_tui.py",
           "line": 10,
           "length": 25,
           "intent": "unit",
@@ -934,7 +934,7 @@
         },
         {
           "name": "test_command_overlay_filter_and_select",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 53,
           "length": 29,
           "intent": "unit",
@@ -946,7 +946,7 @@
         },
         {
           "name": "test_command_overlay_enter_and_tab",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 85,
           "length": 20,
           "intent": "unit",
@@ -958,7 +958,7 @@
         },
         {
           "name": "test_file_overlay_filter_and_escape",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 108,
           "length": 30,
           "intent": "unit",
@@ -970,7 +970,7 @@
         },
         {
           "name": "test_file_overlay_enter_and_tab",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 141,
           "length": 23,
           "intent": "unit",
@@ -982,7 +982,7 @@
         },
         {
           "name": "test_input_text_area_plain_enter_submits",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 172,
           "length": 18,
           "intent": "unit",
@@ -994,7 +994,7 @@
         },
         {
           "name": "test_input_text_area_backslash_enter_inserts_newline",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 193,
           "length": 14,
           "intent": "unit",
@@ -1006,7 +1006,7 @@
         },
         {
           "name": "test_input_text_area_tab_triggers_command_overlay",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 210,
           "length": 20,
           "intent": "unit",
@@ -1018,7 +1018,7 @@
         },
         {
           "name": "test_input_text_area_escape_closes_overlays",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 233,
           "length": 12,
           "intent": "unit",
@@ -1030,7 +1030,7 @@
         },
         {
           "name": "test_input_text_area_autocomplete_single_match",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 248,
           "length": 19,
           "intent": "unit",
@@ -1042,7 +1042,7 @@
         },
         {
           "name": "test_input_text_area_at_char_shows_file_overlay",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 270,
           "length": 15,
           "intent": "unit",
@@ -1054,7 +1054,7 @@
         },
         {
           "name": "test_input_text_area_close_overlays_directly",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 288,
           "length": 16,
           "intent": "unit",
@@ -1066,7 +1066,7 @@
         },
         {
           "name": "test_history_screen_row_selected_and_escape",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 312,
           "length": 22,
           "intent": "unit",
@@ -1078,7 +1078,7 @@
         },
         {
           "name": "test_history_screen_escape_returns_none",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 337,
           "length": 13,
           "intent": "unit",
@@ -1090,7 +1090,7 @@
         },
         {
           "name": "test_mcp_screen_close_and_escape",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 353,
           "length": 18,
           "intent": "unit",
@@ -1102,7 +1102,7 @@
         },
         {
           "name": "test_mcp_screen_escape_dismisses",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 374,
           "length": 10,
           "intent": "unit",
@@ -1114,7 +1114,7 @@
         },
         {
           "name": "test_tool_approval_accept_all",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 395,
           "length": 23,
           "intent": "unit",
@@ -1126,7 +1126,7 @@
         },
         {
           "name": "test_tool_approval_reject_all_on_escape",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 421,
           "length": 19,
           "intent": "unit",
@@ -1138,7 +1138,7 @@
         },
         {
           "name": "test_tool_approval_feedback_submit_rejects",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 443,
           "length": 25,
           "intent": "unit",
@@ -1150,7 +1150,7 @@
         },
         {
           "name": "test_tool_approval_feedback_empty_accepts",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 471,
           "length": 24,
           "intent": "unit",
@@ -1162,7 +1162,7 @@
         },
         {
           "name": "test_tool_approval_button_press_individual",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 498,
           "length": 33,
           "intent": "unit",
@@ -1174,7 +1174,7 @@
         },
         {
           "name": "test_tool_approval_button_with_no_id_skipped",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 534,
           "length": 15,
           "intent": "unit",
@@ -1186,7 +1186,7 @@
         },
         {
           "name": "test_tool_approval_result_default_fields",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 552,
           "length": 4,
           "intent": "unit",
@@ -1198,7 +1198,7 @@
         },
         {
           "name": "test_process_queue_with_queued_message",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_app_workers.py",
+          "file": "<repository-root>/tests/test_app_workers.py",
           "line": 24,
           "length": 11,
           "intent": "unit",
@@ -1210,7 +1210,7 @@
         },
         {
           "name": "test_process_queue_empty_is_noop",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_app_workers.py",
+          "file": "<repository-root>/tests/test_app_workers.py",
           "line": 38,
           "length": 5,
           "intent": "unit",
@@ -1222,7 +1222,7 @@
         },
         {
           "name": "test_submit_prompt_invokes_run",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_app_workers.py",
+          "file": "<repository-root>/tests/test_app_workers.py",
           "line": 46,
           "length": 7,
           "intent": "unit",
@@ -1234,7 +1234,7 @@
         },
         {
           "name": "test_restore_input_with_buffer",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_app_workers.py",
+          "file": "<repository-root>/tests/test_app_workers.py",
           "line": 56,
           "length": 11,
           "intent": "unit",
@@ -1246,7 +1246,7 @@
         },
         {
           "name": "test_action_interrupt_cancels_workers",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_app_workers.py",
+          "file": "<repository-root>/tests/test_app_workers.py",
           "line": 70,
           "length": 18,
           "intent": "unit",
@@ -1493,23 +1493,23 @@
             "detail": "70 modules exceed 500 lines (god modules)",
             "items": [
               {
-                "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py",
+                "file": "<repository-root>/tests/text_universal_skills.py",
                 "lines": 608
               },
               {
-                "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_tui_components.py",
+                "file": "<repository-root>/tests/test_tui_components.py",
                 "lines": 1050
               },
               {
-                "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_parity_commands.py",
+                "file": "<repository-root>/tests/test_parity_commands.py",
                 "lines": 565
               },
               {
-                "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+                "file": "<repository-root>/tests/test_screens_and_overlays.py",
                 "lines": 555
               },
               {
-                "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_enhanced_features.py",
+                "file": "<repository-root>/tests/test_enhanced_features.py",
                 "lines": 710
               }
             ]
@@ -1521,27 +1521,27 @@
             "items": [
               {
                 "class": "CommandProcessor",
-                "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/commands.py",
+                "file": "<repository-root>/agent_terminal_ui/commands.py",
                 "method_count": 80
               },
               {
                 "class": "AgentClient",
-                "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/client.py",
+                "file": "<repository-root>/agent_terminal_ui/client.py",
                 "method_count": 54
               },
               {
                 "class": "AgentApp",
-                "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/app.py",
+                "file": "<repository-root>/agent_terminal_ui/app.py",
                 "method_count": 43
               },
               {
                 "class": "CommandProcessor",
-                "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/build/lib/agent_terminal_ui/commands.py",
+                "file": "<repository-root>/build/lib/agent_terminal_ui/commands.py",
                 "method_count": 77
               },
               {
                 "class": "AgentClient",
-                "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/build/lib/agent_terminal_ui/client.py",
+                "file": "<repository-root>/build/lib/agent_terminal_ui/client.py",
                 "method_count": 45
               }
             ]
@@ -1710,223 +1710,223 @@
       "tests_missing_markers": [
         {
           "test_name": "test_create_session",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_client.py",
+          "file": "<repository-root>/tests/test_client.py",
           "line": 15
         },
         {
           "test_name": "test_stream_mode_injection",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_client.py",
+          "file": "<repository-root>/tests/test_client.py",
           "line": 29
         },
         {
           "test_name": "test_app_modes",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_tui.py",
+          "file": "<repository-root>/tests/test_tui.py",
           "line": 10
         },
         {
           "test_name": "test_command_overlay_filter_and_select",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 53
         },
         {
           "test_name": "test_command_overlay_enter_and_tab",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 85
         },
         {
           "test_name": "test_file_overlay_filter_and_escape",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 108
         },
         {
           "test_name": "test_file_overlay_enter_and_tab",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 141
         },
         {
           "test_name": "test_input_text_area_plain_enter_submits",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 172
         },
         {
           "test_name": "test_input_text_area_backslash_enter_inserts_newline",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 193
         },
         {
           "test_name": "test_input_text_area_tab_triggers_command_overlay",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 210
         },
         {
           "test_name": "test_input_text_area_escape_closes_overlays",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 233
         },
         {
           "test_name": "test_input_text_area_autocomplete_single_match",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 248
         },
         {
           "test_name": "test_input_text_area_at_char_shows_file_overlay",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 270
         },
         {
           "test_name": "test_input_text_area_close_overlays_directly",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 288
         },
         {
           "test_name": "test_history_screen_row_selected_and_escape",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 312
         },
         {
           "test_name": "test_history_screen_escape_returns_none",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 337
         },
         {
           "test_name": "test_mcp_screen_close_and_escape",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 353
         },
         {
           "test_name": "test_mcp_screen_escape_dismisses",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 374
         },
         {
           "test_name": "test_tool_approval_accept_all",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 395
         },
         {
           "test_name": "test_tool_approval_reject_all_on_escape",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/test_screens_and_overlays.py",
+          "file": "<repository-root>/tests/test_screens_and_overlays.py",
           "line": 421
         }
       ],
       "functions_missing_docstrings": [
         {
           "function": "image_to_ansi",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/scripts/img2ansi.py",
+          "file": "<repository-root>/scripts/img2ansi.py",
           "line": 7,
           "length": 27
         },
         {
           "function": "main",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/scripts/verify_tui_acp.py",
+          "file": "<repository-root>/scripts/verify_tui_acp.py",
           "line": 13,
           "length": 44
         },
         {
           "function": "mock_app",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py",
+          "file": "<repository-root>/tests/text_universal_skills.py",
           "line": 12,
           "length": 20
         },
         {
           "function": "test_yaml_frontmatter_parsing",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py",
+          "file": "<repository-root>/tests/text_universal_skills.py",
           "line": 46,
           "length": 99
         },
         {
           "function": "test_skill_without_yaml_frontmatter",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py",
+          "file": "<repository-root>/tests/text_universal_skills.py",
           "line": 147,
           "length": 96
         },
         {
           "function": "test_skill_missing_skill_md",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py",
+          "file": "<repository-root>/tests/text_universal_skills.py",
           "line": 245,
           "length": 57
         },
         {
           "function": "test_multiple_skills_loading",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py",
+          "file": "<repository-root>/tests/text_universal_skills.py",
           "line": 304,
           "length": 96
         },
         {
           "function": "test_skill_command_registration_integration",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py",
+          "file": "<repository-root>/tests/text_universal_skills.py",
           "line": 402,
           "length": 48
         },
         {
           "function": "test_real_universal_skills_structure",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py",
+          "file": "<repository-root>/tests/text_universal_skills.py",
           "line": 452,
           "length": 99
         },
         {
           "function": "test_skill_command_help_display",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py",
+          "file": "<repository-root>/tests/text_universal_skills.py",
           "line": 553,
           "length": 25
         },
         {
           "function": "test_skill_command_with_hyphenated_names",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py",
+          "file": "<repository-root>/tests/text_universal_skills.py",
           "line": 580,
           "length": 29
         },
         {
           "function": "mock_load",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py",
+          "file": "<repository-root>/tests/text_universal_skills.py",
           "line": 73,
           "length": 61
         },
         {
           "function": "mock_load",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py",
+          "file": "<repository-root>/tests/text_universal_skills.py",
           "line": 169,
           "length": 62
         },
         {
           "function": "mock_load",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py",
+          "file": "<repository-root>/tests/text_universal_skills.py",
           "line": 260,
           "length": 31
         },
         {
           "function": "mock_load",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py",
+          "file": "<repository-root>/tests/text_universal_skills.py",
           "line": 331,
           "length": 59
         },
         {
           "function": "mock_load",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/tests/text_universal_skills.py",
+          "file": "<repository-root>/tests/text_universal_skills.py",
           "line": 471,
           "length": 58
         },
         {
           "function": "__init__",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/commands.py",
+          "file": "<repository-root>/agent_terminal_ui/commands.py",
           "line": 32,
           "length": 63
         },
         {
           "function": "process",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/commands.py",
+          "file": "<repository-root>/agent_terminal_ui/commands.py",
           "line": 96,
           "length": 37
         },
         {
           "function": "cmd_exit",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/commands.py",
+          "file": "<repository-root>/agent_terminal_ui/commands.py",
           "line": 147,
           "length": 16
         },
         {
           "function": "cmd_image",
-          "file": "/home/apps/workspace/agent-packages/agent-terminal-ui/agent_terminal_ui/commands.py",
+          "file": "<repository-root>/agent_terminal_ui/commands.py",
           "line": 183,
           "length": 41
         }
@@ -2286,7 +2286,7 @@
         {
           "criterion": "bumpversion_exists",
           "points": 20,
-          "evidence": "/home/apps/workspace/agent-packages/agent-terminal-ui/.bumpversion.cfg",
+          "evidence": "<repository-root>/.bumpversion.cfg",
           "reasoning": ".bumpversion.cfg found"
         },
         {

@@ -13,6 +13,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 import httpx
+from rich.console import Group
 from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Table
@@ -74,6 +75,11 @@ class CommandProcessor:
             "simplify": self.cmd_simplify,
             "add-dir": self.cmd_add_dir,
             "graph": self.cmd_graph,
+            "ask": self.cmd_ask,
+            "nl": self.cmd_nl,
+            "obs": self.cmd_obs,
+            "broker": self.cmd_broker,
+            "kvcache": self.cmd_kvcache,
             "ingest": self.cmd_ingest,
             "kb": self.cmd_kb,
             "sdd": self.cmd_sdd,
@@ -90,6 +96,10 @@ class CommandProcessor:
             "prompts": self.cmd_prompts,
             "skills": self.cmd_skills_only,
             "tools": self.cmd_tools_only,
+            "capabilities": self.cmd_capabilities,
+            "capability": self.cmd_capabilities,
+            "run": self.cmd_run,
+            "runs": self.cmd_run,
             # --- Agent View & Goal commands (TUI-20, ORCH-5.0) ---
             "goal": self.cmd_goal,
             "goal:status": self.cmd_goal_status,
@@ -102,6 +112,8 @@ class CommandProcessor:
         self.canonical_commands: dict[str, str] = {
             "quit": "exit",
             "cost": "stats",
+            "capability": "capabilities",
+            "runs": "run",
         }
 
     async def process(self, text: str) -> bool:
@@ -186,9 +198,9 @@ class CommandProcessor:
 
     async def cmd_help(self, args: str) -> None:
         """Show available commands and their descriptions."""
-        # CONCEPT:ECO-4.71 — descriptions for cross-surface commands come from the ONE
-        # agent-utilities command registry, so the TUI and messaging bots stay aligned;
-        # TUI-only commands fall back to their handler docstring.
+        # CONCEPT:AU-ECO.messaging.shared-by-every-messaging
+        # Cross-surface descriptions come from the one agent-utilities command
+        # registry; TUI-only commands fall back to their handler docstring.
         try:
             from agent_utilities.messaging.commands import command_specs
 
@@ -234,6 +246,23 @@ class CommandProcessor:
         from agent_terminal_ui.tui.mcp_screen import MCPScreen
 
         self.app.push_screen(MCPScreen(config, tools))
+
+    async def cmd_capabilities(self, args: str) -> None:
+        """Search live capabilities. Usage: /capabilities [query]"""
+        opener = getattr(self.app, "open_capability_palette", None)
+        if not callable(opener):
+            self.app.notify("Capability palette unavailable.", severity="warning")
+            return
+        opener(initial_query=args.strip())
+
+    async def cmd_run(self, args: str) -> None:
+        """Browse runs or follow one in Mission Control. Usage: /run [run_id]"""
+        run_id = args.strip() or getattr(self.app, "last_run_id", None)
+        opener = getattr(self.app, "open_run_inspector", None)
+        if not callable(opener):
+            self.app.notify("Run inspector unavailable.", severity="warning")
+            return
+        opener(str(run_id) if run_id else None)
 
     async def cmd_history(self, args: str) -> None:
         """Browse and select from historical chat sessions."""
@@ -343,7 +372,10 @@ class CommandProcessor:
         await self._submit_prompt(f"Search the codebase for: {args}")
 
     async def cmd_stats(self, args: str) -> None:
-        """Show live token/cost stats for the current session (CONCEPT:ECO-4.41)."""
+        """Show live token/cost stats for the current session.
+
+        CONCEPT:AU-ECO.mcp.usage-cost-observability-surface
+        """
         tracker = getattr(self.app, "cost_tracker", None)
         if tracker is not None:
             with contextlib.suppress(Exception):
@@ -1044,7 +1076,7 @@ class CommandProcessor:
         from agent_terminal_ui.goal import GoalSpec
 
         spec = GoalSpec.parse_goal_input(args)
-        spec.session_id = getattr(self.app, "_session_id", "")
+        spec.session_id = getattr(self.app, "current_session_id", None) or ""
 
         log = self.app.query_one("Conversation")
         await log.add_info(
@@ -1113,7 +1145,7 @@ class CommandProcessor:
     async def cmd_bg(self, args: str) -> None:
         """Background the current session. The agent continues working autonomously."""
         log = self.app.query_one("Conversation")
-        session_id = getattr(self.app, "_session_id", "")
+        session_id = getattr(self.app, "current_session_id", None)
         if not session_id:
             self.app.notify("No active session to background.", severity="warning")
             return
@@ -1221,6 +1253,130 @@ class CommandProcessor:
             return
 
         self.app.notify(f"Unknown /graph subcommand: {sub}", severity="warning")
+
+    async def cmd_ask(self, args: str) -> None:
+        """Ask a data question in plain English (multi-step analyst, KG-2.308).
+
+        Usage: /ask <natural-language question>
+        """
+        question = args.strip()
+        if not question:
+            self.app.notify("Usage: /ask <question>", severity="warning")
+            return
+        log = self.app.query_one("Conversation")
+        await log.add_info(f"[dim]Asking the data analyst: {question}[/dim]")
+        try:
+            result = await self.app._client.graph_ask_data(question)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "ask", exc)
+            return
+        await log.add_info(self._render_ask_data(result))
+
+    async def cmd_nl(self, args: str) -> None:
+        """Translate a question into a graph query and run it (KG-2.305).
+
+        Usage: /nl <question>  (prefix with 'preview ' to dry-run the query)
+        """
+        text = args.strip()
+        if not text:
+            self.app.notify("Usage: /nl <question>", severity="warning")
+            return
+        execute = True
+        sub, rest = self._parse_subcommand(text)
+        if sub == "preview" and rest.strip():
+            execute = False
+            text = rest.strip()
+        log = self.app.query_one("Conversation")
+        try:
+            result = await self.app._client.graph_nl_query(text, execute=execute)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "nl-query", exc)
+            return
+        await log.add_info(self._render_nl_query(result))
+
+    async def cmd_obs(self, args: str) -> None:
+        """Query observability metrics (PromQL) and traces (KG-2.310).
+
+        Usage: /obs <promql>            instant metric evaluation
+               /obs range <promql>      range query with a sparkline
+               /obs traces [service]    search recent distributed traces
+        """
+        sub, rest = self._parse_subcommand(args)
+        log = self.app.query_one("Conversation")
+
+        if sub == "traces":
+            service = rest.strip()
+            try:
+                result = await self.app._client.graph_traces(service=service)
+            except httpx.HTTPStatusError as exc:
+                await self._write_http_error(log, "traces", exc)
+                return
+            await log.add_info(self._render_traces(result))
+            return
+
+        if sub == "range":
+            expr = rest.strip()
+            if not expr:
+                self.app.notify("Usage: /obs range <promql>", severity="warning")
+                return
+            try:
+                result = await self.app._client.graph_promql(
+                    expr, action="range", start="-15m", end="now", step="30s"
+                )
+            except httpx.HTTPStatusError as exc:
+                await self._write_http_error(log, "promql", exc)
+                return
+            await log.add_info(self._render_promql(result, expr, "range"))
+            return
+
+        expr = args.strip()
+        if sub == "metric":
+            expr = rest.strip()
+        if not expr:
+            self.app.notify(
+                "Usage: /obs <promql> | range <promql> | traces [service]",
+                severity="warning",
+            )
+            return
+        try:
+            result = await self.app._client.graph_promql(expr, action="instant")
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "promql", exc)
+            return
+        await log.add_info(self._render_promql(result, expr, "instant"))
+
+    async def cmd_broker(self, args: str) -> None:
+        """Show engine message-broker status (KG-2.310).
+
+        Usage: /broker [stats | queues | exchanges]
+        """
+        sub, _ = self._parse_subcommand(args)
+        action = {
+            "": "stats",
+            "stats": "stats",
+            "queues": "list_queues",
+            "exchanges": "list_exchanges",
+        }.get(sub)
+        if action is None:
+            self.app.notify(f"Unknown /broker subcommand: {sub}", severity="warning")
+            return
+        log = self.app.query_one("Conversation")
+        try:
+            result = await self.app._client.graph_broker(action=action)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "broker", exc)
+            return
+        await log.add_info(self._render_broker(result, action))
+
+    async def cmd_kvcache(self, args: str) -> None:
+        """Show shared KV-cache occupancy and dedup stats (KG-2.306/2.310)."""
+        log = self.app.query_one("Conversation")
+        try:
+            result = await self.app._client.graph_kvcache(action="stats")
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "kvcache", exc)
+            return
+        await log.add_info(self._render_kvcache(result))
 
     async def cmd_kb(self, args: str) -> None:
         """Browse and ingest knowledge bases.
@@ -1793,6 +1949,230 @@ class CommandProcessor:
             table.add_row(entry_id, entry_type, str(target))
         return table
 
+    @staticmethod
+    def _surface_error(result: dict[str, Any]) -> str | None:
+        """Return a tool-level error string from a ``/graph/*`` payload, if any.
+
+        The engine-surface tools degrade cleanly to ``{"error": "..."}`` at
+        HTTP 200 rather than raising, so callers check this before rendering.
+        """
+        err = result.get("error") if isinstance(result, dict) else None
+        return str(err) if err else None
+
+    @staticmethod
+    def _sparkline(values: list[float]) -> str:
+        """Render a compact Unicode sparkline for a numeric series."""
+        if not values:
+            return ""
+        blocks = "▁▂▃▄▅▆▇█"
+        low = min(values)
+        high = max(values)
+        span = high - low
+        if span <= 0:
+            return blocks[0] * len(values)
+        return "".join(
+            blocks[min(len(blocks) - 1, int((v - low) / span * (len(blocks) - 1)))]
+            for v in values
+        )
+
+    @staticmethod
+    def _coerce_float(value: Any) -> float | None:
+        """Best-effort float coercion for PromQL sample values."""
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
+
+    def _render_json_panel(self, title: str, result: dict[str, Any]) -> Panel:
+        """Fallback renderer: pretty-print an unrecognized payload as JSON."""
+        body = Syntax(
+            json.dumps(result, indent=2, default=str),
+            "json",
+            word_wrap=True,
+        )
+        return Panel(body, title=title, border_style="cyan")
+
+    def _render_nl_query(self, result: dict[str, Any]) -> Any:
+        """Render an ``nl_query`` payload: generated query + result rows."""
+        err = self._surface_error(result)
+        if err:
+            return f"[red]NL query failed: {err}[/red]"
+        query = result.get("query") or result.get("generated_query") or ""
+        dialect = result.get("dialect", "")
+        rows = result.get("rows") or result.get("results") or result.get("result") or []
+        header = f"[bold blue]Generated query[/bold blue] ([dim]{dialect}[/dim])\n"
+        header += f"[green]{query}[/green]" if query else "[dim](no query)[/dim]"
+        if not isinstance(rows, list) or not rows:
+            return header + "\n[dim]No rows returned.[/dim]"
+        table = Table(title="Results", expand=True)
+        columns = sorted({k for row in rows if isinstance(row, dict) for k in row})
+        if columns:
+            for col in columns:
+                table.add_column(col, overflow="fold")
+            for row in rows[:50]:
+                table.add_row(*[str(row.get(col, "")) for col in columns])
+        else:
+            table.add_column("value")
+            for row in rows[:50]:
+                table.add_row(str(row))
+        return Group(header, table)
+
+    def _render_ask_data(self, result: dict[str, Any]) -> Any:
+        """Render an ``ask_data`` payload: synthesized answer + query + rows."""
+        err = self._surface_error(result)
+        if err:
+            return f"[red]Ask-data failed: {err}[/red]"
+        answer = result.get("answer") or ""
+        query = result.get("query") or result.get("generated_query") or ""
+        rows = result.get("rows") or result.get("results") or []
+        parts = []
+        if answer:
+            parts.append(Panel(str(answer), title="Answer", border_style="green"))
+        if query:
+            parts.append(Syntax(str(query), "sql", word_wrap=True))
+        if isinstance(rows, list) and rows:
+            table = Table(title="Rows", expand=True)
+            columns = sorted({k for r in rows if isinstance(r, dict) for k in r})
+            if columns:
+                for col in columns:
+                    table.add_column(col, overflow="fold")
+                for row in rows[:50]:
+                    table.add_row(*[str(row.get(col, "")) for col in columns])
+                parts.append(table)
+        if not parts:
+            return self._render_json_panel("Ask Data", result)
+        return Group(*parts)
+
+    def _render_promql(self, result: dict[str, Any], expr: str, action: str) -> Any:
+        """Render a PromQL payload: a metric table plus a sparkline for ranges."""
+        err = self._surface_error(result)
+        if err:
+            return f"[red]PromQL failed: {err}[/red]"
+        inner = result.get("result", result)
+        if isinstance(inner, dict):
+            series = inner.get("result", inner.get("data", inner))
+        else:
+            series = inner
+        if not isinstance(series, list) or not series:
+            return self._render_json_panel(f"PromQL: {expr}", result)
+        table = Table(title=f"PromQL ({action}): {expr}", expand=True)
+        table.add_column("Series", style="cyan", overflow="fold")
+        if action == "range":
+            table.add_column("Trend")
+            table.add_column("Last", justify="right")
+        else:
+            table.add_column("Value", justify="right")
+        for entry in series[:20]:
+            if not isinstance(entry, dict):
+                table.add_row(str(entry), "")
+                continue
+            metric = entry.get("metric") or {}
+            label = (
+                metric.get("__name__")
+                or ", ".join(f"{k}={v}" for k, v in metric.items())
+                or "value"
+            )
+            if action == "range":
+                pairs = entry.get("values") or []
+                nums = [
+                    n for _, raw in pairs if (n := self._coerce_float(raw)) is not None
+                ]
+                last = f"{nums[-1]:g}" if nums else ""
+                table.add_row(str(label), self._sparkline(nums), last)
+            else:
+                value = entry.get("value") or ["", ""]
+                raw = (
+                    value[1]
+                    if isinstance(value, list | tuple) and len(value) > 1
+                    else value
+                )
+                num = self._coerce_float(raw)
+                table.add_row(str(label), f"{num:g}" if num is not None else str(raw))
+        return table
+
+    def _render_traces(self, result: dict[str, Any]) -> Any:
+        """Render a trace-search payload as a table."""
+        err = self._surface_error(result)
+        if err:
+            return f"[red]Trace search failed: {err}[/red]"
+        inner = result.get("result", result)
+        traces = inner.get("traces", inner) if isinstance(inner, dict) else inner
+        if not isinstance(traces, list) or not traces:
+            return "[dim]No traces found.[/dim]"
+        table = Table(title="Traces", expand=True)
+        table.add_column("Trace ID", style="cyan", no_wrap=True)
+        table.add_column("Service", style="magenta")
+        table.add_column("Operation")
+        table.add_column("Duration", justify="right")
+        for trace in traces[:30]:
+            if not isinstance(trace, dict):
+                continue
+            duration = trace.get("duration_ms") or trace.get("duration") or ""
+            table.add_row(
+                str(trace.get("trace_id") or trace.get("id", "")),
+                str(trace.get("service") or trace.get("service_name", "")),
+                str(trace.get("operation") or trace.get("name", "")),
+                str(duration),
+            )
+        return table
+
+    def _render_broker(self, result: dict[str, Any], action: str) -> Any:
+        """Render broker stats or a queue/exchange listing as a table."""
+        err = self._surface_error(result)
+        if err:
+            return f"[red]Broker query failed: {err}[/red]"
+        inner = result.get("result", result)
+        if action in ("list_queues", "list_exchanges"):
+            items = inner
+            if isinstance(inner, dict):
+                items = (
+                    inner.get("queues")
+                    or inner.get("exchanges")
+                    or inner.get("result", [])
+                )
+            if not isinstance(items, list) or not items:
+                return "[dim]No entries.[/dim]"
+            table = Table(title=action.replace("_", " ").title(), expand=True)
+            table.add_column("Name", style="cyan", overflow="fold")
+            table.add_column("Detail")
+            for item in items[:50]:
+                if isinstance(item, dict):
+                    name = (
+                        item.get("name")
+                        or item.get("queue")
+                        or item.get("exchange", "")
+                    )
+                    detail = ", ".join(
+                        f"{k}={v}" for k, v in item.items() if k not in ("name",)
+                    )
+                    table.add_row(str(name), detail)
+                else:
+                    table.add_row(str(item), "")
+            return table
+        if not isinstance(inner, dict):
+            return self._render_json_panel("Broker", result)
+        table = Table(title="Broker Stats", expand=True)
+        table.add_column("Metric", style="bold cyan")
+        table.add_column("Value", justify="right")
+        for key in sorted(inner):
+            table.add_row(str(key), str(inner[key]))
+        return table
+
+    def _render_kvcache(self, result: dict[str, Any]) -> Any:
+        """Render KV-cache occupancy and dedup counters as a table."""
+        err = self._surface_error(result)
+        if err:
+            return f"[red]KV-cache query failed: {err}[/red]"
+        inner = result.get("result", result)
+        if not isinstance(inner, dict):
+            return self._render_json_panel("KV-Cache", result)
+        table = Table(title="KV-Cache Stats", expand=True)
+        table.add_column("Metric", style="bold cyan")
+        table.add_column("Value", justify="right")
+        for key in sorted(inner):
+            table.add_row(str(key), str(inner[key]))
+        return table
+
     def _render_memory_list(self, memories: list[dict[str, Any]]) -> Table:
         """Build a Rich table listing memory nodes."""
         table = Table(title="Memories", expand=True)
@@ -2162,7 +2542,8 @@ class CommandProcessor:
         )
 
     # ─────────────────────────────────────────────────────────────────
-    #  KG-Native Commands (CONCEPT:KG-002 / KG-003)
+    #  KG-Native Commands
+    #  CONCEPT:TU-KG.compute.prompt-management-ahe-rollback / KG-003
     # ─────────────────────────────────────────────────────────────────
 
     async def cmd_prompts(self, args: str) -> None:
@@ -2177,7 +2558,10 @@ class CommandProcessor:
                     "[yellow]No prompts found in KG.[/yellow]"
                 )
                 return
-            table = Table(title="Prompts (CONCEPT:KG-002)", expand=True)
+            table = Table(
+                title="Prompts (CONCEPT:TU-KG.compute.prompt-management-ahe-rollback)",
+                expand=True,
+            )
             table.add_column("ID", style="cyan", no_wrap=True)
             table.add_column("Name", style="bold")
             table.add_column("Description")
@@ -2274,7 +2658,10 @@ class CommandProcessor:
                 "[yellow]No skills discovered.[/yellow]"
             )
             return
-        table = Table(title="Agent Skills (CONCEPT:KG-003)", expand=True)
+        table = Table(
+            title="Agent Skills (CONCEPT:TU-KG.compute.granular-resource-queries)",
+            expand=True,
+        )
         table.add_column("ID", style="cyan", no_wrap=True)
         table.add_column("Name", style="bold")
         table.add_column("Source")
@@ -2308,7 +2695,10 @@ class CommandProcessor:
                 "[yellow]No MCP tools discovered.[/yellow]"
             )
             return
-        table = Table(title="MCP Tools (CONCEPT:KG-003)", expand=True)
+        table = Table(
+            title="MCP Tools (CONCEPT:TU-KG.compute.granular-resource-queries)",
+            expand=True,
+        )
         table.add_column("ID", style="cyan", no_wrap=True)
         table.add_column("Name", style="bold")
         table.add_column("Server/Source")

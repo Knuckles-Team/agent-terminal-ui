@@ -1,6 +1,6 @@
 # `/goal` Command — Autonomous Goal Loop
 
-> **Concept:** ORCH-5.0 (Autonomous Goal Loop)
+> **Concept:** AU-ORCH.session.durable-session-autonomous-goal (Autonomous Goal Loop)
 > **Status:** Implemented
 > **Package:** `agent-utilities` (models) + `agent-terminal-ui` (TUI integration)
 
@@ -113,7 +113,7 @@ reuse and learning from past successes/failures.
 
 ### Durable Persistence
 Goal state is checkpointed as `GoalCheckpoint` objects using the KG's
-`StateCheckpointer` (CONCEPT:KG-2.6). If the process crashes mid-goal,
+`StateCheckpointer` (CONCEPT:AU-KG.research.research-pipeline-runner). If the process crashes mid-goal,
 the goal loop can be resumed from the last checkpoint.
 
 ## Data Models

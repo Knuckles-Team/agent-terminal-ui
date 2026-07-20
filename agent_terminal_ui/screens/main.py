@@ -24,6 +24,7 @@ from textual.widgets import Footer, ProgressBar, RichLog, TabbedContent, TabPane
 
 from agent_terminal_ui.tui.input_text_area import InputTextArea
 from agent_terminal_ui.tui.status_line import StatusLine
+from agent_terminal_ui.widgets.capability_sidebar import CapabilitySidebar
 from agent_terminal_ui.widgets.conversation import Conversation
 from agent_terminal_ui.widgets.graph_tree import GraphTree
 from agent_terminal_ui.widgets.temporal_graph import TemporalGraph
@@ -79,6 +80,8 @@ class MainScreen(Screen):
                         yield GraphTree("Swarm", id="agent-graph")
                     with TabPane("Temporal", id="temporal-tab"):
                         yield TemporalGraph(id="temporal-graph")
+                    with TabPane("Capabilities", id="capabilities-tab"):
+                        yield CapabilitySidebar(id="capability-sidebar")
 
         cmd_processor = getattr(self.agent_app, "_cmd_processor", None)
         input_commands = cmd_processor.commands if cmd_processor is not None else {}
@@ -280,6 +283,7 @@ class MainScreen(Screen):
         elif event_type == "turn_end" or (
             event_type == "text" and "[DONE]" in event.get("content", "")
         ):
+            conversation.finish_agent_response()
             conversation.stop_thinking()
             if "usage" in event:
                 with contextlib.suppress(Exception):
@@ -329,6 +333,14 @@ class MainScreen(Screen):
         """Toggle server log visibility."""
         log = self.query_one("#server-log", RichLog)
         log.display = not log.display
+
+    def on_capability_sidebar_capability_selected(
+        self, event: CapabilitySidebar.CapabilitySelected
+    ) -> None:
+        """Open a sidebar selection in the full schema-driven palette."""
+        opener = getattr(self.agent_app, "open_capability_palette", None)
+        if callable(opener):
+            opener(capability_id=event.capability_id)
 
     # ── Log Tailing ──
 

@@ -49,13 +49,13 @@ xychart-beta
 |-----------|--------|----------|-----------|
 | has_pyproject | 10 | `pyproject.toml and requirements.txt` | Both pyproject.toml and requirements.txt exist, fulfilling mandatory Python proj |
 | project_type_detected | 10 | `Agent-Utilities Ecosystem` | Identified 1 ecosystem marker(s) in dependencies |
-| externalized_prompts | 0 | `/home/apps/workspace/agent-packages/agent-terminal-ui` | No prompts/ directory found. Prompts may be hardcoded in source. |
+| externalized_prompts | 0 | `<repository-root>` | No prompts/ directory found. Prompts may be hardcoded in source. |
 | observability | 0 | `dependency list` | No observability tools (logfire, sentry, opentelemetry) found |
 | testing_suite | 10 | `tests dir: True, pytest dep: True` | Tests directory exists, pytest in dependencies |
-| agents_md | 10 | `/home/apps/workspace/agent-packages/agent-terminal-ui/AGENTS` | AGENTS.md exists with comprehensive content |
-| pre_commit_hooks | 10 | `/home/apps/workspace/agent-packages/agent-terminal-ui/.pre-c` | Pre-commit configuration found for automated code quality checks |
-| gitignore | 10 | `/home/apps/workspace/agent-packages/agent-terminal-ui/.gitig` | .gitignore exists to prevent committing build artifacts and secrets |
-| env_template | 0 | `/home/apps/workspace/agent-packages/agent-terminal-ui` | No .env.example or .env.template — may hinder developer onboarding |
+| agents_md | 10 | `<repository-root>/AGENTS` | AGENTS.md exists with comprehensive content |
+| pre_commit_hooks | 10 | `<repository-root>/.pre-c` | Pre-commit configuration found for automated code quality checks |
+| gitignore | 10 | `<repository-root>/.gitig` | .gitignore exists to prevent committing build artifacts and secrets |
+| env_template | 0 | `<repository-root>` | No .env.example or .env.template — may hinder developer onboarding |
 | protocol_support | 0 | `file scan` | No A2A, ACP, or MCP protocol support detected |
 
 ---
@@ -66,7 +66,7 @@ xychart-beta
 
 | Criterion | Points | Evidence | Reasoning |
 |-----------|--------|----------|-----------|
-| dependency_freshness | 99 | `source=/home/apps/workspace/agent-packages/agent-terminal-ui` | Audited 9 deps (9 installed, 0 constraint-only). 0 major, 0 minor, 1 patch update |
+| dependency_freshness | 99 | `source=<repository-root>` | Audited 9 deps (9 installed, 0 constraint-only). 0 major, 0 minor, 1 patch update |
 
 ---
 
@@ -249,7 +249,7 @@ xychart-beta
 
 | Criterion | Points | Evidence | Reasoning |
 |-----------|--------|----------|-----------|
-| bumpversion_exists | 20 | `/home/apps/workspace/agent-packages/agent-terminal-ui/.bumpv` | .bumpversion.cfg found |
+| bumpversion_exists | 20 | `<repository-root>/.bumpv` | .bumpversion.cfg found |
 | current_version_defined | 20 | `0.2.0` | Current version tracked is 0.2.0 |
 | files_tracked | 20 | `1 files tracked` | Found 1 files tracked in .bumpversion.cfg |
 | version_drift_check | 0 | `2 untracked files` | Version definitions found in codebase that are missing from .bumpversion.cfg |
