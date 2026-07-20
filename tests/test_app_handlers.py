@@ -191,7 +191,7 @@ async def test_init_with_acp_enabled(monkeypatch):
 
     app = AgentApp()
     assert app._enable_acp is True
-    assert app._acp_client is None  # deferred init
+    assert app._acp_client is app._client
     assert app._acp_session_id is None
 
 
@@ -202,7 +202,7 @@ async def test_map_acp_event_branches(agent_app):
 
         # text-delta
         out = agent_app._map_acp_event({"type": "text-delta", "delta": "x"})
-        assert out == {"type": "text", "content": "x"}
+        assert out == {"type": "text_delta", "content": "x"}
 
         # thinking yields None
         assert agent_app._map_acp_event({"type": "thinking"}) is None

@@ -129,8 +129,11 @@ class TemporalGraph(Vertical):
             iso_ts: The current scrubber timestamp; empty means "now".
         """
         tree = self.tree
-        tree.root.remove_children()
-        tree.root.set_label(f"Graph @ {iso_ts or 'now'}")
+        root = tree.root
+        if root is None:
+            return
+        root.remove_children()
+        root.set_label(f"Graph @ {iso_ts or 'now'}")
 
         # Build a node-id -> TreeNode map as we add nodes, so edges can be nested
         # under their source without stashing attributes on the TreeNode.
@@ -138,7 +141,7 @@ class TemporalGraph(Vertical):
         for node in nodes:
             node_id = str(node.get("id") or node.get("name") or "?")
             label = str(node.get("name") or node.get("id") or "node")
-            child = tree.root.add(f"[bold]{label}[/]", data=node, expand=False)
+            child = root.add(f"[bold]{label}[/]", data=node, expand=False)
             children_by_id[node_id] = child
 
         # Attach edges under their source node, dimming the expired ones.
@@ -146,9 +149,11 @@ class TemporalGraph(Vertical):
             source = str(edge.get("source", "?"))
             target = str(edge.get("target", "?"))
             rel = str(edge.get("type", "rel"))
-            parent = children_by_id.get(source, tree.root)
+            parent = children_by_id.get(source)
+            if parent is None:
+                parent = root
             if is_edge_expired(edge, iso_ts):
                 parent.add_leaf(f"[dim]{rel} → {target} (expired)[/]", data=edge)
             else:
                 parent.add_leaf(f"{rel} → [primary]{target}[/]", data=edge)
-        tree.root.expand()
+        root.expand()

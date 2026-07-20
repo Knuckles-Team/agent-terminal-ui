@@ -10,17 +10,35 @@ import json
 import logging
 from collections.abc import AsyncGenerator
 from typing import Any
+from urllib.parse import quote
 
 import httpx
+
+from agent_terminal_ui.capabilities import (
+    CapabilityCatalog,
+    CapabilityDescriptor,
+    CapabilityInvocation,
+    CapabilityPreflight,
+    RunCatalog,
+    RunEventPage,
+    RunSummary,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class AgentClient:
-    """Standardized client for the agent-utilities ACP protocol.
+    """Standardized wire client for the agent-utilities ACP protocol.
 
-    This replaces the legacy AG-UI client with a robust, native ACP implementation.
+    The TUI treats this class as its protocol adapter: callers consume one
+    normalized event vocabulary regardless of whether events originated from an
+    initial turn or an approval-resume stream.  The currently shipped adapter
+    speaks ACP; the application-level ``ENABLE_ACP`` compatibility switch must
+    therefore select this initialized adapter rather than constructing a second,
+    deferred client.
     """
+
+    protocol = "acp"
 
     def __init__(self, base_url: str = "http://localhost:8000") -> None:
         """Initialize the ACP client.
@@ -32,12 +50,100 @@ class AgentClient:
         # The ACP mount is typically at /acp
         self.acp_url = f"{self.base_url}/acp"
         self._http_client = httpx.AsyncClient(timeout=30.0)
+        self._current_session_id: str | None = None
+
+    @property
+    def current_session_id(self) -> str | None:
+        """Return the session most recently created or used by this client."""
+        return self._current_session_id
 
     async def create_session(self) -> str:
         """Create a new ACP session."""
         response = await self._http_client.post(f"{self.acp_url}/sessions")
         response.raise_for_status()
-        return response.json().get("session_id", "")
+        payload = response.json()
+        session_id = payload.get("session_id") or payload.get("sessionId", "")
+        if session_id:
+            self._current_session_id = session_id
+        return session_id
+
+    @staticmethod
+    def _normalize_event(event: dict[str, Any], session_id: str) -> dict[str, Any]:
+        """Normalize one ACP event into the event vocabulary used by every UI.
+
+        Keeping this translation in the transport adapter prevents initial turns
+        and approval-resume turns from producing subtly different event names.
+        Every normalized event carries its owning session id so consumers can
+        persist, export, and resume the same conversation.
+        """
+        event_type = event.get("type")
+
+        if event_type in ("text-delta", "text_delta"):
+            normalized: dict[str, Any] = {
+                "type": "text_delta",
+                "content": event.get("delta")
+                or event.get("text")
+                or event.get("content", ""),
+            }
+        elif event_type == "text":
+            normalized = {"type": "text", "content": event.get("content", "")}
+        elif event_type == "thinking":
+            normalized = {
+                "type": "sideband",
+                "data": {
+                    "type": "thought",
+                    "content": event.get("thought", ""),
+                },
+            }
+        elif event_type in ("plan-updated", "plan_updated"):
+            normalized = {
+                "type": "sideband",
+                "data": {"type": "plan", "plan": event.get("plan", [])},
+            }
+        elif event_type in ("tool-call", "tool_call"):
+            normalized = {
+                "type": "tool_call",
+                "data": event.get("call") or event.get("data") or {},
+            }
+        elif event_type in ("tool-output", "tool_output"):
+            output_data = event.get("data")
+            if not isinstance(output_data, dict):
+                output_data = {
+                    key: value for key, value in event.items() if key != "type"
+                }
+            normalized = {
+                "type": "tool_output",
+                "data": output_data,
+            }
+        elif event_type == "error":
+            normalized = {
+                "type": "error",
+                "message": event.get("message", "Unknown error"),
+            }
+        elif event_type in ("turn-end", "turn_end"):
+            normalized = {"type": "turn_end"}
+            if event.get("usage") is not None:
+                normalized["usage"] = event["usage"]
+        elif event_type == "usage":
+            normalized = {
+                "type": "usage",
+                "data": event.get("usage") or event.get("data") or {},
+            }
+        elif event_type in ("session-started", "session_started"):
+            normalized = {"type": "session_started"}
+        else:
+            normalized = dict(event)
+
+        event_metadata = event.get("_event")
+        if isinstance(event_metadata, dict):
+            normalized.setdefault("_event", event_metadata)
+            run_id = event_metadata.get("run_id")
+            if run_id:
+                normalized.setdefault("run_id", run_id)
+        if event.get("run_id"):
+            normalized.setdefault("run_id", event["run_id"])
+        normalized.setdefault("session_id", session_id)
+        return normalized
 
     async def send_rpc(
         self,
@@ -140,6 +246,12 @@ class AgentClient:
         try:
             if not session_id:
                 session_id = await self.create_session()
+            self._current_session_id = session_id
+
+            # Surface identity before any response event.  This is deliberately
+            # an event rather than an out-of-band mutable property so interactive
+            # and headless consumers observe the same session contract.
+            yield {"type": "session_started", "session_id": session_id}
 
             # Handle mode selection
             if mode_id:
@@ -181,43 +293,14 @@ class AgentClient:
 
             # Stream events from the session
             async for event in self.stream_events(session_id):
-                # Standardize events for the TUI to consume
-                event_type = event.get("type")
-                if event_type == "text-delta":
-                    yield {"type": "text", "content": event.get("text", "")}
-                elif event_type == "text":
-                    yield {"type": "text", "content": event.get("content", "")}
-                elif event_type == "thinking":
-                    yield {
-                        "type": "sideband",
-                        "data": {
-                            "type": "thought",
-                            "content": event.get("thought", ""),
-                        },
-                    }
-                elif event_type == "plan-updated":
-                    yield {
-                        "type": "sideband",
-                        "data": {"type": "plan", "plan": event.get("plan", [])},
-                    }
-                elif event_type == "tool-call" or event_type == "tool_call":
-                    yield {
-                        "type": "tool_call",
-                        "data": event.get("call") or event.get("data"),
-                    }
-                elif event_type == "error":
-                    yield {
-                        "type": "error",
-                        "message": event.get("message", "Unknown error"),
-                    }
-                elif event_type == "turn-end":
-                    yield {"type": "turn_end"}
-                else:
-                    yield event
+                yield self._normalize_event(event, session_id)
 
         except Exception as e:
             logger.exception(f"ACP Stream Error: {e}")
-            yield {"type": "error", "message": str(e)}
+            error = {"type": "error", "message": str(e)}
+            if session_id:
+                error["session_id"] = session_id
+            yield error
 
     async def send_decision(
         self,
@@ -233,9 +316,11 @@ class AgentClient:
             session_id: Optional session id.
         """
         try:
+            session_id = session_id or self._current_session_id
             if not session_id:
                 logger.error("No session ID to send decision")
                 return
+            self._current_session_id = session_id
 
             for call_id, decision in decisions.items():
                 await self.send_rpc(
@@ -246,10 +331,13 @@ class AgentClient:
 
             # resume streaming if needed
             async for event in self.stream_events(session_id):
-                yield event
+                yield self._normalize_event(event, session_id)
         except Exception as e:
             logger.error(f"Decision Error: {e}")
-            yield {"type": "error", "message": str(e)}
+            error = {"type": "error", "message": str(e)}
+            if session_id:
+                error["session_id"] = session_id
+            yield error
 
     async def get_metadata(self) -> dict[str, Any]:
         """Fetch general agent metadata."""
@@ -258,6 +346,151 @@ class AgentClient:
             return response.json()
         except Exception:
             return {}
+
+    @staticmethod
+    def _gateway_body(response: httpx.Response) -> Any:
+        """Return a direct FastAPI body or unwrap the shared HTTP envelope."""
+        response.raise_for_status()
+        payload = response.json()
+        if isinstance(payload, dict) and "status_code" in payload and "data" in payload:
+            return payload["data"]
+        return payload
+
+    async def list_capabilities(
+        self,
+        *,
+        query: str | None = None,
+        status: str | None = None,
+        intent: str | None = None,
+        tag: str | None = None,
+        include_actions: bool = True,
+    ) -> CapabilityCatalog:
+        """Fetch the live catalog used by schema-driven frontend surfaces."""
+        params = {
+            key: value
+            for key, value in {
+                "q": query,
+                "status": status,
+                "intent": intent,
+                "tag": tag,
+                "include_actions": str(include_actions).lower(),
+            }.items()
+            if value is not None
+        }
+        response = await self._http_client.get(
+            f"{self.base_url}/api/capabilities", params=params
+        )
+        return CapabilityCatalog.from_payload(self._gateway_body(response))
+
+    async def get_capability(self, capability_id: str) -> CapabilityDescriptor:
+        """Fetch one live capability descriptor by stable ID."""
+        encoded = quote(capability_id, safe="")
+        response = await self._http_client.get(
+            f"{self.base_url}/api/capabilities/{encoded}"
+        )
+        return CapabilityDescriptor.from_payload(self._gateway_body(response))
+
+    async def preflight_capability(
+        self,
+        capability_id: str,
+        *,
+        action: str | None = None,
+        inputs: dict[str, Any] | None = None,
+        target: str | None = None,
+    ) -> CapabilityPreflight:
+        """Validate inputs and preview availability/policy without executing."""
+        encoded = quote(capability_id, safe="")
+        response = await self._http_client.post(
+            f"{self.base_url}/api/capabilities/{encoded}/preflight",
+            json={
+                "action": action,
+                "inputs": inputs or {},
+                "target": target,
+            },
+        )
+        return CapabilityPreflight.from_payload(self._gateway_body(response))
+
+    async def invoke_capability(
+        self,
+        capability_id: str,
+        inputs: dict[str, Any],
+        *,
+        action: str,
+        target: str | None = None,
+        approval_id: str | None = None,
+        run_id: str | None = None,
+        session_id: str | None = None,
+    ) -> CapabilityInvocation:
+        """Execute or resume through the gateway-owned governance boundary."""
+        encoded = quote(capability_id, safe="")
+        payload: dict[str, Any] = {"action": action, "inputs": inputs}
+        payload.update(
+            {
+                key: value
+                for key, value in {
+                    "target": target,
+                    "approval_id": approval_id,
+                    "run_id": run_id,
+                    "session_id": session_id,
+                }.items()
+                if value is not None
+            }
+        )
+        response = await self._http_client.post(
+            f"{self.base_url}/api/capabilities/{encoded}/invoke", json=payload
+        )
+        result = self._gateway_body(response)
+        return CapabilityInvocation.from_payload(
+            capability_id,
+            result,
+            http_status=response.status_code,
+            requested_session_id=session_id,
+        )
+
+    async def get_run_summary(self, run_id: str) -> RunSummary:
+        """Fetch a summary for one replayable canonical run."""
+        encoded = quote(run_id, safe="")
+        response = await self._http_client.get(f"{self.base_url}/api/runs/{encoded}")
+        return RunSummary.from_payload(self._gateway_body(response))
+
+    async def list_runs(
+        self,
+        *,
+        session_id: str | None = None,
+        status: str | None = None,
+        limit: int = 100,
+    ) -> RunCatalog:
+        """List newest-first canonical run lifecycle summaries."""
+        params = {
+            key: value
+            for key, value in {
+                "session_id": session_id,
+                "status": status,
+                "limit": limit,
+            }.items()
+            if value is not None
+        }
+        response = await self._http_client.get(
+            f"{self.base_url}/api/runs", params=params
+        )
+        return RunCatalog.from_payload(self._gateway_body(response))
+
+    async def get_run_events(
+        self, run_id: str, *, after: int = 0, limit: int = 1_000
+    ) -> RunEventPage:
+        """Replay canonical run events after a per-run sequence cursor."""
+        encoded = quote(run_id, safe="")
+        response = await self._http_client.get(
+            f"{self.base_url}/api/runs/{encoded}/events",
+            params={"after": after, "limit": limit},
+        )
+        return RunEventPage.from_payload(self._gateway_body(response))
+
+    async def get_event_schema(self) -> dict[str, Any]:
+        """Fetch the versioned canonical run-event JSON Schema."""
+        response = await self._http_client.get(f"{self.base_url}/api/events/schema")
+        payload = self._gateway_body(response)
+        return payload if isinstance(payload, dict) else {}
 
     async def list_configured_models(self) -> dict[str, Any]:
         """Fetch the configured LLM model registry from the backend.
@@ -302,7 +535,10 @@ class AgentClient:
             return []
 
     async def _obs_get(self, path: str, params: dict | None = None) -> Any:
-        """GET an /api/observability/* endpoint (CONCEPT:AU-ECO.mcp.usage-cost-observability-surface)."""
+        """GET an /api/observability/* endpoint.
+
+        CONCEPT:AU-ECO.mcp.usage-cost-observability-surface
+        """
         try:
             response = await self._http_client.get(
                 f"{self.base_url}/api/observability{path}",
@@ -546,21 +782,34 @@ class AgentClient:
         response.raise_for_status()
         data = response.json()
         if isinstance(data, dict):
-            return data.get("approvals", [])
+            # The gateway contract names this collection ``pending``. Keep the
+            # legacy envelope as a read-only fallback for older deployments.
+            pending = data.get("pending", data.get("approvals", []))
+            return pending if isinstance(pending, list) else []
         return data if isinstance(data, list) else []
 
-    async def grant_fleet_approval(self, approval_id: str) -> dict[str, Any]:
-        """Grant a pending fleet approval by identifier.
+    async def grant_fleet_approval(
+        self, job_id: str, decision: str = "approved"
+    ) -> dict[str, Any]:
+        """Resolve a pending fleet approval for a job.
 
         Args:
-            approval_id: The identifier of the approval to grant.
+            job_id: The identifier of the fleet job awaiting approval.
+            decision: Either ``"approved"`` or ``"denied"``.
 
         Returns:
             The gateway response payload.
+
+        Raises:
+            ValueError: If *decision* is not supported by the gateway contract.
         """
+        if decision not in {"approved", "denied"}:
+            msg = "decision must be 'approved' or 'denied'"
+            raise ValueError(msg)
+
         response = await self._http_client.post(
             f"{self.base_url}/api/fleet/approvals/grant",
-            json={"approval_id": approval_id},
+            json={"job_id": job_id, "decision": decision},
         )
         response.raise_for_status()
         return response.json()
@@ -1270,7 +1519,8 @@ class AgentClient:
     async def rollback_prompt(self, prompt_id: str, version_id: str) -> dict[str, Any]:
         """Rollback a prompt to a previous version.
 
-        CONCEPT:TU-KG.compute.prompt-management-ahe-rollback — Prompt Management (AHE Rollback)
+        CONCEPT:TU-KG.compute.prompt-management-ahe-rollback
+        Prompt Management (AHE Rollback).
         """
         response = await self._http_client.post(
             f"{self.base_url}/api/enhanced/prompts/{prompt_id}/rollback/{version_id}"
