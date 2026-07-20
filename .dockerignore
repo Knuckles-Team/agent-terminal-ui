@@ -1,0 +1,22 @@
+# Keep local state, credentials, caches, and build output outside the build context.
+.git
+.env
+.env.*
+.venv
+venv
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage*
+htmlcov/
+build/
+dist/
+*.egg-info/
+*.key
+*.pem
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*

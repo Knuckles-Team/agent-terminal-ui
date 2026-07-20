@@ -457,7 +457,7 @@ class TestAgentApp:
         app = AgentApp()
 
         text_event = app._map_acp_event({"type": "text-delta", "delta": "hello"})
-        assert text_event == {"type": "text", "content": "hello"}
+        assert text_event == {"type": "text_delta", "content": "hello"}
 
         thinking_event = app._map_acp_event({"type": "thinking"})
         assert thinking_event is None

@@ -418,7 +418,7 @@ async def test_send_decision_happy_path():
             )
         ]
 
-    assert events == [{"type": "text", "content": "x"}]
+    assert events == [{"type": "text", "content": "x", "session_id": "s"}]
     mock_rpc.assert_awaited_once()
     await c.close()
 

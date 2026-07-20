@@ -96,6 +96,10 @@ class CommandProcessor:
             "prompts": self.cmd_prompts,
             "skills": self.cmd_skills_only,
             "tools": self.cmd_tools_only,
+            "capabilities": self.cmd_capabilities,
+            "capability": self.cmd_capabilities,
+            "run": self.cmd_run,
+            "runs": self.cmd_run,
             # --- Agent View & Goal commands (TUI-20, ORCH-5.0) ---
             "goal": self.cmd_goal,
             "goal:status": self.cmd_goal_status,
@@ -108,6 +112,8 @@ class CommandProcessor:
         self.canonical_commands: dict[str, str] = {
             "quit": "exit",
             "cost": "stats",
+            "capability": "capabilities",
+            "runs": "run",
         }
 
     async def process(self, text: str) -> bool:
@@ -192,9 +198,9 @@ class CommandProcessor:
 
     async def cmd_help(self, args: str) -> None:
         """Show available commands and their descriptions."""
-        # CONCEPT:AU-ECO.messaging.shared-by-every-messaging — descriptions for cross-surface commands come from the ONE
-        # agent-utilities command registry, so the TUI and messaging bots stay aligned;
-        # TUI-only commands fall back to their handler docstring.
+        # CONCEPT:AU-ECO.messaging.shared-by-every-messaging
+        # Cross-surface descriptions come from the one agent-utilities command
+        # registry; TUI-only commands fall back to their handler docstring.
         try:
             from agent_utilities.messaging.commands import command_specs
 
@@ -240,6 +246,23 @@ class CommandProcessor:
         from agent_terminal_ui.tui.mcp_screen import MCPScreen
 
         self.app.push_screen(MCPScreen(config, tools))
+
+    async def cmd_capabilities(self, args: str) -> None:
+        """Search live capabilities. Usage: /capabilities [query]"""
+        opener = getattr(self.app, "open_capability_palette", None)
+        if not callable(opener):
+            self.app.notify("Capability palette unavailable.", severity="warning")
+            return
+        opener(initial_query=args.strip())
+
+    async def cmd_run(self, args: str) -> None:
+        """Browse runs or follow one in Mission Control. Usage: /run [run_id]"""
+        run_id = args.strip() or getattr(self.app, "last_run_id", None)
+        opener = getattr(self.app, "open_run_inspector", None)
+        if not callable(opener):
+            self.app.notify("Run inspector unavailable.", severity="warning")
+            return
+        opener(str(run_id) if run_id else None)
 
     async def cmd_history(self, args: str) -> None:
         """Browse and select from historical chat sessions."""
@@ -349,7 +372,10 @@ class CommandProcessor:
         await self._submit_prompt(f"Search the codebase for: {args}")
 
     async def cmd_stats(self, args: str) -> None:
-        """Show live token/cost stats for the current session (CONCEPT:AU-ECO.mcp.usage-cost-observability-surface)."""
+        """Show live token/cost stats for the current session.
+
+        CONCEPT:AU-ECO.mcp.usage-cost-observability-surface
+        """
         tracker = getattr(self.app, "cost_tracker", None)
         if tracker is not None:
             with contextlib.suppress(Exception):
@@ -1050,7 +1076,7 @@ class CommandProcessor:
         from agent_terminal_ui.goal import GoalSpec
 
         spec = GoalSpec.parse_goal_input(args)
-        spec.session_id = getattr(self.app, "_session_id", "")
+        spec.session_id = getattr(self.app, "current_session_id", None) or ""
 
         log = self.app.query_one("Conversation")
         await log.add_info(
@@ -1119,7 +1145,7 @@ class CommandProcessor:
     async def cmd_bg(self, args: str) -> None:
         """Background the current session. The agent continues working autonomously."""
         log = self.app.query_one("Conversation")
-        session_id = getattr(self.app, "_session_id", "")
+        session_id = getattr(self.app, "current_session_id", None)
         if not session_id:
             self.app.notify("No active session to background.", severity="warning")
             return
@@ -2516,7 +2542,8 @@ class CommandProcessor:
         )
 
     # ─────────────────────────────────────────────────────────────────
-    #  KG-Native Commands (CONCEPT:TU-KG.compute.prompt-management-ahe-rollback / KG-003)
+    #  KG-Native Commands
+    #  CONCEPT:TU-KG.compute.prompt-management-ahe-rollback / KG-003
     # ─────────────────────────────────────────────────────────────────
 
     async def cmd_prompts(self, args: str) -> None:
@@ -2531,7 +2558,10 @@ class CommandProcessor:
                     "[yellow]No prompts found in KG.[/yellow]"
                 )
                 return
-            table = Table(title="Prompts (CONCEPT:TU-KG.compute.prompt-management-ahe-rollback)", expand=True)
+            table = Table(
+                title="Prompts (CONCEPT:TU-KG.compute.prompt-management-ahe-rollback)",
+                expand=True,
+            )
             table.add_column("ID", style="cyan", no_wrap=True)
             table.add_column("Name", style="bold")
             table.add_column("Description")
@@ -2628,7 +2658,10 @@ class CommandProcessor:
                 "[yellow]No skills discovered.[/yellow]"
             )
             return
-        table = Table(title="Agent Skills (CONCEPT:TU-KG.compute.granular-resource-queries)", expand=True)
+        table = Table(
+            title="Agent Skills (CONCEPT:TU-KG.compute.granular-resource-queries)",
+            expand=True,
+        )
         table.add_column("ID", style="cyan", no_wrap=True)
         table.add_column("Name", style="bold")
         table.add_column("Source")
@@ -2662,7 +2695,10 @@ class CommandProcessor:
                 "[yellow]No MCP tools discovered.[/yellow]"
             )
             return
-        table = Table(title="MCP Tools (CONCEPT:TU-KG.compute.granular-resource-queries)", expand=True)
+        table = Table(
+            title="MCP Tools (CONCEPT:TU-KG.compute.granular-resource-queries)",
+            expand=True,
+        )
         table.add_column("ID", style="cyan", no_wrap=True)
         table.add_column("Name", style="bold")
         table.add_column("Server/Source")

@@ -2,9 +2,9 @@
 """Agent Terminal User Interface (TUI) Application.
 
 This module implements the primary Textual application for the agent terminal UI.
-It handles user input, streams events from the agent server (using both
-AG-UI and ACP protocols), manages tool execution flows, and delegates
-UI rendering to the MainScreen.
+It handles user input, streams normalized events through the configured
+AgentClient transport adapter, manages tool execution flows, and delegates
+UI rendering to the MainScreen. The currently shipped adapter speaks ACP.
 
 Architecture:
     AgentApp (App) — protocol/client orchestration, global state
@@ -41,10 +41,12 @@ from textual.binding import Binding, BindingType
 from textual.message import Message
 
 # Core client and command imports
+from agent_terminal_ui.capability_provider import CapabilityCommandProvider
 from agent_terminal_ui.client import ACPClient, AgentClient
 from agent_terminal_ui.commands import CommandProcessor
 
 # Screen imports
+from agent_terminal_ui.screens.agent_view import AgentViewScreen
 from agent_terminal_ui.screens.main import MainScreen
 
 # TUI component imports (still needed for some actions)
@@ -92,6 +94,7 @@ class AgentApp(App):
 
     TITLE = "Agent Terminal UI"
     SUB_TITLE = "Powered by agent-utilities"
+    COMMANDS = App.COMMANDS | {CapabilityCommandProvider}
 
     BINDINGS: ClassVar[list[BindingType]] = [
         Binding("ctrl+c", "interrupt", "Interrupt", show=False, priority=True),
@@ -109,12 +112,13 @@ class AgentApp(App):
         Binding("alt+o", "toggle_fast_mode", "Fast", show=False, priority=True),
         Binding("alt+d", "switch_dashboard", "Dashboard", show=True, priority=True),
         Binding("alt+u", "switch_usage", "Usage", show=True, priority=True),
+        Binding("alt+c", "show_capabilities", "Capabilities", show=True, priority=True),
         Binding("escape,escape", "rewind", "Rewind", show=False, priority=True),
     ]
 
     MODES = {
         "main": MainScreen,
-        "agents": "agent_view",  # Lazy import — resolved in on_mount
+        "agents": AgentViewScreen,
     }
     DEFAULT_MODE = "main"
 
@@ -143,6 +147,7 @@ class AgentApp(App):
         self._processing_permissions: bool = False
         self._pending_tool_calls: dict[str, dict[str, Any]] = {}
         self._current_session_id: str | None = None
+        self._last_run_id: str | None = None
         self._pending_parts: list[dict[str, Any]] = []
         self._current_model: str | None = None
 
@@ -152,6 +157,7 @@ class AgentApp(App):
 
         self.initial_prompt = initial_prompt
         self.auto_approve = auto_approve
+        self._start_bg = start_bg
 
         # Set built-in theme (tokyo-night = blue palette)
         self.theme = theme_name
@@ -161,10 +167,16 @@ class AgentApp(App):
         self._client = client or AgentClient(base_url=server_url)
         self._acp_client: ACPClient | None = None
         self._enable_acp: bool = os.getenv("ENABLE_ACP", "false").lower() == "true"
+        client_protocol = getattr(self._client, "protocol", "acp")
+        self._protocol = client_protocol if isinstance(client_protocol, str) else "acp"
+        self._acp_session_id: str | None = None
 
+        # ``AgentClient`` is the initialized ACP transport adapter shipped by
+        # this package.  ENABLE_ACP is retained as a compatibility selector, but
+        # it must never point at a deferred ``None`` client (which previously
+        # made every explicitly-enabled turn a no-op).
         if self._enable_acp:
-            self._acp_client = None  # Deferred
-            self._acp_session_id: str | None = None
+            self._acp_client = self._client
 
         self._cmd_processor = CommandProcessor(self)
         self.workspace_files: list[str] = []
@@ -173,6 +185,11 @@ class AgentApp(App):
     def current_session_id(self) -> str | None:
         """The active agent session identifier, if any."""
         return self._current_session_id
+
+    @property
+    def last_run_id(self) -> str | None:
+        """The most recently observed canonical run identifier, if any."""
+        return self._last_run_id
 
     @property
     def agent_client(self) -> AgentClient:
@@ -192,6 +209,8 @@ class AgentApp(App):
     def on_mount(self) -> None:
         """Handle application startup."""
         self._scan_workspace_files()
+        if self._start_bg:
+            self.call_after_refresh(self.switch_mode, "agents")
         if self.initial_prompt:
             # Enqueue the prompt and let the main screen process it once ready
             self.call_after_refresh(self._submit_prompt, self.initial_prompt)
@@ -204,7 +223,11 @@ class AgentApp(App):
             except Exception as e:
                 logger.warning(f"Failed to close AgentClient connection pool: {e}")
 
-        if hasattr(self, "_acp_client") and self._acp_client is not None:
+        if (
+            hasattr(self, "_acp_client")
+            and self._acp_client is not None
+            and self._acp_client is not self._client
+        ):
             try:
                 await self._acp_client.close()
             except Exception as e:
@@ -435,7 +458,7 @@ class AgentApp(App):
         mode_id: str = "ask",
         model: str | None = None,
     ) -> None:
-        """Stream events from the agent server using the AG-UI protocol.
+        """Stream events through the default normalized protocol adapter.
 
         Args:
             query: The user prompt to send.
@@ -450,11 +473,12 @@ class AgentApp(App):
             mode_id=mode_id,
             model=model,
         ):
+            self._remember_session_identity(event)
             self.post_message(AgentEventReceived(event))
 
     @work(exclusive=True)
     async def _run_acp_turn(self, query: str, mode_id: str = "ask") -> None:
-        """Stream events from the ACP server.
+        """Stream events through the explicitly selected ACP adapter.
 
         Args:
             query: The user prompt to send via the ACP protocol.
@@ -463,15 +487,40 @@ class AgentApp(App):
         if not self._acp_client:
             return
 
-        if not hasattr(self, "_acp_session_id") or not self._acp_session_id:
-            self._acp_session_id = await self._acp_client.create_session()
-
-        async for event in self._client.stream(
-            query, session_id=self._acp_session_id, parts=None, mode_id=mode_id
+        session_id = self._acp_session_id or self._current_session_id
+        async for event in self._acp_client.stream(
+            query,
+            session_id=session_id,
+            parts=None,
+            mode_id=mode_id,
+            model=self._current_model,
         ):
-            tui_event = self._map_acp_event(event)
+            event_type = event.get("type", "")
+            # AgentClient already emits normalized underscore event names.  Keep
+            # this raw-event fallback for injected/older ACP adapters.
+            tui_event = self._map_acp_event(event) if "-" in event_type else event
             if tui_event:
+                self._remember_session_identity(tui_event)
                 self.post_message(AgentEventReceived(tui_event))
+
+    def _remember_session_identity(self, event: dict[str, Any]) -> None:
+        """Capture transport session and canonical run identities."""
+        metadata = event.get("_event")
+        metadata_session_id = (
+            metadata.get("session_id") if isinstance(metadata, dict) else None
+        )
+        session_id = (
+            event.get("session_id") or event.get("sessionId") or metadata_session_id
+        )
+        if session_id:
+            self._current_session_id = str(session_id)
+            if self._enable_acp:
+                self._acp_session_id = self._current_session_id
+
+        metadata_run_id = metadata.get("run_id") if isinstance(metadata, dict) else None
+        run_id = event.get("run_id") or event.get("runId") or metadata_run_id
+        if run_id:
+            self._last_run_id = str(run_id)
 
     def _map_acp_event(self, acp_event: dict[str, Any]) -> dict[str, Any] | None:
         """Translate ACP protocol events to the internal TUI event format.
@@ -483,17 +532,38 @@ class AgentApp(App):
             A normalized dictionary compatible with the TUI event log, or None.
         """
         etype = acp_event.get("type")
+        mapped: dict[str, Any]
         if etype == "text-delta":
-            return {"type": "text", "content": acp_event.get("delta", "")}
+            mapped = {
+                "type": "text_delta",
+                "content": acp_event.get("delta")
+                or acp_event.get("text")
+                or acp_event.get("content", ""),
+            }
         elif etype == "thinking":
             return None
         elif etype == "tool-call":
-            return {"type": "tool_call", "data": acp_event.get("call", {})}
+            mapped = {"type": "tool_call", "data": acp_event.get("call", {})}
         elif etype == "turn-end":
-            return {"type": "turn_end", "usage": acp_event.get("usage")}
+            mapped = {"type": "turn_end", "usage": acp_event.get("usage")}
         elif etype == "usage":
-            return {"type": "usage", "data": acp_event.get("usage")}
-        return None
+            mapped = {"type": "usage", "data": acp_event.get("usage")}
+        elif etype == "session-started":
+            mapped = {"type": "session_started"}
+        else:
+            return None
+
+        session_id = acp_event.get("session_id") or acp_event.get("sessionId")
+        if session_id:
+            mapped["session_id"] = session_id
+        metadata = acp_event.get("_event")
+        if isinstance(metadata, dict):
+            mapped["_event"] = metadata
+            if metadata.get("run_id"):
+                mapped["run_id"] = metadata["run_id"]
+        if acp_event.get("run_id"):
+            mapped["run_id"] = acp_event["run_id"]
+        return mapped
 
     # ── Event Routing ──
 
@@ -505,6 +575,7 @@ class AgentApp(App):
         """
         event = message.event
         event_type = event.get("type")
+        self._remember_session_identity(event)
 
         # Route to MainScreen for display
         main_screen = self._get_main_screen()
@@ -636,7 +707,12 @@ class AgentApp(App):
             decisions: Map of call IDs to 'accept' or 'reject'.
             feedback: Optional feedback provided by the user.
         """
-        async for event in self._client.send_decision(decisions, feedback):
+        async for event in self._client.send_decision(
+            decisions,
+            feedback,
+            session_id=self._current_session_id,
+        ):
+            self._remember_session_identity(event)
             self.post_message(AgentEventReceived(event))
         self._processing_permissions = False
         if not self._is_processing:
@@ -803,7 +879,10 @@ class AgentApp(App):
             self.notify("Dashboard requires service-dashboard-core", severity="warning")
 
     def action_switch_usage(self) -> None:
-        """Switch to the Usage & Cost screen (Alt+U / /usage). CONCEPT:AU-ECO.mcp.usage-cost-observability-surface."""
+        """Switch to Usage & Cost (Alt+U / /usage).
+
+        CONCEPT:AU-ECO.mcp.usage-cost-observability-surface
+        """
         try:
             from agent_terminal_ui.screens.usage import UsageScreen
 
@@ -811,9 +890,56 @@ class AgentApp(App):
         except Exception as e:  # noqa: BLE001
             self.notify(f"Usage screen unavailable: {e}", severity="warning")
 
+    def open_capability_palette(
+        self,
+        *,
+        initial_query: str = "",
+        capability_id: str | None = None,
+    ) -> None:
+        """Open the live schema-driven capability palette."""
+        from agent_terminal_ui.tui.capability_palette import CapabilityPaletteScreen
+
+        self.push_screen(
+            CapabilityPaletteScreen(
+                self.agent_client,
+                initial_query=initial_query,
+                capability_id=capability_id,
+            )
+        )
+
+    def action_show_capabilities(self) -> None:
+        """Browse the gateway's live capability catalog (Alt+C)."""
+        self.open_capability_palette()
+
+    def open_run_inspector(self, run_id: str | None = None) -> None:
+        """Open run discovery or cursor-based event replay for one run."""
+        from agent_terminal_ui.tui.run_inspector import (
+            RunBrowserScreen,
+            RunInspectorScreen,
+        )
+
+        if run_id:
+            self.push_screen(RunInspectorScreen(self.agent_client, run_id))
+        else:
+            self.push_screen(
+                RunBrowserScreen(self.agent_client, session_id=self.current_session_id)
+            )
+
+    def remember_run_id(self, run_id: str) -> None:
+        """Record an explicit run identity returned by a capability invocation."""
+        self._last_run_id = run_id
+
+    def remember_session_id(self, session_id: str) -> None:
+        """Record stable session continuity independently from execution runs."""
+        self._current_session_id = session_id
+        if self._enable_acp:
+            self._acp_session_id = session_id
+
     @property
     def cost_tracker(self):
-        """Lazily-instantiated local per-session cost ledger (CONCEPT:AU-ECO.mcp.usage-cost-observability-surface).
+        """Return the lazy local per-session cost ledger.
+
+        CONCEPT:AU-ECO.mcp.usage-cost-observability-surface
 
         Lives on the app so both the Usage screen and the status line read one
         instance. Returns None if the tracker module is unavailable.
