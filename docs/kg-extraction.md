@@ -1,4 +1,4 @@
-# `/ingest` — live KG extraction (ECO-4.43)
+# `/ingest` — live KG extraction (AU-ECO.connector.git-task-resolver)
 
 The `/ingest` command turns a URL, file, or inline text into a knowledge graph,
 streaming facts into the conversation as they generate.

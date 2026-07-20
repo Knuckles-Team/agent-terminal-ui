@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "surface": "agent-terminal-ui",
+  "catalog_schema_version": "2.0",
+  "event_schema_version": "1.0",
+  "default_support": "generated",
+  "overrides": {
+    "ask_data": {
+      "support": "native",
+      "entrypoint": "/ask"
+    },
+    "graph_broker": {
+      "support": "native",
+      "entrypoint": "/broker"
+    },
+    "graph_configure": {
+      "support": "native",
+      "entrypoint": "/config"
+    },
+    "graph_goals": {
+      "support": "native",
+      "entrypoint": "/goal"
+    },
+    "graph_kvcache": {
+      "support": "native",
+      "entrypoint": "/kvcache"
+    },
+    "graph_memory": {
+      "support": "native",
+      "entrypoint": "/memory"
+    },
+    "graph_promql": {
+      "support": "native",
+      "entrypoint": "/obs"
+    },
+    "graph_schedules": {
+      "support": "native",
+      "entrypoint": "/cron"
+    },
+    "graph_search": {
+      "support": "native",
+      "entrypoint": "/graph search"
+    },
+    "graph_traces": {
+      "support": "native",
+      "entrypoint": "/obs traces"
+    },
+    "nl_query": {
+      "support": "native",
+      "entrypoint": "/nl"
+    },
+    "usage_query": {
+      "support": "native",
+      "entrypoint": "/usage"
+    }
+  }
+}

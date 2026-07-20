@@ -230,15 +230,20 @@ async def test_run_agent_turn_with_permissions_worker(app):
     async with app.run_test() as pilot:
         await pilot.pause()
 
+        seen_session_ids = []
+
         async def fake_send_decision(decisions, feedback=None, session_id=None):
+            seen_session_ids.append(session_id)
             yield {"type": "text", "content": "resumed"}
 
         app._client.send_decision = fake_send_decision
+        app._current_session_id = "session-approval"
         coro = app._run_agent_turn_with_permissions.__wrapped__(
             app, {"c1": "accept"}, None
         )
         await coro
         assert app._processing_permissions is False
+        assert seen_session_ids == ["session-approval"]
 
 
 @pytest.mark.asyncio
@@ -247,14 +252,20 @@ async def test_run_agent_turn_worker_drives_client_stream(app):
         await pilot.pause()
 
         async def fake_stream(*args, **kwargs):
-            yield {"type": "text", "content": "a"}
-            yield {"type": "turn_end"}
+            yield {"type": "session_started", "session_id": "session-created"}
+            yield {
+                "type": "text_delta",
+                "content": "a",
+                "session_id": "session-created",
+            }
+            yield {"type": "turn_end", "session_id": "session-created"}
 
         app._client.stream = fake_stream
         coro = app._run_agent_turn.__wrapped__(
             app, "query", parts=[], mode_id="ask", model=None
         )
         await coro
+        assert app.current_session_id == "session-created"
 
 
 @pytest.mark.asyncio
@@ -265,3 +276,22 @@ async def test_run_acp_turn_no_acp_client_returns(app):
         app._acp_client = None
         coro = app._run_acp_turn.__wrapped__(app, "q", "ask")
         await coro
+
+
+@pytest.mark.asyncio
+async def test_run_acp_turn_uses_initialized_adapter_and_captures_session(app):
+    async with app.run_test() as pilot:
+        await pilot.pause()
+
+        async def fake_stream(*args, **kwargs):
+            yield {"type": "session_started", "session_id": "explicit-acp"}
+            yield {"type": "text_delta", "content": "ok", "session_id": "explicit-acp"}
+            yield {"type": "turn_end", "session_id": "explicit-acp"}
+
+        app._enable_acp = True
+        app._acp_client = app._client
+        app._client.stream = fake_stream
+        coro = app._run_acp_turn.__wrapped__(app, "q", "ask")
+        await coro
+        assert app.current_session_id == "explicit-acp"
+        assert app._acp_session_id == "explicit-acp"

@@ -423,25 +423,34 @@ async def test_get_fleet_topology(client: AgentClient) -> None:
 
 @pytest.mark.asyncio
 async def test_get_fleet_approvals_unwraps_dict_envelope(client: AgentClient) -> None:
-    """``get_fleet_approvals`` returns the ``approvals`` list from a dict envelope."""
+    """``get_fleet_approvals`` returns the gateway's ``pending`` list."""
     with patch.object(client._http_client, "get", new_callable=AsyncMock) as mock_get:
-        mock_get.return_value = _mock_response({"approvals": [{"id": "a1"}]})
+        mock_get.return_value = _mock_response({"pending": [{"job_id": "job-1"}]})
 
         result = await client.get_fleet_approvals()
 
-        assert result == [{"id": "a1"}]
+        assert result == [{"job_id": "job-1"}]
 
 
 @pytest.mark.asyncio
-async def test_grant_fleet_approval_posts_id(client: AgentClient) -> None:
-    """``grant_fleet_approval`` POSTs the approval id to the grant endpoint."""
+async def test_grant_fleet_approval_posts_job_and_decision(client: AgentClient) -> None:
+    """``grant_fleet_approval`` follows the fleet decision contract."""
     with patch.object(client._http_client, "post", new_callable=AsyncMock) as mock_post:
-        mock_post.return_value = _mock_response({"granted": "a1"})
+        mock_post.return_value = _mock_response({"job_id": "job-1", "approved": False})
 
-        result = await client.grant_fleet_approval("a1")
+        result = await client.grant_fleet_approval("job-1", decision="denied")
 
         mock_post.assert_awaited_once_with(
             "http://localhost:8000/api/fleet/approvals/grant",
-            json={"approval_id": "a1"},
+            json={"job_id": "job-1", "decision": "denied"},
         )
-        assert result == {"granted": "a1"}
+        assert result == {"job_id": "job-1", "approved": False}
+
+
+@pytest.mark.asyncio
+async def test_grant_fleet_approval_rejects_unknown_decision(
+    client: AgentClient,
+) -> None:
+    """Fleet decisions are limited to the gateway's supported values."""
+    with pytest.raises(ValueError, match="approved.*denied"):
+        await client.grant_fleet_approval("job-1", decision="maybe")

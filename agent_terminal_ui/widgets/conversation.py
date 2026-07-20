@@ -275,6 +275,10 @@ class Conversation(VerticalScroll):
         """Finalize any in-progress streaming response."""
         self._current_response = None
 
+    def finish_agent_response(self) -> None:
+        """Close the current streaming block at a protocol turn boundary."""
+        self._finalize_current_response()
+
     def _prune_old_widgets(self) -> None:
         """Prune older message widgets to maintain a lightweight DOM."""
         try:
