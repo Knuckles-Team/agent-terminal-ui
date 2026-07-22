@@ -31,7 +31,9 @@ shell = [
 ]
 test = [
     "pytest-xdist>=3.8.0",
-    "pytest>=9.1.1",
+    # CONCEPT:PHASE2-RECONCILE — capped under pytest 9. The unmaintained
+    # pytest-textual-snapshot plugin (below) pins `pytest<9`.
+    "pytest<9",
     "pytest-asyncio>=1.4.0",
     "pytest-env>=1.7.0",
     "pytest-cov>=7.1.0",
