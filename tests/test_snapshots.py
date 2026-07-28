@@ -1,15 +1,16 @@
 """Visual regression (golden) snapshots for UI uniformity.
 
-Renders the conversation surface and its message-block widgets to SVG via
-``pytest-textual-snapshot`` and compares against committed goldens. This is how we
-catch layout/contrast regressions and confirm components render uniformly,
-including across the built-in themes the UI ships with. Regenerate goldens
-intentionally with ``pytest --snapshot-update``.
+Renders the conversation surface and its message-block widgets to SVG with
+Textual and compares committed goldens with Syrupy. This catches
+layout/contrast regressions across the built-in themes the UI ships with.
+Regenerate goldens intentionally with ``pytest --snapshot-update``.
 """
 
 from unittest.mock import AsyncMock
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
+from syrupy.extensions.image import SVGImageSnapshotExtension
 from textual.app import App, ComposeResult
 
 from agent_terminal_ui.tui.status_line import StatusLine
@@ -41,8 +42,8 @@ class ConversationHarness(App):
         )
         await conv.add_tool_call(
             tool_name="shell",
-            tool_input={"command": "pytest -q"},
-            tool_call_id="t1",
+            tool_args='{"command": "pytest -q"}',
+            call_id="t1",
         )
         await conv.add_info("Context compacted at L1 (tools summarized).")
         await conv.add_error("Connection to backend lost; retrying.")
@@ -55,18 +56,37 @@ class StatusLineHarness(App):
         yield StatusLine()
 
 
+@pytest.fixture
+def svg_snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
+    """Compare SVG output as one committed image per test case."""
+    return snapshot.with_defaults(extension_class=SVGImageSnapshotExtension)
+
+
+async def export_svg(app: App, *, terminal_size: tuple[int, int]) -> str:
+    """Render an app at a fixed terminal size and export its settled SVG."""
+    async with app.run_test(size=terminal_size) as pilot:
+        await pilot.pause()
+        return app.export_screenshot()
+
+
 @pytest.mark.parametrize("theme", THEMES)
-def test_conversation_snapshot_per_theme(snap_compare, theme: str) -> None:
+async def test_conversation_snapshot_per_theme(
+    svg_snapshot: SnapshotAssertion, theme: str
+) -> None:
     """The conversation surface renders uniformly under each built-in theme."""
-    assert snap_compare(ConversationHarness(theme_name=theme), terminal_size=(100, 32))
+    actual = await export_svg(
+        ConversationHarness(theme_name=theme), terminal_size=(100, 32)
+    )
+    assert actual == svg_snapshot
 
 
-def test_status_line_snapshot(snap_compare) -> None:
+async def test_status_line_snapshot(svg_snapshot: SnapshotAssertion) -> None:
     """The status line renders consistently."""
-    assert snap_compare(StatusLineHarness(), terminal_size=(100, 3))
+    actual = await export_svg(StatusLineHarness(), terminal_size=(100, 3))
+    assert actual == svg_snapshot
 
 
-def test_main_screen_snapshot(snap_compare) -> None:
+async def test_main_screen_snapshot(svg_snapshot: SnapshotAssertion) -> None:
     """The full primary screen composes and renders without layout drift."""
     from agent_terminal_ui.app import AgentApp
 
@@ -78,4 +98,5 @@ def test_main_screen_snapshot(snap_compare) -> None:
             yield _
 
     client.stream = _empty_stream
-    assert snap_compare(AgentApp(client=client), terminal_size=(120, 40))
+    actual = await export_svg(AgentApp(client=client), terminal_size=(120, 40))
+    assert actual == svg_snapshot

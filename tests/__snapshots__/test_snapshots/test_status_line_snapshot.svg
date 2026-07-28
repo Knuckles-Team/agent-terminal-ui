@@ -19,48 +19,48 @@
         font-weight: 700;
     }
 
-    .terminal-matrix {
+    .terminal-2768467847-matrix {
         font-family: Fira Code, monospace;
         font-size: 20px;
         line-height: 24.4px;
         font-variant-east-asian: full-width;
     }
 
-    .terminal-title {
+    .terminal-2768467847-title {
         font-size: 18px;
         font-weight: bold;
         font-family: arial;
     }
 
-    .terminal-r1 { fill: #c5c8c6 }
-.terminal-r2 { fill: #0e2638 }
+    .terminal-2768467847-r1 { fill: #c5c8c6 }
+.terminal-2768467847-r2 { fill: #222222 }
     </style>
 
     <defs>
-    <clipPath id="terminal-clip-terminal">
+    <clipPath id="terminal-2768467847-clip-terminal">
       <rect x="0" y="0" width="1219.0" height="72.19999999999999" />
     </clipPath>
-    <clipPath id="terminal-line-0">
+    <clipPath id="terminal-2768467847-line-0">
     <rect x="0" y="1.5" width="1220" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-1">
+<clipPath id="terminal-2768467847-line-1">
     <rect x="0" y="25.9" width="1220" height="24.65"/>
             </clipPath>
     </defs>
 
-    <rect fill="#292929" stroke="rgba(255,255,255,0.35)" stroke-width="1" x="1" y="1" width="1236" height="121.2" rx="8"/><text class="terminal-title" fill="#c5c8c6" text-anchor="middle" x="618" y="27">StatusLineHarness</text>
+    <rect fill="#292929" stroke="rgba(255,255,255,0.35)" stroke-width="1" x="1" y="1" width="1236" height="121.2" rx="8"/><text class="terminal-2768467847-title" fill="#c5c8c6" text-anchor="middle" x="618" y="27">StatusLineHarness</text>
             <g transform="translate(26,22)">
             <circle cx="0" cy="0" r="7" fill="#ff5f57"/>
             <circle cx="22" cy="0" r="7" fill="#febc2e"/>
             <circle cx="44" cy="0" r="7" fill="#28c840"/>
             </g>
         
-    <g transform="translate(9, 41)" clip-path="url(#terminal-clip-terminal)">
+    <g transform="translate(9, 41)" clip-path="url(#terminal-2768467847-clip-terminal)">
     <rect fill="#121212" x="0" y="1.5" width="1220" height="24.65" shape-rendering="crispEdges"/><rect fill="#121212" x="0" y="25.9" width="1220" height="24.65" shape-rendering="crispEdges"/><rect fill="#1e1e1e" x="0" y="50.3" width="1220" height="24.65" shape-rendering="crispEdges"/>
-    <g class="terminal-matrix">
-    <text class="terminal-r1" x="1220" y="20" textLength="12.2" clip-path="url(#terminal-line-0)">
-</text><text class="terminal-r1" x="1220" y="44.4" textLength="12.2" clip-path="url(#terminal-line-1)">
-</text><text class="terminal-r2" x="0" y="68.8" textLength="1220" clip-path="url(#terminal-line-2)">────────────────────────────────────────────────────────────────────────────────────────────────────</text>
+    <g class="terminal-2768467847-matrix">
+    <text class="terminal-2768467847-r1" x="1220" y="20" textLength="12.2" clip-path="url(#terminal-2768467847-line-0)">
+</text><text class="terminal-2768467847-r1" x="1220" y="44.4" textLength="12.2" clip-path="url(#terminal-2768467847-line-1)">
+</text><text class="terminal-2768467847-r2" x="0" y="68.8" textLength="1220" clip-path="url(#terminal-2768467847-line-2)">────────────────────────────────────────────────────────────────────────────────────────────────────</text>
     </g>
     </g>
 </svg>
