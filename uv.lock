@@ -16,7 +16,7 @@ wheels = [
 
 [[package]]
 name = "agent-terminal-ui"
-version = "1.0.0"
+version = "2.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "agent-client-protocol" },
@@ -42,31 +42,31 @@ test = [
     { name = "pytest-benchmark" },
     { name = "pytest-cov" },
     { name = "pytest-env" },
-    { name = "pytest-textual-snapshot" },
     { name = "pytest-timeout" },
     { name = "pytest-xdist" },
+    { name = "syrupy" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "agent-client-protocol", specifier = ">=0.9.0,<1.0.0" },
+    { name = "agent-client-protocol", specifier = ">=0.11.0" },
     { name = "bashlex", marker = "extra == 'shell'", specifier = ">=0.18" },
-    { name = "httpx", specifier = ">=0.28.1,<1.0.0" },
-    { name = "memray", marker = "extra == 'profile'", specifier = ">=1.12.0" },
-    { name = "psutil", marker = "extra == 'profile'", specifier = ">=5.9.0" },
-    { name = "py-spy", marker = "extra == 'profile'", specifier = ">=0.3.14" },
-    { name = "pytest", marker = "extra == 'test'", specifier = ">=9.0.0,<10.0.0" },
-    { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=1.3.0,<2.0.0" },
-    { name = "pytest-benchmark", marker = "extra == 'test'", specifier = ">=4.0.0" },
-    { name = "pytest-cov", marker = "extra == 'test'", specifier = ">=7.0.0,<8.0.0" },
-    { name = "pytest-env", marker = "extra == 'test'" },
-    { name = "pytest-textual-snapshot", marker = "extra == 'test'", specifier = ">=1.0.0" },
-    { name = "pytest-timeout", marker = "extra == 'test'", specifier = ">=2.3.0" },
-    { name = "pytest-xdist", marker = "extra == 'test'", specifier = ">=3.6.0" },
-    { name = "pyyaml", specifier = ">=6.0.3,<7.0.0" },
-    { name = "rich", specifier = ">=15.0.0,<16.0.0" },
-    { name = "textual", specifier = ">=8.2.0,<9.0.0" },
-    { name = "textual-diff-view", specifier = ">=0.1.0" },
+    { name = "httpx", specifier = ">=0.28.1" },
+    { name = "memray", marker = "extra == 'profile'", specifier = ">=1.19.3" },
+    { name = "psutil", marker = "extra == 'profile'", specifier = ">=7.2.2" },
+    { name = "py-spy", marker = "extra == 'profile'", specifier = ">=0.4.2" },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=9.0.2" },
+    { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=1.4.0" },
+    { name = "pytest-benchmark", marker = "extra == 'test'", specifier = ">=5.2.3" },
+    { name = "pytest-cov", marker = "extra == 'test'", specifier = ">=7.1.0" },
+    { name = "pytest-env", marker = "extra == 'test'", specifier = ">=1.7.0" },
+    { name = "pytest-timeout", marker = "extra == 'test'", specifier = ">=2.4.0" },
+    { name = "pytest-xdist", marker = "extra == 'test'", specifier = ">=3.8.0" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
+    { name = "rich", specifier = ">=15.0.0" },
+    { name = "syrupy", marker = "extra == 'test'", specifier = ">=5.5.3" },
+    { name = "textual", specifier = ">=8.2.8" },
+    { name = "textual-diff-view", specifier = ">=0.1.5" },
 ]
 provides-extras = ["shell", "test", "profile"]
 
@@ -714,31 +714,15 @@ wheels = [
 
 [[package]]
 name = "pytest-env"
-version = "1.6.0"
+version = "1.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pytest" },
     { name = "python-dotenv" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ff/69/4db1c30625af0621df8dbe73797b38b6d1b04e15d021dd5d26a6d297f78c/pytest_env-1.6.0.tar.gz", hash = "sha256:ac02d6fba16af54d61e311dd70a3c61024a4e966881ea844affc3c8f0bf207d3", size = 16163, upload-time = "2026-03-12T22:39:43.78Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/65/49/08ee056f9cc655e437abcf2ae399884844b623223476ae6a77244131db03/pytest_env-1.7.0.tar.gz", hash = "sha256:0c1dc1101fb8d3ab3611e8f8d657ba06c3c0c167fc85c90457e5b27f2508f43e", size = 16408, upload-time = "2026-07-21T13:09:21.834Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/27/16/ad52f56b96d851a2bcfdc1e754c3531341885bd7177a128c13ff2ca72ab4/pytest_env-1.6.0-py3-none-any.whl", hash = "sha256:1e7f8a62215e5885835daaed694de8657c908505b964ec8097a7ce77b403d9a3", size = 10400, upload-time = "2026-03-12T22:39:41.887Z" },
-]
-
-[[package]]
-name = "pytest-textual-snapshot"
-version = "1.0.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "jinja2" },
-    { name = "pytest" },
-    { name = "rich" },
-    { name = "syrupy" },
-    { name = "textual" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/8b/75/2ef17ae52fa5bc848ff2d1d7bc317a702cbd6d7ad733ca991b9f899dbbae/pytest_textual_snapshot-1.0.0.tar.gz", hash = "sha256:065217055ed833b8a16f2320a0613f39a0154e8d9fee63535f29f32c6414b9d7", size = 11071, upload-time = "2024-07-22T15:17:44.629Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/70/2e/4bf16ed78b382b3d7c1e545475ec8cf04346870be662815540faf8f16e8c/pytest_textual_snapshot-1.0.0-py3-none-any.whl", hash = "sha256:dd3a421491a6b1987ee7b4336d7f65299524924d2b0a297e69733b73b01570e1", size = 11171, upload-time = "2024-07-22T15:17:43.167Z" },
+    { url = "https://files.pythonhosted.org/packages/3e/fc/9f2975c41d41bf5bd9a7d0fc03085ec20052b456b079df53828ae4a1b100/pytest_env-1.7.0-py3-none-any.whl", hash = "sha256:9ee0f1fe859d23fcdb533fe2909a404b3b133d02674a56df275bbe4df4eb104b", size = 10263, upload-time = "2026-07-21T13:09:20.677Z" },
 ]
 
 [[package]]
