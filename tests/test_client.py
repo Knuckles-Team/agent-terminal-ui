@@ -113,3 +113,77 @@ async def test_send_decision_reuses_session_and_normalizes_resume_stream(run_cli
         "session_id": "sess-approval",
     }
     assert events[1] == {"type": "turn_end", "session_id": "sess-approval"}
+
+
+# ── D-FE-2 regression coverage ──────────────────────────────────────────
+#
+# (a) ``agent-client-protocol`` (Zed's real ACP SDK) is not a dependency of
+#     this package: nothing in ``agent_terminal_ui`` imports
+#     ``agent_client_protocol``, and ``AgentClient`` must construct and work
+#     even when that package is not importable/installed at all.
+# (b) ``ACP_URL`` is now actually read (see ``AgentApp.__init__`` in
+#     ``app.py``) rather than being a documented-but-dead env var; at the
+#     client level this is exercised via the ``acp_url`` constructor kwarg.
+
+
+def test_agent_client_protocol_module_is_not_imported_by_this_package():
+    """``agent_client_protocol`` (the real Zed ACP SDK) must not be a runtime
+    dependency of this client — this repo speaks its own hand-rolled
+    JSON-RPC/SSE convention, not that SDK's wire format."""
+    import ast
+    from pathlib import Path
+
+    import agent_terminal_ui
+
+    package_dir = Path(agent_terminal_ui.__file__).parent
+    for py_file in package_dir.rglob("*.py"):
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                names = [alias.name for alias in node.names]
+            elif isinstance(node, ast.ImportFrom):
+                names = [node.module] if node.module else []
+            else:
+                continue
+            for name in names:
+                assert name is None or not name.startswith("agent_client_protocol"), (
+                    f"{py_file} imports agent_client_protocol at {node.lineno}"
+                )
+
+
+def test_agent_client_constructs_with_agent_client_protocol_hidden(monkeypatch):
+    """Simulate the dependency being absent entirely (uninstalled): importing
+    and constructing ``AgentClient`` must not require it."""
+    import builtins
+
+    real_import = builtins.__import__
+
+    def _blocking_import(name, *args, **kwargs):
+        if name == "agent_client_protocol" or name.startswith("agent_client_protocol."):
+            raise ModuleNotFoundError(f"No module named {name!r}")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", _blocking_import)
+
+    # Re-import fresh to prove construction doesn't reach for the SDK.
+    import importlib
+
+    import agent_terminal_ui.client as client_module
+
+    importlib.reload(client_module)
+    client = client_module.AgentClient(base_url="http://localhost:8000")
+    assert client.base_url == "http://localhost:8000"
+    assert client.acp_url == "http://localhost:8000/acp"
+
+
+def test_acp_url_override_replaces_derived_default():
+    """D-FE-2(b): passing ``acp_url`` overrides the ``{base_url}/acp`` default."""
+    client = AgentClient(
+        base_url="http://localhost:8000", acp_url="http://otherhost:9001/acp"
+    )
+    assert client.acp_url == "http://otherhost:9001/acp"
+
+
+def test_acp_url_defaults_when_not_provided():
+    client = AgentClient(base_url="http://localhost:8000")
+    assert client.acp_url == "http://localhost:8000/acp"

@@ -276,8 +276,7 @@ Example: If you type "fix the bug in app.py" followed by "and add a test for it"
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `AGENT_URL` | `http://localhost:8000` | Agent server URL (interactive and headless) |
-| `ENABLE_ACP` | `false` | Legacy explicit-ACP selector; both default/auto and explicit paths currently use the shipped ACP adapter |
-| `ACP_URL` | `http://localhost:8001` | Documented but not read; effective ACP URL is `{AGENT_URL}/acp` |
+| `ACP_URL` | `{AGENT_URL}/acp` | Override for the ACP mount used by `client.py`'s hand-rolled JSON-RPC/SSE convention (session create, `rpc/{id}`, `stream/{id}`). Defaults to `{AGENT_URL}/acp` when unset. |
 | `AGENT_THEME` | `tokyo-night` | Startup theme (any Textual built-in theme name) |
 
 ### Themes
