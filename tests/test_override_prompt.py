@@ -12,27 +12,24 @@ import pytest
 
 
 @pytest.fixture
-def yolo_app(monkeypatch):
+def yolo_app():
     """Return an AgentApp with auto_approve=True and an initial prompt."""
-    monkeypatch.delenv("ENABLE_ACP", raising=False)
     from agent_terminal_ui.app import AgentApp
 
     return AgentApp(initial_prompt="hello world", auto_approve=True)
 
 
 @pytest.fixture
-def prompt_only_app(monkeypatch):
+def prompt_only_app():
     """Return an AgentApp with an initial prompt but no auto_approve."""
-    monkeypatch.delenv("ENABLE_ACP", raising=False)
     from agent_terminal_ui.app import AgentApp
 
     return AgentApp(initial_prompt="run tests", auto_approve=False)
 
 
 @pytest.fixture
-def plain_app(monkeypatch):
+def plain_app():
     """Return a plain AgentApp with no new flags."""
-    monkeypatch.delenv("ENABLE_ACP", raising=False)
     from agent_terminal_ui.app import AgentApp
 
     return AgentApp()

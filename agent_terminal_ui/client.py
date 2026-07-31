@@ -2,7 +2,11 @@
 """Agent Client implementation for the terminal UI.
 
 This module provides high-level client wrappers for interacting with the agent
-server using the native Agent Communication Protocol (ACP).
+server. "ACP" here names this repo's own hand-rolled JSON-RPC-over-HTTP +
+SSE convention (session create → ``POST {base}/acp/rpc/{id}`` → stream
+``GET {base}/acp/stream/{id}``) — it is not an integration with Zed's
+``agent-client-protocol`` SDK; this client speaks HTTP/SSE directly via
+``httpx`` and has no dependency on that package.
 """
 
 import contextlib
@@ -28,27 +32,30 @@ logger = logging.getLogger(__name__)
 
 
 class AgentClient:
-    """Standardized wire client for the agent-utilities ACP protocol.
+    """Standardized wire client for this repo's hand-rolled ACP convention.
 
-    The TUI treats this class as its protocol adapter: callers consume one
-    normalized event vocabulary regardless of whether events originated from an
-    initial turn or an approval-resume stream.  The currently shipped adapter
-    speaks ACP; the application-level ``ENABLE_ACP`` compatibility switch must
-    therefore select this initialized adapter rather than constructing a second,
-    deferred client.
+    The TUI treats this class as its one and only protocol adapter: callers
+    consume one normalized event vocabulary regardless of whether events
+    originated from an initial turn or an approval-resume stream. There is
+    currently no second adapter to select between.
     """
 
     protocol = "acp"
 
-    def __init__(self, base_url: str = "http://localhost:8000") -> None:
+    def __init__(
+        self, base_url: str = "http://localhost:8000", acp_url: str | None = None
+    ) -> None:
         """Initialize the ACP client.
 
         Args:
             base_url: The base URL of the agent server.
+            acp_url: Optional explicit override for the ACP mount (e.g. from
+                the ``ACP_URL`` environment variable). Defaults to
+                ``{base_url}/acp``, which is where the gateway mounts it.
         """
         self.base_url: str = base_url.rstrip("/")
         # The ACP mount is typically at /acp
-        self.acp_url = f"{self.base_url}/acp"
+        self.acp_url = acp_url.rstrip("/") if acp_url else f"{self.base_url}/acp"
         self._http_client = httpx.AsyncClient(timeout=30.0)
         self._current_session_id: str | None = None
 
