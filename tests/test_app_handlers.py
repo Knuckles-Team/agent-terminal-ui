@@ -17,8 +17,8 @@ import pytest
 
 @pytest.fixture
 def agent_app(monkeypatch):
-    """Ensure ENABLE_ACP is off and return a fresh AgentApp instance."""
-    monkeypatch.delenv("ENABLE_ACP", raising=False)
+    """Ensure ACP_URL is unset and return a fresh AgentApp instance."""
+    monkeypatch.delenv("ACP_URL", raising=False)
     from agent_terminal_ui.app import AgentApp
 
     return AgentApp()
@@ -185,39 +185,23 @@ async def test_handle_tool_approval_result_with_decisions(agent_app):
 
 
 @pytest.mark.asyncio
-async def test_init_with_acp_enabled(monkeypatch):
-    monkeypatch.setenv("ENABLE_ACP", "true")
+async def test_acp_url_env_var_overrides_derived_url(monkeypatch):
+    """D-FE-2(b): ``ACP_URL`` is now actually read, not silently dropped."""
+    monkeypatch.setenv("ACP_URL", "http://otherhost:9999/acp")
+    monkeypatch.setenv("AGENT_URL", "http://localhost:8000")
     from agent_terminal_ui.app import AgentApp
 
     app = AgentApp()
-    assert app._enable_acp is True
-    assert app._acp_client is app._client
-    assert app._acp_session_id is None
+    assert app._client.acp_url == "http://otherhost:9999/acp"
 
 
 @pytest.mark.asyncio
-async def test_map_acp_event_branches(agent_app):
-    async with agent_app.run_test() as pilot:
-        await pilot.pause()
+async def test_acp_url_defaults_to_agent_url_derivation(monkeypatch):
+    monkeypatch.delenv("ACP_URL", raising=False)
+    monkeypatch.setenv("AGENT_URL", "http://localhost:8000")
+    from agent_terminal_ui.app import AgentApp
 
-        # text-delta
-        out = agent_app._map_acp_event({"type": "text-delta", "delta": "x"})
-        assert out == {"type": "text_delta", "content": "x"}
+    app = AgentApp()
+    assert app._client.acp_url == "http://localhost:8000/acp"
 
-        # thinking yields None
-        assert agent_app._map_acp_event({"type": "thinking"}) is None
 
-        # tool-call
-        out = agent_app._map_acp_event({"type": "tool-call", "call": {"id": "c1"}})
-        assert out["type"] == "tool_call"
-
-        # turn-end
-        out = agent_app._map_acp_event({"type": "turn-end", "usage": {"x": 1}})
-        assert out == {"type": "turn_end", "usage": {"x": 1}}
-
-        # usage
-        out = agent_app._map_acp_event({"type": "usage", "usage": {"x": 1}})
-        assert out["type"] == "usage"
-
-        # unknown
-        assert agent_app._map_acp_event({"type": "weird"}) is None

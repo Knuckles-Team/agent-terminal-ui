@@ -116,8 +116,7 @@ Custom pricing can be set via `tracker.set_pricing(model, input, output, cached)
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `AGENT_URL` | `http://localhost:8000` | Agent backend URL (interactive and headless). |
-| `ENABLE_ACP` | `false` | Use the ACP protocol instead of AG-UI. |
-| `ACP_URL` | `http://localhost:8001` | Documented but NOT read; the effective ACP URL is `{AGENT_URL}/acp`. |
+| `ACP_URL` | `{AGENT_URL}/acp` | Override for the ACP mount used by `client.py`'s hand-rolled JSON-RPC/SSE convention. Defaults to `{AGENT_URL}/acp` when unset. |
 | `AGENT_THEME` | `tokyo-night` | Startup theme (any Textual built-in theme name). |
 | `TEXTUAL_ANIMATIONS` | `full` | Set to `none` to disable entrance animations (reduced motion). |
 | `AGENT_UTILITIES_DATA_DIR` | platform default | Override the directory for the SQLite session store. |

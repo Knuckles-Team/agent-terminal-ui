@@ -450,29 +450,6 @@ class TestAgentApp:
         msg = AgentEventReceived(event_data)
         assert msg.event == event_data
 
-    def test_acp_event_mapping(self):
-        """ACP event mapping should translate correctly."""
-        from agent_terminal_ui.app import AgentApp
-
-        app = AgentApp()
-
-        text_event = app._map_acp_event({"type": "text-delta", "delta": "hello"})
-        assert text_event == {"type": "text_delta", "content": "hello"}
-
-        thinking_event = app._map_acp_event({"type": "thinking"})
-        assert thinking_event is None
-
-        tool_event = app._map_acp_event({"type": "tool-call", "call": {"name": "test"}})
-        assert tool_event == {"type": "tool_call", "data": {"name": "test"}}
-
-        turn_end = app._map_acp_event(
-            {"type": "turn-end", "usage": {"total_tokens": 100}}
-        )
-        assert turn_end == {"type": "turn_end", "usage": {"total_tokens": 100}}
-
-        unknown = app._map_acp_event({"type": "unknown_type"})
-        assert unknown is None
-
     def test_message_queue(self):
         """Message queue should store and retrieve messages."""
         from agent_terminal_ui.app import AgentApp

@@ -13,8 +13,7 @@ import pytest
 
 
 @pytest.fixture
-def app(monkeypatch):
-    monkeypatch.delenv("ENABLE_ACP", raising=False)
+def app():
     from agent_terminal_ui.app import AgentApp
 
     return AgentApp()
@@ -268,30 +267,3 @@ async def test_run_agent_turn_worker_drives_client_stream(app):
         assert app.current_session_id == "session-created"
 
 
-@pytest.mark.asyncio
-async def test_run_acp_turn_no_acp_client_returns(app):
-    async with app.run_test() as pilot:
-        await pilot.pause()
-        app._enable_acp = True
-        app._acp_client = None
-        coro = app._run_acp_turn.__wrapped__(app, "q", "ask")
-        await coro
-
-
-@pytest.mark.asyncio
-async def test_run_acp_turn_uses_initialized_adapter_and_captures_session(app):
-    async with app.run_test() as pilot:
-        await pilot.pause()
-
-        async def fake_stream(*args, **kwargs):
-            yield {"type": "session_started", "session_id": "explicit-acp"}
-            yield {"type": "text_delta", "content": "ok", "session_id": "explicit-acp"}
-            yield {"type": "turn_end", "session_id": "explicit-acp"}
-
-        app._enable_acp = True
-        app._acp_client = app._client
-        app._client.stream = fake_stream
-        coro = app._run_acp_turn.__wrapped__(app, "q", "ask")
-        await coro
-        assert app.current_session_id == "explicit-acp"
-        assert app._acp_session_id == "explicit-acp"
