@@ -26,6 +26,13 @@ from agent_terminal_ui.capabilities import (
 
 logger = logging.getLogger(__name__)
 
+#: Prefix the gateway mounts the canonical Knowledge-Graph REST table under
+#: (``agent_utilities.gateway.graph_api.register_graph_routes(app,
+#: prefix="/api")``). The ``/graph/*`` action twins live there, unlike the
+#: server's own un-prefixed routers (``/models``, ``/chats``, ``/tools``,
+#: ``/mcp/*``).
+GATEWAY_API_PREFIX = "/api"
+
 
 class AgentClient:
     """Standardized wire client for the agent-utilities ACP protocol.
@@ -926,6 +933,12 @@ class AgentClient:
         transport/gateway failures raise ``httpx.HTTPStatusError`` for the
         caller to render.
 
+        The gateway mounts the whole canonical KG route table under ``/api``
+        (``register_graph_routes(app, prefix="/api")``), so the request URL is
+        ``{base_url}/api{path}``. Posting to the bare ``{base_url}{path}`` — as
+        this helper used to — reached nothing: every engine-surface command
+        (``/ask``, ``/nl``, ``/obs``, ``/broker``, ``/kvcache``) 404'd.
+
         Args:
             path: A ``/graph/*`` route path (e.g. ``/graph/promql``).
             payload: The tool keyword arguments to send as the JSON body.
@@ -933,7 +946,9 @@ class AgentClient:
         Returns:
             The unwrapped ``result`` object (empty dict when absent).
         """
-        response = await self._http_client.post(f"{self.base_url}{path}", json=payload)
+        response = await self._http_client.post(
+            f"{self.base_url}{GATEWAY_API_PREFIX}{path}", json=payload
+        )
         response.raise_for_status()
         data = response.json()
         if isinstance(data, dict):
