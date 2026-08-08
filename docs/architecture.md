@@ -61,11 +61,13 @@ the headless `StreamSink` present the same event vocabulary.
 ## Protocol connection
 
 `agent-terminal-ui` consumes one normalized event vocabulary through
-`AgentClient`. The adapter currently shipped by this package uses **ACP**
-(JSON-RPC + SSE). The default/auto path and the legacy explicit
-`ENABLE_ACP=true` path therefore resolve to the same initialized adapter; the
-flag no longer creates a deferred second client. A future AG-UI adapter can
-implement the same normalized stream contract without changing screen code.
+`AgentClient`, which is the only adapter this package ships. It speaks
+**ACP** — this repo's own hand-rolled JSON-RPC (over HTTP) + SSE convention,
+*not* an integration with Zed's `agent-client-protocol` SDK; there is no
+dependency on that package and nothing here imports it. A future second
+adapter (e.g. AG-UI) could implement the same normalized stream contract
+without changing screen code, but no selector flag exists today because
+there is only one adapter to select.
 
 The workflow sidebar discovers graph nodes from sideband events at runtime — nodes
 are never hardcoded. They appear as the graph emits `specialist_enter` /
@@ -174,8 +176,7 @@ a placeholder.
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `AGENT_URL` | `http://localhost:8000` | Agent backend URL (used by both interactive and headless modes). |
-| `ENABLE_ACP` | `false` | Legacy explicit-ACP selector; default/auto and explicit paths currently resolve to the shipped ACP adapter. |
-| `ACP_URL` | `http://localhost:8001` | Documented but NOT read by `client.py`; the effective ACP URL is derived as `{AGENT_URL}/acp`. |
+| `ACP_URL` | `{AGENT_URL}/acp` | Override for the ACP mount used by `client.py`'s hand-rolled JSON-RPC/SSE convention. Defaults to `{AGENT_URL}/acp` when unset. |
 | `AGENT_THEME` | `tokyo-night` | Initial theme (any Textual built-in theme name). |
 
 See [Configuration](configuration.md) for the full settings reference.

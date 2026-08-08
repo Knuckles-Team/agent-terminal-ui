@@ -42,7 +42,7 @@ from textual.message import Message
 
 # Core client and command imports
 from agent_terminal_ui.capability_provider import CapabilityCommandProvider
-from agent_terminal_ui.client import ACPClient, AgentClient
+from agent_terminal_ui.client import AgentClient
 from agent_terminal_ui.commands import CommandProcessor
 
 # Screen imports
@@ -164,19 +164,10 @@ class AgentApp(App):
 
         # Initialize client
         server_url = os.getenv("AGENT_URL", "http://localhost:8000")
-        self._client = client or AgentClient(base_url=server_url)
-        self._acp_client: ACPClient | None = None
-        self._enable_acp: bool = os.getenv("ENABLE_ACP", "false").lower() == "true"
+        acp_url = os.getenv("ACP_URL") or None
+        self._client = client or AgentClient(base_url=server_url, acp_url=acp_url)
         client_protocol = getattr(self._client, "protocol", "acp")
         self._protocol = client_protocol if isinstance(client_protocol, str) else "acp"
-        self._acp_session_id: str | None = None
-
-        # ``AgentClient`` is the initialized ACP transport adapter shipped by
-        # this package.  ENABLE_ACP is retained as a compatibility selector, but
-        # it must never point at a deferred ``None`` client (which previously
-        # made every explicitly-enabled turn a no-op).
-        if self._enable_acp:
-            self._acp_client = self._client
 
         self._cmd_processor = CommandProcessor(self)
         self.workspace_files: list[str] = []
@@ -222,16 +213,6 @@ class AgentApp(App):
                 await self._client.close()
             except Exception as e:
                 logger.warning(f"Failed to close AgentClient connection pool: {e}")
-
-        if (
-            hasattr(self, "_acp_client")
-            and self._acp_client is not None
-            and self._acp_client is not self._client
-        ):
-            try:
-                await self._acp_client.close()
-            except Exception as e:
-                logger.warning(f"Failed to close ACPClient connection pool: {e}")
 
     # ── Message Queue ──
 
@@ -323,15 +304,12 @@ class AgentApp(App):
         if main_screen:
             main_screen.start_processing()
 
-        if self._enable_acp:
-            self._run_acp_turn(message, mode_id=self._agent_mode)
-        else:
-            self._run_agent_turn(
-                message,
-                parts=parts,
-                mode_id=self._agent_mode,
-                model=self._current_model,
-            )
+        self._run_agent_turn(
+            message,
+            parts=parts,
+            mode_id=self._agent_mode,
+            model=self._current_model,
+        )
 
     # ── Input Handling ──
 
@@ -427,12 +405,9 @@ class AgentApp(App):
 
         # Start agent turn
         self._is_processing = True
-        if self._enable_acp:
-            self._run_acp_turn(value, mode_id=self._agent_mode)
-        else:
-            self._run_agent_turn(
-                value, parts=parts, mode_id=self._agent_mode, model=self._current_model
-            )
+        self._run_agent_turn(
+            value, parts=parts, mode_id=self._agent_mode, model=self._current_model
+        )
 
     async def _submit_prompt(self, prompt: str) -> None:
         """Helper to submit a prompt to the agent programmatically."""
@@ -441,12 +416,9 @@ class AgentApp(App):
             main_screen.start_processing()
 
         self._is_processing = True
-        if self._enable_acp:
-            self._run_acp_turn(prompt, mode_id=self._agent_mode)
-        else:
-            self._run_agent_turn(
-                prompt, parts=[], mode_id=self._agent_mode, model=self._current_model
-            )
+        self._run_agent_turn(
+            prompt, parts=[], mode_id=self._agent_mode, model=self._current_model
+        )
 
     # ── Protocol Communication ──
 
@@ -476,33 +448,6 @@ class AgentApp(App):
             self._remember_session_identity(event)
             self.post_message(AgentEventReceived(event))
 
-    @work(exclusive=True)
-    async def _run_acp_turn(self, query: str, mode_id: str = "ask") -> None:
-        """Stream events through the explicitly selected ACP adapter.
-
-        Args:
-            query: The user prompt to send via the ACP protocol.
-            mode_id: The interactive mode requested.
-        """
-        if not self._acp_client:
-            return
-
-        session_id = self._acp_session_id or self._current_session_id
-        async for event in self._acp_client.stream(
-            query,
-            session_id=session_id,
-            parts=None,
-            mode_id=mode_id,
-            model=self._current_model,
-        ):
-            event_type = event.get("type", "")
-            # AgentClient already emits normalized underscore event names.  Keep
-            # this raw-event fallback for injected/older ACP adapters.
-            tui_event = self._map_acp_event(event) if "-" in event_type else event
-            if tui_event:
-                self._remember_session_identity(tui_event)
-                self.post_message(AgentEventReceived(tui_event))
-
     def _remember_session_identity(self, event: dict[str, Any]) -> None:
         """Capture transport session and canonical run identities."""
         metadata = event.get("_event")
@@ -514,56 +459,11 @@ class AgentApp(App):
         )
         if session_id:
             self._current_session_id = str(session_id)
-            if self._enable_acp:
-                self._acp_session_id = self._current_session_id
 
         metadata_run_id = metadata.get("run_id") if isinstance(metadata, dict) else None
         run_id = event.get("run_id") or event.get("runId") or metadata_run_id
         if run_id:
             self._last_run_id = str(run_id)
-
-    def _map_acp_event(self, acp_event: dict[str, Any]) -> dict[str, Any] | None:
-        """Translate ACP protocol events to the internal TUI event format.
-
-        Args:
-            acp_event: The raw event received from the ACP protocol.
-
-        Returns:
-            A normalized dictionary compatible with the TUI event log, or None.
-        """
-        etype = acp_event.get("type")
-        mapped: dict[str, Any]
-        if etype == "text-delta":
-            mapped = {
-                "type": "text_delta",
-                "content": acp_event.get("delta")
-                or acp_event.get("text")
-                or acp_event.get("content", ""),
-            }
-        elif etype == "thinking":
-            return None
-        elif etype == "tool-call":
-            mapped = {"type": "tool_call", "data": acp_event.get("call", {})}
-        elif etype == "turn-end":
-            mapped = {"type": "turn_end", "usage": acp_event.get("usage")}
-        elif etype == "usage":
-            mapped = {"type": "usage", "data": acp_event.get("usage")}
-        elif etype == "session-started":
-            mapped = {"type": "session_started"}
-        else:
-            return None
-
-        session_id = acp_event.get("session_id") or acp_event.get("sessionId")
-        if session_id:
-            mapped["session_id"] = session_id
-        metadata = acp_event.get("_event")
-        if isinstance(metadata, dict):
-            mapped["_event"] = metadata
-            if metadata.get("run_id"):
-                mapped["run_id"] = metadata["run_id"]
-        if acp_event.get("run_id"):
-            mapped["run_id"] = acp_event["run_id"]
-        return mapped
 
     # ── Event Routing ──
 
@@ -932,8 +832,6 @@ class AgentApp(App):
     def remember_session_id(self, session_id: str) -> None:
         """Record stable session continuity independently from execution runs."""
         self._current_session_id = session_id
-        if self._enable_acp:
-            self._acp_session_id = session_id
 
     @property
     def cost_tracker(self):
