@@ -1,0 +1,66 @@
+# Merge-queue gate declaration for `agent-terminal-ui` (a PYTHON repository).
+#
+# Bootstrapped directly onto `main` the same way agent-utilities'/epistemic-graph's/
+# agent-webui's own `.mergequeue.yaml` were (D-MQR-1's "chore(merge-queue): bootstrap
+# .mergequeue.yaml" pattern) -- a direct commit, not landed through the queue itself,
+# because a repo with no queue declaration cannot enqueue the declaration through its
+# own queue. Every change to this file AFTER this bootstrap goes through the queue like
+# any other candidate.
+#
+# ★ w6-true-green (2026-08-07): this repo had NO `.mergequeue.yaml` at all -- the queue
+# tool itself refuses to enqueue rather than default to "no gates" ("A repository with
+# no declaration is REFUSED rather than defaulted, because 'declared no gates' and 'has
+# no queue configured' must not be the same value."). That is a structural gap of
+# exactly the kind this lane's charter (03-true-green-not-baselined-green.md) exists to
+# close: a repo nobody can safely land work into through the queue is a repo whose red
+# can only grow.
+#
+# Same "never rely on a per-worktree .venv" reasoning as agent-webui's own file: the
+# queue verifies each candidate in a THROWAWAY `git worktree add --detach` checkout,
+# proven to carry no `.venv` of its own. Every gate below self-provisions an isolated
+# venv (`.venv-mq`, never touching a real `.venv` a human/agent may have live) before
+# running, mirroring agent-webui's `test -d node_modules || pnpm install` idiom for the
+# same reason. This also satisfies the "never bare `uv run`" rule: nothing here invokes
+# `uv run` (which silently falls back to the system interpreter when workspace-root
+# discovery fails, per D-UVR-1) -- `uv venv` + `uv pip install` build an explicit venv,
+# and every gate command then invokes that venv's `python` binary directly by path.
+
+base: main
+batch_size: 8
+
+environment_signature: ["bash", "-c", "python3 --version && uv --version"]
+
+gates:
+  # `uvx ruff@<pin>` (an ephemeral, cached tool env -- NOT `uv run`, so D-UVR-1's
+  # workspace-root/system-interpreter fallback does not apply) rather than a
+  # project dependency: ruff is not declared in pyproject.toml at all here (it
+  # is only ever installed by the `ruff-pre-commit` hook's own hermetic env),
+  # version-pinned to match .pre-commit-config.yaml's `rev: ... # v0.15.12`
+  # exactly so the queue enforces the identical ruleset a real commit would.
+  - name: ruff
+    command: ["bash", "-c", "uvx ruff@0.15.12 check --output-format concise ."]
+    tier: fast
+    timeout: 60
+    baseline_timeout: 120
+    compare: lines
+    when_changed: ['*.py', '**/*.py']
+
+  - name: pytest
+    command: ["bash", "-c",
+      "test -d .venv-mq || uv venv .venv-mq --python 3.11 >/dev/null; uv pip install --python .venv-mq/bin/python -q -e '.[test]' >/dev/null; .venv-mq/bin/python -m pytest -q --tb=short -rfE -m 'not integration'"]
+    tier: fast
+    timeout: 300
+    baseline_timeout: 600
+    compare: pytest-ids
+    on_timeout: defer
+    when_changed: ['*.py', '**/*.py', 'pyproject.toml', 'pytest.ini']
+
+  - name: full-suite
+    command: ["bash", "-c",
+      "test -d .venv-mq || uv venv .venv-mq --python 3.11 >/dev/null; uv pip install --python .venv-mq/bin/python -q -e '.[test]' >/dev/null; .venv-mq/bin/python -m pytest -q --tb=short -rfE"]
+    tier: slow
+    timeout: 900
+    compare: pytest-ids
+
+generated_files: []
+regenerate: []
