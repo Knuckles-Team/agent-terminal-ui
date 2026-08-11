@@ -265,5 +265,3 @@ async def test_run_agent_turn_worker_drives_client_stream(app):
         )
         await coro
         assert app.current_session_id == "session-created"
-
-

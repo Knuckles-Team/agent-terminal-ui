@@ -6,7 +6,7 @@ import copy
 import json
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, cast
 
 import httpx
 import pytest
@@ -633,7 +633,7 @@ class _PaletteHarness(App[None]):
         yield Static("harness")
 
     def on_mount(self) -> None:
-        self.push_screen(CapabilityPaletteScreen(self.agent_client))
+        self.push_screen(CapabilityPaletteScreen(cast(AgentClient, self.agent_client)))
 
     def remember_run_id(self, run_id: str) -> None:
         self.observed_run_id = run_id
@@ -855,7 +855,9 @@ class _RunBrowserHarness(App[None]):
         yield Static("harness")
 
     def on_mount(self) -> None:
-        self.push_screen(RunBrowserScreen(self.agent_client, session_id="session-1"))
+        self.push_screen(
+            RunBrowserScreen(cast(AgentClient, self.agent_client), session_id="session-1")
+        )
 
 
 @pytest.mark.asyncio

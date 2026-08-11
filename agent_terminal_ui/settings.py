@@ -257,6 +257,22 @@ def load_agent_utilities_config() -> dict[str, Any]:
     return {}
 
 
+def _toml_escape_string(value: str) -> str:
+    """Escape a string for embedding in a TOML basic string literal.
+
+    Handles the characters that would otherwise break out of the quoted
+    string (backslash, double quote) or that TOML basic strings forbid
+    as literal bytes (newline, carriage return, tab).
+    """
+    return (
+        value.replace("\\", "\\\\")
+        .replace('"', '\\"')
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+        .replace("\t", "\\t")
+    )
+
+
 class AppSettings:
     """TOML-backed application settings.
 
@@ -310,7 +326,7 @@ class AppSettings:
                 elif isinstance(value, int):
                     lines.append(f"{key} = {value}\n")
                 elif isinstance(value, str):
-                    lines.append(f'{key} = "{value}"\n')
+                    lines.append(f'{key} = "{_toml_escape_string(value)}"\n')
 
             self._file.write_text("".join(lines))
         except Exception as e:
