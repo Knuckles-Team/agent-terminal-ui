@@ -203,5 +203,3 @@ async def test_acp_url_defaults_to_agent_url_derivation(monkeypatch):
 
     app = AgentApp()
     assert app._client.acp_url == "http://localhost:8000/acp"
-
-
