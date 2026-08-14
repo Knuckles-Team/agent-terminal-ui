@@ -1,7 +1,7 @@
 # Concept Registry — agent-terminal-ui
 
 > **Prefix**: `CONCEPT:TUI-*`
-> **Version**: 2.1.0
+> **Version**: 2.2.0
 > **Bridge**: [`CONCEPT:AU-ECO.messaging.native-backend-abstraction`](https://github.com/Knuckles-Team/agent-utilities/blob/main/docs/concepts.md) (Unified Toolkit Ingestion)
 
 ---
