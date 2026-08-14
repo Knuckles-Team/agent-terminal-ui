@@ -47,6 +47,9 @@ profile = [
 [project.scripts]
 agent-terminal-ui = "agent_terminal_ui.terminal_ui:terminal_ui"
 
+[tool.uv.workspace]
+members = ["."]
+
 [tool.setuptools]
 include-package-data = true
 
