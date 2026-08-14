@@ -52,6 +52,7 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["."]
+include = ["agent_terminal_ui*"]
 
 [tool.setuptools.package-data]
 agent_terminal_ui = ["py.typed"]
