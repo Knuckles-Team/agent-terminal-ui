@@ -228,3 +228,9 @@ session_*.md
 
 # pytest-textual-snapshot generated report
 snapshot_report.html
+
+# P0.2/P0.3 (graph-os-completion-program): materialized, dev-machine-only
+# symlink to the real agent-utilities checkout, used so this repo resolves
+# standalone against its own tracked lock instead of the ecosystem workspace.
+# Never tracked.
+.uv-workspace-siblings/
