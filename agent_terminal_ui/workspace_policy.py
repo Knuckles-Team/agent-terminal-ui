@@ -121,6 +121,59 @@ class WorkspacePolicy:
         """Add an explicitly denied path."""
         self._denied_paths.add(str(Path(path).resolve()))
 
+    def _deny(
+        self, operation: FileOperation, resolved: str, reason: str
+    ) -> PolicyViolation:
+        """Record and return a violation for a blocked operation."""
+        violation = PolicyViolation(operation, resolved, self._sandbox_mode, reason)
+        self._violations.append(violation)
+        return violation
+
+    def _check_deny_list(
+        self, operation: FileOperation, resolved: str
+    ) -> PolicyViolation | None:
+        """Explicit deny list always wins."""
+        for denied in self._denied_paths:
+            if resolved.startswith(denied):
+                return self._deny(
+                    operation, resolved, f"Path is in deny list: {denied}"
+                )
+        return None
+
+    def _is_in_allow_list(self, resolved: str) -> bool:
+        """Explicit allow list."""
+        return any(resolved.startswith(allowed) for allowed in self._allowed_paths)
+
+    def _check_read_only_mode(
+        self, operation: FileOperation, resolved: str
+    ) -> PolicyViolation | None:
+        """Read-only mode blocks all writes."""
+        if operation in (
+            FileOperation.WRITE,
+            FileOperation.DELETE,
+            FileOperation.CREATE,
+            FileOperation.EXECUTE,
+        ):
+            return self._deny(
+                operation, resolved, "Read-only mode blocks write operations"
+            )
+        return None
+
+    def _check_workspace_write_mode(
+        self, operation: FileOperation, resolved: str
+    ) -> PolicyViolation | None:
+        """workspace-write mode: check if path is within workspace."""
+        workspace_str = str(self._workspace)
+        if operation in (
+            FileOperation.WRITE,
+            FileOperation.DELETE,
+            FileOperation.CREATE,
+        ) and not resolved.startswith(workspace_str):
+            return self._deny(
+                operation, resolved, f"Path is outside workspace: {workspace_str}"
+            )
+        return None
+
     def check_operation(
         self, operation: FileOperation, path: str | Path
     ) -> PolicyViolation | None:
@@ -135,22 +188,12 @@ class WorkspacePolicy:
         """
         resolved = str(Path(path).resolve())
 
-        # Explicit deny list always wins
-        for denied in self._denied_paths:
-            if resolved.startswith(denied):
-                violation = PolicyViolation(
-                    operation,
-                    resolved,
-                    self._sandbox_mode,
-                    f"Path is in deny list: {denied}",
-                )
-                self._violations.append(violation)
-                return violation
+        violation = self._check_deny_list(operation, resolved)
+        if violation is not None:
+            return violation
 
-        # Explicit allow list
-        for allowed in self._allowed_paths:
-            if resolved.startswith(allowed):
-                return None
+        if self._is_in_allow_list(resolved):
+            return None
 
         # danger-full-access allows everything
         if self._sandbox_mode == SandboxMode.DANGER_FULL_ACCESS:
@@ -160,41 +203,11 @@ class WorkspacePolicy:
         if self._trust_mode and operation == FileOperation.READ:
             return None
 
-        # Read-only mode blocks all writes
         if self._sandbox_mode == SandboxMode.READ_ONLY:
-            if operation in (
-                FileOperation.WRITE,
-                FileOperation.DELETE,
-                FileOperation.CREATE,
-                FileOperation.EXECUTE,
-            ):
-                violation = PolicyViolation(
-                    operation,
-                    resolved,
-                    self._sandbox_mode,
-                    "Read-only mode blocks write operations",
-                )
-                self._violations.append(violation)
-                return violation
-            return None
+            return self._check_read_only_mode(operation, resolved)
 
-        # workspace-write mode: check if path is within workspace
         if self._sandbox_mode == SandboxMode.WORKSPACE_WRITE:
-            workspace_str = str(self._workspace)
-            if operation in (
-                FileOperation.WRITE,
-                FileOperation.DELETE,
-                FileOperation.CREATE,
-            ):
-                if not resolved.startswith(workspace_str):
-                    violation = PolicyViolation(
-                        operation,
-                        resolved,
-                        self._sandbox_mode,
-                        f"Path is outside workspace: {workspace_str}",
-                    )
-                    self._violations.append(violation)
-                    return violation
+            return self._check_workspace_write_mode(operation, resolved)
 
         return None
 
