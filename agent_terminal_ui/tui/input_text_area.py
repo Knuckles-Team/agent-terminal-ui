@@ -8,6 +8,7 @@ on some terminals).
 
 import contextlib
 import logging
+import os
 
 from textual import events
 from textual.message import Message
@@ -15,6 +16,29 @@ from textual.widget import Widget
 from textual.widgets import ListItem, ListView, Static, TextArea
 
 logger = logging.getLogger(__name__)
+
+#: Directory names never descended into by `_iter_workspace_files`, on top
+#: of any dotdir (hidden) skip.
+_NOISY_DIR_NAMES = ("node_modules", "__pycache__", "venv")
+
+
+def _iter_workspace_files():
+    """Yield relative file paths under cwd, skipping noisy/hidden entries.
+
+    Used as the local-scan fallback in `FileSuggestionsOverlay._load_files`
+    when no pre-cached workspace file list is available from the app.
+    """
+    for root, dirs, filenames in os.walk("."):
+        # Exclude common noisy directories
+        dirs[:] = [
+            d
+            for d in dirs
+            if not d.startswith(".") and d not in _NOISY_DIR_NAMES
+        ]
+        for f in filenames:
+            rel_path = os.path.relpath(os.path.join(root, f), ".")
+            if not rel_path.startswith("."):
+                yield rel_path
 
 
 class CommandSuggestionsOverlay(Widget):
@@ -246,36 +270,25 @@ class FileSuggestionsOverlay(Widget):
 
     def _load_files(self):
         """Load files from the current workspace."""
-        # Try to use pre-cached workspace files from parent App
-        try:
-            self._all_files = getattr(self.app, "workspace_files", [])
-        except Exception:
-            self._all_files = []
-
-        if not self._all_files:
-            # Fallback to local scan just in case
-            import os
-
-            files: list[str] = []
-            with contextlib.suppress(Exception):
-                for root, dirs, filenames in os.walk("."):
-                    # Exclude common noisy directories
-                    dirs[:] = [
-                        d
-                        for d in dirs
-                        if not d.startswith(".")
-                        and d not in ("node_modules", "__pycache__", "venv")
-                    ]
-                    for f in filenames:
-                        rel_path = os.path.relpath(os.path.join(root, f), ".")
-                        if not rel_path.startswith("."):
-                            files.append(rel_path)
-                        if len(files) > 1000:  # Limit for performance
-                            break
-                    if len(files) > 1000:
-                        break
-            self._all_files = sorted(files)
+        self._all_files = self._preloaded_app_files() or self._scan_local_files()
         self._filtered_files = self._all_files
+
+    def _preloaded_app_files(self) -> list[str]:
+        """Pre-cached workspace files from the parent App, if any."""
+        try:
+            return getattr(self.app, "workspace_files", [])
+        except Exception:
+            return []
+
+    def _scan_local_files(self, limit: int = 1000) -> list[str]:
+        """Fallback: locally walk cwd for files, excluding common noisy dirs."""
+        files: list[str] = []
+        with contextlib.suppress(Exception):
+            for rel_path in _iter_workspace_files():
+                files.append(rel_path)
+                if len(files) > limit:  # Limit for performance
+                    break
+        return sorted(files)
 
     def compose(self):
         """Compose the overlay UI."""
@@ -402,58 +415,13 @@ class InputTextArea(TextArea):
             event: The Textual key event to process.
 
         """
-        # Tab key triggers suggestions (commands or files)
-        if event.key == "tab":
-            current_text: str = self.text.strip()  # type: ignore[has-type]
-            if "@" in current_text:
-                self._show_file_suggestions()
-            else:
-                self._show_command_suggestions()
-            event.stop()
-            event.prevent_default()
+        if self._handle_tab_key(event):
             return
-
-        # Escape key closes overlays
-        if event.key == "escape":
-            self._close_suggestion_overlay()
-            self._close_file_overlay()
-            event.stop()
-            event.prevent_default()
+        if self._handle_escape_key(event):
             return
-
-        # Some terminals send backslash followed by enter as two separate events for
-        # Shift+Enter (instead of a single "shift+enter" key). We detect this pattern
-        # by tracking when backslash is pressed and checking if enter follows.
-        if event.key == "backslash":
-            self._last_key_was_backslash = True
-            event.stop()
-            event.prevent_default()
+        if self._handle_backslash_key(event):
             return
-
-        if event.key == "enter":
-            event.stop()
-            event.prevent_default()
-            if self._last_key_was_backslash:
-                self._last_key_was_backslash = False
-                self.insert("\n")
-            else:
-                # Check if there are matching commands for autocomplete
-                current_text_enter: str = self.text.strip()  # type: ignore[has-type]
-                if current_text_enter.startswith("/") and not self._suggestion_overlay:
-                    # Find matching commands
-                    matches = [
-                        cmd
-                        for cmd in self._commands.keys()
-                        if cmd.startswith(current_text_enter[1:])
-                        and cmd != current_text_enter[1:]
-                    ]
-                    if matches:
-                        # Autocomplete to the first match
-                        self.text = f"/{matches[0]} "
-                        self.cursor_position = len(self.text)
-                        return
-                # Submit the input
-                self.post_message(self.Submitted(self.text))
+        if self._handle_enter_key(event):
             return
 
         if self._last_key_was_backslash:
@@ -462,64 +430,181 @@ class InputTextArea(TextArea):
             self.insert("\\")
             self._last_key_was_backslash = False
 
-        # Detect "@" character to show file suggestions immediately
-        if event.character == "@":
-            # Show suggestions after the @ is inserted
-            def show_if_at_still_there():
-                if "@" in self.text:
-                    self._show_file_popup()
-
-            self.set_timer(0.01, show_if_at_still_there)
+        if self._handle_at_character(event):
             return
-
-        # Detect "/" character to show suggestions immediately
-        if event.character == "/":
-            # Show suggestions after the slash is inserted
-            def show_if_slash_still_there():
-                if self.text.strip().startswith("/"):
-                    self._show_suggestion_popup()
-
-            self.set_timer(0.01, show_if_slash_still_there)
+        if self._handle_slash_character(event):
             return
 
         # Close suggestions if backspace removes the "/" or "@"
         if event.key == "backspace":
-            current_text = self.text
-            if not current_text.strip().startswith("/"):
-                self._close_suggestion_overlay()
-            elif self._suggestion_overlay:
-                query = current_text.strip()[1:]
-                self._suggestion_overlay.filter_commands(query)
-
-            if "@" not in current_text:
-                self._close_file_overlay()
-            elif self._file_overlay:
-                # Find the current @ mention being typed
-                at_index = current_text.rfind("@")
-                query = (
-                    current_text[at_index + 1 :].split()[0] if at_index != -1 else ""
-                )
-                self._file_overlay.filter_files(query)
+            self._sync_overlays_on_backspace()
 
         # Update suggestions as user types
-        if self._suggestion_overlay:
-            current_text = self.text.strip()
-            if current_text.startswith("/"):
-                query = current_text[1:]
-                self._suggestion_overlay.filter_commands(query)
-            else:
-                self._close_suggestion_overlay()
+        self._sync_suggestion_overlay()
+        self._sync_file_overlay()
 
-        if self._file_overlay:
-            current_text = self.text
+    def _handle_tab_key(self, event: events.Key) -> bool:
+        """Tab key triggers suggestions (commands or files). Returns True if handled."""
+        if event.key != "tab":
+            return False
+        current_text: str = self.text.strip()  # type: ignore[has-type]
+        if "@" in current_text:
+            self._show_file_suggestions()
+        else:
+            self._show_command_suggestions()
+        event.stop()
+        event.prevent_default()
+        return True
+
+    def _handle_escape_key(self, event: events.Key) -> bool:
+        """Escape key closes overlays. Returns True if handled."""
+        if event.key != "escape":
+            return False
+        self._close_suggestion_overlay()
+        self._close_file_overlay()
+        event.stop()
+        event.prevent_default()
+        return True
+
+    def _handle_backslash_key(self, event: events.Key) -> bool:
+        """Track backslash so a following Enter can be treated as Shift+Enter.
+
+        Some terminals send backslash followed by enter as two separate events
+        for Shift+Enter (instead of a single "shift+enter" key). We detect
+        this pattern by tracking when backslash is pressed and checking if
+        enter follows. Returns True if handled.
+        """
+        if event.key != "backslash":
+            return False
+        self._last_key_was_backslash = True
+        event.stop()
+        event.prevent_default()
+        return True
+
+    def _handle_enter_key(self, event: events.Key) -> bool:
+        """Enter submits, unless it completes a backslash-newline or an
+        autocomplete. Returns True if handled."""
+        if event.key != "enter":
+            return False
+        event.stop()
+        event.prevent_default()
+        if self._last_key_was_backslash:
+            self._last_key_was_backslash = False
+            self.insert("\n")
+        elif not self._autocomplete_slash_command():
+            self.post_message(self.Submitted(self.text))
+        return True
+
+    def _autocomplete_slash_command(self) -> bool:
+        """Autocomplete `/partial` text to its sole matching command on Enter.
+
+        Returns True if autocomplete fired (the caller must not also submit).
+        """
+        current_text_enter: str = self.text.strip()  # type: ignore[has-type]
+        if not current_text_enter.startswith("/") or self._suggestion_overlay:
+            return False
+        matches = [
+            cmd
+            for cmd in self._commands.keys()
+            if cmd.startswith(current_text_enter[1:])
+            and cmd != current_text_enter[1:]
+        ]
+        if not matches:
+            return False
+        # Autocomplete to the first match
+        self.text = f"/{matches[0]} "
+        self.cursor_position = len(self.text)
+        return True
+
+    def _handle_at_character(self, event: events.Key) -> bool:
+        """Detect "@" character to show file suggestions immediately."""
+        if event.character != "@":
+            return False
+
+        def show_if_at_still_there():
+            if "@" in self.text:
+                self._show_file_popup()
+
+        self.set_timer(0.01, show_if_at_still_there)
+        return True
+
+    def _handle_slash_character(self, event: events.Key) -> bool:
+        """Detect "/" character to show command suggestions immediately."""
+        if event.character != "/":
+            return False
+
+        def show_if_slash_still_there():
+            if self.text.strip().startswith("/"):
+                self._show_suggestion_popup()
+
+        self.set_timer(0.01, show_if_slash_still_there)
+        return True
+
+    def _sync_overlays_on_backspace(self) -> None:
+        """Update or close the overlays after a backspace may have removed
+        the "/" or "@" that triggered them."""
+        current_text = self.text
+        if not current_text.strip().startswith("/"):
+            self._close_suggestion_overlay()
+        elif self._suggestion_overlay:
+            query = current_text.strip()[1:]
+            self._suggestion_overlay.filter_commands(query)
+
+        if "@" not in current_text:
+            self._close_file_overlay()
+        elif self._file_overlay:
+            # Find the current @ mention being typed
             at_index = current_text.rfind("@")
-            if at_index != -1:
-                # Get text from @ until space or end
-                mention_text = current_text[at_index + 1 :]
-                query = mention_text.split()[0] if mention_text else ""
-                self._file_overlay.filter_files(query)
-            else:
-                self._close_file_overlay()
+            query = current_text[at_index + 1 :].split()[0] if at_index != -1 else ""
+            self._file_overlay.filter_files(query)
+
+    def _sync_suggestion_overlay(self) -> None:
+        """Refresh the command-suggestion overlay's filter as the user types."""
+        if not self._suggestion_overlay:
+            return
+        current_text = self.text.strip()
+        if current_text.startswith("/"):
+            query = current_text[1:]
+            self._suggestion_overlay.filter_commands(query)
+        else:
+            self._close_suggestion_overlay()
+
+    def _sync_file_overlay(self) -> None:
+        """Refresh the file-suggestion overlay's filter as the user types."""
+        if not self._file_overlay:
+            return
+        current_text = self.text
+        at_index = current_text.rfind("@")
+        if at_index != -1:
+            # Get text from @ until space or end
+            mention_text = current_text[at_index + 1 :]
+            query = mention_text.split()[0] if mention_text else ""
+            self._file_overlay.filter_files(query)
+        else:
+            self._close_file_overlay()
+
+    def _get_canonical_commands(self) -> dict | None:
+        """Look up the alias->canonical command-name map from the app's
+        CommandProcessor, if the host app has one wired up."""
+        try:
+            from agent_terminal_ui.commands import CommandProcessor
+
+            if hasattr(self.app, "_cmd_processor") and isinstance(
+                self.app._cmd_processor, CommandProcessor
+            ):
+                return self.app._cmd_processor.canonical_commands
+        except Exception as e:
+            logger.debug(f"Failed to get canonical commands: {e}")
+        return None
+
+    def _resolve_mount_app(self):
+        """Resolve the App to mount an overlay into, falling back to
+        `self.screen.app` when `self.app` itself is unavailable."""
+        try:
+            return self.app
+        except AttributeError as e:
+            logger.debug(f"Using screen.app as fallback: {e}")
+            return self.screen.app if hasattr(self, "screen") else None
 
     def _show_suggestion_popup(self) -> None:
         """Show the visual suggestion overlay."""
@@ -546,18 +631,7 @@ class InputTextArea(TextArea):
 
         # Get the query for initial filtering
         query = current_text[1:] if len(current_text) > 1 else ""
-
-        # Get canonical commands mapping from the command processor
-        canonical_commands = None
-        try:
-            from agent_terminal_ui.commands import CommandProcessor
-
-            if hasattr(self.app, "_cmd_processor") and isinstance(
-                self.app._cmd_processor, CommandProcessor
-            ):
-                canonical_commands = self.app._cmd_processor.canonical_commands
-        except Exception as e:
-            logger.debug(f"Failed to get canonical commands: {e}")
+        canonical_commands = self._get_canonical_commands()
 
         self._suggestion_overlay = CommandSuggestionsOverlay(
             self._commands,
@@ -568,12 +642,7 @@ class InputTextArea(TextArea):
         )
 
         # Mount the overlay in the app
-        try:
-            app = self.app
-        except AttributeError as e:
-            logger.debug(f"Using screen.app as fallback: {e}")
-            app = self.screen.app if hasattr(self, "screen") else None
-
+        app = self._resolve_mount_app()
         if app:
             app.mount(self._suggestion_overlay)
 
@@ -596,17 +665,7 @@ class InputTextArea(TextArea):
         if not matches:
             return
 
-        # Get canonical commands mapping
-        canonical_commands = None
-        try:
-            from agent_terminal_ui.commands import CommandProcessor
-
-            if hasattr(self.app, "_cmd_processor") and isinstance(
-                self.app._cmd_processor, CommandProcessor
-            ):
-                canonical_commands = self.app._cmd_processor.canonical_commands
-        except Exception as e:
-            logger.debug(f"Failed to get canonical commands: {e}")
+        canonical_commands = self._get_canonical_commands()
 
         # Auto-complete if only one match
         if len(matches) == 1:
