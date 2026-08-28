@@ -138,63 +138,65 @@ class CommandProcessor:
         if not parts or not parts[0]:
             self.app.notify("Unknown command: /", severity="warning")
             return True
-
         cmd_name = parts[0].lower()
         args = parts[1] if len(parts) > 1 else ""
 
         if cmd_name in self.commands:
-            try:
-                await self.commands[cmd_name](args)
-            except Exception as e:
-                self.app.notify(
-                    f"Error executing command /{cmd_name}: {e}", severity="error"
-                )
-            return True
+            await self._run_registered_command(cmd_name, args)
         else:
-            # Try to query the gateway commands/execute endpoint
-            try:
-                async with httpx.AsyncClient() as client:
-                    response = await client.post(
-                        f"{self.app.agent_client.base_url}/api/enhanced/commands/execute",
-                        json={"command": text},
-                        timeout=15.0,
-                    )
-                    if response.status_code == 200:
-                        data = response.json()
-                        response_markdown = data.get("response_markdown", "")
-                        client_actions = data.get("client_actions", [])
+            await self._run_gateway_command(cmd_name, text)
+        return True
 
-                        try:
-                            conv = self.app.query_one("Conversation")
-                            await conv.add_agent_response(response_markdown)
-                        except Exception:
-                            self.app.notify(
-                                response_markdown[:100], severity="information"
-                            )
+    async def _run_registered_command(self, cmd_name: str, args: str) -> None:
+        """Invoke a locally registered command, surfacing failures as notices."""
+        try:
+            await self.commands[cmd_name](args)
+        except Exception as e:
+            self.app.notify(
+                f"Error executing command /{cmd_name}: {e}", severity="error"
+            )
 
-                        # Handle client actions
-                        for action_dict in client_actions:
-                            action = action_dict.get("action")
-                            if action == "clear_chat":
-                                with contextlib.suppress(Exception):
-                                    conv = self.app.query_one("Conversation")
-                                    await conv.clear_conversation()
-                                    await conv.add_info(
-                                        "🧹 Chat log cleared via slash command."
-                                    )
-                        return True
-                    else:
-                        self.app.notify(
-                            f"Gateway command failed: Code {response.status_code}",
-                            severity="error",
-                        )
-                        return True
-            except Exception as e:
-                self.app.notify(
-                    f"Unknown command: /{cmd_name} (Gateway offline: {e})",
-                    severity="warning",
+    async def _run_gateway_command(self, cmd_name: str, text: str) -> None:
+        """Fall back to the gateway's commands/execute endpoint."""
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.app.agent_client.base_url}/api/enhanced/commands/execute",
+                    json={"command": text},
+                    timeout=15.0,
                 )
-                return True
+                if response.status_code != 200:
+                    self.app.notify(
+                        f"Gateway command failed: Code {response.status_code}",
+                        severity="error",
+                    )
+                    return
+                data = response.json()
+                await self._show_gateway_response(data.get("response_markdown", ""))
+                await self._apply_client_actions(data.get("client_actions", []))
+        except Exception as e:
+            self.app.notify(
+                f"Unknown command: /{cmd_name} (Gateway offline: {e})",
+                severity="warning",
+            )
+
+    async def _show_gateway_response(self, response_markdown: str) -> None:
+        """Render a gateway response in the conversation, or notify on failure."""
+        try:
+            conv = self.app.query_one("Conversation")
+            await conv.add_agent_response(response_markdown)
+        except Exception:
+            self.app.notify(response_markdown[:100], severity="information")
+
+    async def _apply_client_actions(self, client_actions: list[Any]) -> None:
+        """Apply the client-side actions requested by a gateway response."""
+        for action_dict in client_actions:
+            if action_dict.get("action") != "clear_chat":
+                continue
+            with contextlib.suppress(Exception):
+                conv = self.app.query_one("Conversation")
+                await conv.clear_conversation()
+                await conv.add_info("🧹 Chat log cleared via slash command.")
 
     async def cmd_help(self, args: str) -> None:
         """Show available commands and their descriptions."""
@@ -445,80 +447,93 @@ class CommandProcessor:
 
         parts = raw.split(maxsplit=1)
         if parts[0] == "jsonl":
-            if len(parts) < 2:
-                await conversation.add_info(
-                    "[yellow]Usage: /ingest jsonl <job_id>[/yellow]"
-                )
-                return
-            try:
-                jsonl = await client.extraction_jsonl(parts[1].strip())
-            except Exception as exc:
-                await conversation.add_info(f"[red]JSONL fetch failed: {exc}[/red]")
-                return
-            lines = jsonl.strip().splitlines()
-            await conversation.add_info(
-                f"[green]{len(lines)} facts[/green] (job {parts[1].strip()}):\n"
-                + "\n".join(f"[dim]{ln}[/dim]" for ln in lines[:50])
-                + ("\n…" if len(lines) > 50 else "")
-            )
+            await self._ingest_export_jsonl(conversation, client, parts)
             return
 
-        text = ""
-        url = ""
+        text, url = self._ingest_source(raw, parts)
+        job_id = await self._ingest_submit(conversation, client, text, url)
+        if job_id is None:
+            return
+        await self._ingest_stream_facts(conversation, client, job_id)
+
+    async def _ingest_export_jsonl(
+        self, conversation: Any, client: Any, parts: list[str]
+    ) -> None:
+        """Download a finished extraction job's facts as JSONL."""
+        if len(parts) < 2:
+            await conversation.add_info(
+                "[yellow]Usage: /ingest jsonl <job_id>[/yellow]"
+            )
+            return
+        job_id = parts[1].strip()
+        try:
+            jsonl = await client.extraction_jsonl(job_id)
+        except Exception as exc:
+            await conversation.add_info(f"[red]JSONL fetch failed: {exc}[/red]")
+            return
+        lines = jsonl.strip().splitlines()
+        await conversation.add_info(
+            f"[green]{len(lines)} facts[/green] (job {job_id}):\n"
+            + "\n".join(f"[dim]{ln}[/dim]" for ln in lines[:50])
+            + ("\n…" if len(lines) > 50 else "")
+        )
+
+    @staticmethod
+    def _ingest_source(raw: str, parts: list[str]) -> tuple[str, str]:
+        """Resolve ``/ingest`` arguments into an ``(inline text, url)`` pair."""
         if parts[0] == "--":
-            text = parts[1] if len(parts) > 1 else ""
-        elif raw.startswith(("http://", "https://")):
-            url = raw
-        else:
-            from pathlib import Path
+            return (parts[1] if len(parts) > 1 else ""), ""
+        if raw.startswith(("http://", "https://")):
+            return "", raw
 
-            p = Path(raw).expanduser()
-            if p.is_file():
-                text = p.read_text(encoding="utf-8", errors="ignore")
-            else:
-                url = raw  # let the gateway's reader try it as a URL
+        from pathlib import Path
 
+        p = Path(raw).expanduser()
+        if p.is_file():
+            return p.read_text(encoding="utf-8", errors="ignore"), ""
+        return "", raw  # let the gateway's reader try it as a URL
+
+    async def _ingest_submit(
+        self, conversation: Any, client: Any, text: str, url: str
+    ) -> str | None:
+        """Submit an extraction job, returning its id or ``None`` on failure."""
         try:
             res = await client.submit_extraction(text=text, url=url)
         except Exception as exc:
             await conversation.add_info(f"[red]Extraction submit failed: {exc}[/red]")
-            return
+            return None
         job_id = res.get("job_id")
         if res.get("status") != "submitted" or not job_id:
             msg = res.get("message", "engine cold?")
             await conversation.add_info(
                 f"[yellow]Extraction unavailable: {msg}[/yellow]"
             )
-            return
+            return None
 
         await conversation.add_info(
             f"[bold blue]Extracting[/bold blue] (job [cyan]{job_id}[/cyan])… "
             "facts stream below; `/ingest jsonl " + job_id + "` to export."
         )
+        return job_id
 
+    async def _ingest_stream_facts(
+        self, conversation: Any, client: Any, job_id: str
+    ) -> None:
+        """Stream extracted facts into the conversation until the job ends."""
         kept = 0
         dupes = 0
         try:
             async for ev in client.stream_extraction(job_id):
                 etype = ev.get("type")
-                if etype == "fact":
-                    f = ev.get("fact", {})
-                    is_dup = bool(ev.get("is_duplicate"))
-                    if is_dup:
-                        dupes += 1
-                        continue
-                    kept += 1
-                    tags = " ".join(f"#{t}" for t in (f.get("tags") or [])[:4])
-                    conf = f.get("confidence", "–")
-                    line = (
-                        f"[blue]{f.get('subject', '')}[/blue] "
-                        f"[magenta]{f.get('predicate', '')}[/magenta] "
-                        f"[green]{f.get('object', '')}[/green]  "
-                        f"[dim]conf {conf}%  {tags}[/dim]"
-                    )
-                    await conversation.add_info(line)
-                elif etype == "job_done":
+                if etype == "job_done":
                     break
+                if etype != "fact":
+                    continue
+                if ev.get("is_duplicate"):
+                    dupes += 1
+                    continue
+                kept += 1
+                await conversation.add_info(self._format_fact_row(ev.get("fact", {})))
         except Exception as exc:
             await conversation.add_info(f"[red]Stream error: {exc}[/red]")
             return
@@ -527,6 +542,18 @@ class CommandProcessor:
             f"[green]Done[/green] — {kept} facts"
             + (f" ([dim]{dupes} duplicates suppressed[/dim])" if dupes else "")
             + f". Export: /ingest jsonl {job_id}"
+        )
+
+    @staticmethod
+    def _format_fact_row(fact: dict[str, Any]) -> str:
+        """Render one extracted fact as a colourised conversation row."""
+        tags = " ".join(f"#{t}" for t in (fact.get("tags") or [])[:4])
+        conf = fact.get("confidence", "–")
+        return (
+            f"[blue]{fact.get('subject', '')}[/blue] "
+            f"[magenta]{fact.get('predicate', '')}[/magenta] "
+            f"[green]{fact.get('object', '')}[/green]  "
+            f"[dim]conf {conf}%  {tags}[/dim]"
         )
 
     async def cmd_fleet(self, args: str) -> None:
@@ -1992,67 +2019,128 @@ class CommandProcessor:
         )
         return Panel(body, title=title, border_style="cyan")
 
+    @staticmethod
+    def _row_columns(rows: list[Any]) -> list[str]:
+        """Union of the keys across every mapping row, in stable order."""
+        return sorted({k for row in rows if isinstance(row, dict) for k in row})
+
+    @staticmethod
+    def _dict_rows_table(title: str, rows: list[Any], columns: list[str]) -> Table:
+        """Render mapping rows as a table with one column per known key."""
+        table = Table(title=title, expand=True)
+        for col in columns:
+            table.add_column(col, overflow="fold")
+        for row in rows[:50]:
+            table.add_row(*[str(row.get(col, "")) for col in columns])
+        return table
+
+    @staticmethod
+    def _scalar_rows_table(title: str, rows: list[Any]) -> Table:
+        """Render non-mapping rows as a single-column table."""
+        table = Table(title=title, expand=True)
+        table.add_column("value")
+        for row in rows[:50]:
+            table.add_row(str(row))
+        return table
+
+    @staticmethod
+    def _nl_query_header(result: dict[str, Any]) -> str:
+        """Format the generated-query header for an ``nl_query`` payload."""
+        query = result.get("query") or result.get("generated_query") or ""
+        dialect = result.get("dialect", "")
+        header = f"[bold blue]Generated query[/bold blue] ([dim]{dialect}[/dim])\n"
+        return header + (
+            f"[green]{query}[/green]" if query else "[dim](no query)[/dim]"
+        )
+
     def _render_nl_query(self, result: dict[str, Any]) -> Any:
         """Render an ``nl_query`` payload: generated query + result rows."""
         err = self._surface_error(result)
         if err:
             return f"[red]NL query failed: {err}[/red]"
-        query = result.get("query") or result.get("generated_query") or ""
-        dialect = result.get("dialect", "")
+        header = self._nl_query_header(result)
         rows = result.get("rows") or result.get("results") or result.get("result") or []
-        header = f"[bold blue]Generated query[/bold blue] ([dim]{dialect}[/dim])\n"
-        header += f"[green]{query}[/green]" if query else "[dim](no query)[/dim]"
         if not isinstance(rows, list) or not rows:
             return header + "\n[dim]No rows returned.[/dim]"
-        table = Table(title="Results", expand=True)
-        columns = sorted({k for row in rows if isinstance(row, dict) for k in row})
-        if columns:
-            for col in columns:
-                table.add_column(col, overflow="fold")
-            for row in rows[:50]:
-                table.add_row(*[str(row.get(col, "")) for col in columns])
-        else:
-            table.add_column("value")
-            for row in rows[:50]:
-                table.add_row(str(row))
+        columns = self._row_columns(rows)
+        table = (
+            self._dict_rows_table("Results", rows, columns)
+            if columns
+            else self._scalar_rows_table("Results", rows)
+        )
         return Group(header, table)
+
+    def _ask_data_parts(self, result: dict[str, Any]) -> list[Any]:
+        """Collect the renderables for an ``ask_data`` payload, in order."""
+        parts: list[Any] = []
+        answer = result.get("answer") or ""
+        if answer:
+            parts.append(Panel(str(answer), title="Answer", border_style="green"))
+        query = result.get("query") or result.get("generated_query") or ""
+        if query:
+            parts.append(Syntax(str(query), "sql", word_wrap=True))
+        rows_table = self._ask_data_rows_table(result)
+        if rows_table is not None:
+            parts.append(rows_table)
+        return parts
+
+    def _ask_data_rows_table(self, result: dict[str, Any]) -> Table | None:
+        """Build the ``ask_data`` rows table, or ``None`` when there is nothing."""
+        rows = result.get("rows") or result.get("results") or []
+        if not isinstance(rows, list) or not rows:
+            return None
+        columns = self._row_columns(rows)
+        if not columns:
+            return None
+        return self._dict_rows_table("Rows", rows, columns)
 
     def _render_ask_data(self, result: dict[str, Any]) -> Any:
         """Render an ``ask_data`` payload: synthesized answer + query + rows."""
         err = self._surface_error(result)
         if err:
             return f"[red]Ask-data failed: {err}[/red]"
-        answer = result.get("answer") or ""
-        query = result.get("query") or result.get("generated_query") or ""
-        rows = result.get("rows") or result.get("results") or []
-        parts = []
-        if answer:
-            parts.append(Panel(str(answer), title="Answer", border_style="green"))
-        if query:
-            parts.append(Syntax(str(query), "sql", word_wrap=True))
-        if isinstance(rows, list) and rows:
-            table = Table(title="Rows", expand=True)
-            columns = sorted({k for r in rows if isinstance(r, dict) for k in r})
-            if columns:
-                for col in columns:
-                    table.add_column(col, overflow="fold")
-                for row in rows[:50]:
-                    table.add_row(*[str(row.get(col, "")) for col in columns])
-                parts.append(table)
+        parts = self._ask_data_parts(result)
         if not parts:
             return self._render_json_panel("Ask Data", result)
         return Group(*parts)
+
+    @staticmethod
+    def _promql_series(result: dict[str, Any]) -> Any:
+        """Unwrap the sample series from a PromQL payload's nesting."""
+        inner = result.get("result", result)
+        if isinstance(inner, dict):
+            return inner.get("result", inner.get("data", inner))
+        return inner
+
+    @staticmethod
+    def _promql_label(entry: dict[str, Any]) -> str:
+        """Build the display label for one PromQL series entry."""
+        metric = entry.get("metric") or {}
+        return str(
+            metric.get("__name__")
+            or ", ".join(f"{k}={v}" for k, v in metric.items())
+            or "value"
+        )
+
+    def _promql_row(self, entry: dict[str, Any], action: str) -> list[str]:
+        """Build the table cells for one PromQL series entry."""
+        label = self._promql_label(entry)
+        if action == "range":
+            pairs = entry.get("values") or []
+            nums = [n for _, raw in pairs if (n := self._coerce_float(raw)) is not None]
+            last = f"{nums[-1]:g}" if nums else ""
+            return [label, self._sparkline(nums), last]
+        value = entry.get("value") or ["", ""]
+        raw = value[1] if isinstance(value, list | tuple) and len(value) > 1 else value
+        num = self._coerce_float(raw)
+        return [label, f"{num:g}" if num is not None else str(raw)]
 
     def _render_promql(self, result: dict[str, Any], expr: str, action: str) -> Any:
         """Render a PromQL payload: a metric table plus a sparkline for ranges."""
         err = self._surface_error(result)
         if err:
             return f"[red]PromQL failed: {err}[/red]"
-        inner = result.get("result", result)
-        if isinstance(inner, dict):
-            series = inner.get("result", inner.get("data", inner))
-        else:
-            series = inner
+        series = self._promql_series(result)
         if not isinstance(series, list) or not series:
             return self._render_json_panel(f"PromQL: {expr}", result)
         table = Table(title=f"PromQL ({action}): {expr}", expand=True)
@@ -2063,32 +2151,21 @@ class CommandProcessor:
         else:
             table.add_column("Value", justify="right")
         for entry in series[:20]:
-            if not isinstance(entry, dict):
-                table.add_row(str(entry), "")
-                continue
-            metric = entry.get("metric") or {}
-            label = (
-                metric.get("__name__")
-                or ", ".join(f"{k}={v}" for k, v in metric.items())
-                or "value"
-            )
-            if action == "range":
-                pairs = entry.get("values") or []
-                nums = [
-                    n for _, raw in pairs if (n := self._coerce_float(raw)) is not None
-                ]
-                last = f"{nums[-1]:g}" if nums else ""
-                table.add_row(str(label), self._sparkline(nums), last)
+            if isinstance(entry, dict):
+                table.add_row(*self._promql_row(entry, action))
             else:
-                value = entry.get("value") or ["", ""]
-                raw = (
-                    value[1]
-                    if isinstance(value, list | tuple) and len(value) > 1
-                    else value
-                )
-                num = self._coerce_float(raw)
-                table.add_row(str(label), f"{num:g}" if num is not None else str(raw))
+                table.add_row(str(entry), "")
         return table
+
+    @staticmethod
+    def _trace_row(trace: dict[str, Any]) -> tuple[str, str, str, str]:
+        """Build the table cells for one trace-search hit."""
+        return (
+            str(trace.get("trace_id") or trace.get("id", "")),
+            str(trace.get("service") or trace.get("service_name", "")),
+            str(trace.get("operation") or trace.get("name", "")),
+            str(trace.get("duration_ms") or trace.get("duration") or ""),
+        )
 
     def _render_traces(self, result: dict[str, Any]) -> Any:
         """Render a trace-search payload as a table."""
@@ -2105,15 +2182,33 @@ class CommandProcessor:
         table.add_column("Operation")
         table.add_column("Duration", justify="right")
         for trace in traces[:30]:
-            if not isinstance(trace, dict):
-                continue
-            duration = trace.get("duration_ms") or trace.get("duration") or ""
-            table.add_row(
-                str(trace.get("trace_id") or trace.get("id", "")),
-                str(trace.get("service") or trace.get("service_name", "")),
-                str(trace.get("operation") or trace.get("name", "")),
-                str(duration),
+            if isinstance(trace, dict):
+                table.add_row(*self._trace_row(trace))
+        return table
+
+    @staticmethod
+    def _broker_item_row(item: Any) -> tuple[str, str]:
+        """Build the table cells for one broker queue/exchange entry."""
+        if not isinstance(item, dict):
+            return str(item), ""
+        name = item.get("name") or item.get("queue") or item.get("exchange", "")
+        detail = ", ".join(f"{k}={v}" for k, v in item.items() if k not in ("name",))
+        return str(name), detail
+
+    def _render_broker_listing(self, inner: Any, action: str) -> Any:
+        """Render a broker queue/exchange listing as a table."""
+        items = inner
+        if isinstance(inner, dict):
+            items = (
+                inner.get("queues") or inner.get("exchanges") or inner.get("result", [])
             )
+        if not isinstance(items, list) or not items:
+            return "[dim]No entries.[/dim]"
+        table = Table(title=action.replace("_", " ").title(), expand=True)
+        table.add_column("Name", style="cyan", overflow="fold")
+        table.add_column("Detail")
+        for item in items[:50]:
+            table.add_row(*self._broker_item_row(item))
         return table
 
     def _render_broker(self, result: dict[str, Any], action: str) -> Any:
@@ -2123,32 +2218,7 @@ class CommandProcessor:
             return f"[red]Broker query failed: {err}[/red]"
         inner = result.get("result", result)
         if action in ("list_queues", "list_exchanges"):
-            items = inner
-            if isinstance(inner, dict):
-                items = (
-                    inner.get("queues")
-                    or inner.get("exchanges")
-                    or inner.get("result", [])
-                )
-            if not isinstance(items, list) or not items:
-                return "[dim]No entries.[/dim]"
-            table = Table(title=action.replace("_", " ").title(), expand=True)
-            table.add_column("Name", style="cyan", overflow="fold")
-            table.add_column("Detail")
-            for item in items[:50]:
-                if isinstance(item, dict):
-                    name = (
-                        item.get("name")
-                        or item.get("queue")
-                        or item.get("exchange", "")
-                    )
-                    detail = ", ".join(
-                        f"{k}={v}" for k, v in item.items() if k not in ("name",)
-                    )
-                    table.add_row(str(name), detail)
-                else:
-                    table.add_row(str(item), "")
-            return table
+            return self._render_broker_listing(inner, action)
         if not isinstance(inner, dict):
             return self._render_json_panel("Broker", result)
         table = Table(title="Broker Stats", expand=True)
