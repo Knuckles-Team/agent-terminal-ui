@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import json
+from collections.abc import Callable
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
@@ -300,6 +301,120 @@ def test_capability_coverage_ledger_uses_supported_contract() -> None:
         assert override.get("entrypoint") or override.get("reason")
 
 
+def _route_capabilities_list(request: httpx.Request, body: dict[str, Any]) -> httpx.Response:
+    assert request.url.params["include_actions"] == "true"
+    return httpx.Response(200, json={"status_code": 200, "data": _catalog_payload()})
+
+
+def _route_capability_descriptor(
+    request: httpx.Request, body: dict[str, Any]
+) -> httpx.Response:
+    return httpx.Response(200, json=_descriptor_payload())
+
+
+def _route_capability_preflight(
+    request: httpx.Request, body: dict[str, Any]
+) -> httpx.Response:
+    assert set(body) == {"action", "inputs", "target"}
+    assert body["action"] == "inspect"
+    assert body["inputs"]["value"] == 7
+    return httpx.Response(200, json=_preflight_payload())
+
+
+def _route_demo_tool_invoke(request: httpx.Request, body: dict[str, Any]) -> httpx.Response:
+    assert body == {
+        "action": "inspect",
+        "inputs": {"action": "inspect", "value": 7},
+        "session_id": "session-stable-1",
+    }
+    return httpx.Response(
+        202,
+        json={
+            "status": "running",
+            "run_id": "run-1",
+            "session_id": "session-stable-1",
+            "result": {},
+        },
+    )
+
+
+def _route_graph_mine_invoke(request: httpx.Request, body: dict[str, Any]) -> httpx.Response:
+    expected_inputs = {
+        "action": "cluster",
+        "params_json": '{"features":[[1.0,2.0]]}',
+        "graph": "tenant-a",
+    }
+    if body.get("approval_id"):
+        assert body == {
+            "action": "cluster",
+            "inputs": expected_inputs,
+            "approval_id": "approval-1",
+            "run_id": "run-pending-1",
+            "session_id": "session-stable-1",
+        }
+        return httpx.Response(
+            202,
+            json={
+                "status": "running",
+                "run_id": "run-pending-1",
+                "session_id": "session-stable-1",
+                "result": {},
+            },
+        )
+    assert body == {
+        "action": "cluster",
+        "inputs": expected_inputs,
+        "session_id": "session-stable-1",
+    }
+    return httpx.Response(
+        202,
+        json={
+            "status": "approval_required",
+            "approval_id": "approval-1",
+            "run_id": "run-pending-1",
+            "session_id": "session-stable-1",
+        },
+    )
+
+
+def _route_run_summary(request: httpx.Request, body: dict[str, Any]) -> httpx.Response:
+    return httpx.Response(200, json=_run_summary_payload())
+
+
+def _route_runs_list(request: httpx.Request, body: dict[str, Any]) -> httpx.Response:
+    assert request.url.params["status"] == "completed"
+    return httpx.Response(
+        200,
+        json={"schema_version": "1.0", "count": 1, "runs": [_run_summary_payload()]},
+    )
+
+
+def _route_run_events(request: httpx.Request, body: dict[str, Any]) -> httpx.Response:
+    assert request.url.params["after"] == "0"
+    return httpx.Response(200, json=_run_page_payload())
+
+
+def _route_events_schema(request: httpx.Request, body: dict[str, Any]) -> httpx.Response:
+    return httpx.Response(200, json={"schema_version": "1.0", "schema": {"type": "object"}})
+
+
+#: The mock gateway's routing table, keyed by exact request path. Any path
+#: not listed here falls back to a 404 in `handler` below.
+_MOCK_GATEWAY_ROUTES: dict[
+    str, Callable[[httpx.Request, dict[str, Any]], httpx.Response]
+] = {
+    "/api/capabilities": _route_capabilities_list,
+    "/api/capabilities/demo_tool": _route_capability_descriptor,
+    "/api/capabilities/demo_tool/preflight": _route_capability_preflight,
+    "/api/capabilities/demo_tool/invoke": _route_demo_tool_invoke,
+    "/api/capabilities/graph_mine/invoke": _route_graph_mine_invoke,
+    "/api/runs/run-1": _route_run_summary,
+    "/api/runs": _route_runs_list,
+    "/api/runs/run-1/events": _route_run_events,
+    "/api/events/schema": _route_events_schema,
+}
+
+
 @pytest.mark.asyncio
 async def test_client_consumes_live_capability_and_run_contracts() -> None:
     requests: list[tuple[str, str, dict[str, Any]]] = []
@@ -307,92 +422,10 @@ async def test_client_consumes_live_capability_and_run_contracts() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         body = json.loads(request.content) if request.content else {}
         requests.append((request.method, request.url.path, body))
-        path = request.url.path
-        if path == "/api/capabilities":
-            assert request.url.params["include_actions"] == "true"
-            return httpx.Response(
-                200,
-                json={"status_code": 200, "data": _catalog_payload()},
-            )
-        if path == "/api/capabilities/demo_tool":
-            return httpx.Response(200, json=_descriptor_payload())
-        if path == "/api/capabilities/demo_tool/preflight":
-            assert set(body) == {"action", "inputs", "target"}
-            assert body["action"] == "inspect"
-            assert body["inputs"]["value"] == 7
-            return httpx.Response(200, json=_preflight_payload())
-        if path == "/api/capabilities/demo_tool/invoke":
-            assert body == {
-                "action": "inspect",
-                "inputs": {"action": "inspect", "value": 7},
-                "session_id": "session-stable-1",
-            }
-            return httpx.Response(
-                202,
-                json={
-                    "status": "running",
-                    "run_id": "run-1",
-                    "session_id": "session-stable-1",
-                    "result": {},
-                },
-            )
-        if path == "/api/capabilities/graph_mine/invoke":
-            expected_inputs = {
-                "action": "cluster",
-                "params_json": '{"features":[[1.0,2.0]]}',
-                "graph": "tenant-a",
-            }
-            if body.get("approval_id"):
-                assert body == {
-                    "action": "cluster",
-                    "inputs": expected_inputs,
-                    "approval_id": "approval-1",
-                    "run_id": "run-pending-1",
-                    "session_id": "session-stable-1",
-                }
-                return httpx.Response(
-                    202,
-                    json={
-                        "status": "running",
-                        "run_id": "run-pending-1",
-                        "session_id": "session-stable-1",
-                        "result": {},
-                    },
-                )
-            assert body == {
-                "action": "cluster",
-                "inputs": expected_inputs,
-                "session_id": "session-stable-1",
-            }
-            return httpx.Response(
-                202,
-                json={
-                    "status": "approval_required",
-                    "approval_id": "approval-1",
-                    "run_id": "run-pending-1",
-                    "session_id": "session-stable-1",
-                },
-            )
-        if path == "/api/runs/run-1":
-            return httpx.Response(200, json=_run_summary_payload())
-        if path == "/api/runs":
-            assert request.url.params["status"] == "completed"
-            return httpx.Response(
-                200,
-                json={
-                    "schema_version": "1.0",
-                    "count": 1,
-                    "runs": [_run_summary_payload()],
-                },
-            )
-        if path == "/api/runs/run-1/events":
-            assert request.url.params["after"] == "0"
-            return httpx.Response(200, json=_run_page_payload())
-        if path == "/api/events/schema":
-            return httpx.Response(
-                200, json={"schema_version": "1.0", "schema": {"type": "object"}}
-            )
-        return httpx.Response(404, json={"detail": "not found"})
+        route = _MOCK_GATEWAY_ROUTES.get(request.url.path)
+        if route is None:
+            return httpx.Response(404, json={"detail": "not found"})
+        return route(request, body)
 
     client = AgentClient("http://gateway.test")
     await client._http_client.aclose()
