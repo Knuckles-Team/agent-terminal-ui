@@ -114,6 +114,35 @@ class TemporalGraph(Vertical):
         self.tree.root.set_label(f"Graph @ {iso_ts or 'now'}")
         self.post_message(self.AsOfRequested(iso_ts, query))
 
+    @staticmethod
+    def _add_graph_node(
+        root: TreeNode[dict[str, Any]], node: dict[str, Any]
+    ) -> tuple[str, TreeNode[dict[str, Any]]]:
+        """Add one node under `root`; returns its (node_id, TreeNode)."""
+        node_id = str(node.get("id") or node.get("name") or "?")
+        label = str(node.get("name") or node.get("id") or "node")
+        child = root.add(f"[bold]{label}[/]", data=node, expand=False)
+        return node_id, child
+
+    @staticmethod
+    def _add_graph_edge(
+        root: TreeNode[dict[str, Any]],
+        children_by_id: dict[str, TreeNode[dict[str, Any]]],
+        edge: dict[str, Any],
+        iso_ts: str,
+    ) -> None:
+        """Attach one edge leaf under its source node, dimming if expired."""
+        source = str(edge.get("source", "?"))
+        target = str(edge.get("target", "?"))
+        rel = str(edge.get("type", "rel"))
+        parent = children_by_id.get(source)
+        if parent is None:
+            parent = root
+        if is_edge_expired(edge, iso_ts):
+            parent.add_leaf(f"[dim]{rel} → {target} (expired)[/]", data=edge)
+        else:
+            parent.add_leaf(f"{rel} → [primary]{target}[/]", data=edge)
+
     def render_as_of(
         self,
         nodes: list[dict[str, Any]],
@@ -139,21 +168,10 @@ class TemporalGraph(Vertical):
         # under their source without stashing attributes on the TreeNode.
         children_by_id: dict[str, TreeNode[dict[str, Any]]] = {}
         for node in nodes:
-            node_id = str(node.get("id") or node.get("name") or "?")
-            label = str(node.get("name") or node.get("id") or "node")
-            child = root.add(f"[bold]{label}[/]", data=node, expand=False)
+            node_id, child = self._add_graph_node(root, node)
             children_by_id[node_id] = child
 
         # Attach edges under their source node, dimming the expired ones.
         for edge in edges:
-            source = str(edge.get("source", "?"))
-            target = str(edge.get("target", "?"))
-            rel = str(edge.get("type", "rel"))
-            parent = children_by_id.get(source)
-            if parent is None:
-                parent = root
-            if is_edge_expired(edge, iso_ts):
-                parent.add_leaf(f"[dim]{rel} → {target} (expired)[/]", data=edge)
-            else:
-                parent.add_leaf(f"{rel} → [primary]{target}[/]", data=edge)
+            self._add_graph_edge(root, children_by_id, edge, iso_ts)
         root.expand()
