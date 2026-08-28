@@ -409,6 +409,100 @@ class TestConversation:
         assert conv._tool_blocks == {}
 
 
+class _FakeCappedSettings:
+    """Minimal stand-in for AppSettings exposing only ``get(key, default)``."""
+
+    def __init__(self, max_conversation_widgets: int) -> None:
+        self._max = max_conversation_widgets
+
+    def get(self, key, default=None):
+        if key == "max_conversation_widgets":
+            return self._max
+        return default
+
+
+class TestConversationPruning:
+    """Test Conversation._prune_old_widgets."""
+
+    @pytest.mark.asyncio
+    async def test_prune_keeps_only_the_configured_max(self):
+        """Only the newest `max_conversation_widgets` children survive."""
+        from textual.app import App, ComposeResult
+
+        from agent_terminal_ui.widgets.conversation import Conversation
+
+        class _Host(App):
+            settings = _FakeCappedSettings(3)
+
+            def compose(self) -> ComposeResult:
+                yield Conversation(id="conversation")
+
+        app = _Host()
+        async with app.run_test() as pilot:
+            conv = app.query_one(Conversation)
+            mounted = []
+            for i in range(5):
+                await conv.add_info(f"line {i}")
+                mounted.append(conv.window.children[-1])
+            await pilot.pause()
+
+            remaining = list(conv.window.children)
+            assert len(remaining) == 3
+            # The 2 oldest were pruned; the 3 newest survive.
+            assert mounted[0] not in remaining
+            assert mounted[1] not in remaining
+            assert mounted[2] in remaining
+            assert mounted[3] in remaining
+            assert mounted[4] in remaining
+
+    @pytest.mark.asyncio
+    async def test_prune_forgets_pruned_tool_blocks(self):
+        """A pruned tool-call widget's entry is removed from _tool_blocks too."""
+        from textual.app import App, ComposeResult
+
+        from agent_terminal_ui.widgets.conversation import Conversation
+
+        class _Host(App):
+            settings = _FakeCappedSettings(2)
+
+            def compose(self) -> ComposeResult:
+                yield Conversation(id="conversation")
+
+        app = _Host()
+        async with app.run_test() as pilot:
+            conv = app.query_one(Conversation)
+            await conv.add_tool_call("read", call_id="c1")
+            await conv.add_tool_call("write", call_id="c2")
+            await conv.add_tool_call("delete", call_id="c3")
+            await pilot.pause()
+
+            assert "c1" not in conv._tool_blocks
+            assert "c2" in conv._tool_blocks
+            assert "c3" in conv._tool_blocks
+            assert len(conv.window.children) == 2
+
+    @pytest.mark.asyncio
+    async def test_prune_falls_back_to_default_when_settings_unavailable(self):
+        """No `app.settings` (or a raising lookup) falls back to a cap of 50."""
+        from textual.app import App, ComposeResult
+
+        from agent_terminal_ui.widgets.conversation import Conversation
+
+        class _Host(App):
+            def compose(self) -> ComposeResult:
+                yield Conversation(id="conversation")
+
+        app = _Host()
+        async with app.run_test() as pilot:
+            conv = app.query_one(Conversation)
+            for i in range(5):
+                await conv.add_info(f"line {i}")
+            await pilot.pause()
+
+            # Well under the default cap of 50, so nothing was pruned.
+            assert len(conv.window.children) == 5
+
+
 # ── Tools Sidebar Tests ──
 
 
