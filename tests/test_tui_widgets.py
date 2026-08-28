@@ -214,6 +214,53 @@ class TestSettings:
         os.unlink(f.name)
 
 
+# ── Settings Screen Tests ──
+
+
+class TestSettingsScreen:
+    """Test the SettingsScreen's schema-driven form composition."""
+
+    @pytest.mark.asyncio
+    async def test_compose_generates_one_input_per_editable_setting_type(self):
+        """compose() yields the right widget kind (Input/Checkbox/Select) per
+        setting type, one per editable schema entry, with correct values."""
+        from textual.app import App, ComposeResult
+        from textual.widgets import Checkbox, Input, Select
+
+        from agent_terminal_ui.screens.settings import SettingsScreen
+        from agent_terminal_ui.settings import SETTINGS_SCHEMA, AppSettings
+
+        with tempfile.NamedTemporaryFile(suffix=".toml", delete=False) as f:
+            settings = AppSettings(settings_file=Path(f.name))
+
+        class _Host(App):
+            def compose(self) -> ComposeResult:
+                yield from ()
+
+        app = _Host()
+        try:
+            async with app.run_test() as pilot:
+                await app.push_screen(SettingsScreen(settings))
+                await pilot.pause()
+
+                screen = app.screen
+                assert isinstance(screen, SettingsScreen)
+
+                editable = [s for s in SETTINGS_SCHEMA if s.editable]
+                input_widgets = list(screen.query(".setting-input"))
+                assert len(input_widgets) == len(editable)
+
+                widgets_by_name = {w.name: w for w in input_widgets}
+                assert isinstance(widgets_by_name["theme"], Select)
+                assert isinstance(widgets_by_name["sidebar_visible"], Checkbox)
+                assert widgets_by_name["sidebar_visible"].value is True
+                assert isinstance(widgets_by_name["shell_command"], Input)
+                assert isinstance(widgets_by_name["max_log_lines"], Input)
+                assert widgets_by_name["max_log_lines"].value == "1000"
+        finally:
+            os.unlink(f.name)
+
+
 # ── Widget Unit Tests ──
 
 
