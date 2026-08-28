@@ -2,9 +2,28 @@
 
 import tempfile
 from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+
+from agent_terminal_ui.client import _load_skill_entry
+
+
+def _mock_skills_from_dir(skills_dir: Path) -> list[dict[str, Any]]:
+    """Build the list a ``_load_skills_from_filesystem`` fallback would.
+
+    Reuses the production per-skill parser (`_load_skill_entry`) so this
+    test double can't drift from what it stands in for -- see the same
+    pattern in tests/text_universal_skills.py.
+    """
+    if not skills_dir.exists():
+        return []
+    return [
+        _load_skill_entry(skill_dir)
+        for skill_dir in skills_dir.iterdir()
+        if skill_dir.is_dir()
+    ]
 
 
 @pytest.fixture
@@ -565,33 +584,7 @@ class TestSkillFileSystemLoading:
             # Temporarily override the workspace root to point to our temp dir
 
             async def mock_load():
-                # Manually set up the skills directory
-                client_skills_dir = Path(temp_dir) / "skills"
-                if client_skills_dir.exists():
-                    skills = []
-                    for skill_dir in client_skills_dir.iterdir():
-                        if skill_dir.is_dir():
-                            skill_id = skill_dir.name
-                            skill_md = skill_dir / "SKILL.md"
-                            description = ""
-                            if skill_md.exists():
-                                content = skill_md.read_text(encoding="utf-8")
-                                for line in content.split("\n"):
-                                    line = line.strip()
-                                    if line and not line.startswith("#"):
-                                        description = line
-                                        break
-
-                            skills.append(
-                                {
-                                    "id": skill_id,
-                                    "name": skill_id,
-                                    "description": description,
-                                }
-                            )
-
-                    return skills
-                return []
+                return _mock_skills_from_dir(Path(temp_dir) / "skills")
 
             client._load_skills_from_filesystem = mock_load  # type: ignore[method-assign]
 
