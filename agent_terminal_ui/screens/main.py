@@ -12,8 +12,9 @@ from __future__ import annotations
 import contextlib
 import logging
 import os
+from collections.abc import Awaitable, Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from textual import work
 from textual.app import ComposeResult
@@ -31,6 +32,17 @@ from agent_terminal_ui.widgets.temporal_graph import TemporalGraph
 from agent_terminal_ui.widgets.workflow import WorkflowSidebar
 
 logger = logging.getLogger(__name__)
+
+
+class _MockAgentToolCallEvent:
+    """Adapts a plain event-data dict to attribute access, matching the
+    `AgentToolCallEvent` protocol the tool_display formatters expect."""
+
+    def __init__(self, data: dict[str, Any]) -> None:
+        self.__dict__.update(data)
+
+    def __getattr__(self, name: str) -> Any:
+        return self.__dict__.get(name)
 
 
 class MainScreen(Screen):
@@ -168,126 +180,155 @@ class MainScreen(Screen):
         conversation = self.query_one("#conversation", Conversation)
         event_type = event.get("type")
 
-        if event_type == "text":
-            content = event.get("content", "")
-            agent_name = event.get("agent_name", "main")
-            await conversation.add_agent_response(content, agent_name=agent_name)
+        handler = self._EVENT_HANDLERS.get(event_type)
+        if handler is not None:
+            await handler(self, conversation, event)
+            return
 
-        elif event_type == "text_delta":
-            delta = event.get("content", "")
-            agent_name = event.get("agent_name", "main")
-            if conversation._current_response is None:
-                await conversation.start_agent_response(agent_name=agent_name)
-            await conversation.append_to_response(delta)
+        # NOTE: since "text" is dispatched above via _EVENT_HANDLERS, the
+        # `event_type == "text" and "[DONE]" in ...` half of this condition
+        # is unreachable in practice (an existing quirk, preserved as-is --
+        # see the module's known-issues notes).
+        if event_type == "turn_end" or (
+            event_type == "text" and "[DONE]" in event.get("content", "")
+        ):
+            self._handle_turn_end_display(conversation, event)
 
-        elif event_type == "tool_call":
-            data = event.get("data", {})
-            call_id = data.get("call_id", "")
-            tool_name = data.get("name", "unknown_tool")
-            agent_name = data.get("agent_name", "main")
-            needs_approval = data.get("needs_approval", False)
-            status = "pending" if needs_approval else "in_progress"
+    async def _handle_text_event(
+        self, conversation: Conversation, event: dict[str, Any]
+    ) -> None:
+        content = event.get("content", "")
+        agent_name = event.get("agent_name", "main")
+        await conversation.add_agent_response(content, agent_name=agent_name)
 
-            # Format tool args
-            from agent_terminal_ui.tui.tool_display._registry import get_formatter
+    async def _handle_text_delta_event(
+        self, conversation: Conversation, event: dict[str, Any]
+    ) -> None:
+        delta = event.get("content", "")
+        agent_name = event.get("agent_name", "main")
+        if conversation._current_response is None:
+            await conversation.start_agent_response(agent_name=agent_name)
+        await conversation.append_to_response(delta)
 
-            class MockEvent:
-                def __init__(self, d):
-                    self.__dict__.update(d)
+    async def _handle_tool_call_event(
+        self, conversation: Conversation, event: dict[str, Any]
+    ) -> None:
+        data = event.get("data", {})
+        call_id = data.get("call_id", "")
+        tool_name = data.get("name", "unknown_tool")
+        agent_name = data.get("agent_name", "main")
+        needs_approval = data.get("needs_approval", False)
+        status = "pending" if needs_approval else "in_progress"
 
-                def __getattr__(self, n):
-                    return self.__dict__.get(n)
+        # Format tool args
+        from agent_terminal_ui.tui.tool_display._registry import get_formatter
 
-            formatter = get_formatter(tool_name)
-            args_str = formatter.format_call_header(MockEvent(data))
+        formatter = get_formatter(tool_name)
+        args_str = formatter.format_call_header(_MockAgentToolCallEvent(data))
 
-            if tool_name != "todo_write":
-                await conversation.add_tool_call(
-                    tool_name,
-                    args_str,
-                    status=status,
-                    agent_name=agent_name,
-                    call_id=call_id,
-                )
+        if tool_name != "todo_write":
+            await conversation.add_tool_call(
+                tool_name,
+                args_str,
+                status=status,
+                agent_name=agent_name,
+                call_id=call_id,
+            )
 
-            # If has output already
-            if "output" in data:
-                summary = formatter.format_output_summary(MockEvent(data))
-                details = formatter.format_output_details(MockEvent(data))
-                await conversation.update_tool_call(
-                    call_id,
-                    status="completed",
-                    content=summary,
-                    details=details,
-                )
-
-        elif event_type == "tool_output":
-            data = event.get("data", {})
-            call_id = data.get("call_id", "")
-            tool_name = data.get("name", "unknown_tool")
-
-            from agent_terminal_ui.tui.tool_display._registry import get_formatter
-
-            class MockEvent2:
-                def __init__(self, d):
-                    self.__dict__.update(d)
-
-                def __getattr__(self, n):
-                    return self.__dict__.get(n)
-
-            formatter = get_formatter(tool_name)
-            summary = formatter.format_output_summary(MockEvent2(data))
-            details = formatter.format_output_details(MockEvent2(data))
-
-            status = "failed" if data.get("error") else "completed"
+        # If has output already
+        if "output" in data:
+            summary = formatter.format_output_summary(_MockAgentToolCallEvent(data))
+            details = formatter.format_output_details(_MockAgentToolCallEvent(data))
             await conversation.update_tool_call(
                 call_id,
-                status=status,
+                status="completed",
                 content=summary,
                 details=details,
             )
 
-        elif event_type == "usage":
-            data = event.get("data", {})
+    async def _handle_tool_output_event(
+        self, conversation: Conversation, event: dict[str, Any]
+    ) -> None:
+        data = event.get("data", {})
+        call_id = data.get("call_id", "")
+        tool_name = data.get("name", "unknown_tool")
+
+        from agent_terminal_ui.tui.tool_display._registry import get_formatter
+
+        formatter = get_formatter(tool_name)
+        summary = formatter.format_output_summary(_MockAgentToolCallEvent(data))
+        details = formatter.format_output_details(_MockAgentToolCallEvent(data))
+
+        status = "failed" if data.get("error") else "completed"
+        await conversation.update_tool_call(
+            call_id,
+            status=status,
+            content=summary,
+            details=details,
+        )
+
+    async def _handle_usage_display_event(
+        self, _conversation: Conversation, event: dict[str, Any]
+    ) -> None:
+        data = event.get("data", {})
+        with contextlib.suppress(Exception):
+            self.query_one(StatusLine).update_usage(data)
+
+    async def _handle_sideband_event(
+        self, _conversation: Conversation, event: dict[str, Any]
+    ) -> None:
+        data = event.get("data", {})
+        node = data.get("node")
+        if not node:
+            inner = data.get("data", data)
+            graph_event = inner.get("event", "")
+            if graph_event == "specialist_enter":
+                node = inner.get("agent", inner.get("node_id"))
+            elif graph_event == "specialist_exit":
+                node = inner.get("agent", inner.get("node_id"))
+                if node:
+                    with contextlib.suppress(Exception):
+                        self.query_one(WorkflowSidebar).update_state(
+                            node, status="completed"
+                        )
+                    return
+            elif graph_event in ("routing_started", "routing_completed"):
+                node = "router"
+            elif graph_event == "verification_result":
+                node = "verifier"
+        if node:
             with contextlib.suppress(Exception):
-                self.query_one(StatusLine).update_usage(data)
+                self.query_one(WorkflowSidebar).update_state(node)
 
-        elif event_type == "sideband":
-            data = event.get("data", {})
-            node = data.get("node")
-            if not node:
-                inner = data.get("data", data)
-                graph_event = inner.get("event", "")
-                if graph_event == "specialist_enter":
-                    node = inner.get("agent", inner.get("node_id"))
-                elif graph_event == "specialist_exit":
-                    node = inner.get("agent", inner.get("node_id"))
-                    if node:
-                        with contextlib.suppress(Exception):
-                            self.query_one(WorkflowSidebar).update_state(
-                                node, status="completed"
-                            )
-                        return
-                elif graph_event in ("routing_started", "routing_completed"):
-                    node = "router"
-                elif graph_event == "verification_result":
-                    node = "verifier"
-            if node:
-                with contextlib.suppress(Exception):
-                    self.query_one(WorkflowSidebar).update_state(node)
+    async def _handle_error_display_event(
+        self, conversation: Conversation, event: dict[str, Any]
+    ) -> None:
+        error_message = event.get("message", "An unknown error occurred")
+        await conversation.add_error(error_message)
 
-        elif event_type == "error":
-            error_message = event.get("message", "An unknown error occurred")
-            await conversation.add_error(error_message)
+    #: Dispatch table for `handle_agent_event`, keyed by `event["type"]`.
+    #: "turn_end" (and the text+"[DONE]" case) is handled separately below
+    #: since it isn't a simple one-shot per-type handler.
+    _EVENT_HANDLERS: ClassVar[
+        dict[str, Callable[["MainScreen", Conversation, dict[str, Any]], Awaitable[None]]]
+    ] = {
+        "text": _handle_text_event,
+        "text_delta": _handle_text_delta_event,
+        "tool_call": _handle_tool_call_event,
+        "tool_output": _handle_tool_output_event,
+        "usage": _handle_usage_display_event,
+        "sideband": _handle_sideband_event,
+        "error": _handle_error_display_event,
+    }
 
-        elif event_type == "turn_end" or (
-            event_type == "text" and "[DONE]" in event.get("content", "")
-        ):
-            conversation.finish_agent_response()
-            conversation.stop_thinking()
-            if "usage" in event:
-                with contextlib.suppress(Exception):
-                    self.query_one(StatusLine).update_usage(event["usage"])
+    def _handle_turn_end_display(
+        self, conversation: Conversation, event: dict[str, Any]
+    ) -> None:
+        conversation.finish_agent_response()
+        conversation.stop_thinking()
+        if "usage" in event:
+            with contextlib.suppress(Exception):
+                self.query_one(StatusLine).update_usage(event["usage"])
 
     def start_processing(self) -> None:
         """Show thinking indicators."""
