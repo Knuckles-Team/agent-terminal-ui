@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import itertools
 import json
 import sys
 import tomllib
@@ -58,31 +59,46 @@ def _exercise(suffix: str, payload: bytes) -> None:
         tomllib.loads(text)
 
 
-def main() -> int:
-    if len(sys.argv) != 2:
-        return 2
-    corpus = _corpus(Path.cwd()) or [(".json", b'{"seed": true}')]
+def _bounded_cases(
+    corpus: list[tuple[str, bytes]], limit: int
+) -> list[tuple[str, bytes]]:
+    """The exactly-`limit` (suffix, mutation) cases to exercise.
+
+    One pass through the corpus produces `len(corpus) * len(_mutations(...))`
+    cases; if that is fewer than `limit`, the corpus is replayed from the
+    start to fill the budget (same bounded-budget behaviour the original
+    inline while/for/for loop had).
+    """
+    all_cases = [
+        (suffix, mutation)
+        for suffix, payload in corpus
+        for mutation in _mutations(payload)
+    ]
+    if not all_cases:
+        return []
+    return list(itertools.islice(itertools.cycle(all_cases), limit))
+
+
+def _run_cases(corpus: list[tuple[str, bytes]], limit: int) -> tuple[int, int]:
+    """Exercise mutated corpus entries until exactly `limit` cases have run.
+
+    Returns (cases_run, crash_count); a "crash" is any exception other than
+    the three expected parse-failure classes.
+    """
     cases = 0
     crashes = 0
-    while cases < 64:
-        for suffix, payload in corpus:
-            for mutation in _mutations(payload):
-                try:
-                    _exercise(suffix, mutation)
-                except (
-                    UnicodeDecodeError,
-                    json.JSONDecodeError,
-                    tomllib.TOMLDecodeError,
-                ):
-                    pass
-                except Exception:
-                    crashes += 1
-                cases += 1
-                if cases >= 64:
-                    break
-            if cases >= 64:
-                break
-    output = Path(sys.argv[1])
+    for suffix, mutation in _bounded_cases(corpus, limit):
+        try:
+            _exercise(suffix, mutation)
+        except (UnicodeDecodeError, json.JSONDecodeError, tomllib.TOMLDecodeError):
+            pass
+        except Exception:
+            crashes += 1
+        cases += 1
+    return cases, crashes
+
+
+def _write_result(output: Path, cases: int, crashes: int) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(
         json.dumps(
@@ -98,6 +114,14 @@ def main() -> int:
         ),
         encoding="utf-8",
     )
+
+
+def main() -> int:
+    if len(sys.argv) != 2:
+        return 2
+    corpus = _corpus(Path.cwd()) or [(".json", b'{"seed": true}')]
+    cases, crashes = _run_cases(corpus, 64)
+    _write_result(Path(sys.argv[1]), cases, crashes)
     return 0 if crashes == 0 else 1
 
 
