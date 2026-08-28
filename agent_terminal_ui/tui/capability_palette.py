@@ -142,6 +142,18 @@ class _PendingCapabilityApproval:
     invocation: CapabilityInvocation
 
 
+@dataclass(frozen=True, slots=True)
+class _InvocationRouting:
+    """The target/approval/run/session identifiers threaded through one
+    governed invocation call, bundled to keep `_call_invoke_capability`'s
+    signature under the wave's parameter cap."""
+
+    target: str | None
+    approval_id: str | None
+    run_id: str | None
+    session_id: str
+
+
 class CapabilityPaletteScreen(ModalScreen[None]):
     """Search capabilities, generate inputs from schemas, and invoke safely."""
 
@@ -450,9 +462,8 @@ class CapabilityPaletteScreen(ModalScreen[None]):
         self.descriptor = descriptor
         await self._render_descriptor(descriptor, action_id=action_id)
 
-    async def _render_descriptor(
-        self, descriptor: CapabilityDescriptor, *, action_id: str | None = None
-    ) -> None:
+    def _descriptor_summary_lines(self, descriptor: CapabilityDescriptor) -> list[str]:
+        """Status/availability summary lines for the description panel."""
         availability = descriptor.availability
         missing = ", ".join(availability.missing_preconditions)
         renderer = str(descriptor.render.get("renderer") or "json")
@@ -470,8 +481,12 @@ class CapabilityPaletteScreen(ModalScreen[None]):
             lines.append(
                 "[cyan]Callable now; the first invocation will warm the backend.[/cyan]"
             )
-        self.query_one("#capability-description", Static).update("\n".join(lines))
+        return lines
 
+    def _update_action_select(
+        self, descriptor: CapabilityDescriptor, action_id: str | None
+    ) -> CapabilityAction | None:
+        """Populate the action select and resolve which action is selected."""
         action_select = self.query_one("#capability-action-select", Select)
         actions = descriptor.actions
         action_select.set_options(
@@ -486,6 +501,15 @@ class CapabilityPaletteScreen(ModalScreen[None]):
         if selected is not None:
             action_select.value = selected.id
         self._suppress_action_change = False
+        return selected
+
+    async def _render_descriptor(
+        self, descriptor: CapabilityDescriptor, *, action_id: str | None = None
+    ) -> None:
+        lines = self._descriptor_summary_lines(descriptor)
+        self.query_one("#capability-description", Static).update("\n".join(lines))
+
+        selected = self._update_action_select(descriptor, action_id)
 
         if selected is not None:
             await self._render_action(selected)
@@ -504,13 +528,8 @@ class CapabilityPaletteScreen(ModalScreen[None]):
             "unavailable": "red",
         }.get(status, "dim")
 
-    async def _render_action(self, action: CapabilityAction) -> None:
-        self.capability_action = action
-        self.form_fields = schema_fields(action.input_schema)
-        self.field_widget_ids = {}
-        self.preflight = None
-        self.query_one("#capability-preflight", Static).update("")
-        self.query_one("#capability-result", Static).update("")
+    def _action_contract_lines(self, action: CapabilityAction) -> list[str]:
+        """Governed-invoke / legacy-REST contract summary for one action."""
         route = action.rest_route or "not registered"
         encoding = action.request_encoding or "not declared"
         mutates = action.side_effects.mutates
@@ -522,54 +541,62 @@ class CapabilityPaletteScreen(ModalScreen[None]):
             if self.descriptor
             else "unknown"
         )
-        self.query_one("#capability-action-contract", Static).update(
-            "\n".join(
-                (
-                    f"[bold]Action contract[/bold]: {escape(action.id)}",
-                    f"Governed invoke: {escape(invoke_route)}",
-                    f"Legacy direct REST: {escape(route)} ({escape(encoding)}; "
-                    f"frontend executable: {action.frontend_executable})",
-                    f"Asynchronous result event: {escape(eventual_event)}",
-                    f"Mutates: {mutates}",
-                )
-            )
+        return [
+            f"[bold]Action contract[/bold]: {escape(action.id)}",
+            f"Governed invoke: {escape(invoke_route)}",
+            f"Legacy direct REST: {escape(route)} ({escape(encoding)}; "
+            f"frontend executable: {action.frontend_executable})",
+            f"Asynchronous result event: {escape(eventual_event)}",
+            f"Mutates: {mutates}",
+        ]
+
+    @staticmethod
+    def _field_detail_text(schema_field: SchemaField) -> str:
+        """Human-readable type/requirement/enum/description summary for a field."""
+        requirement = "required" if schema_field.required else "optional"
+        description = schema_field.description
+        enum = schema_field.schema.get("enum")
+        detail = f"{schema_field.kind}, {requirement}"
+        if isinstance(enum, list):
+            detail += "; choices: " + ", ".join(str(item) for item in enum)
+        if description:
+            detail += f". {description}"
+        return detail
+
+    def _build_field_widget_pair(
+        self, index: int, schema_field: SchemaField
+    ) -> tuple[Static, Input]:
+        """The (label, input) widget pair for one schema-driven form field."""
+        widget_id = f"capability-field-{index}"
+        self.field_widget_ids[schema_field.name] = widget_id
+        detail = self._field_detail_text(schema_field)
+        label = Static(
+            f"[bold]{escape(schema_field.name)}[/bold] [dim]{escape(detail)}[/dim]",
+            classes="capability-field-label",
         )
+        lowered = schema_field.name.lower()
+        field_input = Input(
+            value=schema_default_text(schema_field),
+            placeholder=f"Enter {schema_field.kind}",
+            password=any(
+                secret in lowered
+                for secret in ("password", "secret", "token", "api_key")
+            ),
+            id=widget_id,
+            classes="capability-field-input",
+            disabled="const" in schema_field.schema,
+        )
+        return label, field_input
+
+    async def _render_form_fields(self) -> None:
+        """(Re)mount the input widgets for the current action's form fields."""
         container = self.query_one("#capability-form-fields", Vertical)
         await container.remove_children()
 
         widgets: list[Static | Input] = []
         for index, schema_field in enumerate(self.form_fields):
-            widget_id = f"capability-field-{index}"
-            self.field_widget_ids[schema_field.name] = widget_id
-            requirement = "required" if schema_field.required else "optional"
-            description = schema_field.description
-            enum = schema_field.schema.get("enum")
-            detail = f"{schema_field.kind}, {requirement}"
-            if isinstance(enum, list):
-                detail += "; choices: " + ", ".join(str(item) for item in enum)
-            if description:
-                detail += f". {description}"
-            widgets.append(
-                Static(
-                    f"[bold]{escape(schema_field.name)}[/bold] "
-                    f"[dim]{escape(detail)}[/dim]",
-                    classes="capability-field-label",
-                )
-            )
-            lowered = schema_field.name.lower()
-            widgets.append(
-                Input(
-                    value=schema_default_text(schema_field),
-                    placeholder=f"Enter {schema_field.kind}",
-                    password=any(
-                        secret in lowered
-                        for secret in ("password", "secret", "token", "api_key")
-                    ),
-                    id=widget_id,
-                    classes="capability-field-input",
-                    disabled="const" in schema_field.schema,
-                )
-            )
+            widgets.extend(self._build_field_widget_pair(index, schema_field))
+
         if widgets:
             await container.mount(*widgets)
         else:
@@ -577,6 +604,8 @@ class CapabilityPaletteScreen(ModalScreen[None]):
                 Static("[dim]This action declares no input fields.[/dim]")
             )
 
+    def _update_invoke_controls(self, action: CapabilityAction) -> None:
+        """Enable/disable the preflight and invoke buttons for this action."""
         enabled = self._detail_live
         invocable = self._action_invocable(action)
         self.query_one("#capability-preflight-button", Button).disabled = not enabled
@@ -592,6 +621,19 @@ class CapabilityPaletteScreen(ModalScreen[None]):
                 "unavailable.",
                 color="yellow",
             )
+
+    async def _render_action(self, action: CapabilityAction) -> None:
+        self.capability_action = action
+        self.form_fields = schema_fields(action.input_schema)
+        self.field_widget_ids = {}
+        self.preflight = None
+        self.query_one("#capability-preflight", Static).update("")
+        self.query_one("#capability-result", Static).update("")
+        self.query_one("#capability-action-contract", Static).update(
+            "\n".join(self._action_contract_lines(action))
+        )
+        await self._render_form_fields()
+        self._update_invoke_controls(action)
 
     @staticmethod
     def _action_invocable(action: CapabilityAction | None) -> bool:
@@ -736,17 +778,14 @@ class CapabilityPaletteScreen(ModalScreen[None]):
             return
         await self._invoke(descriptor, action, inputs)
 
-    async def _invoke(
-        self,
-        descriptor: CapabilityDescriptor,
-        action: CapabilityAction,
-        inputs: dict[str, Any],
-        *,
-        target: str | None = None,
-        approval_id: str | None = None,
-        run_id: str | None = None,
-        session_id: str | None = None,
-    ) -> None:
+    async def _resolve_invocation_session_id(
+        self, session_id: str | None
+    ) -> str | None:
+        """Resolve (or create) the stable session id for a governed invocation.
+
+        On failure, sets the palette status itself and returns None -- the
+        caller should treat a None result as "already reported, stop here."
+        """
         if session_id is None:
             try:
                 session_id = await self._stable_session_id()
@@ -756,90 +795,101 @@ class CapabilityPaletteScreen(ModalScreen[None]):
                     f"created: {type(exc).__name__}: {exc}",
                     color="yellow",
                 )
-                return
+                return None
         if not session_id:
             self._set_status(
                 "Invocation blocked because no stable session identity is available.",
                 color="yellow",
             )
-            return
+            return None
+        return session_id
 
+    async def _call_invoke_capability(
+        self,
+        descriptor: CapabilityDescriptor,
+        action: CapabilityAction,
+        inputs: dict[str, Any],
+        routing: _InvocationRouting,
+    ) -> CapabilityInvocation | None:
+        """Call the gateway's governed invoke boundary; report and return None
+        on failure so the caller can stop."""
         self._set_status(
             "Invoking through the gateway's governed capability boundary..."
         )
         try:
-            invocation = await self.client.invoke_capability(
+            return await self.client.invoke_capability(
                 descriptor.id,
                 inputs,
                 action=action.id,
-                target=target,
-                approval_id=approval_id,
-                run_id=run_id,
-                session_id=session_id,
+                target=routing.target,
+                approval_id=routing.approval_id,
+                run_id=routing.run_id,
+                session_id=routing.session_id,
             )
         except Exception as exc:
             self._set_status(
                 f"Invocation failed: {type(exc).__name__}: {exc}", color="red"
             )
-            return
+            return None
 
-        result = invocation.result
-        rendered = json.dumps(result, indent=2, sort_keys=True, default=str)
+    def _render_invocation_result(self, invocation: CapabilityInvocation) -> None:
+        rendered = json.dumps(invocation.result, indent=2, sort_keys=True, default=str)
         self.query_one("#capability-result", Static).update(
             Syntax(rendered, "json", word_wrap=True)
         )
 
-        self._remember_invocation_identity(invocation)
-        if invocation.approval_required:
-            if not (
-                invocation.approval_id and invocation.run_id and invocation.session_id
-            ):
-                self._set_status(
-                    "The gateway requested approval without complete server-bound "
-                    "approval, run, and session identities; automatic resume is "
-                    "disabled.",
-                    color="red",
-                )
-                return
-            self._pending_approval = _PendingCapabilityApproval(
-                descriptor=descriptor,
-                action=action,
-                inputs=copy.deepcopy(inputs),
-                target=target,
-                invocation=invocation,
-            )
-            self._set_approval_buttons(enabled=True)
-            self.query_one("#capability-preflight-button", Button).disabled = True
-            self.query_one("#capability-invoke-button", Button).disabled = True
+    def _handle_invocation_approval_required(
+        self,
+        descriptor: CapabilityDescriptor,
+        action: CapabilityAction,
+        inputs: dict[str, Any],
+        target: str | None,
+        invocation: CapabilityInvocation,
+    ) -> None:
+        if not (
+            invocation.approval_id and invocation.run_id and invocation.session_id
+        ):
             self._set_status(
-                f"Run {invocation.run_id} is waiting for approval "
-                f"{invocation.approval_id}. Approve to resume this exact request, "
-                "or deny it.",
+                "The gateway requested approval without complete server-bound "
+                "approval, run, and session identities; automatic resume is "
+                "disabled.",
+                color="red",
+            )
+            return
+        self._pending_approval = _PendingCapabilityApproval(
+            descriptor=descriptor,
+            action=action,
+            inputs=copy.deepcopy(inputs),
+            target=target,
+            invocation=invocation,
+        )
+        self._set_approval_buttons(enabled=True)
+        self.query_one("#capability-preflight-button", Button).disabled = True
+        self.query_one("#capability-invoke-button", Button).disabled = True
+        self._set_status(
+            f"Run {invocation.run_id} is waiting for approval "
+            f"{invocation.approval_id}. Approve to resume this exact request, "
+            "or deny it.",
+            color="yellow",
+        )
+
+    def _handle_invocation_accepted(self) -> None:
+        self._pending_approval = None
+        self._set_approval_buttons(enabled=False)
+        if self.run_id:
+            self._set_status(
+                f"Invocation accepted. Run {self.run_id} is executing; inspect "
+                "its events for the eventual tool_result.",
+                color="cyan",
+            )
+        else:
+            self._set_status(
+                "The gateway accepted execution without a run_id; lifecycle "
+                "tracking is unavailable.",
                 color="yellow",
             )
-            return
 
-        if invocation.accepted:
-            self._pending_approval = None
-            self._set_approval_buttons(enabled=False)
-            if self.run_id:
-                self._set_status(
-                    f"Invocation accepted. Run {self.run_id} is executing; inspect "
-                    "its events for the eventual tool_result.",
-                    color="cyan",
-                )
-            else:
-                self._set_status(
-                    "The gateway accepted execution without a run_id; lifecycle "
-                    "tracking is unavailable.",
-                    color="yellow",
-                )
-            return
-
-        if not invocation.succeeded:
-            self._set_status("The gateway returned an error result.", color="red")
-            return
-
+    def _handle_invocation_completed(self) -> None:
         self._pending_approval = None
         self._set_approval_buttons(enabled=False)
         if self.run_id:
@@ -853,6 +903,52 @@ class CapabilityPaletteScreen(ModalScreen[None]):
                 "for this result.",
                 color="green",
             )
+
+    async def _invoke(
+        self,
+        descriptor: CapabilityDescriptor,
+        action: CapabilityAction,
+        inputs: dict[str, Any],
+        *,
+        target: str | None = None,
+        approval_id: str | None = None,
+        run_id: str | None = None,
+        session_id: str | None = None,
+    ) -> None:
+        resolved_session_id = await self._resolve_invocation_session_id(session_id)
+        if resolved_session_id is None:
+            return
+
+        routing = _InvocationRouting(
+            target=target,
+            approval_id=approval_id,
+            run_id=run_id,
+            session_id=resolved_session_id,
+        )
+        invocation = await self._call_invoke_capability(
+            descriptor, action, inputs, routing
+        )
+        if invocation is None:
+            return
+
+        self._render_invocation_result(invocation)
+
+        self._remember_invocation_identity(invocation)
+        if invocation.approval_required:
+            self._handle_invocation_approval_required(
+                descriptor, action, inputs, target, invocation
+            )
+            return
+
+        if invocation.accepted:
+            self._handle_invocation_accepted()
+            return
+
+        if not invocation.succeeded:
+            self._set_status("The gateway returned an error result.", color="red")
+            return
+
+        self._handle_invocation_completed()
 
     async def _stable_session_id(self) -> str | None:
         """Return or create the stable session used by governed executions."""
