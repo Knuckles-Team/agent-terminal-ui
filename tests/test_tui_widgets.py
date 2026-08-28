@@ -167,6 +167,52 @@ class TestSettings:
         assert "theme" in settings
         os.unlink(f.name)
 
+    def test_env_var_overrides_boolean_setting(self, monkeypatch):
+        """A boolean-typed setting's env override is coerced to bool."""
+        from agent_terminal_ui.settings import AppSettings
+
+        with tempfile.NamedTemporaryFile(suffix=".toml", delete=False) as f:
+            settings = AppSettings(settings_file=Path(f.name))
+
+        monkeypatch.setenv("SIDEBAR_VISIBLE", "false")
+        assert settings.get("sidebar_visible") is False
+        monkeypatch.setenv("SIDEBAR_VISIBLE", "1")
+        assert settings.get("sidebar_visible") is True
+        os.unlink(f.name)
+
+    def test_env_var_overrides_integer_setting(self, monkeypatch):
+        """An integer-typed setting's env override is coerced to int."""
+        from agent_terminal_ui.settings import AppSettings
+
+        with tempfile.NamedTemporaryFile(suffix=".toml", delete=False) as f:
+            settings = AppSettings(settings_file=Path(f.name))
+
+        monkeypatch.setenv("MAX_LOG_LINES", "500")
+        assert settings.get("max_log_lines") == 500
+        os.unlink(f.name)
+
+    def test_env_var_invalid_integer_falls_back_to_raw_string(self, monkeypatch):
+        """An unparseable integer override returns the raw string, not an error."""
+        from agent_terminal_ui.settings import AppSettings
+
+        with tempfile.NamedTemporaryFile(suffix=".toml", delete=False) as f:
+            settings = AppSettings(settings_file=Path(f.name))
+
+        monkeypatch.setenv("MAX_LOG_LINES", "not-a-number")
+        assert settings.get("max_log_lines") == "not-a-number"
+        os.unlink(f.name)
+
+    def test_env_var_override_for_unknown_key_returns_raw_string(self, monkeypatch):
+        """A key with no schema entry gets its raw env value, uncoerced."""
+        from agent_terminal_ui.settings import AppSettings
+
+        with tempfile.NamedTemporaryFile(suffix=".toml", delete=False) as f:
+            settings = AppSettings(settings_file=Path(f.name))
+
+        monkeypatch.setenv("NOT_IN_SCHEMA", "raw-value")
+        assert settings.get("not_in_schema") == "raw-value"
+        os.unlink(f.name)
+
 
 # ── Widget Unit Tests ──
 
