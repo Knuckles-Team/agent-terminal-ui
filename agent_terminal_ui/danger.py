@@ -198,6 +198,34 @@ DESTRUCTIVE_PATTERNS = [
 ]
 
 
+def _matches_any_pattern(command: str, patterns: list[re.Pattern[str]]) -> bool:
+    return any(pattern.search(command) for pattern in patterns)
+
+
+def _classify_sudo_command(command: str) -> DangerLevel:
+    """Classify a ``sudo ...`` command by its inner command's danger level.
+
+    A sudo'd SAFE command is elevated to DANGEROUS; any already-elevated
+    inner level (DANGEROUS/DESTRUCTIVE) passes through unchanged.
+    """
+    inner = command[5:].strip()
+    inner_level = classify_command(inner)
+    if inner_level == DangerLevel.SAFE:
+        return DangerLevel.DANGEROUS
+    return inner_level
+
+
+def _classify_base_command(base_cmd: str) -> DangerLevel:
+    """Classify by exact base-command membership in the three known sets."""
+    if base_cmd in DESTRUCTIVE_COMMANDS:
+        return DangerLevel.DESTRUCTIVE
+    if base_cmd in DANGEROUS_COMMANDS:
+        return DangerLevel.DANGEROUS
+    if base_cmd in SAFE_COMMANDS:
+        return DangerLevel.SAFE
+    return DangerLevel.UNKNOWN
+
+
 def classify_command(command: str) -> DangerLevel:
     """Classify the danger level of a shell command.
 
@@ -212,36 +240,20 @@ def classify_command(command: str) -> DangerLevel:
         return DangerLevel.SAFE
 
     # Check destructive patterns first
-    for pattern in DESTRUCTIVE_PATTERNS:
-        if pattern.search(command):
-            return DangerLevel.DESTRUCTIVE
+    if _matches_any_pattern(command, DESTRUCTIVE_PATTERNS):
+        return DangerLevel.DESTRUCTIVE
 
     # Check dangerous patterns
-    for pattern in DANGEROUS_PATTERNS:
-        if pattern.search(command):
-            return DangerLevel.DANGEROUS
+    if _matches_any_pattern(command, DANGEROUS_PATTERNS):
+        return DangerLevel.DANGEROUS
 
     # Check if sudo is used
     if command.startswith("sudo "):
-        inner = command[5:].strip()
-        inner_level = classify_command(inner)
-        if inner_level == DangerLevel.SAFE:
-            return DangerLevel.DANGEROUS
-        return inner_level
+        return _classify_sudo_command(command)
 
     # Extract the base command
     base_cmd = _extract_base_command(command)
-
-    if base_cmd in DESTRUCTIVE_COMMANDS:
-        return DangerLevel.DESTRUCTIVE
-
-    if base_cmd in DANGEROUS_COMMANDS:
-        return DangerLevel.DANGEROUS
-
-    if base_cmd in SAFE_COMMANDS:
-        return DangerLevel.SAFE
-
-    return DangerLevel.UNKNOWN
+    return _classify_base_command(base_cmd)
 
 
 def get_danger_markup(level: DangerLevel) -> str:
