@@ -316,6 +316,72 @@ class TestConversation:
         assert conv._tool_blocks == {}
 
 
+# ── Tools Sidebar Tests ──
+
+
+class TestToolsSidebar:
+    """Test the ToolsSidebar widget's tree population."""
+
+    @pytest.mark.asyncio
+    async def test_populate_tree_groups_by_source_and_filters(self):
+        """Items group under their source_name, and filter_text narrows results."""
+        from textual.app import App, ComposeResult
+
+        from agent_terminal_ui.widgets.tools_sidebar import ToolsSidebar
+
+        class _Host(App):
+            def compose(self) -> ComposeResult:
+                yield ToolsSidebar()
+
+        data = [
+            {
+                "name": "read_file",
+                "description": "Read a file from disk",
+                "source_name": "fs-server",
+                "type": "tool",
+            },
+            {
+                "name": "write_file",
+                "description": "Write a file",
+                "source_name": "fs-server",
+                "type": "tool",
+            },
+            {
+                "name": "my-skill",
+                "description": "A helpful skill",
+                "source_name": "skills-folder",
+                "type": "skill",
+            },
+        ]
+
+        app = _Host()
+        async with app.run_test() as pilot:
+            sidebar = app.query_one(ToolsSidebar)
+
+            sidebar._populate_tree(data)
+            await pilot.pause()
+            tree = sidebar.query_one("#tools-tree")
+            source_nodes = list(tree.root.children)
+            assert len(source_nodes) == 2
+            fs_node = next(n for n in source_nodes if "fs-server" in str(n.label))
+            skills_node = next(
+                n for n in source_nodes if "skills-folder" in str(n.label)
+            )
+            assert len(fs_node.children) == 2
+            assert len(skills_node.children) == 1
+            assert "Skill Folder" in str(skills_node.label)
+            assert "MCP Server" in str(fs_node.label)
+
+            # A filter narrows both the grouping and the leaves under it.
+            sidebar._populate_tree(data, filter_text="write")
+            await pilot.pause()
+            tree = sidebar.query_one("#tools-tree")
+            filtered_nodes = list(tree.root.children)
+            assert len(filtered_nodes) == 1
+            assert len(filtered_nodes[0].children) == 1
+            assert "write_file" in str(filtered_nodes[0].children[0].label)
+
+
 # ── Shell Tests ──
 
 
