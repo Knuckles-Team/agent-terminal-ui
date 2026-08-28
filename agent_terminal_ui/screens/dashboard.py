@@ -344,6 +344,31 @@ class DashboardScreen(Screen):
             return
         self._apply_data(data)
 
+    @staticmethod
+    def _normalize_widget_fields(raw_fields: Any) -> list[tuple[str, str]]:
+        """Normalize a widget's ``fields`` payload to a uniform list of
+        (label, value) string pairs.
+
+        Accepts either a ``{label: value}`` dict or a list of
+        ``{"label": ..., "value": ...}`` dicts (both shapes are used by
+        different backend widgets).
+        """
+        if isinstance(raw_fields, dict):
+            return [(label, str(value)) for label, value in raw_fields.items()]
+        return [(f.get("label", ""), str(f.get("value", ""))) for f in raw_fields]
+
+    def _apply_card_data(self, card: ServiceCard, widget_data: dict[str, Any]) -> str:
+        """Update one card from its widget data. Returns the resulting status."""
+        raw_fields = widget_data.get("fields") or {}
+        fields = self._normalize_widget_fields(raw_fields)
+        status = widget_data.get("status", "unknown")
+        card.update_data(
+            status=status,
+            fields=fields,
+            error=widget_data.get("error"),
+        )
+        return status
+
     def _apply_data(self, data: dict[str, Any]) -> None:
         """Update cards from a ``{service_id: widget_data}`` mapping."""
         ok_count = 0
@@ -354,21 +379,7 @@ class DashboardScreen(Screen):
             if not card:
                 continue
 
-            raw_fields = widget_data.get("fields") or {}
-            if isinstance(raw_fields, dict):
-                fields = [(label, str(value)) for label, value in raw_fields.items()]
-            else:
-                fields = [
-                    (f.get("label", ""), str(f.get("value", ""))) for f in raw_fields
-                ]
-
-            status = widget_data.get("status", "unknown")
-            card.update_data(
-                status=status,
-                fields=fields,
-                error=widget_data.get("error"),
-            )
-
+            status = self._apply_card_data(card, widget_data)
             if status == "ok":
                 ok_count += 1
             elif status == "error":
