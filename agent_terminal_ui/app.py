@@ -67,6 +67,28 @@ logger = logging.getLogger(__name__)
 DOUBLE_TAP_SECONDS: float = 0.25
 MODES: list[str] = ["ask", "plan", "code", "chat", "build"]
 
+#: Directory names never descended into by `_iter_workspace_candidate_files`,
+#: on top of any dotdir (hidden) skip.
+_WORKSPACE_SCAN_NOISY_DIRS = ("node_modules", "__pycache__", "venv", ".git")
+
+
+def _iter_workspace_candidate_files():
+    """Yield relative file paths under cwd, skipping noisy/hidden entries.
+
+    Used as the background-scan source for `AgentApp._scan_workspace_files`.
+    """
+    for root, dirs, filenames in os.walk("."):
+        # Exclude common noisy directories
+        dirs[:] = [
+            d
+            for d in dirs
+            if not d.startswith(".") and d not in _WORKSPACE_SCAN_NOISY_DIRS
+        ]
+        for f in filenames:
+            rel_path = os.path.relpath(os.path.join(root, f), ".")
+            if not rel_path.startswith("."):
+                yield rel_path
+
 
 class AgentEventReceived(Message):
     """Event posted when a message or tool call is received from the client."""
@@ -236,6 +258,36 @@ class AgentApp(App):
             f"(Queue size: {len(self._user_message_queue)})"
         )
 
+    #: (pattern, replacement) pairs tried in order by `_try_combine_queries`.
+    #: NOTE (preserved as-is, see that method's docstring): for the first two
+    #: entries, `replacement` is only ever used as a truthiness check --
+    #: their `pattern` and the replacement template itself are unused.
+    _COMBINATION_PATTERNS: ClassVar[list[tuple[str, str | None]]] = [
+        (r"^(.*?)(?:\s+(?:and|also|plus|then|after that)\s+)(.+)$", r"\1 and \2"),
+        (r"^(.*?)(?:\s+;\s*)(.+)$", r"\1; \2"),
+        (r"^(fix|add|remove|update|create|delete|implement|refactor)\s+(.+)$", None),
+    ]
+
+    @staticmethod
+    def _combine_via_connective(new_message: str, last_message: str) -> str | None:
+        """Join two queued messages with " and ", if the result is short enough."""
+        combined = f"{last_message} and {new_message}"
+        return combined if len(combined) < 500 else None
+
+    @staticmethod
+    def _combine_via_shared_action(
+        pattern: str, new_message: str, last_message: str
+    ) -> str | None:
+        """Join two queued messages that share the same leading action verb."""
+        new_match = re.match(pattern, new_message, re.IGNORECASE)
+        last_match = re.match(pattern, last_message, re.IGNORECASE)
+        if not (new_match and last_match):
+            return None
+        action = new_match.group(1).lower()
+        if action != last_match.group(1).lower():
+            return None
+        return f"{action} {last_match.group(2)} and {new_match.group(2)}"
+
     def _try_combine_queries(
         self, new_message: str, parts: list[dict[str, Any]] | None = None
     ) -> str | None:
@@ -247,6 +299,11 @@ class AgentApp(App):
 
         Returns:
             The combined message if combination succeeded, None otherwise.
+
+        NOTE: for the first two entries in ``_COMBINATION_PATTERNS``, the
+        connective-join branch below fires on ANY non-None `replacement`
+        without actually applying `pattern`/`replacement` -- an existing
+        quirk carried over verbatim from before this method was split up.
         """
         if not self._user_message_queue:
             return None
@@ -254,30 +311,15 @@ class AgentApp(App):
         last_item = self._user_message_queue[-1]
         last_message = last_item["message"]
 
-        # Combination patterns
-        combination_patterns = [
-            (r"^(.*?)(?:\s+(?:and|also|plus|then|after that)\s+)(.+)$", r"\1 and \2"),
-            (r"^(.*?)(?:\s+;\s*)(.+)$", r"\1; \2"),
-            (
-                r"^(fix|add|remove|update|create|delete|implement|refactor)\s+(.+)$",
-                None,
-            ),
-        ]
-
-        for pattern, replacement in combination_patterns:
+        for pattern, replacement in self._COMBINATION_PATTERNS:
             if replacement:
-                combined = f"{last_message} and {new_message}"
-                if len(combined) < 500:
-                    return combined
+                combined = self._combine_via_connective(new_message, last_message)
             else:
-                new_match = re.match(pattern, new_message, re.IGNORECASE)
-                last_match = re.match(pattern, last_message, re.IGNORECASE)
-                if new_match and last_match:
-                    action = new_match.group(1).lower()
-                    if action == last_match.group(1).lower():
-                        return (
-                            f"{action} {last_match.group(2)} and {new_match.group(2)}"
-                        )
+                combined = self._combine_via_shared_action(
+                    pattern, new_message, last_message
+                )
+            if combined:
+                return combined
 
         return None
 
@@ -331,64 +373,72 @@ class AgentApp(App):
             return
 
         # Handle direct bash execution via ! prefix
-        if value.startswith("!"):
-            bash_cmd = value[1:].strip()
-            if bash_cmd:
-                self.query_one(InputTextArea).clear()
-                main_screen = self._get_main_screen()
-                if main_screen:
-                    conversation = main_screen.query_one(
-                        "#conversation",
-                        lazy_import(
-                            "agent_terminal_ui.widgets.conversation", "Conversation"
-                        ),
-                    )
-                    await conversation.add_info(f"[$primary]> {bash_cmd}[/$primary]")
-                await self._submit_prompt(f"Execute this shell command: {bash_cmd}")
-                return
+        if value.startswith("!") and await self._handle_bash_prefix(value):
+            return
 
         # If currently processing, add to queue
         if self._is_processing and self._queue_enabled:
-            combined = self._try_combine_queries(value)
-            if combined:
-                self._user_message_queue[-1]["message"] = combined
-                main_screen = self._get_main_screen()
-                if main_screen:
-                    conversation = main_screen.query_one(
-                        "#conversation",
-                        lazy_import(
-                            "agent_terminal_ui.widgets.conversation", "Conversation"
-                        ),
-                    )
-                    await conversation.add_info(
-                        f"[dim italic]Combined queued message: "
-                        f"{combined[:100]}...[/dim italic]"
-                    )
-            else:
-                parts = []
-                if hasattr(self, "_pending_parts") and self._pending_parts:
-                    parts = self._pending_parts
-                    parts.append({"text": value})
-                    self._pending_parts = []
-
-                self._add_to_queue(value, parts)
-                main_screen = self._get_main_screen()
-                if main_screen:
-                    conversation = main_screen.query_one(
-                        "#conversation",
-                        lazy_import(
-                            "agent_terminal_ui.widgets.conversation", "Conversation"
-                        ),
-                    )
-                    await conversation.add_info(
-                        f"[dim italic]Queued message ({len(self._user_message_queue)} "
-                        f"pending): {value[:100]}...[/dim italic]"
-                    )
-
-            self.query_one(InputTextArea).clear()
+            await self._handle_queued_submission(value)
             return
 
         # Normal processing
+        await self._submit_new_message(value)
+
+    async def _notify_conversation(self, markup: str) -> None:
+        """Post an info line to the conversation widget, if mounted."""
+        main_screen = self._get_main_screen()
+        if not main_screen:
+            return
+        conversation = main_screen.query_one(
+            "#conversation",
+            lazy_import("agent_terminal_ui.widgets.conversation", "Conversation"),
+        )
+        await conversation.add_info(markup)
+
+    def _collect_pending_parts(self, value: str) -> list[dict[str, Any]]:
+        """Consume any pending multi-modal parts, appending the text part."""
+        parts: list[dict[str, Any]] = []
+        if hasattr(self, "_pending_parts") and self._pending_parts:
+            parts = self._pending_parts
+            parts.append({"text": value})
+            self._pending_parts = []
+        return parts
+
+    async def _handle_bash_prefix(self, value: str) -> bool:
+        """Handle direct bash execution via the "!" prefix.
+
+        Returns:
+            True if `value` had a non-empty bash command and was handled.
+        """
+        bash_cmd = value[1:].strip()
+        if not bash_cmd:
+            return False
+        self.query_one(InputTextArea).clear()
+        await self._notify_conversation(f"[$primary]> {bash_cmd}[/$primary]")
+        await self._submit_prompt(f"Execute this shell command: {bash_cmd}")
+        return True
+
+    async def _handle_queued_submission(self, value: str) -> None:
+        """Combine with, or append to, the pending-message queue."""
+        combined = self._try_combine_queries(value)
+        if combined:
+            self._user_message_queue[-1]["message"] = combined
+            await self._notify_conversation(
+                f"[dim italic]Combined queued message: "
+                f"{combined[:100]}...[/dim italic]"
+            )
+        else:
+            parts = self._collect_pending_parts(value)
+            self._add_to_queue(value, parts)
+            await self._notify_conversation(
+                f"[dim italic]Queued message ({len(self._user_message_queue)} "
+                f"pending): {value[:100]}...[/dim italic]"
+            )
+
+        self.query_one(InputTextArea).clear()
+
+    async def _submit_new_message(self, value: str) -> None:
+        """Display and dispatch a brand-new (non-queued) user message."""
         main_screen = self._get_main_screen()
         if main_screen:
             await main_screen.add_user_message(value)
@@ -396,14 +446,8 @@ class AgentApp(App):
 
         self.query_one(InputTextArea).clear()
 
-        # Collect parts if any
-        parts = []
-        if hasattr(self, "_pending_parts") and self._pending_parts:
-            parts = self._pending_parts
-            parts.append({"text": value})
-            self._pending_parts = []
+        parts = self._collect_pending_parts(value)
 
-        # Start agent turn
         self._is_processing = True
         self._run_agent_turn(
             value, parts=parts, mode_id=self._agent_mode, model=self._current_model
@@ -484,38 +528,47 @@ class AgentApp(App):
 
         # Handle state management in app
         if event_type == "tool_call":
-            data = event.get("data", {})
-            call_id = data.get("call_id")
-            if call_id:
-                self._pending_tool_calls[call_id] = data
-
+            self._handle_tool_call_event(event)
         elif event_type == "usage":
-            data = event.get("data", {})
-            self._last_usage = data
-
+            self._handle_usage_event(event)
         elif event_type == "turn_end" or (
             event_type == "text" and "[DONE]" in event.get("content", "")
         ):
-            self._is_processing = False
-            if main_screen:
-                main_screen.stop_processing()
-
-            if "usage" in event:
-                self._last_usage = event["usage"]
-
-            # Check for decisions needed
-            if any(
-                tc.get("needs_approval") for tc in self._pending_tool_calls.values()
-            ):
-                self._show_tool_approval_modal()
-            else:
-                if self._user_message_queue:
-                    self._process_queue()
-
+            self._handle_turn_end_event(event, main_screen)
         elif event_type == "error":
-            self._is_processing = False
-            if main_screen:
-                main_screen.stop_processing()
+            self._handle_agent_error_event(main_screen)
+
+    def _handle_tool_call_event(self, event: dict[str, Any]) -> None:
+        """Track a tool call awaiting a result/approval."""
+        data = event.get("data", {})
+        call_id = data.get("call_id")
+        if call_id:
+            self._pending_tool_calls[call_id] = data
+
+    def _handle_usage_event(self, event: dict[str, Any]) -> None:
+        """Record the latest token-usage snapshot."""
+        self._last_usage = event.get("data", {})
+
+    def _handle_turn_end_event(self, event: dict[str, Any], main_screen: Any) -> None:
+        """Stop processing, record final usage, and route to approval/queue."""
+        self._is_processing = False
+        if main_screen:
+            main_screen.stop_processing()
+
+        if "usage" in event:
+            self._last_usage = event["usage"]
+
+        # Check for decisions needed
+        if any(tc.get("needs_approval") for tc in self._pending_tool_calls.values()):
+            self._show_tool_approval_modal()
+        elif self._user_message_queue:
+            self._process_queue()
+
+    def _handle_agent_error_event(self, main_screen: Any) -> None:
+        """Stop processing after a transport/agent error event."""
+        self._is_processing = False
+        if main_screen:
+            main_screen.stop_processing()
 
     # ── Tool Approval ──
 
@@ -622,6 +675,25 @@ class AgentApp(App):
 
     # ── Session Management ──
 
+    async def _replay_assistant_content(self, conversation: Any, content: Any) -> None:
+        """Replay one historical assistant message's content (str or parts list)."""
+        if isinstance(content, str):
+            await conversation.add_agent_response(content)
+        elif isinstance(content, list):
+            for item in content:
+                text = item if isinstance(item, str) else item.get("text", "")
+                if text:
+                    await conversation.add_agent_response(text)
+
+    async def _replay_message(self, conversation: Any, msg: dict[str, Any]) -> None:
+        """Replay one historical chat message into the conversation widget."""
+        role = msg.get("role")
+        content = msg.get("content", "")
+        if role == "user":
+            await conversation.add_user_message(content)
+        elif role == "assistant":
+            await self._replay_assistant_content(conversation, content)
+
     @work(exclusive=True)
     async def _resume_session(self, chat_id: str | None) -> None:
         """Fetch and display a past chat session from history.
@@ -645,22 +717,8 @@ class AgentApp(App):
         await conversation.add_info(f"[$primary]Resuming session: {chat_id}[/$primary]")
 
         chat_data = await self._client.get_chat(chat_id)
-        messages = chat_data.get("messages", [])
-
-        for msg in messages:
-            role = msg.get("role")
-            content = msg.get("content", "")
-
-            if role == "user":
-                await conversation.add_user_message(content)
-            elif role == "assistant":
-                if isinstance(content, str):
-                    await conversation.add_agent_response(content)
-                elif isinstance(content, list):
-                    for item in content:
-                        text = item if isinstance(item, str) else item.get("text", "")
-                        if text:
-                            await conversation.add_agent_response(text)
+        for msg in chat_data.get("messages", []):
+            await self._replay_message(conversation, msg)
 
     # ── Actions ──
 
@@ -868,25 +926,11 @@ class AgentApp(App):
     @work(exclusive=True, thread=True)
     def _scan_workspace_files(self) -> None:
         """Scan workspace files in the background."""
-        import os
-
-        files = []
         try:
-            for root, dirs, filenames in os.walk("."):
-                # Exclude common noisy directories
-                dirs[:] = [
-                    d
-                    for d in dirs
-                    if not d.startswith(".")
-                    and d not in ("node_modules", "__pycache__", "venv", ".git")
-                ]
-                for f in filenames:
-                    rel_path = os.path.relpath(os.path.join(root, f), ".")
-                    if not rel_path.startswith("."):
-                        files.append(rel_path)
-                    # We can cap at a reasonable large limit (e.g. 5000)
-                    if len(files) > 5000:
-                        break
+            files = []
+            for rel_path in _iter_workspace_candidate_files():
+                files.append(rel_path)
+                # We can cap at a reasonable large limit (e.g. 5000)
                 if len(files) > 5000:
                     break
             self.workspace_files = sorted(files)
