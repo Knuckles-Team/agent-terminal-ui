@@ -998,6 +998,80 @@ class CommandProcessor:
         """Toggle server logs visibility (Ctrl+V)."""
         self.app.action_toggle_logs()
 
+    def _require_arg(self, rest: str, usage: str) -> str | None:
+        """Return the stripped argument, or ``None`` after notifying the usage."""
+        value = rest.strip()
+        if not value:
+            self.app.notify(usage, severity="warning")
+            return None
+        return value
+
+    async def _memory_list(self, log: Any, rest: str) -> None:
+        """``/memory list`` — render every Memory node."""
+        try:
+            memories = await self.app._client.list_graph_nodes(node_type="Memory")
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "memory list", exc)
+            return
+        await log.add_info(self._render_memory_list(memories))
+
+    async def _memory_add(self, log: Any, rest: str) -> None:
+        """``/memory add <content>`` — create a Memory node."""
+        content = self._require_arg(rest, "Usage: /memory add <content>")
+        if content is None:
+            return
+        try:
+            created = await self.app._client.create_memory({"content": content})
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "memory add", exc)
+            return
+        mem_id = created.get("id", "<unknown>")
+        self.app.notify(f"Memory created: {mem_id}", severity="information")
+        await log.add_info(f"[green]Memory created:[/green] {mem_id}")
+
+    async def _memory_get(self, log: Any, rest: str) -> None:
+        """``/memory get <id>`` — render one Memory node."""
+        mem_id = self._require_arg(rest, "Usage: /memory get <id>")
+        if mem_id is None:
+            return
+        try:
+            memory = await self.app._client.get_memory(mem_id)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "memory get", exc)
+            return
+        await log.add_info(self._render_memory_detail(memory))
+
+    async def _memory_delete(self, log: Any, rest: str) -> None:
+        """``/memory delete <id>`` — remove one Memory node."""
+        mem_id = self._require_arg(rest, "Usage: /memory delete <id>")
+        if mem_id is None:
+            return
+        try:
+            await self.app._client.delete_memory(mem_id)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "memory delete", exc)
+            return
+        self.app.notify(f"Memory deleted: {mem_id}", severity="warning")
+        await log.add_info(f"[yellow]Memory deleted:[/yellow] {mem_id}")
+
+    async def _memory_search(self, log: Any, rest: str) -> None:
+        """``/memory search <query>`` — semantic search across the graph."""
+        query = self._require_arg(rest, "Usage: /memory search <query>")
+        if query is None:
+            return
+        try:
+            hits = await self.app._client.search_graph(query)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "memory search", exc)
+            return
+        await log.add_info(self._render_graph_search(query, hits))
+
+    async def _memory_review(self, log: Any, rest: str) -> None:
+        """``/memory review`` — ask the agent to summarize stored memories."""
+        await self._submit_prompt(
+            "Review the current knowledge-graph memories and summarize key items."
+        )
+
     async def cmd_memory(self, args: str) -> None:
         """Manage knowledge-graph memory nodes.
 
@@ -1006,77 +1080,20 @@ class CommandProcessor:
         """
         sub, rest = self._parse_subcommand(args)
         log = self.app.query_one("Conversation")
-
-        if sub in ("", "list"):
-            try:
-                memories = await self.app._client.list_graph_nodes(node_type="Memory")
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "memory list", exc)
-                return
-            await log.add_info(self._render_memory_list(memories))
+        handlers: dict[str, Callable[[Any, str], Awaitable[None]]] = {
+            "": self._memory_list,
+            "list": self._memory_list,
+            "add": self._memory_add,
+            "get": self._memory_get,
+            "delete": self._memory_delete,
+            "search": self._memory_search,
+            "review": self._memory_review,
+        }
+        handler = handlers.get(sub)
+        if handler is None:
+            await self._submit_prompt(f"Manage project memory: {args}")
             return
-
-        if sub == "add":
-            if not rest.strip():
-                self.app.notify("Usage: /memory add <content>", severity="warning")
-                return
-            try:
-                created = await self.app._client.create_memory(
-                    {"content": rest.strip()}
-                )
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "memory add", exc)
-                return
-            mem_id = created.get("id", "<unknown>")
-            self.app.notify(f"Memory created: {mem_id}", severity="information")
-            await log.add_info(f"[green]Memory created:[/green] {mem_id}")
-            return
-
-        if sub == "get":
-            if not rest.strip():
-                self.app.notify("Usage: /memory get <id>", severity="warning")
-                return
-            try:
-                memory = await self.app._client.get_memory(rest.strip())
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "memory get", exc)
-                return
-            await log.add_info(self._render_memory_detail(memory))
-            return
-
-        if sub == "delete":
-            if not rest.strip():
-                self.app.notify("Usage: /memory delete <id>", severity="warning")
-                return
-            mem_id = rest.strip()
-            try:
-                await self.app._client.delete_memory(mem_id)
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "memory delete", exc)
-                return
-            self.app.notify(f"Memory deleted: {mem_id}", severity="warning")
-            await log.add_info(f"[yellow]Memory deleted:[/yellow] {mem_id}")
-            return
-
-        if sub == "search":
-            if not rest.strip():
-                self.app.notify("Usage: /memory search <query>", severity="warning")
-                return
-            try:
-                hits = await self.app._client.search_graph(rest.strip())
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "memory search", exc)
-                return
-            await log.add_info(self._render_graph_search(rest.strip(), hits))
-            return
-
-        if sub == "review":
-            await self._submit_prompt(
-                "Review the current knowledge-graph memories and summarize key items."
-            )
-            return
-
-        await self._submit_prompt(f"Manage project memory: {args}")
+        await handler(log, rest)
 
     async def cmd_agents(self, args: str) -> None:
         """Open the Agent View — multi-session dashboard (TUI-20)."""
@@ -1227,6 +1244,49 @@ class CommandProcessor:
         """Add a directory to the agent's working context. Usage: /add-dir <path>"""
         await self._submit_prompt(f"Add this directory to your working context: {args}")
 
+    async def _graph_stats(self, log: Any, rest: str) -> None:
+        """``/graph stats`` — summarize the knowledge graph."""
+        try:
+            stats = await self.app._client.get_graph_stats()
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "graph stats", exc)
+            return
+        await log.add_info(self._render_graph_stats(stats))
+
+    async def _graph_nodes(self, log: Any, rest: str) -> None:
+        """``/graph nodes [type]`` — list graph nodes, optionally by type."""
+        node_type = rest.strip() or None
+        try:
+            nodes = await self.app._client.list_graph_nodes(node_type=node_type)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "graph nodes", exc)
+            return
+        await log.add_info(self._render_graph_nodes(nodes, node_type))
+
+    async def _graph_search(self, log: Any, rest: str) -> None:
+        """``/graph search <query>`` — semantic search across the graph."""
+        query = self._require_arg(rest, "Usage: /graph search <query>")
+        if query is None:
+            return
+        try:
+            hits = await self.app._client.search_graph(query)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "graph search", exc)
+            return
+        await log.add_info(self._render_graph_search(query, hits))
+
+    async def _graph_impact(self, log: Any, rest: str) -> None:
+        """``/graph impact <symbol>`` — show what a symbol change would touch."""
+        symbol = self._require_arg(rest, "Usage: /graph impact <symbol>")
+        if symbol is None:
+            return
+        try:
+            impacts = await self.app._client.get_graph_impact(symbol)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "graph impact", exc)
+            return
+        await log.add_info(self._render_graph_impact(symbol, impacts))
+
     async def cmd_graph(self, args: str) -> None:
         """Explore the knowledge graph.
 
@@ -1234,52 +1294,18 @@ class CommandProcessor:
         """
         sub, rest = self._parse_subcommand(args)
         log = self.app.query_one("Conversation")
-
-        if sub in ("", "stats"):
-            try:
-                stats = await self.app._client.get_graph_stats()
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "graph stats", exc)
-                return
-            await log.add_info(self._render_graph_stats(stats))
+        handlers: dict[str, Callable[[Any, str], Awaitable[None]]] = {
+            "": self._graph_stats,
+            "stats": self._graph_stats,
+            "nodes": self._graph_nodes,
+            "search": self._graph_search,
+            "impact": self._graph_impact,
+        }
+        handler = handlers.get(sub)
+        if handler is None:
+            self.app.notify(f"Unknown /graph subcommand: {sub}", severity="warning")
             return
-
-        if sub == "nodes":
-            node_type = rest.strip() or None
-            try:
-                nodes = await self.app._client.list_graph_nodes(node_type=node_type)
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "graph nodes", exc)
-                return
-            await log.add_info(self._render_graph_nodes(nodes, node_type))
-            return
-
-        if sub == "search":
-            if not rest.strip():
-                self.app.notify("Usage: /graph search <query>", severity="warning")
-                return
-            try:
-                hits = await self.app._client.search_graph(rest.strip())
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "graph search", exc)
-                return
-            await log.add_info(self._render_graph_search(rest.strip(), hits))
-            return
-
-        if sub == "impact":
-            if not rest.strip():
-                self.app.notify("Usage: /graph impact <symbol>", severity="warning")
-                return
-            symbol = rest.strip()
-            try:
-                impacts = await self.app._client.get_graph_impact(symbol)
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "graph impact", exc)
-                return
-            await log.add_info(self._render_graph_impact(symbol, impacts))
-            return
-
-        self.app.notify(f"Unknown /graph subcommand: {sub}", severity="warning")
+        await handler(log, rest)
 
     async def cmd_ask(self, args: str) -> None:
         """Ask a data question in plain English (multi-step analyst, KG-2.308).
@@ -1405,6 +1431,64 @@ class CommandProcessor:
             return
         await log.add_info(self._render_kvcache(result))
 
+    async def _kb_list(self, log: Any, rest: str) -> None:
+        """``/kb list`` — show every knowledge base."""
+        try:
+            kbs = await self.app._client.list_kbs()
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "kb list", exc)
+            return
+        await log.add_info(self._render_kb_list(kbs))
+
+    async def _kb_search(self, log: Any, rest: str) -> None:
+        """``/kb search <query> [--kb <id>]`` — search knowledge-base articles."""
+        usage = "Usage: /kb search <query> [--kb <id>]"
+        if self._require_arg(rest, usage) is None:
+            return
+        query, kb_id = self._split_kb_flag(rest)
+        if not query:
+            self.app.notify(usage, severity="warning")
+            return
+        try:
+            hits = await self.app._client.search_kb(query, kb_id=kb_id)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "kb search", exc)
+            return
+        await log.add_info(self._render_kb_search(query, hits, kb_id))
+
+    async def _kb_article(self, log: Any, rest: str) -> None:
+        """``/kb article <id>`` — render one knowledge-base article."""
+        article_id = self._require_arg(rest, "Usage: /kb article <article_id>")
+        if article_id is None:
+            return
+        try:
+            article = await self.app._client.get_kb_article(article_id)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "kb article", exc)
+            return
+        await log.add_info(self._render_kb_article(article))
+
+    async def _kb_ingest(self, log: Any, rest: str) -> None:
+        """``/kb ingest <source> <kb_name>`` — ingest a source into a KB."""
+        parts = rest.split(maxsplit=1)
+        if len(parts) < 2:
+            self.app.notify("Usage: /kb ingest <source> <kb_name>", severity="warning")
+            return
+        source, kb_name = parts[0], parts[1].strip()
+        try:
+            result = await self.app._client.ingest_kb(source, kb_name)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "kb ingest", exc)
+            return
+        status = result.get("status", "ok")
+        self.app.notify(
+            f"Ingestion started: {kb_name} ({status})", severity="information"
+        )
+        await log.add_info(
+            f"[green]Ingested[/green] [bold]{source}[/bold] "
+            f"into [cyan]{kb_name}[/cyan] (status: {status})"
+        )
+
     async def cmd_kb(self, args: str) -> None:
         """Browse and ingest knowledge bases.
 
@@ -1413,70 +1497,61 @@ class CommandProcessor:
         """
         sub, rest = self._parse_subcommand(args)
         log = self.app.query_one("Conversation")
-
-        if sub in ("", "list"):
-            try:
-                kbs = await self.app._client.list_kbs()
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "kb list", exc)
-                return
-            await log.add_info(self._render_kb_list(kbs))
+        handlers: dict[str, Callable[[Any, str], Awaitable[None]]] = {
+            "": self._kb_list,
+            "list": self._kb_list,
+            "search": self._kb_search,
+            "article": self._kb_article,
+            "ingest": self._kb_ingest,
+        }
+        handler = handlers.get(sub)
+        if handler is None:
+            self.app.notify(f"Unknown /kb subcommand: {sub}", severity="warning")
             return
+        await handler(log, rest)
 
-        if sub == "search":
-            usage = "Usage: /kb search <query> [--kb <id>]"
-            if not rest.strip():
-                self.app.notify(usage, severity="warning")
-                return
-            query, kb_id = self._split_kb_flag(rest)
-            if not query:
-                self.app.notify(usage, severity="warning")
-                return
-            try:
-                hits = await self.app._client.search_kb(query, kb_id=kb_id)
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "kb search", exc)
-                return
-            await log.add_info(self._render_kb_search(query, hits, kb_id))
+    async def _sdd_constitution(self, log: Any, rest: str) -> None:
+        """``/sdd constitution`` — render the project constitution."""
+        try:
+            constitution = await self.app._client.get_constitution()
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "sdd constitution", exc)
             return
-
-        if sub == "article":
-            if not rest.strip():
-                self.app.notify("Usage: /kb article <article_id>", severity="warning")
-                return
-            article_id = rest.strip()
-            try:
-                article = await self.app._client.get_kb_article(article_id)
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "kb article", exc)
-                return
-            await log.add_info(self._render_kb_article(article))
+        if not constitution:
+            await log.add_info("[yellow]No constitution defined yet.[/yellow]")
             return
+        await log.add_info(self._render_constitution(constitution))
 
-        if sub == "ingest":
-            parts = rest.split(maxsplit=1)
-            if len(parts) < 2:
-                self.app.notify(
-                    "Usage: /kb ingest <source> <kb_name>", severity="warning"
-                )
-                return
-            source, kb_name = parts[0], parts[1].strip()
-            try:
-                result = await self.app._client.ingest_kb(source, kb_name)
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "kb ingest", exc)
-                return
-            status = result.get("status", "ok")
-            self.app.notify(
-                f"Ingestion started: {kb_name} ({status})", severity="information"
-            )
-            await log.add_info(
-                f"[green]Ingested[/green] [bold]{source}[/bold] "
-                f"into [cyan]{kb_name}[/cyan] (status: {status})"
-            )
+    async def _sdd_specs(self, log: Any, rest: str) -> None:
+        """``/sdd specs`` — list the recorded specifications."""
+        try:
+            specs = await self.app._client.list_specs()
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "sdd specs", exc)
             return
+        await log.add_info(self._render_specs(specs))
 
-        self.app.notify(f"Unknown /kb subcommand: {sub}", severity="warning")
+    async def _sdd_plans(self, log: Any, rest: str) -> None:
+        """``/sdd plans`` — list the recorded plans."""
+        try:
+            plans = await self.app._client.list_plans()
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "sdd plans", exc)
+            return
+        await log.add_info(self._render_plans(plans))
+
+    async def _sdd_tasks(self, log: Any, rest: str) -> None:
+        """``/sdd tasks [plan_id]`` — list tasks, optionally scoped to a plan."""
+        plan_id = rest.strip() or None
+        try:
+            tasks = await self.app._client.get_tasks(plan_id=plan_id)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "sdd tasks", exc)
+            return
+        # Server may wrap tasks in {"tasks": [...]} or return a list directly.
+        if isinstance(tasks, dict) and "tasks" in tasks:
+            tasks = tasks["tasks"]
+        await log.add_info(self._render_tasks(tasks, plan_id))
 
     async def cmd_sdd(self, args: str) -> None:
         """Inspect Spec-Driven Development artifacts.
@@ -1485,54 +1560,20 @@ class CommandProcessor:
         """
         sub, rest = self._parse_subcommand(args)
         log = self.app.query_one("Conversation")
-
-        if sub == "constitution":
-            try:
-                constitution = await self.app._client.get_constitution()
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "sdd constitution", exc)
-                return
-            if not constitution:
-                await log.add_info("[yellow]No constitution defined yet.[/yellow]")
-                return
-            await log.add_info(self._render_constitution(constitution))
+        handlers: dict[str, Callable[[Any, str], Awaitable[None]]] = {
+            "constitution": self._sdd_constitution,
+            "specs": self._sdd_specs,
+            "plans": self._sdd_plans,
+            "tasks": self._sdd_tasks,
+        }
+        handler = handlers.get(sub)
+        if handler is None:
+            self.app.notify(
+                "Usage: /sdd [constitution | specs | plans | tasks [plan_id]]",
+                severity="warning",
+            )
             return
-
-        if sub == "specs":
-            try:
-                specs = await self.app._client.list_specs()
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "sdd specs", exc)
-                return
-            await log.add_info(self._render_specs(specs))
-            return
-
-        if sub == "plans":
-            try:
-                plans = await self.app._client.list_plans()
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "sdd plans", exc)
-                return
-            await log.add_info(self._render_plans(plans))
-            return
-
-        if sub == "tasks":
-            plan_id = rest.strip() or None
-            try:
-                tasks = await self.app._client.get_tasks(plan_id=plan_id)
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "sdd tasks", exc)
-                return
-            # Server may wrap tasks in {"tasks": [...]} or return a list directly.
-            if isinstance(tasks, dict) and "tasks" in tasks:
-                tasks = tasks["tasks"]
-            await log.add_info(self._render_tasks(tasks, plan_id))
-            return
-
-        self.app.notify(
-            "Usage: /sdd [constitution | specs | plans | tasks [plan_id]]",
-            severity="warning",
-        )
+        await handler(log, rest)
 
     async def cmd_impact(self, args: str) -> None:
         """Inspect topological impact for a symbol. Usage: /impact <symbol>"""
