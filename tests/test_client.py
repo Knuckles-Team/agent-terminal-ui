@@ -1,3 +1,5 @@
+import ast
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -126,29 +128,34 @@ async def test_send_decision_reuses_session_and_normalizes_resume_stream(run_cli
 #     client level this is exercised via the ``acp_url`` constructor kwarg.
 
 
+def _imported_module_names(node: ast.AST) -> list[str | None]:
+    """Names imported by one `Import`/`ImportFrom` AST node (else empty)."""
+    if isinstance(node, ast.Import):
+        return [alias.name for alias in node.names]
+    if isinstance(node, ast.ImportFrom):
+        return [node.module] if node.module else []
+    return []
+
+
+def _assert_no_agent_client_protocol_import(py_file: Path) -> None:
+    """Assert one source file never imports ``agent_client_protocol``."""
+    tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+    for node in ast.walk(tree):
+        for name in _imported_module_names(node):
+            assert name is None or not name.startswith("agent_client_protocol"), (
+                f"{py_file} imports agent_client_protocol at {node.lineno}"
+            )
+
+
 def test_agent_client_protocol_module_is_not_imported_by_this_package():
     """``agent_client_protocol`` (the real Zed ACP SDK) must not be a runtime
     dependency of this client — this repo speaks its own hand-rolled
     JSON-RPC/SSE convention, not that SDK's wire format."""
-    import ast
-    from pathlib import Path
-
     import agent_terminal_ui
 
     package_dir = Path(agent_terminal_ui.__file__).parent
     for py_file in package_dir.rglob("*.py"):
-        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                names = [alias.name for alias in node.names]
-            elif isinstance(node, ast.ImportFrom):
-                names = [node.module] if node.module else []
-            else:
-                continue
-            for name in names:
-                assert name is None or not name.startswith("agent_client_protocol"), (
-                    f"{py_file} imports agent_client_protocol at {node.lineno}"
-                )
+        _assert_no_agent_client_protocol_import(py_file)
 
 
 def test_agent_client_constructs_with_agent_client_protocol_hidden(monkeypatch):
