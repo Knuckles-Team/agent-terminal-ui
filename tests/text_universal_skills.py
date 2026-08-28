@@ -2,10 +2,32 @@
 
 import tempfile
 from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-import yaml
+
+from agent_terminal_ui.client import _load_skill_entry
+
+
+def _mock_skills_from_dir(skills_dir: Path) -> list[dict[str, Any]]:
+    """Build the list a ``_load_skills_from_filesystem`` fallback would.
+
+    Every test in this module mocks ``AgentClient._load_skills_from_filesystem``
+    with a closure over a temp/real skills directory. They used to each
+    reimplement the SKILL.md YAML-frontmatter/simple-parsing logic inline
+    (duplicating, and drifting from, the real fallback in
+    ``agent_terminal_ui.client``). This reuses the same production
+    per-skill parser (`_load_skill_entry`) so the mocks can never diverge
+    from what they're standing in for.
+    """
+    if not skills_dir.exists():
+        return []
+    return [
+        _load_skill_entry(skill_dir)
+        for skill_dir in skills_dir.iterdir()
+        if skill_dir.is_dir()
+    ]
 
 
 @pytest.fixture
@@ -71,66 +93,7 @@ This is the content of the skill.
 
             # Mock the workspace root and method to use our temp directory
             async def mock_load():
-                client_skills_dir = Path(temp_dir) / "skills"
-                if client_skills_dir.exists():
-                    skills = []
-                    for skill_dir in client_skills_dir.iterdir():
-                        if skill_dir.is_dir():
-                            skill_id = skill_dir.name
-                            skill_md = skill_dir / "SKILL.md"
-                            description = ""
-                            if skill_md.exists():
-                                content = skill_md.read_text(encoding="utf-8")
-                                # Try to parse YAML frontmatter
-                                lines = content.split("\n")
-                                in_yaml = False
-                                yaml_content = []
-
-                                for line in lines:
-                                    if line.strip() == "---":
-                                        if not in_yaml:
-                                            in_yaml = True
-                                        else:
-                                            break
-                                    elif in_yaml:
-                                        yaml_content.append(line)
-
-                                # Parse YAML for description
-                                if yaml_content:
-                                    try:
-                                        yaml_data = yaml.safe_load(
-                                            "\n".join(yaml_content)
-                                        )
-                                        if (
-                                            isinstance(yaml_data, dict)
-                                            and "description" in yaml_data
-                                        ):
-                                            description = yaml_data["description"]
-                                    except Exception:
-                                        pass
-
-                                # If no description from YAML, try simple parsing
-                                if not description:
-                                    for line in lines:
-                                        line = line.strip()
-                                        if (
-                                            line
-                                            and line != "---"
-                                            and not line.startswith("#")
-                                        ):
-                                            description = line
-                                            break
-
-                            skills.append(
-                                {
-                                    "id": skill_id,
-                                    "name": skill_id,
-                                    "description": description,
-                                }
-                            )
-
-                    return skills
-                return []
+                return _mock_skills_from_dir(Path(temp_dir) / "skills")
 
             client._load_skills_from_filesystem = mock_load  # type: ignore[method-assign]
             skills = await client._load_skills_from_filesystem()
@@ -167,67 +130,7 @@ It should still work by parsing the first non-empty line.
             # Mock the workspace root and method
 
             async def mock_load():
-                client_skills_dir = Path(temp_dir) / "skills"
-                if client_skills_dir.exists():
-                    skills = []
-                    for skill_dir in client_skills_dir.iterdir():
-                        if skill_dir.is_dir():
-                            skill_id = skill_dir.name
-                            skill_md = skill_dir / "SKILL.md"
-                            description = ""
-                            if skill_md.exists():
-                                content = skill_md.read_text(encoding="utf-8")
-                                # Try to parse YAML frontmatter first
-                                lines = content.split("\n")
-                                in_yaml = False
-                                yaml_content = []
-
-                                for line in lines:
-                                    if line.strip() == "---":
-                                        if not in_yaml:
-                                            in_yaml = True
-                                        else:
-                                            # End of YAML frontmatter
-                                            break
-                                    elif in_yaml:
-                                        yaml_content.append(line)
-
-                                # Parse YAML for description
-                                if yaml_content:
-                                    try:
-                                        yaml_data = yaml.safe_load(
-                                            "\n".join(yaml_content)
-                                        )
-                                        if (
-                                            isinstance(yaml_data, dict)
-                                            and "description" in yaml_data
-                                        ):
-                                            description = yaml_data["description"]
-                                    except Exception:
-                                        pass
-
-                                # If no description from YAML, try simple parsing
-                                if not description:
-                                    for line in lines:
-                                        line = line.strip()
-                                        if (
-                                            line
-                                            and line != "---"
-                                            and not line.startswith("#")
-                                        ):
-                                            description = line
-                                            break
-
-                            skills.append(
-                                {
-                                    "id": skill_id,
-                                    "name": skill_id,
-                                    "description": description,
-                                }
-                            )
-
-                    return skills
-                return []
+                return _mock_skills_from_dir(Path(temp_dir) / "skills")
 
             client._load_skills_from_filesystem = mock_load  # type: ignore[method-assign]
             skills = await client._load_skills_from_filesystem()
@@ -258,36 +161,7 @@ It should still work by parsing the first non-empty line.
 
             # Mock the workspace root and method
             async def mock_load():
-                client_skills_dir = Path(temp_dir) / "skills"
-                if client_skills_dir.exists():
-                    skills = []
-                    for skill_dir in client_skills_dir.iterdir():
-                        if skill_dir.is_dir():
-                            skill_id = skill_dir.name
-                            skill_md = skill_dir / "SKILL.md"
-                            description = ""
-                            if skill_md.exists():
-                                content = skill_md.read_text(encoding="utf-8")
-                                for line in content.split("\n"):
-                                    line = line.strip()
-                                    if (
-                                        line
-                                        and line != "---"
-                                        and not line.startswith("#")
-                                    ):
-                                        description = line
-                                        break
-
-                            skills.append(
-                                {
-                                    "id": skill_id,
-                                    "name": skill_id,
-                                    "description": description,
-                                }
-                            )
-
-                    return skills
-                return []
+                return _mock_skills_from_dir(Path(temp_dir) / "skills")
 
             client._load_skills_from_filesystem = mock_load  # type: ignore[method-assign]
             skills = await client._load_skills_from_filesystem()
@@ -329,64 +203,7 @@ Content for {skill_name}.
 
             # Mock the workspace root and method
             async def mock_load():
-                client_skills_dir = Path(temp_dir) / "skills"
-                if client_skills_dir.exists():
-                    skills = []
-                    for skill_dir in client_skills_dir.iterdir():
-                        if skill_dir.is_dir():
-                            skill_id = skill_dir.name
-                            skill_md = skill_dir / "SKILL.md"
-                            description = ""
-                            if skill_md.exists():
-                                content = skill_md.read_text(encoding="utf-8")
-                                # Try to parse YAML frontmatter
-                                lines = content.split("\n")
-                                in_yaml = False
-                                yaml_content = []
-
-                                for line in lines:
-                                    if line.strip() == "---":
-                                        if not in_yaml:
-                                            in_yaml = True
-                                        else:
-                                            break
-                                    elif in_yaml:
-                                        yaml_content.append(line)
-
-                                if yaml_content:
-                                    try:
-                                        yaml_data = yaml.safe_load(
-                                            "\n".join(yaml_content)
-                                        )
-                                        if (
-                                            isinstance(yaml_data, dict)
-                                            and "description" in yaml_data
-                                        ):
-                                            description = yaml_data["description"]
-                                    except Exception:
-                                        pass
-
-                                if not description:
-                                    for line in lines:
-                                        line = line.strip()
-                                        if (
-                                            line
-                                            and line != "---"
-                                            and not line.startswith("#")
-                                        ):
-                                            description = line
-                                            break
-
-                            skills.append(
-                                {
-                                    "id": skill_id,
-                                    "name": skill_id,
-                                    "description": description,
-                                }
-                            )
-
-                    return skills
-                return []
+                return _mock_skills_from_dir(Path(temp_dir) / "skills")
 
             client._load_skills_from_filesystem = mock_load  # type: ignore[method-assign]
             skills = await client._load_skills_from_filesystem()
@@ -469,63 +286,7 @@ This skill tests the integration.
 
             # Mock the workspace root to point to real location
             async def mock_load():
-                if real_skills_dir.exists():
-                    skills = []
-                    for skill_dir in real_skills_dir.iterdir():
-                        if skill_dir.is_dir():
-                            skill_id = skill_dir.name
-                            skill_md = skill_dir / "SKILL.md"
-                            description = ""
-                            if skill_md.exists():
-                                content = skill_md.read_text(encoding="utf-8")
-                                # Try to parse YAML frontmatter
-                                lines = content.split("\n")
-                                in_yaml = False
-                                yaml_content = []
-
-                                for line in lines:
-                                    if line.strip() == "---":
-                                        if not in_yaml:
-                                            in_yaml = True
-                                        else:
-                                            break
-                                    elif in_yaml:
-                                        yaml_content.append(line)
-
-                                if yaml_content:
-                                    try:
-                                        yaml_data = yaml.safe_load(
-                                            "\n".join(yaml_content)
-                                        )
-                                        if (
-                                            isinstance(yaml_data, dict)
-                                            and "description" in yaml_data
-                                        ):
-                                            description = yaml_data["description"]
-                                    except Exception:
-                                        pass
-
-                                if not description:
-                                    for line in lines:
-                                        line = line.strip()
-                                        if (
-                                            line
-                                            and line != "---"
-                                            and not line.startswith("#")
-                                        ):
-                                            description = line
-                                            break
-
-                            skills.append(
-                                {
-                                    "id": skill_id,
-                                    "name": skill_id,
-                                    "description": description,
-                                }
-                            )
-
-                    return skills
-                return []
+                return _mock_skills_from_dir(real_skills_dir)
 
             client._load_skills_from_filesystem = mock_load  # type: ignore[method-assign]
             skills = await client._load_skills_from_filesystem()
