@@ -84,6 +84,35 @@ class HookResult:
         }
 
 
+def _parse_shell_env_line(line: str) -> tuple[str, str] | None:
+    """Parse one ``export KEY=VALUE`` (or bare ``KEY=VALUE``) shell line.
+
+    Returns (key, value) if the line assigns a non-empty key, else None.
+    """
+    line = line.strip()
+    if line.startswith("export "):
+        line = line[7:]
+    if "=" not in line:
+        return None
+    key, _, value = line.partition("=")
+    key = key.strip()
+    value = value.strip().strip("'\"")
+    if not key:
+        return None
+    return key, value
+
+
+def _collect_shell_env_vars(result: HookResult, env_vars: dict[str, str]) -> None:
+    """Merge one hook result's stdout export lines into `env_vars` in place."""
+    if not (result.success and result.stdout):
+        return
+    for line in result.stdout.strip().split("\n"):
+        parsed = _parse_shell_env_line(line)
+        if parsed:
+            key, value = parsed
+            env_vars[key] = value
+
+
 class HookManager:
     """Manages lifecycle hooks with timeout-protected execution.
 
@@ -203,17 +232,7 @@ class HookManager:
         results = await self.fire("shell_env", context)
 
         for result in results:
-            if result.success and result.stdout:
-                for line in result.stdout.strip().split("\n"):
-                    line = line.strip()
-                    if line.startswith("export "):
-                        line = line[7:]
-                    if "=" in line:
-                        key, _, value = line.partition("=")
-                        key = key.strip()
-                        value = value.strip().strip("'\"")
-                        if key:
-                            env_vars[key] = value
+            _collect_shell_env_vars(result, env_vars)
 
         return env_vars
 
