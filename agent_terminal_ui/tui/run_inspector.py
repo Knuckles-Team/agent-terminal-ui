@@ -131,39 +131,44 @@ class RunBrowserScreen(ModalScreen[None]):
         query = self.query_one("#run-browser-search", Input).value
         self._filter(query)
 
+    @staticmethod
+    def _run_matches_query(run: RunSummary, normalized_query: str) -> bool:
+        """Whether a run's identity/status fields contain the search query."""
+        if not normalized_query:
+            return True
+        haystack = " ".join(
+            (
+                run.run_id,
+                run.session_id or "",
+                run.trace_id or "",
+                run.status,
+                run.last_event_type or "",
+            )
+        ).lower()
+        return normalized_query in haystack
+
+    def _run_browser_status(self, scope: str) -> tuple[str, str]:
+        """The (message, color) pair for the status bar after filtering."""
+        if not self.catalog.runs:
+            return (
+                f"No process-local runs are available for {scope}. "
+                "The bounded replay store may be empty or restarted.",
+                "yellow",
+            )
+        message = f"{len(self.filtered)} of {len(self.catalog.runs)} runs ({scope})."
+        return message, "green"
+
     def _filter(self, query: str) -> None:
         runs = self.catalog.runs if self.catalog else ()
         normalized = query.strip().lower()
         self.filtered = [
-            run
-            for run in runs
-            if not normalized
-            or normalized
-            in " ".join(
-                (
-                    run.run_id,
-                    run.session_id or "",
-                    run.trace_id or "",
-                    run.status,
-                    run.last_event_type or "",
-                )
-            ).lower()
+            run for run in runs if self._run_matches_query(run, normalized)
         ]
         self._render_list()
         if self.catalog is None:
             return
         scope = f"session {self.session_id}" if self.session_id else "all sessions"
-        if not self.catalog.runs:
-            message = (
-                f"No process-local runs are available for {scope}. "
-                "The bounded replay store may be empty or restarted."
-            )
-            color = "yellow"
-        else:
-            message = (
-                f"{len(self.filtered)} of {len(self.catalog.runs)} runs ({scope})."
-            )
-            color = "green"
+        message, color = self._run_browser_status(scope)
         self.query_one("#run-browser-status", Static).update(
             f"[{color}]{escape(message)}[/{color}]"
         )
