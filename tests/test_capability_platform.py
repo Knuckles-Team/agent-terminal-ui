@@ -902,3 +902,59 @@ async def test_run_browser_discovers_newest_lifecycle_summaries() -> None:
         assert isinstance(browser, RunBrowserScreen)
         assert [run.run_id for run in browser.filtered] == ["run-1"]
         assert browser.filtered[0].status == "completed"
+
+
+@pytest.mark.asyncio
+async def test_run_browser_filter_narrows_by_query_and_reports_counts() -> None:
+    """RunBrowserScreen._filter: search narrows results and the status bar
+    reports "N of M runs"; an empty query restores the full catalog; a query
+    matching nothing yields an empty list."""
+    from agent_terminal_ui.capabilities import RunCatalog, RunSummary
+
+    app = _RunBrowserHarness(_FakeCapabilityClient())
+    async with app.run_test() as pilot:
+        await pilot.pause(0.2)
+        browser = app.screen
+        assert isinstance(browser, RunBrowserScreen)
+
+        run_a = RunSummary(
+            run_id="run-a",
+            session_id="s1",
+            trace_id=None,
+            status="completed",
+            first_sequence=1,
+            last_sequence=2,
+            event_count=2,
+            truncated=False,
+            first_timestamp=None,
+            last_timestamp=None,
+            last_event_type="run_completed",
+        )
+        run_b = RunSummary(
+            run_id="run-b",
+            session_id="s2",
+            trace_id=None,
+            status="failed",
+            first_sequence=1,
+            last_sequence=1,
+            event_count=1,
+            truncated=False,
+            first_timestamp=None,
+            last_timestamp=None,
+            last_event_type="error",
+        )
+        browser.catalog = RunCatalog(schema_version="1.0", count=2, runs=(run_a, run_b))
+
+        browser._filter("run-a")
+        assert [r.run_id for r in browser.filtered] == ["run-a"]
+        status_text = str(browser.query_one("#run-browser-status", Static).content)
+        assert "1 of 2 runs" in status_text
+
+        browser._filter("")
+        assert [r.run_id for r in browser.filtered] == ["run-a", "run-b"]
+
+        browser._filter("failed")
+        assert [r.run_id for r in browser.filtered] == ["run-b"]
+
+        browser._filter("nomatch")
+        assert browser.filtered == []
