@@ -138,63 +138,65 @@ class CommandProcessor:
         if not parts or not parts[0]:
             self.app.notify("Unknown command: /", severity="warning")
             return True
-
         cmd_name = parts[0].lower()
         args = parts[1] if len(parts) > 1 else ""
 
         if cmd_name in self.commands:
-            try:
-                await self.commands[cmd_name](args)
-            except Exception as e:
-                self.app.notify(
-                    f"Error executing command /{cmd_name}: {e}", severity="error"
-                )
-            return True
+            await self._run_registered_command(cmd_name, args)
         else:
-            # Try to query the gateway commands/execute endpoint
-            try:
-                async with httpx.AsyncClient() as client:
-                    response = await client.post(
-                        f"{self.app.agent_client.base_url}/api/enhanced/commands/execute",
-                        json={"command": text},
-                        timeout=15.0,
-                    )
-                    if response.status_code == 200:
-                        data = response.json()
-                        response_markdown = data.get("response_markdown", "")
-                        client_actions = data.get("client_actions", [])
+            await self._run_gateway_command(cmd_name, text)
+        return True
 
-                        try:
-                            conv = self.app.query_one("Conversation")
-                            await conv.add_agent_response(response_markdown)
-                        except Exception:
-                            self.app.notify(
-                                response_markdown[:100], severity="information"
-                            )
+    async def _run_registered_command(self, cmd_name: str, args: str) -> None:
+        """Invoke a locally registered command, surfacing failures as notices."""
+        try:
+            await self.commands[cmd_name](args)
+        except Exception as e:
+            self.app.notify(
+                f"Error executing command /{cmd_name}: {e}", severity="error"
+            )
 
-                        # Handle client actions
-                        for action_dict in client_actions:
-                            action = action_dict.get("action")
-                            if action == "clear_chat":
-                                with contextlib.suppress(Exception):
-                                    conv = self.app.query_one("Conversation")
-                                    await conv.clear_conversation()
-                                    await conv.add_info(
-                                        "🧹 Chat log cleared via slash command."
-                                    )
-                        return True
-                    else:
-                        self.app.notify(
-                            f"Gateway command failed: Code {response.status_code}",
-                            severity="error",
-                        )
-                        return True
-            except Exception as e:
-                self.app.notify(
-                    f"Unknown command: /{cmd_name} (Gateway offline: {e})",
-                    severity="warning",
+    async def _run_gateway_command(self, cmd_name: str, text: str) -> None:
+        """Fall back to the gateway's commands/execute endpoint."""
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.app.agent_client.base_url}/api/enhanced/commands/execute",
+                    json={"command": text},
+                    timeout=15.0,
                 )
-                return True
+                if response.status_code != 200:
+                    self.app.notify(
+                        f"Gateway command failed: Code {response.status_code}",
+                        severity="error",
+                    )
+                    return
+                data = response.json()
+                await self._show_gateway_response(data.get("response_markdown", ""))
+                await self._apply_client_actions(data.get("client_actions", []))
+        except Exception as e:
+            self.app.notify(
+                f"Unknown command: /{cmd_name} (Gateway offline: {e})",
+                severity="warning",
+            )
+
+    async def _show_gateway_response(self, response_markdown: str) -> None:
+        """Render a gateway response in the conversation, or notify on failure."""
+        try:
+            conv = self.app.query_one("Conversation")
+            await conv.add_agent_response(response_markdown)
+        except Exception:
+            self.app.notify(response_markdown[:100], severity="information")
+
+    async def _apply_client_actions(self, client_actions: list[Any]) -> None:
+        """Apply the client-side actions requested by a gateway response."""
+        for action_dict in client_actions:
+            if action_dict.get("action") != "clear_chat":
+                continue
+            with contextlib.suppress(Exception):
+                conv = self.app.query_one("Conversation")
+                await conv.clear_conversation()
+                await conv.add_info("🧹 Chat log cleared via slash command.")
 
     async def cmd_help(self, args: str) -> None:
         """Show available commands and their descriptions."""
@@ -445,80 +447,93 @@ class CommandProcessor:
 
         parts = raw.split(maxsplit=1)
         if parts[0] == "jsonl":
-            if len(parts) < 2:
-                await conversation.add_info(
-                    "[yellow]Usage: /ingest jsonl <job_id>[/yellow]"
-                )
-                return
-            try:
-                jsonl = await client.extraction_jsonl(parts[1].strip())
-            except Exception as exc:
-                await conversation.add_info(f"[red]JSONL fetch failed: {exc}[/red]")
-                return
-            lines = jsonl.strip().splitlines()
-            await conversation.add_info(
-                f"[green]{len(lines)} facts[/green] (job {parts[1].strip()}):\n"
-                + "\n".join(f"[dim]{ln}[/dim]" for ln in lines[:50])
-                + ("\n…" if len(lines) > 50 else "")
-            )
+            await self._ingest_export_jsonl(conversation, client, parts)
             return
 
-        text = ""
-        url = ""
+        text, url = self._ingest_source(raw, parts)
+        job_id = await self._ingest_submit(conversation, client, text, url)
+        if job_id is None:
+            return
+        await self._ingest_stream_facts(conversation, client, job_id)
+
+    async def _ingest_export_jsonl(
+        self, conversation: Any, client: Any, parts: list[str]
+    ) -> None:
+        """Download a finished extraction job's facts as JSONL."""
+        if len(parts) < 2:
+            await conversation.add_info(
+                "[yellow]Usage: /ingest jsonl <job_id>[/yellow]"
+            )
+            return
+        job_id = parts[1].strip()
+        try:
+            jsonl = await client.extraction_jsonl(job_id)
+        except Exception as exc:
+            await conversation.add_info(f"[red]JSONL fetch failed: {exc}[/red]")
+            return
+        lines = jsonl.strip().splitlines()
+        await conversation.add_info(
+            f"[green]{len(lines)} facts[/green] (job {job_id}):\n"
+            + "\n".join(f"[dim]{ln}[/dim]" for ln in lines[:50])
+            + ("\n…" if len(lines) > 50 else "")
+        )
+
+    @staticmethod
+    def _ingest_source(raw: str, parts: list[str]) -> tuple[str, str]:
+        """Resolve ``/ingest`` arguments into an ``(inline text, url)`` pair."""
         if parts[0] == "--":
-            text = parts[1] if len(parts) > 1 else ""
-        elif raw.startswith(("http://", "https://")):
-            url = raw
-        else:
-            from pathlib import Path
+            return (parts[1] if len(parts) > 1 else ""), ""
+        if raw.startswith(("http://", "https://")):
+            return "", raw
 
-            p = Path(raw).expanduser()
-            if p.is_file():
-                text = p.read_text(encoding="utf-8", errors="ignore")
-            else:
-                url = raw  # let the gateway's reader try it as a URL
+        from pathlib import Path
 
+        p = Path(raw).expanduser()
+        if p.is_file():
+            return p.read_text(encoding="utf-8", errors="ignore"), ""
+        return "", raw  # let the gateway's reader try it as a URL
+
+    async def _ingest_submit(
+        self, conversation: Any, client: Any, text: str, url: str
+    ) -> str | None:
+        """Submit an extraction job, returning its id or ``None`` on failure."""
         try:
             res = await client.submit_extraction(text=text, url=url)
         except Exception as exc:
             await conversation.add_info(f"[red]Extraction submit failed: {exc}[/red]")
-            return
+            return None
         job_id = res.get("job_id")
         if res.get("status") != "submitted" or not job_id:
             msg = res.get("message", "engine cold?")
             await conversation.add_info(
                 f"[yellow]Extraction unavailable: {msg}[/yellow]"
             )
-            return
+            return None
 
         await conversation.add_info(
             f"[bold blue]Extracting[/bold blue] (job [cyan]{job_id}[/cyan])… "
             "facts stream below; `/ingest jsonl " + job_id + "` to export."
         )
+        return job_id
 
+    async def _ingest_stream_facts(
+        self, conversation: Any, client: Any, job_id: str
+    ) -> None:
+        """Stream extracted facts into the conversation until the job ends."""
         kept = 0
         dupes = 0
         try:
             async for ev in client.stream_extraction(job_id):
                 etype = ev.get("type")
-                if etype == "fact":
-                    f = ev.get("fact", {})
-                    is_dup = bool(ev.get("is_duplicate"))
-                    if is_dup:
-                        dupes += 1
-                        continue
-                    kept += 1
-                    tags = " ".join(f"#{t}" for t in (f.get("tags") or [])[:4])
-                    conf = f.get("confidence", "–")
-                    line = (
-                        f"[blue]{f.get('subject', '')}[/blue] "
-                        f"[magenta]{f.get('predicate', '')}[/magenta] "
-                        f"[green]{f.get('object', '')}[/green]  "
-                        f"[dim]conf {conf}%  {tags}[/dim]"
-                    )
-                    await conversation.add_info(line)
-                elif etype == "job_done":
+                if etype == "job_done":
                     break
+                if etype != "fact":
+                    continue
+                if ev.get("is_duplicate"):
+                    dupes += 1
+                    continue
+                kept += 1
+                await conversation.add_info(self._format_fact_row(ev.get("fact", {})))
         except Exception as exc:
             await conversation.add_info(f"[red]Stream error: {exc}[/red]")
             return
@@ -528,6 +543,61 @@ class CommandProcessor:
             + (f" ([dim]{dupes} duplicates suppressed[/dim])" if dupes else "")
             + f". Export: /ingest jsonl {job_id}"
         )
+
+    @staticmethod
+    def _format_fact_row(fact: dict[str, Any]) -> str:
+        """Render one extracted fact as a colourised conversation row."""
+        tags = " ".join(f"#{t}" for t in (fact.get("tags") or [])[:4])
+        conf = fact.get("confidence", "–")
+        return (
+            f"[blue]{fact.get('subject', '')}[/blue] "
+            f"[magenta]{fact.get('predicate', '')}[/magenta] "
+            f"[green]{fact.get('object', '')}[/green]  "
+            f"[dim]conf {conf}%  {tags}[/dim]"
+        )
+
+    async def _fleet_grant(
+        self, conversation: Any, client: Any, parts: list[str]
+    ) -> None:
+        """``/fleet grant <approval_id>`` — approve one pending fleet action."""
+        if len(parts) < 2:
+            await conversation.add_info(
+                "[yellow]Usage: /fleet grant <approval_id>[/yellow]"
+            )
+            return
+        try:
+            await client.grant_fleet_approval(parts[1])
+        except Exception as exc:
+            await conversation.add_info(f"[red]Grant failed: {exc}[/red]")
+            return
+        await conversation.add_info(f"[green]Granted approval {parts[1]}.[/green]")
+
+    @staticmethod
+    def _fleet_lines(topology: Any, approvals: list[dict[str, Any]]) -> list[str]:
+        """Format the fleet topology and pending-approval summary lines."""
+        lines = ["[bold blue]Fleet Supervisor[/bold blue]"]
+        if topology:
+            lines.append("[bold]Topology[/bold]")
+            lines.extend(f"- {key}: {value}" for key, value in topology.items())
+        lines.append(f"[bold]Pending approvals:[/bold] {len(approvals)}")
+        for approval in approvals:
+            approval_id = approval.get("id") or approval.get("approval_id") or "?"
+            action = approval.get("action", "")
+            target = approval.get("target") or approval.get("subject") or ""
+            lines.append(f"- {approval_id}: {action} {target}".rstrip())
+        if approvals:
+            lines.append("[dim]Grant with /fleet grant <id>[/dim]")
+        return lines
+
+    async def _fleet_overview(self, conversation: Any, client: Any) -> None:
+        """Render fleet topology plus the pending-approval queue."""
+        try:
+            topology = await client.get_fleet_topology()
+            approvals = await client.get_fleet_approvals()
+        except Exception as exc:
+            await conversation.add_info(f"[red]Fleet unavailable: {exc}[/red]")
+            return
+        await conversation.add_info("\n".join(self._fleet_lines(topology, approvals)))
 
     async def cmd_fleet(self, args: str) -> None:
         """Show fleet topology and approvals, or grant one with ``grant <id>``."""
@@ -541,40 +611,9 @@ class CommandProcessor:
 
         parts = args.strip().split()
         if parts and parts[0] == "grant":
-            if len(parts) < 2:
-                await conversation.add_info(
-                    "[yellow]Usage: /fleet grant <approval_id>[/yellow]"
-                )
-                return
-            try:
-                await client.grant_fleet_approval(parts[1])
-            except Exception as exc:
-                await conversation.add_info(f"[red]Grant failed: {exc}[/red]")
-                return
-            await conversation.add_info(f"[green]Granted approval {parts[1]}.[/green]")
+            await self._fleet_grant(conversation, client, parts)
             return
-
-        try:
-            topology = await client.get_fleet_topology()
-            approvals = await client.get_fleet_approvals()
-        except Exception as exc:
-            await conversation.add_info(f"[red]Fleet unavailable: {exc}[/red]")
-            return
-
-        lines = ["[bold blue]Fleet Supervisor[/bold blue]"]
-        if topology:
-            lines.append("[bold]Topology[/bold]")
-            for key, value in topology.items():
-                lines.append(f"- {key}: {value}")
-        lines.append(f"[bold]Pending approvals:[/bold] {len(approvals)}")
-        for approval in approvals:
-            approval_id = approval.get("id") or approval.get("approval_id") or "?"
-            action = approval.get("action", "")
-            target = approval.get("target") or approval.get("subject") or ""
-            lines.append(f"- {approval_id}: {action} {target}".rstrip())
-        if approvals:
-            lines.append("[dim]Grant with /fleet grant <id>[/dim]")
-        await conversation.add_info("\n".join(lines))
+        await self._fleet_overview(conversation, client)
 
     async def cmd_model(self, args: str) -> None:
         """List, select, or inspect configured models.
@@ -626,16 +665,39 @@ class CommandProcessor:
             f"[dim]Switched to model: {model_id}[/dim]"
         )
 
+    def _active_model_id(self, registry: dict[str, Any]) -> Any:
+        """Resolve the active model id from app state, falling back to default."""
+        return (
+            getattr(self.app, "_current_model_id", None)
+            or getattr(self.app, "_current_model", None)
+            or registry.get("default_id")
+        )
+
+    @staticmethod
+    def _model_cost_pair(entry: dict[str, Any]) -> tuple[float, float]:
+        """Return the (input, output) cost per 1M tokens for a model entry."""
+        cost = entry.get("cost") or {}
+        return float(cost.get("input", 0.0)), float(cost.get("output", 0.0))
+
+    def _model_row(self, entry: dict[str, Any], active_id: Any) -> list[str]:
+        """Build the registry-table cells for one configured model."""
+        cost_in, cost_out = self._model_cost_pair(entry)
+        return [
+            "*" if entry.get("id") == active_id else "",
+            str(entry.get("id", "")),
+            str(entry.get("name", "")),
+            str(entry.get("provider", "")),
+            str(entry.get("tier", "")),
+            ", ".join(entry.get("tags") or []) or "-",
+            "yes" if entry.get("is_default") else "",
+            f"${cost_in:.2f} / ${cost_out:.2f}",
+        ]
+
     async def _model_list(self) -> None:
         """Render the configured model registry as a Rich table."""
         registry = await self.app._client.list_configured_models()
         models = registry.get("models") or []
-        default_id = registry.get("default_id")
-        active_id = (
-            getattr(self.app, "_current_model_id", None)
-            or getattr(self.app, "_current_model", None)
-            or default_id
-        )
+        active_id = self._active_model_id(registry)
 
         if not models:
             await self.app.query_one("Conversation").add_info(
@@ -654,24 +716,8 @@ class CommandProcessor:
         table.add_column("Default", justify="center", width=7)
         table.add_column("Cost / 1M (in / out)")
 
-        for m in models:
-            cost = m.get("cost") or {}
-            cost_in = float(cost.get("input", 0.0))
-            cost_out = float(cost.get("output", 0.0))
-            cost_str = f"${cost_in:.2f} / ${cost_out:.2f}"
-            tags = ", ".join(m.get("tags") or []) or "-"
-            is_active = m.get("id") == active_id
-            is_default = bool(m.get("is_default"))
-            table.add_row(
-                "*" if is_active else "",
-                str(m.get("id", "")),
-                str(m.get("name", "")),
-                str(m.get("provider", "")),
-                str(m.get("tier", "")),
-                tags,
-                "yes" if is_default else "",
-                cost_str,
-            )
+        for entry in models:
+            table.add_row(*self._model_row(entry, active_id))
 
         event_log = self.app.query_one("Conversation")
         await event_log.add_info(table)
@@ -679,29 +725,10 @@ class CommandProcessor:
             "[dim]Use `/model set <id>` to switch, `/model show` to inspect.[/dim]"
         )
 
-    async def _model_show(self) -> None:
-        """Display the currently active model, resolving the backend default."""
-        registry = await self.app._client.list_configured_models()
-        models = registry.get("models") or []
-        default_id = registry.get("default_id")
-        active_id = (
-            getattr(self.app, "_current_model_id", None)
-            or getattr(self.app, "_current_model", None)
-            or default_id
-        )
-        match = next((m for m in models if m.get("id") == active_id), None)
-
-        if match is None:
-            await self.app.query_one("Conversation").add_info(
-                "[yellow]No active model. "
-                "Run `/model list` to see what is configured.[/yellow]"
-            )
-            return
-
-        cost = match.get("cost") or {}
-        cost_in = float(cost.get("input", 0.0))
-        cost_out = float(cost.get("output", 0.0))
-        panel = Panel(
+    def _model_panel(self, match: dict[str, Any]) -> Panel:
+        """Build the detail panel for the currently active model."""
+        cost_in, cost_out = self._model_cost_pair(match)
+        return Panel(
             (
                 f"[bold]ID:[/bold] {match.get('id')}\n"
                 f"[bold]Name:[/bold] {match.get('name')}\n"
@@ -717,7 +744,22 @@ class CommandProcessor:
             title="Active Model",
             border_style="cyan",
         )
-        await self.app.query_one("Conversation").add_info(panel)
+
+    async def _model_show(self) -> None:
+        """Display the currently active model, resolving the backend default."""
+        registry = await self.app._client.list_configured_models()
+        models = registry.get("models") or []
+        active_id = self._active_model_id(registry)
+        match = next((m for m in models if m.get("id") == active_id), None)
+
+        if match is None:
+            await self.app.query_one("Conversation").add_info(
+                "[yellow]No active model. "
+                "Run `/model list` to see what is configured.[/yellow]"
+            )
+            return
+
+        await self.app.query_one("Conversation").add_info(self._model_panel(match))
 
     async def _model_set(self, model_id: str) -> None:
         """Select a model id for subsequent turns."""
@@ -971,6 +1013,80 @@ class CommandProcessor:
         """Toggle server logs visibility (Ctrl+V)."""
         self.app.action_toggle_logs()
 
+    def _require_arg(self, rest: str, usage: str) -> str | None:
+        """Return the stripped argument, or ``None`` after notifying the usage."""
+        value = rest.strip()
+        if not value:
+            self.app.notify(usage, severity="warning")
+            return None
+        return value
+
+    async def _memory_list(self, log: Any, rest: str) -> None:
+        """``/memory list`` — render every Memory node."""
+        try:
+            memories = await self.app._client.list_graph_nodes(node_type="Memory")
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "memory list", exc)
+            return
+        await log.add_info(self._render_memory_list(memories))
+
+    async def _memory_add(self, log: Any, rest: str) -> None:
+        """``/memory add <content>`` — create a Memory node."""
+        content = self._require_arg(rest, "Usage: /memory add <content>")
+        if content is None:
+            return
+        try:
+            created = await self.app._client.create_memory({"content": content})
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "memory add", exc)
+            return
+        mem_id = created.get("id", "<unknown>")
+        self.app.notify(f"Memory created: {mem_id}", severity="information")
+        await log.add_info(f"[green]Memory created:[/green] {mem_id}")
+
+    async def _memory_get(self, log: Any, rest: str) -> None:
+        """``/memory get <id>`` — render one Memory node."""
+        mem_id = self._require_arg(rest, "Usage: /memory get <id>")
+        if mem_id is None:
+            return
+        try:
+            memory = await self.app._client.get_memory(mem_id)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "memory get", exc)
+            return
+        await log.add_info(self._render_memory_detail(memory))
+
+    async def _memory_delete(self, log: Any, rest: str) -> None:
+        """``/memory delete <id>`` — remove one Memory node."""
+        mem_id = self._require_arg(rest, "Usage: /memory delete <id>")
+        if mem_id is None:
+            return
+        try:
+            await self.app._client.delete_memory(mem_id)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "memory delete", exc)
+            return
+        self.app.notify(f"Memory deleted: {mem_id}", severity="warning")
+        await log.add_info(f"[yellow]Memory deleted:[/yellow] {mem_id}")
+
+    async def _memory_search(self, log: Any, rest: str) -> None:
+        """``/memory search <query>`` — semantic search across the graph."""
+        query = self._require_arg(rest, "Usage: /memory search <query>")
+        if query is None:
+            return
+        try:
+            hits = await self.app._client.search_graph(query)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "memory search", exc)
+            return
+        await log.add_info(self._render_graph_search(query, hits))
+
+    async def _memory_review(self, log: Any, rest: str) -> None:
+        """``/memory review`` — ask the agent to summarize stored memories."""
+        await self._submit_prompt(
+            "Review the current knowledge-graph memories and summarize key items."
+        )
+
     async def cmd_memory(self, args: str) -> None:
         """Manage knowledge-graph memory nodes.
 
@@ -979,77 +1095,20 @@ class CommandProcessor:
         """
         sub, rest = self._parse_subcommand(args)
         log = self.app.query_one("Conversation")
-
-        if sub in ("", "list"):
-            try:
-                memories = await self.app._client.list_graph_nodes(node_type="Memory")
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "memory list", exc)
-                return
-            await log.add_info(self._render_memory_list(memories))
+        handlers: dict[str, Callable[[Any, str], Awaitable[None]]] = {
+            "": self._memory_list,
+            "list": self._memory_list,
+            "add": self._memory_add,
+            "get": self._memory_get,
+            "delete": self._memory_delete,
+            "search": self._memory_search,
+            "review": self._memory_review,
+        }
+        handler = handlers.get(sub)
+        if handler is None:
+            await self._submit_prompt(f"Manage project memory: {args}")
             return
-
-        if sub == "add":
-            if not rest.strip():
-                self.app.notify("Usage: /memory add <content>", severity="warning")
-                return
-            try:
-                created = await self.app._client.create_memory(
-                    {"content": rest.strip()}
-                )
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "memory add", exc)
-                return
-            mem_id = created.get("id", "<unknown>")
-            self.app.notify(f"Memory created: {mem_id}", severity="information")
-            await log.add_info(f"[green]Memory created:[/green] {mem_id}")
-            return
-
-        if sub == "get":
-            if not rest.strip():
-                self.app.notify("Usage: /memory get <id>", severity="warning")
-                return
-            try:
-                memory = await self.app._client.get_memory(rest.strip())
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "memory get", exc)
-                return
-            await log.add_info(self._render_memory_detail(memory))
-            return
-
-        if sub == "delete":
-            if not rest.strip():
-                self.app.notify("Usage: /memory delete <id>", severity="warning")
-                return
-            mem_id = rest.strip()
-            try:
-                await self.app._client.delete_memory(mem_id)
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "memory delete", exc)
-                return
-            self.app.notify(f"Memory deleted: {mem_id}", severity="warning")
-            await log.add_info(f"[yellow]Memory deleted:[/yellow] {mem_id}")
-            return
-
-        if sub == "search":
-            if not rest.strip():
-                self.app.notify("Usage: /memory search <query>", severity="warning")
-                return
-            try:
-                hits = await self.app._client.search_graph(rest.strip())
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "memory search", exc)
-                return
-            await log.add_info(self._render_graph_search(rest.strip(), hits))
-            return
-
-        if sub == "review":
-            await self._submit_prompt(
-                "Review the current knowledge-graph memories and summarize key items."
-            )
-            return
-
-        await self._submit_prompt(f"Manage project memory: {args}")
+        await handler(log, rest)
 
     async def cmd_agents(self, args: str) -> None:
         """Open the Agent View — multi-session dashboard (TUI-20)."""
@@ -1200,6 +1259,49 @@ class CommandProcessor:
         """Add a directory to the agent's working context. Usage: /add-dir <path>"""
         await self._submit_prompt(f"Add this directory to your working context: {args}")
 
+    async def _graph_stats(self, log: Any, rest: str) -> None:
+        """``/graph stats`` — summarize the knowledge graph."""
+        try:
+            stats = await self.app._client.get_graph_stats()
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "graph stats", exc)
+            return
+        await log.add_info(self._render_graph_stats(stats))
+
+    async def _graph_nodes(self, log: Any, rest: str) -> None:
+        """``/graph nodes [type]`` — list graph nodes, optionally by type."""
+        node_type = rest.strip() or None
+        try:
+            nodes = await self.app._client.list_graph_nodes(node_type=node_type)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "graph nodes", exc)
+            return
+        await log.add_info(self._render_graph_nodes(nodes, node_type))
+
+    async def _graph_search(self, log: Any, rest: str) -> None:
+        """``/graph search <query>`` — semantic search across the graph."""
+        query = self._require_arg(rest, "Usage: /graph search <query>")
+        if query is None:
+            return
+        try:
+            hits = await self.app._client.search_graph(query)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "graph search", exc)
+            return
+        await log.add_info(self._render_graph_search(query, hits))
+
+    async def _graph_impact(self, log: Any, rest: str) -> None:
+        """``/graph impact <symbol>`` — show what a symbol change would touch."""
+        symbol = self._require_arg(rest, "Usage: /graph impact <symbol>")
+        if symbol is None:
+            return
+        try:
+            impacts = await self.app._client.get_graph_impact(symbol)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "graph impact", exc)
+            return
+        await log.add_info(self._render_graph_impact(symbol, impacts))
+
     async def cmd_graph(self, args: str) -> None:
         """Explore the knowledge graph.
 
@@ -1207,52 +1309,18 @@ class CommandProcessor:
         """
         sub, rest = self._parse_subcommand(args)
         log = self.app.query_one("Conversation")
-
-        if sub in ("", "stats"):
-            try:
-                stats = await self.app._client.get_graph_stats()
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "graph stats", exc)
-                return
-            await log.add_info(self._render_graph_stats(stats))
+        handlers: dict[str, Callable[[Any, str], Awaitable[None]]] = {
+            "": self._graph_stats,
+            "stats": self._graph_stats,
+            "nodes": self._graph_nodes,
+            "search": self._graph_search,
+            "impact": self._graph_impact,
+        }
+        handler = handlers.get(sub)
+        if handler is None:
+            self.app.notify(f"Unknown /graph subcommand: {sub}", severity="warning")
             return
-
-        if sub == "nodes":
-            node_type = rest.strip() or None
-            try:
-                nodes = await self.app._client.list_graph_nodes(node_type=node_type)
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "graph nodes", exc)
-                return
-            await log.add_info(self._render_graph_nodes(nodes, node_type))
-            return
-
-        if sub == "search":
-            if not rest.strip():
-                self.app.notify("Usage: /graph search <query>", severity="warning")
-                return
-            try:
-                hits = await self.app._client.search_graph(rest.strip())
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "graph search", exc)
-                return
-            await log.add_info(self._render_graph_search(rest.strip(), hits))
-            return
-
-        if sub == "impact":
-            if not rest.strip():
-                self.app.notify("Usage: /graph impact <symbol>", severity="warning")
-                return
-            symbol = rest.strip()
-            try:
-                impacts = await self.app._client.get_graph_impact(symbol)
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "graph impact", exc)
-                return
-            await log.add_info(self._render_graph_impact(symbol, impacts))
-            return
-
-        self.app.notify(f"Unknown /graph subcommand: {sub}", severity="warning")
+        await handler(log, rest)
 
     async def cmd_ask(self, args: str) -> None:
         """Ask a data question in plain English (multi-step analyst, KG-2.308).
@@ -1378,6 +1446,64 @@ class CommandProcessor:
             return
         await log.add_info(self._render_kvcache(result))
 
+    async def _kb_list(self, log: Any, rest: str) -> None:
+        """``/kb list`` — show every knowledge base."""
+        try:
+            kbs = await self.app._client.list_kbs()
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "kb list", exc)
+            return
+        await log.add_info(self._render_kb_list(kbs))
+
+    async def _kb_search(self, log: Any, rest: str) -> None:
+        """``/kb search <query> [--kb <id>]`` — search knowledge-base articles."""
+        usage = "Usage: /kb search <query> [--kb <id>]"
+        if self._require_arg(rest, usage) is None:
+            return
+        query, kb_id = self._split_kb_flag(rest)
+        if not query:
+            self.app.notify(usage, severity="warning")
+            return
+        try:
+            hits = await self.app._client.search_kb(query, kb_id=kb_id)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "kb search", exc)
+            return
+        await log.add_info(self._render_kb_search(query, hits, kb_id))
+
+    async def _kb_article(self, log: Any, rest: str) -> None:
+        """``/kb article <id>`` — render one knowledge-base article."""
+        article_id = self._require_arg(rest, "Usage: /kb article <article_id>")
+        if article_id is None:
+            return
+        try:
+            article = await self.app._client.get_kb_article(article_id)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "kb article", exc)
+            return
+        await log.add_info(self._render_kb_article(article))
+
+    async def _kb_ingest(self, log: Any, rest: str) -> None:
+        """``/kb ingest <source> <kb_name>`` — ingest a source into a KB."""
+        parts = rest.split(maxsplit=1)
+        if len(parts) < 2:
+            self.app.notify("Usage: /kb ingest <source> <kb_name>", severity="warning")
+            return
+        source, kb_name = parts[0], parts[1].strip()
+        try:
+            result = await self.app._client.ingest_kb(source, kb_name)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "kb ingest", exc)
+            return
+        status = result.get("status", "ok")
+        self.app.notify(
+            f"Ingestion started: {kb_name} ({status})", severity="information"
+        )
+        await log.add_info(
+            f"[green]Ingested[/green] [bold]{source}[/bold] "
+            f"into [cyan]{kb_name}[/cyan] (status: {status})"
+        )
+
     async def cmd_kb(self, args: str) -> None:
         """Browse and ingest knowledge bases.
 
@@ -1386,70 +1512,61 @@ class CommandProcessor:
         """
         sub, rest = self._parse_subcommand(args)
         log = self.app.query_one("Conversation")
-
-        if sub in ("", "list"):
-            try:
-                kbs = await self.app._client.list_kbs()
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "kb list", exc)
-                return
-            await log.add_info(self._render_kb_list(kbs))
+        handlers: dict[str, Callable[[Any, str], Awaitable[None]]] = {
+            "": self._kb_list,
+            "list": self._kb_list,
+            "search": self._kb_search,
+            "article": self._kb_article,
+            "ingest": self._kb_ingest,
+        }
+        handler = handlers.get(sub)
+        if handler is None:
+            self.app.notify(f"Unknown /kb subcommand: {sub}", severity="warning")
             return
+        await handler(log, rest)
 
-        if sub == "search":
-            usage = "Usage: /kb search <query> [--kb <id>]"
-            if not rest.strip():
-                self.app.notify(usage, severity="warning")
-                return
-            query, kb_id = self._split_kb_flag(rest)
-            if not query:
-                self.app.notify(usage, severity="warning")
-                return
-            try:
-                hits = await self.app._client.search_kb(query, kb_id=kb_id)
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "kb search", exc)
-                return
-            await log.add_info(self._render_kb_search(query, hits, kb_id))
+    async def _sdd_constitution(self, log: Any, rest: str) -> None:
+        """``/sdd constitution`` — render the project constitution."""
+        try:
+            constitution = await self.app._client.get_constitution()
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "sdd constitution", exc)
             return
-
-        if sub == "article":
-            if not rest.strip():
-                self.app.notify("Usage: /kb article <article_id>", severity="warning")
-                return
-            article_id = rest.strip()
-            try:
-                article = await self.app._client.get_kb_article(article_id)
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "kb article", exc)
-                return
-            await log.add_info(self._render_kb_article(article))
+        if not constitution:
+            await log.add_info("[yellow]No constitution defined yet.[/yellow]")
             return
+        await log.add_info(self._render_constitution(constitution))
 
-        if sub == "ingest":
-            parts = rest.split(maxsplit=1)
-            if len(parts) < 2:
-                self.app.notify(
-                    "Usage: /kb ingest <source> <kb_name>", severity="warning"
-                )
-                return
-            source, kb_name = parts[0], parts[1].strip()
-            try:
-                result = await self.app._client.ingest_kb(source, kb_name)
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "kb ingest", exc)
-                return
-            status = result.get("status", "ok")
-            self.app.notify(
-                f"Ingestion started: {kb_name} ({status})", severity="information"
-            )
-            await log.add_info(
-                f"[green]Ingested[/green] [bold]{source}[/bold] "
-                f"into [cyan]{kb_name}[/cyan] (status: {status})"
-            )
+    async def _sdd_specs(self, log: Any, rest: str) -> None:
+        """``/sdd specs`` — list the recorded specifications."""
+        try:
+            specs = await self.app._client.list_specs()
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "sdd specs", exc)
             return
+        await log.add_info(self._render_specs(specs))
 
-        self.app.notify(f"Unknown /kb subcommand: {sub}", severity="warning")
+    async def _sdd_plans(self, log: Any, rest: str) -> None:
+        """``/sdd plans`` — list the recorded plans."""
+        try:
+            plans = await self.app._client.list_plans()
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "sdd plans", exc)
+            return
+        await log.add_info(self._render_plans(plans))
+
+    async def _sdd_tasks(self, log: Any, rest: str) -> None:
+        """``/sdd tasks [plan_id]`` — list tasks, optionally scoped to a plan."""
+        plan_id = rest.strip() or None
+        try:
+            tasks = await self.app._client.get_tasks(plan_id=plan_id)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "sdd tasks", exc)
+            return
+        # Server may wrap tasks in {"tasks": [...]} or return a list directly.
+        if isinstance(tasks, dict) and "tasks" in tasks:
+            tasks = tasks["tasks"]
+        await log.add_info(self._render_tasks(tasks, plan_id))
 
     async def cmd_sdd(self, args: str) -> None:
         """Inspect Spec-Driven Development artifacts.
@@ -1458,54 +1575,20 @@ class CommandProcessor:
         """
         sub, rest = self._parse_subcommand(args)
         log = self.app.query_one("Conversation")
-
-        if sub == "constitution":
-            try:
-                constitution = await self.app._client.get_constitution()
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "sdd constitution", exc)
-                return
-            if not constitution:
-                await log.add_info("[yellow]No constitution defined yet.[/yellow]")
-                return
-            await log.add_info(self._render_constitution(constitution))
+        handlers: dict[str, Callable[[Any, str], Awaitable[None]]] = {
+            "constitution": self._sdd_constitution,
+            "specs": self._sdd_specs,
+            "plans": self._sdd_plans,
+            "tasks": self._sdd_tasks,
+        }
+        handler = handlers.get(sub)
+        if handler is None:
+            self.app.notify(
+                "Usage: /sdd [constitution | specs | plans | tasks [plan_id]]",
+                severity="warning",
+            )
             return
-
-        if sub == "specs":
-            try:
-                specs = await self.app._client.list_specs()
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "sdd specs", exc)
-                return
-            await log.add_info(self._render_specs(specs))
-            return
-
-        if sub == "plans":
-            try:
-                plans = await self.app._client.list_plans()
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "sdd plans", exc)
-                return
-            await log.add_info(self._render_plans(plans))
-            return
-
-        if sub == "tasks":
-            plan_id = rest.strip() or None
-            try:
-                tasks = await self.app._client.get_tasks(plan_id=plan_id)
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "sdd tasks", exc)
-                return
-            # Server may wrap tasks in {"tasks": [...]} or return a list directly.
-            if isinstance(tasks, dict) and "tasks" in tasks:
-                tasks = tasks["tasks"]
-            await log.add_info(self._render_tasks(tasks, plan_id))
-            return
-
-        self.app.notify(
-            "Usage: /sdd [constitution | specs | plans | tasks [plan_id]]",
-            severity="warning",
-        )
+        await handler(log, rest)
 
     async def cmd_impact(self, args: str) -> None:
         """Inspect topological impact for a symbol. Usage: /impact <symbol>"""
@@ -1555,27 +1638,8 @@ class CommandProcessor:
         self.app.notify(message, severity="information")
         await log.add_info(f"[green]{message}[/green]")
 
-    async def cmd_codemap(self, args: str) -> None:
-        """Generate a codebase codemap. Usage: /codemap <prompt>"""
-        log = self.app.query_one("Conversation")
-        prompt = args.strip()
-        if not prompt:
-            self.app.notify("Usage: /codemap <prompt>", severity="warning")
-            return
-        try:
-            result = await self.app._client.generate_codemap(prompt)
-        except httpx.HTTPStatusError as exc:
-            await self._write_http_error(log, "codemap", exc)
-            return
-        except Exception as exc:
-            await log.add_info(f"[red]Error (codemap): {exc}[/red]")
-            return
-
-        if result.get("status") == "error":
-            error = result.get("message", "unknown error")
-            await log.add_info(f"[red]Codemap generation failed:[/red] {error}")
-            return
-
+    async def _write_codemap(self, log: Any, result: dict[str, Any]) -> None:
+        """Render a codemap result's header plus its mermaid/markdown artifacts."""
         artifact = result.get("artifact") or {}
         mermaid = artifact.get("mermaid")
         markdown = artifact.get("markdown")
@@ -1593,6 +1657,74 @@ class CommandProcessor:
                 "[yellow]Codemap returned no renderable content.[/yellow]"
             )
 
+    async def cmd_codemap(self, args: str) -> None:
+        """Generate a codebase codemap. Usage: /codemap <prompt>"""
+        log = self.app.query_one("Conversation")
+        prompt = self._require_arg(args, "Usage: /codemap <prompt>")
+        if prompt is None:
+            return
+        try:
+            result = await self.app._client.generate_codemap(prompt)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "codemap", exc)
+            return
+        except Exception as exc:
+            await log.add_info(f"[red]Error (codemap): {exc}[/red]")
+            return
+
+        if result.get("status") == "error":
+            error = result.get("message", "unknown error")
+            await log.add_info(f"[red]Codemap generation failed:[/red] {error}")
+            return
+
+        await self._write_codemap(log, result)
+
+    async def _resources_list(self, log: Any, rest: str) -> None:
+        """``/resources list`` — render the callable-resource registry."""
+        try:
+            resources = await self.app._client.list_resources()
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "resources list", exc)
+            return
+        except Exception as exc:
+            await log.add_info(f"[red]Error (resources list): {exc}[/red]")
+            return
+        await log.add_info(self._render_resources_table(resources))
+
+    async def _parse_spawn_spec(self, log: Any, rest: str) -> dict[str, Any] | None:
+        """Parse a ``/resources spawn`` JSON spec, or report why it is unusable."""
+        if self._require_arg(rest, "Usage: /resources spawn <json_spec>") is None:
+            return None
+        try:
+            spec = json.loads(rest)
+        except json.JSONDecodeError as exc:
+            self.app.notify(
+                f"Invalid JSON for /resources spawn: {exc}", severity="error"
+            )
+            await log.add_info(f"[red]Invalid JSON for spawn spec:[/red] {exc}")
+            return None
+        if not isinstance(spec, dict):
+            self.app.notify("Spawn spec must be a JSON object", severity="error")
+            return None
+        return spec
+
+    async def _resources_spawn(self, log: Any, rest: str) -> None:
+        """``/resources spawn <json_spec>`` — spawn a callable resource."""
+        spec = await self._parse_spawn_spec(log, rest)
+        if spec is None:
+            return
+        try:
+            spawned = await self.app._client.spawn_resource(spec)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "resources spawn", exc)
+            return
+        except Exception as exc:
+            await log.add_info(f"[red]Error (resources spawn): {exc}[/red]")
+            return
+        spawned_id = spawned.get("id") or spawned.get("name", "<unknown>")
+        self.app.notify(f"Spawned resource: {spawned_id}", severity="information")
+        await log.add_info(f"[green]Spawned resource:[/green] {spawned_id}")
+
     async def cmd_resources(self, args: str) -> None:
         """List or spawn callable resources.
 
@@ -1600,50 +1732,16 @@ class CommandProcessor:
         """
         sub, rest = self._parse_subcommand(args)
         log = self.app.query_one("Conversation")
-
-        if sub in ("", "list"):
-            try:
-                resources = await self.app._client.list_resources()
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "resources list", exc)
-                return
-            except Exception as exc:
-                await log.add_info(f"[red]Error (resources list): {exc}[/red]")
-                return
-            await log.add_info(self._render_resources_table(resources))
+        handlers: dict[str, Callable[[Any, str], Awaitable[None]]] = {
+            "": self._resources_list,
+            "list": self._resources_list,
+            "spawn": self._resources_spawn,
+        }
+        handler = handlers.get(sub)
+        if handler is None:
+            self.app.notify(f"Unknown /resources subcommand: {sub}", severity="warning")
             return
-
-        if sub == "spawn":
-            if not rest.strip():
-                self.app.notify(
-                    "Usage: /resources spawn <json_spec>", severity="warning"
-                )
-                return
-            try:
-                spec = json.loads(rest)
-            except json.JSONDecodeError as exc:
-                self.app.notify(
-                    f"Invalid JSON for /resources spawn: {exc}", severity="error"
-                )
-                await log.add_info(f"[red]Invalid JSON for spawn spec:[/red] {exc}")
-                return
-            if not isinstance(spec, dict):
-                self.app.notify("Spawn spec must be a JSON object", severity="error")
-                return
-            try:
-                spawned = await self.app._client.spawn_resource(spec)
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "resources spawn", exc)
-                return
-            except Exception as exc:
-                await log.add_info(f"[red]Error (resources spawn): {exc}[/red]")
-                return
-            spawned_id = spawned.get("id") or spawned.get("name", "<unknown>")
-            self.app.notify(f"Spawned resource: {spawned_id}", severity="information")
-            await log.add_info(f"[green]Spawned resource:[/green] {spawned_id}")
-            return
-
-        self.app.notify(f"Unknown /resources subcommand: {sub}", severity="warning")
+        await handler(log, rest)
 
     async def cmd_pipeline(self, args: str) -> None:
         """Inspect or trigger the ingestion pipeline.
@@ -1891,6 +1989,45 @@ class CommandProcessor:
                 table.add_row(f"  {type_name}", str(by_type[type_name]))
         return table
 
+    @staticmethod
+    def _truncate(value: Any, limit: int = 80) -> Any:
+        """Shorten an over-long string for single-line table display."""
+        if isinstance(value, str) and len(value) > limit:
+            return value[: limit - 3] + "..."
+        return value
+
+    @staticmethod
+    def _first_value(*candidates: Any, default: Any = "") -> Any:
+        """Return the first truthy candidate, or ``default`` when there is none."""
+        for candidate in candidates:
+            if candidate:
+                return candidate
+        return default
+
+    @staticmethod
+    def _named_entries(value: Any) -> Any:
+        """Normalize a ``{name: info}`` mapping into a list of named dicts."""
+        entries = value or []
+        if isinstance(entries, dict):
+            return [
+                {"name": name, **(info if isinstance(info, dict) else {})}
+                for name, info in entries.items()
+            ]
+        return entries
+
+    def _graph_node_row(self, node: dict[str, Any]) -> tuple[str, str, str]:
+        """Build the table cells for one graph node."""
+        labels = node.get("labels") or []
+        labels_str = ", ".join(labels) if labels else node.get("type", "")
+        props = node.get("properties") or {}
+        name = self._first_value(
+            props.get("name"),
+            props.get("title"),
+            props.get("content"),
+            default=node.get("name", ""),
+        )
+        return str(node.get("id", "")), str(labels_str), str(self._truncate(name))
+
     def _render_graph_nodes(
         self, nodes: list[dict[str, Any]], node_type: str | None
     ) -> Table:
@@ -1902,18 +2039,7 @@ class CommandProcessor:
         table.add_column("Name")
 
         for node in nodes:
-            labels = node.get("labels") or []
-            labels_str = ", ".join(labels) if labels else node.get("type", "")
-            props = node.get("properties") or {}
-            name = (
-                props.get("name")
-                or props.get("title")
-                or props.get("content")
-                or node.get("name", "")
-            )
-            if isinstance(name, str) and len(name) > 80:
-                name = name[:77] + "..."
-            table.add_row(str(node.get("id", "")), str(labels_str), str(name))
+            table.add_row(*self._graph_node_row(node))
         return table
 
     def _render_graph_search(self, query: str, hits: list[dict[str, Any]]) -> Table:
@@ -1992,67 +2118,128 @@ class CommandProcessor:
         )
         return Panel(body, title=title, border_style="cyan")
 
+    @staticmethod
+    def _row_columns(rows: list[Any]) -> list[str]:
+        """Union of the keys across every mapping row, in stable order."""
+        return sorted({k for row in rows if isinstance(row, dict) for k in row})
+
+    @staticmethod
+    def _dict_rows_table(title: str, rows: list[Any], columns: list[str]) -> Table:
+        """Render mapping rows as a table with one column per known key."""
+        table = Table(title=title, expand=True)
+        for col in columns:
+            table.add_column(col, overflow="fold")
+        for row in rows[:50]:
+            table.add_row(*[str(row.get(col, "")) for col in columns])
+        return table
+
+    @staticmethod
+    def _scalar_rows_table(title: str, rows: list[Any]) -> Table:
+        """Render non-mapping rows as a single-column table."""
+        table = Table(title=title, expand=True)
+        table.add_column("value")
+        for row in rows[:50]:
+            table.add_row(str(row))
+        return table
+
+    @staticmethod
+    def _nl_query_header(result: dict[str, Any]) -> str:
+        """Format the generated-query header for an ``nl_query`` payload."""
+        query = result.get("query") or result.get("generated_query") or ""
+        dialect = result.get("dialect", "")
+        header = f"[bold blue]Generated query[/bold blue] ([dim]{dialect}[/dim])\n"
+        return header + (
+            f"[green]{query}[/green]" if query else "[dim](no query)[/dim]"
+        )
+
     def _render_nl_query(self, result: dict[str, Any]) -> Any:
         """Render an ``nl_query`` payload: generated query + result rows."""
         err = self._surface_error(result)
         if err:
             return f"[red]NL query failed: {err}[/red]"
-        query = result.get("query") or result.get("generated_query") or ""
-        dialect = result.get("dialect", "")
+        header = self._nl_query_header(result)
         rows = result.get("rows") or result.get("results") or result.get("result") or []
-        header = f"[bold blue]Generated query[/bold blue] ([dim]{dialect}[/dim])\n"
-        header += f"[green]{query}[/green]" if query else "[dim](no query)[/dim]"
         if not isinstance(rows, list) or not rows:
             return header + "\n[dim]No rows returned.[/dim]"
-        table = Table(title="Results", expand=True)
-        columns = sorted({k for row in rows if isinstance(row, dict) for k in row})
-        if columns:
-            for col in columns:
-                table.add_column(col, overflow="fold")
-            for row in rows[:50]:
-                table.add_row(*[str(row.get(col, "")) for col in columns])
-        else:
-            table.add_column("value")
-            for row in rows[:50]:
-                table.add_row(str(row))
+        columns = self._row_columns(rows)
+        table = (
+            self._dict_rows_table("Results", rows, columns)
+            if columns
+            else self._scalar_rows_table("Results", rows)
+        )
         return Group(header, table)
+
+    def _ask_data_parts(self, result: dict[str, Any]) -> list[Any]:
+        """Collect the renderables for an ``ask_data`` payload, in order."""
+        parts: list[Any] = []
+        answer = result.get("answer") or ""
+        if answer:
+            parts.append(Panel(str(answer), title="Answer", border_style="green"))
+        query = result.get("query") or result.get("generated_query") or ""
+        if query:
+            parts.append(Syntax(str(query), "sql", word_wrap=True))
+        rows_table = self._ask_data_rows_table(result)
+        if rows_table is not None:
+            parts.append(rows_table)
+        return parts
+
+    def _ask_data_rows_table(self, result: dict[str, Any]) -> Table | None:
+        """Build the ``ask_data`` rows table, or ``None`` when there is nothing."""
+        rows = result.get("rows") or result.get("results") or []
+        if not isinstance(rows, list) or not rows:
+            return None
+        columns = self._row_columns(rows)
+        if not columns:
+            return None
+        return self._dict_rows_table("Rows", rows, columns)
 
     def _render_ask_data(self, result: dict[str, Any]) -> Any:
         """Render an ``ask_data`` payload: synthesized answer + query + rows."""
         err = self._surface_error(result)
         if err:
             return f"[red]Ask-data failed: {err}[/red]"
-        answer = result.get("answer") or ""
-        query = result.get("query") or result.get("generated_query") or ""
-        rows = result.get("rows") or result.get("results") or []
-        parts = []
-        if answer:
-            parts.append(Panel(str(answer), title="Answer", border_style="green"))
-        if query:
-            parts.append(Syntax(str(query), "sql", word_wrap=True))
-        if isinstance(rows, list) and rows:
-            table = Table(title="Rows", expand=True)
-            columns = sorted({k for r in rows if isinstance(r, dict) for k in r})
-            if columns:
-                for col in columns:
-                    table.add_column(col, overflow="fold")
-                for row in rows[:50]:
-                    table.add_row(*[str(row.get(col, "")) for col in columns])
-                parts.append(table)
+        parts = self._ask_data_parts(result)
         if not parts:
             return self._render_json_panel("Ask Data", result)
         return Group(*parts)
+
+    @staticmethod
+    def _promql_series(result: dict[str, Any]) -> Any:
+        """Unwrap the sample series from a PromQL payload's nesting."""
+        inner = result.get("result", result)
+        if isinstance(inner, dict):
+            return inner.get("result", inner.get("data", inner))
+        return inner
+
+    @staticmethod
+    def _promql_label(entry: dict[str, Any]) -> str:
+        """Build the display label for one PromQL series entry."""
+        metric = entry.get("metric") or {}
+        return str(
+            metric.get("__name__")
+            or ", ".join(f"{k}={v}" for k, v in metric.items())
+            or "value"
+        )
+
+    def _promql_row(self, entry: dict[str, Any], action: str) -> list[str]:
+        """Build the table cells for one PromQL series entry."""
+        label = self._promql_label(entry)
+        if action == "range":
+            pairs = entry.get("values") or []
+            nums = [n for _, raw in pairs if (n := self._coerce_float(raw)) is not None]
+            last = f"{nums[-1]:g}" if nums else ""
+            return [label, self._sparkline(nums), last]
+        value = entry.get("value") or ["", ""]
+        raw = value[1] if isinstance(value, list | tuple) and len(value) > 1 else value
+        num = self._coerce_float(raw)
+        return [label, f"{num:g}" if num is not None else str(raw)]
 
     def _render_promql(self, result: dict[str, Any], expr: str, action: str) -> Any:
         """Render a PromQL payload: a metric table plus a sparkline for ranges."""
         err = self._surface_error(result)
         if err:
             return f"[red]PromQL failed: {err}[/red]"
-        inner = result.get("result", result)
-        if isinstance(inner, dict):
-            series = inner.get("result", inner.get("data", inner))
-        else:
-            series = inner
+        series = self._promql_series(result)
         if not isinstance(series, list) or not series:
             return self._render_json_panel(f"PromQL: {expr}", result)
         table = Table(title=f"PromQL ({action}): {expr}", expand=True)
@@ -2063,32 +2250,21 @@ class CommandProcessor:
         else:
             table.add_column("Value", justify="right")
         for entry in series[:20]:
-            if not isinstance(entry, dict):
-                table.add_row(str(entry), "")
-                continue
-            metric = entry.get("metric") or {}
-            label = (
-                metric.get("__name__")
-                or ", ".join(f"{k}={v}" for k, v in metric.items())
-                or "value"
-            )
-            if action == "range":
-                pairs = entry.get("values") or []
-                nums = [
-                    n for _, raw in pairs if (n := self._coerce_float(raw)) is not None
-                ]
-                last = f"{nums[-1]:g}" if nums else ""
-                table.add_row(str(label), self._sparkline(nums), last)
+            if isinstance(entry, dict):
+                table.add_row(*self._promql_row(entry, action))
             else:
-                value = entry.get("value") or ["", ""]
-                raw = (
-                    value[1]
-                    if isinstance(value, list | tuple) and len(value) > 1
-                    else value
-                )
-                num = self._coerce_float(raw)
-                table.add_row(str(label), f"{num:g}" if num is not None else str(raw))
+                table.add_row(str(entry), "")
         return table
+
+    @staticmethod
+    def _trace_row(trace: dict[str, Any]) -> tuple[str, str, str, str]:
+        """Build the table cells for one trace-search hit."""
+        return (
+            str(trace.get("trace_id") or trace.get("id", "")),
+            str(trace.get("service") or trace.get("service_name", "")),
+            str(trace.get("operation") or trace.get("name", "")),
+            str(trace.get("duration_ms") or trace.get("duration") or ""),
+        )
 
     def _render_traces(self, result: dict[str, Any]) -> Any:
         """Render a trace-search payload as a table."""
@@ -2105,15 +2281,33 @@ class CommandProcessor:
         table.add_column("Operation")
         table.add_column("Duration", justify="right")
         for trace in traces[:30]:
-            if not isinstance(trace, dict):
-                continue
-            duration = trace.get("duration_ms") or trace.get("duration") or ""
-            table.add_row(
-                str(trace.get("trace_id") or trace.get("id", "")),
-                str(trace.get("service") or trace.get("service_name", "")),
-                str(trace.get("operation") or trace.get("name", "")),
-                str(duration),
+            if isinstance(trace, dict):
+                table.add_row(*self._trace_row(trace))
+        return table
+
+    @staticmethod
+    def _broker_item_row(item: Any) -> tuple[str, str]:
+        """Build the table cells for one broker queue/exchange entry."""
+        if not isinstance(item, dict):
+            return str(item), ""
+        name = item.get("name") or item.get("queue") or item.get("exchange", "")
+        detail = ", ".join(f"{k}={v}" for k, v in item.items() if k not in ("name",))
+        return str(name), detail
+
+    def _render_broker_listing(self, inner: Any, action: str) -> Any:
+        """Render a broker queue/exchange listing as a table."""
+        items = inner
+        if isinstance(inner, dict):
+            items = (
+                inner.get("queues") or inner.get("exchanges") or inner.get("result", [])
             )
+        if not isinstance(items, list) or not items:
+            return "[dim]No entries.[/dim]"
+        table = Table(title=action.replace("_", " ").title(), expand=True)
+        table.add_column("Name", style="cyan", overflow="fold")
+        table.add_column("Detail")
+        for item in items[:50]:
+            table.add_row(*self._broker_item_row(item))
         return table
 
     def _render_broker(self, result: dict[str, Any], action: str) -> Any:
@@ -2123,32 +2317,7 @@ class CommandProcessor:
             return f"[red]Broker query failed: {err}[/red]"
         inner = result.get("result", result)
         if action in ("list_queues", "list_exchanges"):
-            items = inner
-            if isinstance(inner, dict):
-                items = (
-                    inner.get("queues")
-                    or inner.get("exchanges")
-                    or inner.get("result", [])
-                )
-            if not isinstance(items, list) or not items:
-                return "[dim]No entries.[/dim]"
-            table = Table(title=action.replace("_", " ").title(), expand=True)
-            table.add_column("Name", style="cyan", overflow="fold")
-            table.add_column("Detail")
-            for item in items[:50]:
-                if isinstance(item, dict):
-                    name = (
-                        item.get("name")
-                        or item.get("queue")
-                        or item.get("exchange", "")
-                    )
-                    detail = ", ".join(
-                        f"{k}={v}" for k, v in item.items() if k not in ("name",)
-                    )
-                    table.add_row(str(name), detail)
-                else:
-                    table.add_row(str(item), "")
-            return table
+            return self._render_broker_listing(inner, action)
         if not isinstance(inner, dict):
             return self._render_json_panel("Broker", result)
         table = Table(title="Broker Stats", expand=True)
@@ -2333,6 +2502,44 @@ class CommandProcessor:
             )
         return table
 
+    def _impact_row(self, entry: dict[str, Any]) -> tuple[str, str, str, str, str]:
+        """Build the table cells for one ``/impact`` entry."""
+        props = entry.get("properties") or {}
+        name = self._first_value(
+            entry.get("name"),
+            props.get("name"),
+            entry.get("symbol"),
+            props.get("symbol"),
+            default=str(entry.get("id", "")),
+        )
+        node_type = self._first_value(
+            entry.get("type"),
+            entry.get("label"),
+            (entry.get("labels") or [""])[0],
+            default=props.get("type", ""),
+        )
+        file_path = self._first_value(
+            entry.get("file"),
+            entry.get("path"),
+            props.get("file"),
+            props.get("path"),
+            default="",
+        )
+        depth = self._first_value(entry.get("depth"), default=entry.get("distance"))
+        relationship = self._first_value(
+            entry.get("relationship"),
+            entry.get("rel_type"),
+            entry.get("edge_type"),
+            default="",
+        )
+        return (
+            str(name),
+            str(node_type),
+            str(file_path),
+            str(depth) if depth is not None else "",
+            str(relationship),
+        )
+
     def _render_impact_table(self, symbol: str, impacts: list[dict[str, Any]]) -> Table:
         """Build a Rich table for ``/impact`` output."""
         table = Table(title=f"Impact: {symbol}", expand=True)
@@ -2343,42 +2550,7 @@ class CommandProcessor:
         table.add_column("Relationship")
 
         for entry in impacts:
-            props = entry.get("properties") or {}
-            name = (
-                entry.get("name")
-                or props.get("name")
-                or entry.get("symbol")
-                or props.get("symbol")
-                or str(entry.get("id", ""))
-            )
-            node_type = (
-                entry.get("type")
-                or entry.get("label")
-                or (entry.get("labels") or [""])[0]
-                or props.get("type", "")
-            )
-            file_path = (
-                entry.get("file")
-                or entry.get("path")
-                or props.get("file")
-                or props.get("path")
-                or ""
-            )
-            depth = entry.get("depth") or entry.get("distance")
-            depth_str = str(depth) if depth is not None else ""
-            relationship = (
-                entry.get("relationship")
-                or entry.get("rel_type")
-                or entry.get("edge_type")
-                or ""
-            )
-            table.add_row(
-                str(name),
-                str(node_type),
-                str(file_path),
-                depth_str,
-                str(relationship),
-            )
+            table.add_row(*self._impact_row(entry))
         return table
 
     def _render_resources_table(self, resources: list[dict[str, Any]]) -> Table:
@@ -2401,6 +2573,24 @@ class CommandProcessor:
             table.add_row(str(r_type), str(name), str(description))
         return table
 
+    @staticmethod
+    def _format_progress(progress: Any) -> str:
+        """Format a pipeline-phase progress value for display."""
+        if progress is None:
+            return ""
+        if isinstance(progress, int | float) and progress <= 1:
+            return f"{progress * 100:.0f}%"
+        return str(progress)
+
+    def _pipeline_row(self, phase: dict[str, Any]) -> tuple[str, str, str, str]:
+        """Build the table cells for one pipeline phase."""
+        return (
+            str(phase.get("name") or phase.get("phase", "")),
+            str(phase.get("state") or phase.get("status", "")),
+            str(phase.get("last_run") or phase.get("last_executed", "")),
+            self._format_progress(phase.get("progress")),
+        )
+
     def _render_pipeline_status(self, status: dict[str, Any]) -> Table:
         """Build a Rich table of pipeline-phase status."""
         title = f"Pipeline ({status.get('status', 'unknown')})"
@@ -2410,26 +2600,19 @@ class CommandProcessor:
         table.add_column("Last Run")
         table.add_column("Progress", justify="right")
 
-        phases = status.get("phases") or []
-        if isinstance(phases, dict):
-            phases = [
-                {"name": name, **(info if isinstance(info, dict) else {})}
-                for name, info in phases.items()
-            ]
-        for phase in phases:
-            name = phase.get("name") or phase.get("phase", "")
-            state = phase.get("state") or phase.get("status", "")
-            last_run = phase.get("last_run") or phase.get("last_executed", "")
-            progress = phase.get("progress")
-            progress_str = (
-                f"{progress * 100:.0f}%"
-                if isinstance(progress, int | float) and progress <= 1
-                else str(progress)
-                if progress is not None
-                else ""
-            )
-            table.add_row(str(name), str(state), str(last_run), progress_str)
+        for phase in self._named_entries(status.get("phases")):
+            table.add_row(*self._pipeline_row(phase))
         return table
+
+    @staticmethod
+    def _maintenance_row(operation: dict[str, Any]) -> tuple[str, str, str, str]:
+        """Build the table cells for one maintenance operation."""
+        return (
+            str(operation.get("name") or operation.get("operation", "")),
+            str(operation.get("last_run") or operation.get("last_executed", "")),
+            str(operation.get("items_pruned", operation.get("pruned", 0))),
+            str(operation.get("items_updated", operation.get("updated", 0))),
+        )
 
     def _render_maintenance_status(self, status: dict[str, Any]) -> Table:
         """Build a Rich table of maintenance-operation status."""
@@ -2440,18 +2623,8 @@ class CommandProcessor:
         table.add_column("Items Pruned", justify="right")
         table.add_column("Items Updated", justify="right")
 
-        operations = status.get("operations") or []
-        if isinstance(operations, dict):
-            operations = [
-                {"name": name, **(info if isinstance(info, dict) else {})}
-                for name, info in operations.items()
-            ]
-        for operation in operations:
-            name = operation.get("name") or operation.get("operation", "")
-            last_run = operation.get("last_run") or operation.get("last_executed", "")
-            pruned = operation.get("items_pruned", operation.get("pruned", 0))
-            updated = operation.get("items_updated", operation.get("updated", 0))
-            table.add_row(str(name), str(last_run), str(pruned), str(updated))
+        for operation in self._named_entries(status.get("operations")):
+            table.add_row(*self._maintenance_row(operation))
         return table
 
     def _render_cron_calendar(self, tasks: list[dict[str, Any]]) -> Table:
@@ -2482,6 +2655,40 @@ class CommandProcessor:
             )
         return table
 
+    @staticmethod
+    def _format_duration(duration: Any) -> str:
+        """Format a cron execution duration for display."""
+        if isinstance(duration, int | float):
+            return f"{duration}"
+        return str(duration) if duration else ""
+
+    def _cron_log_row(self, entry: dict[str, Any]) -> tuple[str, str, str, str, str]:
+        """Build the table cells for one cron execution log entry."""
+        name = self._first_value(
+            entry.get("task_name"),
+            entry.get("name"),
+            default=entry.get("task_id", ""),
+        )
+        started = self._first_value(
+            entry.get("started_at"),
+            entry.get("timestamp"),
+            default=entry.get("start_time", ""),
+        )
+        duration = self._first_value(
+            entry.get("duration"), default=entry.get("duration_ms", "")
+        )
+        status = self._first_value(entry.get("status"), default=entry.get("result", ""))
+        output = self._first_value(
+            entry.get("output"), default=entry.get("message", "")
+        )
+        return (
+            str(name),
+            str(started),
+            self._format_duration(duration),
+            str(status),
+            str(self._truncate(output)),
+        )
+
     def _render_cron_logs(self, logs: list[dict[str, Any]], limit: int) -> Table:
         """Build a Rich table summarizing recent cron executions."""
         table = Table(title=f"Cron Logs (latest {limit})", expand=True)
@@ -2492,30 +2699,7 @@ class CommandProcessor:
         table.add_column("Output")
 
         for entry in logs:
-            name = (
-                entry.get("task_name") or entry.get("name") or entry.get("task_id", "")
-            )
-            started = (
-                entry.get("started_at")
-                or entry.get("timestamp")
-                or entry.get("start_time", "")
-            )
-            duration = entry.get("duration") or entry.get("duration_ms", "")
-            if isinstance(duration, int | float):
-                duration_str = f"{duration}"
-            else:
-                duration_str = str(duration) if duration else ""
-            status = entry.get("status") or entry.get("result", "")
-            output = entry.get("output") or entry.get("message", "")
-            if isinstance(output, str) and len(output) > 80:
-                output = output[:77] + "..."
-            table.add_row(
-                str(name),
-                str(started),
-                duration_str,
-                str(status),
-                str(output),
-            )
+            table.add_row(*self._cron_log_row(entry))
         return table
 
     def _render_backend_config(self, config: dict[str, Any]) -> Panel:
@@ -2546,98 +2730,120 @@ class CommandProcessor:
     #  CONCEPT:TU-KG.compute.prompt-management-ahe-rollback / KG-003
     # ─────────────────────────────────────────────────────────────────
 
+    async def _prompts_list(self, parts: list[str]) -> None:
+        """``/prompts list`` — render every prompt in the knowledge graph."""
+        prompts = await self.app._client.list_prompts()
+        if not prompts:
+            await self.app.query_one("Conversation").add_info(
+                "[yellow]No prompts found in KG.[/yellow]"
+            )
+            return
+        table = Table(
+            title="Prompts (CONCEPT:TU-KG.compute.prompt-management-ahe-rollback)",
+            expand=True,
+        )
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Name", style="bold")
+        table.add_column("Description")
+        table.add_column("Version", justify="right")
+        for p in prompts:
+            table.add_row(
+                str(p.get("id", "")),
+                str(p.get("name", "")),
+                str(p.get("description", ""))[:60],
+                str(p.get("version_number", "1")),
+            )
+        await self.app.query_one("Conversation").add_info(table)
+
+    async def _prompts_get(self, parts: list[str]) -> None:
+        """``/prompts get <id>`` — show one prompt's content."""
+        prompt = await self.app._client.get_prompt(parts[1])
+        content = prompt.get("content", "")
+        syntax = Syntax(content, "markdown", theme="monokai")
+        await self.app.query_one("Conversation").add_info(
+            Panel(syntax, title=f"Prompt: {prompt.get('name', parts[1])}")
+        )
+
+    async def _prompts_set(self, parts: list[str]) -> None:
+        """``/prompts set <id> <content>`` — update a prompt."""
+        result = await self.app._client.update_prompt(parts[1], parts[2])
+        version = result.get("version_number", "?")
+        await self.app.query_one("Conversation").add_info(
+            f"[green]✓ Updated prompt → version {version}[/green]"
+        )
+
+    async def _prompts_versions(self, parts: list[str]) -> None:
+        """``/prompts versions <id>`` — show a prompt's version history."""
+        versions = await self.app._client.get_prompt_versions(parts[1])
+        if not versions:
+            await self.app.query_one("Conversation").add_info(
+                "[yellow]No versions found.[/yellow]"
+            )
+            return
+        table = Table(title=f"Version History: {parts[1]}", expand=True)
+        table.add_column("Version", justify="right")
+        table.add_column("ID", style="cyan")
+        table.add_column("Author")
+        table.add_column("Timestamp")
+        for v in versions:
+            table.add_row(
+                str(v.get("version_number", "?")),
+                str(v.get("id", "")),
+                str(v.get("author", "")),
+                str(v.get("timestamp", "")),
+            )
+        await self.app.query_one("Conversation").add_info(table)
+
+    async def _prompts_rollback(self, parts: list[str]) -> None:
+        """``/prompts rollback <id> <ver>`` — restore an earlier version."""
+        result = await self.app._client.rollback_prompt(parts[1], parts[2])
+        version = result.get("version_number", "?")
+        await self.app.query_one("Conversation").add_info(
+            f"[green]✓ Rolled back to version {version}[/green]"
+        )
+
+    async def _prompts_add(self, parts: list[str]) -> None:
+        """``/prompts add <name> <content>`` — create a new prompt."""
+        name = parts[1]
+        content = parts[2]
+        result = await self.app._client.create_prompt(name, content)
+        prompt_name = result.get("name", name)
+        prompt_id = result.get("id", "?")
+        await self.app.query_one("Conversation").add_info(
+            f"[green]✓ Created prompt '{prompt_name}' ({prompt_id})[/green]"
+        )
+
+    async def _prompts_usage(self) -> None:
+        """Show the ``/prompts`` usage banner."""
+        await self.app.query_one("Conversation").add_info(
+            "[bold blue]Usage:[/bold blue]\n"
+            "  /prompts                     — list all prompts\n"
+            "  /prompts get <id>             — show prompt content\n"
+            "  /prompts set <id> <content>   — update prompt\n"
+            "  /prompts versions <id>        — show version history\n"
+            "  /prompts rollback <id> <ver>  — rollback to version\n"
+            "  /prompts add <name> <content> — create new prompt"
+        )
+
     async def cmd_prompts(self, args: str) -> None:
         """Manage system prompts: list, get, set, versions, rollback, add."""
         parts = args.strip().split(maxsplit=2)
         subcmd = parts[0].lower() if parts else ""
-
-        if not subcmd or subcmd == "list":
-            prompts = await self.app._client.list_prompts()
-            if not prompts:
-                await self.app.query_one("Conversation").add_info(
-                    "[yellow]No prompts found in KG.[/yellow]"
-                )
-                return
-            table = Table(
-                title="Prompts (CONCEPT:TU-KG.compute.prompt-management-ahe-rollback)",
-                expand=True,
-            )
-            table.add_column("ID", style="cyan", no_wrap=True)
-            table.add_column("Name", style="bold")
-            table.add_column("Description")
-            table.add_column("Version", justify="right")
-            for p in prompts:
-                table.add_row(
-                    str(p.get("id", "")),
-                    str(p.get("name", "")),
-                    str(p.get("description", ""))[:60],
-                    str(p.get("version_number", "1")),
-                )
-            await self.app.query_one("Conversation").add_info(table)
-
-        elif subcmd == "get" and len(parts) >= 2:
-            prompt = await self.app._client.get_prompt(parts[1])
-            content = prompt.get("content", "")
-            syntax = Syntax(content, "markdown", theme="monokai")
-            await self.app.query_one("Conversation").add_info(
-                Panel(syntax, title=f"Prompt: {prompt.get('name', parts[1])}")
-            )
-
-        elif subcmd == "set" and len(parts) >= 3:
-            result = await self.app._client.update_prompt(parts[1], parts[2])
-            version = result.get("version_number", "?")
-            await self.app.query_one("Conversation").add_info(
-                f"[green]✓ Updated prompt → version {version}[/green]"
-            )
-
-        elif subcmd == "versions" and len(parts) >= 2:
-            versions = await self.app._client.get_prompt_versions(parts[1])
-            if not versions:
-                await self.app.query_one("Conversation").add_info(
-                    "[yellow]No versions found.[/yellow]"
-                )
-                return
-            table = Table(title=f"Version History: {parts[1]}", expand=True)
-            table.add_column("Version", justify="right")
-            table.add_column("ID", style="cyan")
-            table.add_column("Author")
-            table.add_column("Timestamp")
-            for v in versions:
-                table.add_row(
-                    str(v.get("version_number", "?")),
-                    str(v.get("id", "")),
-                    str(v.get("author", "")),
-                    str(v.get("timestamp", "")),
-                )
-            await self.app.query_one("Conversation").add_info(table)
-
-        elif subcmd == "rollback" and len(parts) >= 3:
-            result = await self.app._client.rollback_prompt(parts[1], parts[2])
-            version = result.get("version_number", "?")
-            await self.app.query_one("Conversation").add_info(
-                f"[green]✓ Rolled back to version {version}[/green]"
-            )
-
-        elif subcmd == "add" and len(parts) >= 3:
-            name = parts[1]
-            content = parts[2]
-            result = await self.app._client.create_prompt(name, content)
-            prompt_name = result.get("name", name)
-            prompt_id = result.get("id", "?")
-            await self.app.query_one("Conversation").add_info(
-                f"[green]✓ Created prompt '{prompt_name}' ({prompt_id})[/green]"
-            )
-
-        else:
-            await self.app.query_one("Conversation").add_info(
-                "[bold blue]Usage:[/bold blue]\n"
-                "  /prompts                     — list all prompts\n"
-                "  /prompts get <id>             — show prompt content\n"
-                "  /prompts set <id> <content>   — update prompt\n"
-                "  /prompts versions <id>        — show version history\n"
-                "  /prompts rollback <id> <ver>  — rollback to version\n"
-                "  /prompts add <name> <content> — create new prompt"
-            )
+        # subcommand -> (minimum token count, handler)
+        handlers: dict[str, tuple[int, Callable[[list[str]], Awaitable[None]]]] = {
+            "": (0, self._prompts_list),
+            "list": (1, self._prompts_list),
+            "get": (2, self._prompts_get),
+            "set": (3, self._prompts_set),
+            "versions": (2, self._prompts_versions),
+            "rollback": (3, self._prompts_rollback),
+            "add": (3, self._prompts_add),
+        }
+        entry = handlers.get(subcmd)
+        if entry is None or len(parts) < entry[0]:
+            await self._prompts_usage()
+            return
+        await entry[1](parts)
 
     async def cmd_skills_only(self, args: str) -> None:
         """List and manage agent skills (pre-baked capabilities)."""
