@@ -8,6 +8,7 @@ the frontend gets a stable, testable boundary for schema-driven rendering.
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, Literal, TypeGuard
 
@@ -20,6 +21,12 @@ def _strings(value: Any) -> tuple[str, ...]:
     if not isinstance(value, list):
         return ()
     return tuple(str(item) for item in value)
+
+
+def _opt_str(data: dict[str, Any], key: str) -> str | None:
+    """``str(data[key])`` if the key is present and non-None, else None."""
+    value = data.get(key)
+    return str(value) if value is not None else None
 
 
 TerminalRunEventType = Literal[
@@ -447,32 +454,16 @@ class RunSummary:
         data = _mapping(payload)
         return cls(
             run_id=str(data.get("run_id") or ""),
-            session_id=(
-                str(data["session_id"]) if data.get("session_id") is not None else None
-            ),
-            trace_id=(
-                str(data["trace_id"]) if data.get("trace_id") is not None else None
-            ),
+            session_id=_opt_str(data, "session_id"),
+            trace_id=_opt_str(data, "trace_id"),
             status=str(data.get("status") or "unknown"),
             first_sequence=int(data.get("first_sequence") or 0),
             last_sequence=int(data.get("last_sequence") or 0),
             event_count=int(data.get("event_count") or 0),
             truncated=bool(data.get("truncated")),
-            first_timestamp=(
-                str(data["first_timestamp"])
-                if data.get("first_timestamp") is not None
-                else None
-            ),
-            last_timestamp=(
-                str(data["last_timestamp"])
-                if data.get("last_timestamp") is not None
-                else None
-            ),
-            last_event_type=(
-                str(data["last_event_type"])
-                if data.get("last_event_type") is not None
-                else None
-            ),
+            first_timestamp=_opt_str(data, "first_timestamp"),
+            last_timestamp=_opt_str(data, "last_timestamp"),
+            last_event_type=_opt_str(data, "last_event_type"),
             raw=data,
         )
 
@@ -530,22 +521,10 @@ class RunEvent:
             timestamp=str(data.get("timestamp") or ""),
             type=str(data.get("type") or "unknown"),
             run_id=str(data.get("run_id") or ""),
-            session_id=(
-                str(data["session_id"]) if data.get("session_id") is not None else None
-            ),
-            trace_id=(
-                str(data["trace_id"]) if data.get("trace_id") is not None else None
-            ),
-            correlation_id=(
-                str(data["correlation_id"])
-                if data.get("correlation_id") is not None
-                else None
-            ),
-            parent_event_id=(
-                str(data["parent_event_id"])
-                if data.get("parent_event_id") is not None
-                else None
-            ),
+            session_id=_opt_str(data, "session_id"),
+            trace_id=_opt_str(data, "trace_id"),
+            correlation_id=_opt_str(data, "correlation_id"),
+            parent_event_id=_opt_str(data, "parent_event_id"),
             source=str(data.get("source") or "agent-utilities"),
             payload=_mapping(data.get("payload")),
             raw=data,
@@ -660,15 +639,21 @@ class SchemaField:
             return value
         if isinstance(value, list):
             return next((str(item) for item in value if item != "null"), "string")
+        return self._kind_from_union() or "string"
+
+    def _kind_from_union(self) -> str | None:
+        """Scan `anyOf`/`oneOf` branches for the first named non-null scalar type."""
         for key in ("anyOf", "oneOf"):
             choices = self.schema.get(key)
-            if isinstance(choices, list):
-                for choice in choices:
-                    if isinstance(choice, dict) and choice.get("type") != "null":
-                        choice_type = choice.get("type")
-                        if isinstance(choice_type, str):
-                            return choice_type
-        return "string"
+            if not isinstance(choices, list):
+                continue
+            for choice in choices:
+                if not isinstance(choice, dict) or choice.get("type") == "null":
+                    continue
+                choice_type = choice.get("type")
+                if isinstance(choice_type, str):
+                    return choice_type
+        return None
 
     @property
     def description(self) -> str:
@@ -711,6 +696,66 @@ def schema_default_text(field: SchemaField) -> str:
     return json.dumps(value, sort_keys=True)
 
 
+def _parse_schema_string(raw_value: str) -> Any:
+    return raw_value
+
+
+def _parse_schema_integer(raw_value: str) -> Any:
+    if not raw_value:
+        raise ValueError("a value is required")
+    return int(raw_value)
+
+
+def _parse_schema_number(raw_value: str) -> Any:
+    if not raw_value:
+        raise ValueError("a value is required")
+    return float(raw_value)
+
+
+def _parse_schema_boolean(raw_value: str) -> Any:
+    lowered = raw_value.strip().lower()
+    if lowered not in {"true", "false"}:
+        raise ValueError("use true or false")
+    return lowered == "true"
+
+
+def _parse_schema_json_typed(raw_value: str, expected: type, kind: str) -> Any:
+    value = json.loads(raw_value)
+    if not isinstance(value, expected):
+        raise ValueError(f"expected a JSON {kind}")
+    return value
+
+
+def _parse_schema_object(raw_value: str) -> Any:
+    return _parse_schema_json_typed(raw_value, dict, "object")
+
+
+def _parse_schema_array(raw_value: str) -> Any:
+    return _parse_schema_json_typed(raw_value, list, "array")
+
+
+def _parse_schema_null(_raw_value: str) -> Any:
+    """Ignores its input -- kept as a no-op parser for a uniform dispatch signature."""
+    return None
+
+
+def _parse_schema_default(raw_value: str) -> Any:
+    return json.loads(raw_value)
+
+
+#: Parser for each JSON-Schema top-level `type`; anything unrecognized falls
+#: back to `_parse_schema_default` (parse as arbitrary JSON).
+_SCHEMA_KIND_PARSERS: dict[str, Callable[[str], Any]] = {
+    "string": _parse_schema_string,
+    "integer": _parse_schema_integer,
+    "number": _parse_schema_number,
+    "boolean": _parse_schema_boolean,
+    "object": _parse_schema_object,
+    "array": _parse_schema_array,
+    "null": _parse_schema_null,
+}
+
+
 def parse_schema_input(field: SchemaField, raw_value: str) -> tuple[bool, Any]:
     """Parse one form value according to its advertised top-level JSON type.
 
@@ -725,32 +770,9 @@ def parse_schema_input(field: SchemaField, raw_value: str) -> tuple[bool, Any]:
             return True, field.schema["default"]
         return False, None
 
-    kind = field.kind
+    parser = _SCHEMA_KIND_PARSERS.get(field.kind, _parse_schema_default)
     try:
-        if kind == "string":
-            value: Any = raw_value
-        elif kind == "integer":
-            if not raw_value:
-                raise ValueError("a value is required")
-            value = int(raw_value)
-        elif kind == "number":
-            if not raw_value:
-                raise ValueError("a value is required")
-            value = float(raw_value)
-        elif kind == "boolean":
-            lowered = raw_value.strip().lower()
-            if lowered not in {"true", "false"}:
-                raise ValueError("use true or false")
-            value = lowered == "true"
-        elif kind in {"object", "array"}:
-            value = json.loads(raw_value)
-            expected = dict if kind == "object" else list
-            if not isinstance(value, expected):
-                raise ValueError(f"expected a JSON {kind}")
-        elif kind == "null":
-            value = None
-        else:
-            value = json.loads(raw_value)
+        value = parser(raw_value)
     except (TypeError, ValueError, json.JSONDecodeError) as exc:
         raise SchemaInputError(f"{field.name}: {exc}") from exc
 
@@ -761,22 +783,32 @@ def parse_schema_input(field: SchemaField, raw_value: str) -> tuple[bool, Any]:
     return True, value
 
 
+def _explicit_run_id_from_dict(payload: dict[str, Any], max_depth: int) -> str | None:
+    for key in ("run_id", "runId"):
+        value = payload.get(key)
+        if value:
+            return str(value)
+    for value in payload.values():
+        run_id = explicit_run_id(value, max_depth=max_depth - 1)
+        if run_id:
+            return run_id
+    return None
+
+
+def _explicit_run_id_from_list(payload: list[Any], max_depth: int) -> str | None:
+    for value in payload:
+        run_id = explicit_run_id(value, max_depth=max_depth - 1)
+        if run_id:
+            return run_id
+    return None
+
+
 def explicit_run_id(payload: Any, *, max_depth: int = 3) -> str | None:
     """Extract only an explicitly named run identity from a gateway result."""
     if max_depth < 0:
         return None
     if isinstance(payload, dict):
-        for key in ("run_id", "runId"):
-            value = payload.get(key)
-            if value:
-                return str(value)
-        for value in payload.values():
-            run_id = explicit_run_id(value, max_depth=max_depth - 1)
-            if run_id:
-                return run_id
-    elif isinstance(payload, list):
-        for value in payload:
-            run_id = explicit_run_id(value, max_depth=max_depth - 1)
-            if run_id:
-                return run_id
+        return _explicit_run_id_from_dict(payload, max_depth)
+    if isinstance(payload, list):
+        return _explicit_run_id_from_list(payload, max_depth)
     return None
