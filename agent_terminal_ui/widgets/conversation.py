@@ -14,6 +14,7 @@ import logging
 
 from textual.app import ComposeResult
 from textual.containers import VerticalGroup, VerticalScroll
+from textual.widget import Widget
 from textual.widgets import Static
 
 from agent_terminal_ui.widgets.agent_response import AgentResponse
@@ -279,30 +280,37 @@ class Conversation(VerticalScroll):
         """Close the current streaming block at a protocol turn boundary."""
         self._finalize_current_response()
 
+    def _max_conversation_widgets(self) -> int:
+        """The configured widget-retention cap (default 50)."""
+        try:
+            return self.app.settings.get("max_conversation_widgets", 50)
+        except Exception:
+            return 50
+
+    def _prunable_children(self) -> list[Widget]:
+        """This window's children eligible for pruning (excludes the active
+        throbber and in-progress streaming response, which must stay)."""
+        return [
+            child
+            for child in self.window.children
+            if child is not self._throbber and child is not self._current_response
+        ]
+
+    def _forget_tool_block(self, widget_to_remove: Widget) -> None:
+        """Drop a widget's entry from the active tool-blocks map, if tracked."""
+        for call_id, block in list(self._tool_blocks.items()):
+            if block is widget_to_remove:
+                self._tool_blocks.pop(call_id, None)
+
     def _prune_old_widgets(self) -> None:
         """Prune older message widgets to maintain a lightweight DOM."""
-        try:
-            max_widgets = self.app.settings.get("max_conversation_widgets", 50)
-        except Exception:
-            max_widgets = 50
-
-        # Gather eligible children for pruning
-        children = list(self.window.children)
-        eligible = []
-        for child in children:
-            if child is self._throbber:
-                continue
-            if child is self._current_response:
-                continue
-            eligible.append(child)
+        max_widgets = self._max_conversation_widgets()
+        eligible = self._prunable_children()
 
         # If we exceed the limit, remove the oldest ones
         excess = len(eligible) - max_widgets
         if excess > 0:
             for i in range(excess):
                 widget_to_remove = eligible[i]
-                # If it's a tool block, also remove it from our active tool blocks map
-                for call_id, block in list(self._tool_blocks.items()):
-                    if block is widget_to_remove:
-                        self._tool_blocks.pop(call_id, None)
+                self._forget_tool_block(widget_to_remove)
                 widget_to_remove.remove()
