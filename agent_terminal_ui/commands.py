@@ -556,6 +556,49 @@ class CommandProcessor:
             f"[dim]conf {conf}%  {tags}[/dim]"
         )
 
+    async def _fleet_grant(
+        self, conversation: Any, client: Any, parts: list[str]
+    ) -> None:
+        """``/fleet grant <approval_id>`` — approve one pending fleet action."""
+        if len(parts) < 2:
+            await conversation.add_info(
+                "[yellow]Usage: /fleet grant <approval_id>[/yellow]"
+            )
+            return
+        try:
+            await client.grant_fleet_approval(parts[1])
+        except Exception as exc:
+            await conversation.add_info(f"[red]Grant failed: {exc}[/red]")
+            return
+        await conversation.add_info(f"[green]Granted approval {parts[1]}.[/green]")
+
+    @staticmethod
+    def _fleet_lines(topology: Any, approvals: list[dict[str, Any]]) -> list[str]:
+        """Format the fleet topology and pending-approval summary lines."""
+        lines = ["[bold blue]Fleet Supervisor[/bold blue]"]
+        if topology:
+            lines.append("[bold]Topology[/bold]")
+            lines.extend(f"- {key}: {value}" for key, value in topology.items())
+        lines.append(f"[bold]Pending approvals:[/bold] {len(approvals)}")
+        for approval in approvals:
+            approval_id = approval.get("id") or approval.get("approval_id") or "?"
+            action = approval.get("action", "")
+            target = approval.get("target") or approval.get("subject") or ""
+            lines.append(f"- {approval_id}: {action} {target}".rstrip())
+        if approvals:
+            lines.append("[dim]Grant with /fleet grant <id>[/dim]")
+        return lines
+
+    async def _fleet_overview(self, conversation: Any, client: Any) -> None:
+        """Render fleet topology plus the pending-approval queue."""
+        try:
+            topology = await client.get_fleet_topology()
+            approvals = await client.get_fleet_approvals()
+        except Exception as exc:
+            await conversation.add_info(f"[red]Fleet unavailable: {exc}[/red]")
+            return
+        await conversation.add_info("\n".join(self._fleet_lines(topology, approvals)))
+
     async def cmd_fleet(self, args: str) -> None:
         """Show fleet topology and approvals, or grant one with ``grant <id>``."""
         conversation = self.app.query_one("Conversation")
@@ -568,40 +611,9 @@ class CommandProcessor:
 
         parts = args.strip().split()
         if parts and parts[0] == "grant":
-            if len(parts) < 2:
-                await conversation.add_info(
-                    "[yellow]Usage: /fleet grant <approval_id>[/yellow]"
-                )
-                return
-            try:
-                await client.grant_fleet_approval(parts[1])
-            except Exception as exc:
-                await conversation.add_info(f"[red]Grant failed: {exc}[/red]")
-                return
-            await conversation.add_info(f"[green]Granted approval {parts[1]}.[/green]")
+            await self._fleet_grant(conversation, client, parts)
             return
-
-        try:
-            topology = await client.get_fleet_topology()
-            approvals = await client.get_fleet_approvals()
-        except Exception as exc:
-            await conversation.add_info(f"[red]Fleet unavailable: {exc}[/red]")
-            return
-
-        lines = ["[bold blue]Fleet Supervisor[/bold blue]"]
-        if topology:
-            lines.append("[bold]Topology[/bold]")
-            for key, value in topology.items():
-                lines.append(f"- {key}: {value}")
-        lines.append(f"[bold]Pending approvals:[/bold] {len(approvals)}")
-        for approval in approvals:
-            approval_id = approval.get("id") or approval.get("approval_id") or "?"
-            action = approval.get("action", "")
-            target = approval.get("target") or approval.get("subject") or ""
-            lines.append(f"- {approval_id}: {action} {target}".rstrip())
-        if approvals:
-            lines.append("[dim]Grant with /fleet grant <id>[/dim]")
-        await conversation.add_info("\n".join(lines))
+        await self._fleet_overview(conversation, client)
 
     async def cmd_model(self, args: str) -> None:
         """List, select, or inspect configured models.
@@ -653,16 +665,39 @@ class CommandProcessor:
             f"[dim]Switched to model: {model_id}[/dim]"
         )
 
+    def _active_model_id(self, registry: dict[str, Any]) -> Any:
+        """Resolve the active model id from app state, falling back to default."""
+        return (
+            getattr(self.app, "_current_model_id", None)
+            or getattr(self.app, "_current_model", None)
+            or registry.get("default_id")
+        )
+
+    @staticmethod
+    def _model_cost_pair(entry: dict[str, Any]) -> tuple[float, float]:
+        """Return the (input, output) cost per 1M tokens for a model entry."""
+        cost = entry.get("cost") or {}
+        return float(cost.get("input", 0.0)), float(cost.get("output", 0.0))
+
+    def _model_row(self, entry: dict[str, Any], active_id: Any) -> list[str]:
+        """Build the registry-table cells for one configured model."""
+        cost_in, cost_out = self._model_cost_pair(entry)
+        return [
+            "*" if entry.get("id") == active_id else "",
+            str(entry.get("id", "")),
+            str(entry.get("name", "")),
+            str(entry.get("provider", "")),
+            str(entry.get("tier", "")),
+            ", ".join(entry.get("tags") or []) or "-",
+            "yes" if entry.get("is_default") else "",
+            f"${cost_in:.2f} / ${cost_out:.2f}",
+        ]
+
     async def _model_list(self) -> None:
         """Render the configured model registry as a Rich table."""
         registry = await self.app._client.list_configured_models()
         models = registry.get("models") or []
-        default_id = registry.get("default_id")
-        active_id = (
-            getattr(self.app, "_current_model_id", None)
-            or getattr(self.app, "_current_model", None)
-            or default_id
-        )
+        active_id = self._active_model_id(registry)
 
         if not models:
             await self.app.query_one("Conversation").add_info(
@@ -681,24 +716,8 @@ class CommandProcessor:
         table.add_column("Default", justify="center", width=7)
         table.add_column("Cost / 1M (in / out)")
 
-        for m in models:
-            cost = m.get("cost") or {}
-            cost_in = float(cost.get("input", 0.0))
-            cost_out = float(cost.get("output", 0.0))
-            cost_str = f"${cost_in:.2f} / ${cost_out:.2f}"
-            tags = ", ".join(m.get("tags") or []) or "-"
-            is_active = m.get("id") == active_id
-            is_default = bool(m.get("is_default"))
-            table.add_row(
-                "*" if is_active else "",
-                str(m.get("id", "")),
-                str(m.get("name", "")),
-                str(m.get("provider", "")),
-                str(m.get("tier", "")),
-                tags,
-                "yes" if is_default else "",
-                cost_str,
-            )
+        for entry in models:
+            table.add_row(*self._model_row(entry, active_id))
 
         event_log = self.app.query_one("Conversation")
         await event_log.add_info(table)
@@ -706,29 +725,10 @@ class CommandProcessor:
             "[dim]Use `/model set <id>` to switch, `/model show` to inspect.[/dim]"
         )
 
-    async def _model_show(self) -> None:
-        """Display the currently active model, resolving the backend default."""
-        registry = await self.app._client.list_configured_models()
-        models = registry.get("models") or []
-        default_id = registry.get("default_id")
-        active_id = (
-            getattr(self.app, "_current_model_id", None)
-            or getattr(self.app, "_current_model", None)
-            or default_id
-        )
-        match = next((m for m in models if m.get("id") == active_id), None)
-
-        if match is None:
-            await self.app.query_one("Conversation").add_info(
-                "[yellow]No active model. "
-                "Run `/model list` to see what is configured.[/yellow]"
-            )
-            return
-
-        cost = match.get("cost") or {}
-        cost_in = float(cost.get("input", 0.0))
-        cost_out = float(cost.get("output", 0.0))
-        panel = Panel(
+    def _model_panel(self, match: dict[str, Any]) -> Panel:
+        """Build the detail panel for the currently active model."""
+        cost_in, cost_out = self._model_cost_pair(match)
+        return Panel(
             (
                 f"[bold]ID:[/bold] {match.get('id')}\n"
                 f"[bold]Name:[/bold] {match.get('name')}\n"
@@ -744,7 +744,22 @@ class CommandProcessor:
             title="Active Model",
             border_style="cyan",
         )
-        await self.app.query_one("Conversation").add_info(panel)
+
+    async def _model_show(self) -> None:
+        """Display the currently active model, resolving the backend default."""
+        registry = await self.app._client.list_configured_models()
+        models = registry.get("models") or []
+        active_id = self._active_model_id(registry)
+        match = next((m for m in models if m.get("id") == active_id), None)
+
+        if match is None:
+            await self.app.query_one("Conversation").add_info(
+                "[yellow]No active model. "
+                "Run `/model list` to see what is configured.[/yellow]"
+            )
+            return
+
+        await self.app.query_one("Conversation").add_info(self._model_panel(match))
 
     async def _model_set(self, model_id: str) -> None:
         """Select a model id for subsequent turns."""
@@ -1623,27 +1638,8 @@ class CommandProcessor:
         self.app.notify(message, severity="information")
         await log.add_info(f"[green]{message}[/green]")
 
-    async def cmd_codemap(self, args: str) -> None:
-        """Generate a codebase codemap. Usage: /codemap <prompt>"""
-        log = self.app.query_one("Conversation")
-        prompt = args.strip()
-        if not prompt:
-            self.app.notify("Usage: /codemap <prompt>", severity="warning")
-            return
-        try:
-            result = await self.app._client.generate_codemap(prompt)
-        except httpx.HTTPStatusError as exc:
-            await self._write_http_error(log, "codemap", exc)
-            return
-        except Exception as exc:
-            await log.add_info(f"[red]Error (codemap): {exc}[/red]")
-            return
-
-        if result.get("status") == "error":
-            error = result.get("message", "unknown error")
-            await log.add_info(f"[red]Codemap generation failed:[/red] {error}")
-            return
-
+    async def _write_codemap(self, log: Any, result: dict[str, Any]) -> None:
+        """Render a codemap result's header plus its mermaid/markdown artifacts."""
         artifact = result.get("artifact") or {}
         mermaid = artifact.get("mermaid")
         markdown = artifact.get("markdown")
@@ -1661,6 +1657,74 @@ class CommandProcessor:
                 "[yellow]Codemap returned no renderable content.[/yellow]"
             )
 
+    async def cmd_codemap(self, args: str) -> None:
+        """Generate a codebase codemap. Usage: /codemap <prompt>"""
+        log = self.app.query_one("Conversation")
+        prompt = self._require_arg(args, "Usage: /codemap <prompt>")
+        if prompt is None:
+            return
+        try:
+            result = await self.app._client.generate_codemap(prompt)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "codemap", exc)
+            return
+        except Exception as exc:
+            await log.add_info(f"[red]Error (codemap): {exc}[/red]")
+            return
+
+        if result.get("status") == "error":
+            error = result.get("message", "unknown error")
+            await log.add_info(f"[red]Codemap generation failed:[/red] {error}")
+            return
+
+        await self._write_codemap(log, result)
+
+    async def _resources_list(self, log: Any, rest: str) -> None:
+        """``/resources list`` — render the callable-resource registry."""
+        try:
+            resources = await self.app._client.list_resources()
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "resources list", exc)
+            return
+        except Exception as exc:
+            await log.add_info(f"[red]Error (resources list): {exc}[/red]")
+            return
+        await log.add_info(self._render_resources_table(resources))
+
+    async def _parse_spawn_spec(self, log: Any, rest: str) -> dict[str, Any] | None:
+        """Parse a ``/resources spawn`` JSON spec, or report why it is unusable."""
+        if self._require_arg(rest, "Usage: /resources spawn <json_spec>") is None:
+            return None
+        try:
+            spec = json.loads(rest)
+        except json.JSONDecodeError as exc:
+            self.app.notify(
+                f"Invalid JSON for /resources spawn: {exc}", severity="error"
+            )
+            await log.add_info(f"[red]Invalid JSON for spawn spec:[/red] {exc}")
+            return None
+        if not isinstance(spec, dict):
+            self.app.notify("Spawn spec must be a JSON object", severity="error")
+            return None
+        return spec
+
+    async def _resources_spawn(self, log: Any, rest: str) -> None:
+        """``/resources spawn <json_spec>`` — spawn a callable resource."""
+        spec = await self._parse_spawn_spec(log, rest)
+        if spec is None:
+            return
+        try:
+            spawned = await self.app._client.spawn_resource(spec)
+        except httpx.HTTPStatusError as exc:
+            await self._write_http_error(log, "resources spawn", exc)
+            return
+        except Exception as exc:
+            await log.add_info(f"[red]Error (resources spawn): {exc}[/red]")
+            return
+        spawned_id = spawned.get("id") or spawned.get("name", "<unknown>")
+        self.app.notify(f"Spawned resource: {spawned_id}", severity="information")
+        await log.add_info(f"[green]Spawned resource:[/green] {spawned_id}")
+
     async def cmd_resources(self, args: str) -> None:
         """List or spawn callable resources.
 
@@ -1668,50 +1732,16 @@ class CommandProcessor:
         """
         sub, rest = self._parse_subcommand(args)
         log = self.app.query_one("Conversation")
-
-        if sub in ("", "list"):
-            try:
-                resources = await self.app._client.list_resources()
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "resources list", exc)
-                return
-            except Exception as exc:
-                await log.add_info(f"[red]Error (resources list): {exc}[/red]")
-                return
-            await log.add_info(self._render_resources_table(resources))
+        handlers: dict[str, Callable[[Any, str], Awaitable[None]]] = {
+            "": self._resources_list,
+            "list": self._resources_list,
+            "spawn": self._resources_spawn,
+        }
+        handler = handlers.get(sub)
+        if handler is None:
+            self.app.notify(f"Unknown /resources subcommand: {sub}", severity="warning")
             return
-
-        if sub == "spawn":
-            if not rest.strip():
-                self.app.notify(
-                    "Usage: /resources spawn <json_spec>", severity="warning"
-                )
-                return
-            try:
-                spec = json.loads(rest)
-            except json.JSONDecodeError as exc:
-                self.app.notify(
-                    f"Invalid JSON for /resources spawn: {exc}", severity="error"
-                )
-                await log.add_info(f"[red]Invalid JSON for spawn spec:[/red] {exc}")
-                return
-            if not isinstance(spec, dict):
-                self.app.notify("Spawn spec must be a JSON object", severity="error")
-                return
-            try:
-                spawned = await self.app._client.spawn_resource(spec)
-            except httpx.HTTPStatusError as exc:
-                await self._write_http_error(log, "resources spawn", exc)
-                return
-            except Exception as exc:
-                await log.add_info(f"[red]Error (resources spawn): {exc}[/red]")
-                return
-            spawned_id = spawned.get("id") or spawned.get("name", "<unknown>")
-            self.app.notify(f"Spawned resource: {spawned_id}", severity="information")
-            await log.add_info(f"[green]Spawned resource:[/green] {spawned_id}")
-            return
-
-        self.app.notify(f"Unknown /resources subcommand: {sub}", severity="warning")
+        await handler(log, rest)
 
     async def cmd_pipeline(self, args: str) -> None:
         """Inspect or trigger the ingestion pipeline.
