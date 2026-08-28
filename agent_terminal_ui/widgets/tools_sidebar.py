@@ -9,6 +9,52 @@ from textual.containers import Vertical
 from textual.widgets import Input, Tree
 
 
+def _item_matches_filter(item: dict[str, Any], filter_text: str, source: str) -> bool:
+    """Case-insensitive filter over an item's name/description/source."""
+    if not filter_text:
+        return True
+    n = item.get("name", "")
+    d = item.get("description", "")
+    text_to_search = f"{n} {d} {source}".lower()
+    return filter_text.lower() in text_to_search
+
+
+def _group_by_source(
+    data: list[dict[str, Any]], filter_text: str
+) -> dict[str, list[dict[str, Any]]]:
+    """Group tools/skills by ``source_name``, applying `filter_text` first."""
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for item in data:
+        source = item.get("source_name") or "Unknown"
+        if not _item_matches_filter(item, filter_text, source):
+            continue
+        grouped.setdefault(source, []).append(item)
+    return grouped
+
+
+def _source_group_label(source: str, items: list[dict[str, Any]]) -> Text:
+    """The tree label for one source group (skill-folder vs. MCP-server icon)."""
+    is_skill = any(i.get("type") == "skill" for i in items)
+    if is_skill:
+        return Text.from_markup(f"📁 [bold cyan]{source}[/] [dim](Skill Folder)[/dim]")
+    return Text.from_markup(f"🔌 [bold blue]{source}[/] [dim](MCP Server)[/dim]")
+
+
+def _item_leaf_label(item: dict[str, Any]) -> Text:
+    """The tree label for one leaf item (a tool or a skill)."""
+    name = item.get("name", "Unknown")
+    desc = item.get("description", "")
+
+    if item.get("type") == "skill":
+        label = Text.from_markup(f" 📄 [green]{name}[/]")
+    else:
+        label = Text.from_markup(f" ⚙️ [yellow]{name}[/]")
+
+    if desc:
+        label.append(f" - {desc[:40]}...", style="dim")
+    return label
+
+
 class ToolsSidebar(Vertical):
     """Sidebar widget for searching and displaying loaded Skills and Tools."""
 
@@ -61,51 +107,12 @@ class ToolsSidebar(Vertical):
         tree.clear()
 
         # Group by source (mcp_server for tools, category/folder for skills)
-        grouped: dict[str, list[dict[str, Any]]] = {}
-        for item in data:
-            source = item.get("source_name") or "Unknown"
-
-            # Simple case-insensitive filter
-            if filter_text:
-                n = item.get("name", "")
-                d = item.get("description", "")
-                text_to_search = f"{n} {d} {source}".lower()
-                if filter_text.lower() not in text_to_search:
-                    continue
-
-            if source not in grouped:
-                grouped[source] = []
-            grouped[source].append(item)
+        grouped = _group_by_source(data, filter_text)
 
         for source, items in sorted(grouped.items()):
-            # Determine if it's a skill source or tool source based on the first item
-            is_skill = any(i.get("type") == "skill" for i in items)
-
-            if is_skill:
-                source_label = Text.from_markup(
-                    f"📁 [bold cyan]{source}[/] [dim](Skill Folder)[/dim]"
-                )
-            else:
-                source_label = Text.from_markup(
-                    f"🔌 [bold blue]{source}[/] [dim](MCP Server)[/dim]"
-                )
-
-            source_node = tree.root.add(source_label, expand=True)
-
+            source_node = tree.root.add(_source_group_label(source, items), expand=True)
             for item in sorted(items, key=lambda x: x.get("name", "")):
-                name = item.get("name", "Unknown")
-                desc = item.get("description", "")
-
-                # Visual distinction between skill and tool
-                if item.get("type") == "skill":
-                    label = Text.from_markup(f" 📄 [green]{name}[/]")
-                else:
-                    label = Text.from_markup(f" ⚙️ [yellow]{name}[/]")
-
-                if desc:
-                    label.append(f" - {desc[:40]}...", style="dim")
-
-                source_node.add(label, data=item)
+                source_node.add(_item_leaf_label(item), data=item)
 
     async def on_input_changed(self, event: Input.Changed) -> None:
         """Filter the tree when search input changes."""
