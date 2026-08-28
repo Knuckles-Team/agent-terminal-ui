@@ -12,7 +12,8 @@ SSE convention (session create → ``POST {base}/acp/rpc/{id}`` → stream
 import contextlib
 import json
 import logging
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable
+from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
@@ -36,6 +37,172 @@ logger = logging.getLogger(__name__)
 #: server's own un-prefixed routers (``/models``, ``/chats``, ``/tools``,
 #: ``/mcp/*``).
 GATEWAY_API_PREFIX = "/api"
+
+
+def _candidate_skills_dirs(workspace_root: Path) -> list[Path]:
+    """Directories checked, in order, for a universal-skills tree."""
+    return [
+        workspace_root / "ai" / "skills" / "universal-skills" / "universal_skills" / "skills",
+        workspace_root
+        / "agent-packages"
+        / "skills"
+        / "universal-skills"
+        / "universal_skills"
+        / "skills",
+        Path.home() / ".codeium" / "windsurf" / "skills",
+        Path.home() / ".config" / "devin" / "skills",
+    ]
+
+
+def _extract_yaml_frontmatter(lines: list[str]) -> list[str]:
+    """Return the raw lines between the first ``---``/``---`` pair, if any."""
+    in_yaml = False
+    yaml_content: list[str] = []
+    for line in lines:
+        if line.strip() == "---":
+            if not in_yaml:
+                in_yaml = True
+            else:
+                break
+        elif in_yaml:
+            yaml_content.append(line)
+    return yaml_content
+
+
+def _parse_skill_description(content: str) -> str:
+    """Extract a skill's description from its ``SKILL.md`` content.
+
+    Prefers a YAML frontmatter ``description:`` key; falls back to the first
+    non-empty, non-marker, non-heading line.
+    """
+    lines = content.split("\n")
+    yaml_content = _extract_yaml_frontmatter(lines)
+
+    if yaml_content:
+        with contextlib.suppress(Exception):
+            import yaml
+
+            yaml_data = yaml.safe_load("\n".join(yaml_content))
+            if isinstance(yaml_data, dict) and "description" in yaml_data:
+                return yaml_data["description"]
+
+    for raw_line in lines:
+        line = raw_line.strip()
+        if line and line != "---" and not line.startswith("#"):
+            return line
+    return ""
+
+
+def _load_skill_entry(skill_dir: Path) -> dict[str, Any]:
+    """Build one skill's catalog entry from its directory."""
+    skill_id = skill_dir.name
+    description = ""
+    skill_md = skill_dir / "SKILL.md"
+    if skill_md.exists():
+        description = _parse_skill_description(skill_md.read_text(encoding="utf-8"))
+    return {"id": skill_id, "name": skill_id, "description": description}
+
+
+def _normalize_text_delta(event: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "type": "text_delta",
+        "content": event.get("delta") or event.get("text") or event.get("content", ""),
+    }
+
+
+def _normalize_text(event: dict[str, Any]) -> dict[str, Any]:
+    return {"type": "text", "content": event.get("content", "")}
+
+
+def _normalize_thinking(event: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "type": "sideband",
+        "data": {"type": "thought", "content": event.get("thought", "")},
+    }
+
+
+def _normalize_plan_updated(event: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "type": "sideband",
+        "data": {"type": "plan", "plan": event.get("plan", [])},
+    }
+
+
+def _normalize_tool_call(event: dict[str, Any]) -> dict[str, Any]:
+    return {"type": "tool_call", "data": event.get("call") or event.get("data") or {}}
+
+
+def _normalize_tool_output(event: dict[str, Any]) -> dict[str, Any]:
+    output_data = event.get("data")
+    if not isinstance(output_data, dict):
+        output_data = {key: value for key, value in event.items() if key != "type"}
+    return {"type": "tool_output", "data": output_data}
+
+
+def _normalize_error(event: dict[str, Any]) -> dict[str, Any]:
+    return {"type": "error", "message": event.get("message", "Unknown error")}
+
+
+def _normalize_turn_end(event: dict[str, Any]) -> dict[str, Any]:
+    normalized: dict[str, Any] = {"type": "turn_end"}
+    if event.get("usage") is not None:
+        normalized["usage"] = event["usage"]
+    return normalized
+
+
+def _normalize_usage(event: dict[str, Any]) -> dict[str, Any]:
+    return {"type": "usage", "data": event.get("usage") or event.get("data") or {}}
+
+
+def _normalize_session_started(_event: dict[str, Any]) -> dict[str, Any]:
+    return {"type": "session_started"}
+
+
+#: Slash-prefixes recognized by `_resolve_stream_mode`, in check order.
+_STREAM_MODE_PREFIXES: tuple[tuple[str, str], ...] = (
+    ("/plan ", "plan"),
+    ("/build ", "build"),
+    ("/chat ", "ask"),
+)
+
+
+def _resolve_stream_mode(query: str, mode_id: str | None) -> tuple[str, str]:
+    """Infer the ACP mode for a `stream()` call and strip its slash prefix.
+
+    An explicitly-passed `mode_id` always wins. Otherwise a recognized
+    slash-prefix (``/plan ``, ``/build ``, ``/chat ``) selects the mode and is
+    stripped from `query`; anything else defaults to ``"ask"`` unchanged.
+    """
+    if mode_id:
+        return query, mode_id
+    for prefix, resolved_mode in _STREAM_MODE_PREFIXES:
+        if query.startswith(prefix):
+            return query[len(prefix) :], resolved_mode
+    return query, "ask"
+
+
+#: Maps a raw ACP ``event["type"]`` (both dash and underscore spellings, where
+#: the upstream event source uses either) to the builder that produces the
+#: normalized event body. An event type with no entry here falls back to
+#: `dict(event)` unchanged -- see `_normalize_event`.
+_EVENT_NORMALIZERS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
+    "text-delta": _normalize_text_delta,
+    "text_delta": _normalize_text_delta,
+    "text": _normalize_text,
+    "thinking": _normalize_thinking,
+    "plan-updated": _normalize_plan_updated,
+    "plan_updated": _normalize_plan_updated,
+    "tool-call": _normalize_tool_call,
+    "tool_call": _normalize_tool_call,
+    "tool-output": _normalize_tool_output,
+    "tool_output": _normalize_tool_output,
+    "error": _normalize_error,
+    "turn-end": _normalize_turn_end,
+    "turn_end": _normalize_turn_end,
+    "usage": _normalize_usage,
+    "session-started": _normalize_session_started,
+    "session_started": _normalize_session_started,
+}
 
 
 class AgentClient:
@@ -91,62 +258,8 @@ class AgentClient:
         persist, export, and resume the same conversation.
         """
         event_type = event.get("type")
-
-        if event_type in ("text-delta", "text_delta"):
-            normalized: dict[str, Any] = {
-                "type": "text_delta",
-                "content": event.get("delta")
-                or event.get("text")
-                or event.get("content", ""),
-            }
-        elif event_type == "text":
-            normalized = {"type": "text", "content": event.get("content", "")}
-        elif event_type == "thinking":
-            normalized = {
-                "type": "sideband",
-                "data": {
-                    "type": "thought",
-                    "content": event.get("thought", ""),
-                },
-            }
-        elif event_type in ("plan-updated", "plan_updated"):
-            normalized = {
-                "type": "sideband",
-                "data": {"type": "plan", "plan": event.get("plan", [])},
-            }
-        elif event_type in ("tool-call", "tool_call"):
-            normalized = {
-                "type": "tool_call",
-                "data": event.get("call") or event.get("data") or {},
-            }
-        elif event_type in ("tool-output", "tool_output"):
-            output_data = event.get("data")
-            if not isinstance(output_data, dict):
-                output_data = {
-                    key: value for key, value in event.items() if key != "type"
-                }
-            normalized = {
-                "type": "tool_output",
-                "data": output_data,
-            }
-        elif event_type == "error":
-            normalized = {
-                "type": "error",
-                "message": event.get("message", "Unknown error"),
-            }
-        elif event_type in ("turn-end", "turn_end"):
-            normalized = {"type": "turn_end"}
-            if event.get("usage") is not None:
-                normalized["usage"] = event["usage"]
-        elif event_type == "usage":
-            normalized = {
-                "type": "usage",
-                "data": event.get("usage") or event.get("data") or {},
-            }
-        elif event_type in ("session-started", "session_started"):
-            normalized = {"type": "session_started"}
-        else:
-            normalized = dict(event)
+        handler = _EVENT_NORMALIZERS.get(event_type)
+        normalized: dict[str, Any] = handler(event) if handler else dict(event)
 
         event_metadata = event.get("_event")
         if isinstance(event_metadata, dict):
@@ -268,20 +381,7 @@ class AgentClient:
             yield {"type": "session_started", "session_id": session_id}
 
             # Handle mode selection
-            if mode_id:
-                # prioritize passed mode_id
-                pass
-            elif query.startswith("/plan "):
-                query = query[6:]
-                mode_id = "plan"
-            elif query.startswith("/build "):
-                query = query[7:]
-                mode_id = "build"
-            elif query.startswith("/chat "):
-                query = query[6:]
-                mode_id = "ask"
-            else:
-                mode_id = "ask"
+            query, mode_id = _resolve_stream_mode(query, mode_id)
 
             # Send the prompt as an RPC call. Include the model id as an
             # ``x-agent-model-id`` header so the backend can apply the
@@ -289,21 +389,11 @@ class AgentClient:
             # model is actually selected (keeps the default call shape
             # identical to the pre-multi-model behaviour).
             rpc_params = {"content": query, "modeId": mode_id, "parts": parts or []}
+            rpc_kwargs: dict[str, Any] = {}
             if model:
                 rpc_params["model"] = model
-            if model:
-                await self.send_rpc(
-                    session_id,
-                    "message/send",
-                    rpc_params,
-                    headers={"x-agent-model-id": model},
-                )
-            else:
-                await self.send_rpc(
-                    session_id,
-                    "message/send",
-                    rpc_params,
-                )
+                rpc_kwargs["headers"] = {"x-agent-model-id": model}
+            await self.send_rpc(session_id, "message/send", rpc_params, **rpc_kwargs)
 
             # Stream events from the session
             async for event in self.stream_events(session_id):
@@ -672,27 +762,9 @@ class AgentClient:
     async def _load_skills_from_filesystem(self) -> list[dict[str, Any]]:
         """Load skills from the universal-skills directory as a fallback."""
         try:
-            from pathlib import Path
-
-            # Try to find universal-skills directory
             # Need to go up to Workspace level
             workspace_root = Path(__file__).parent.parent.parent.parent
-            skills_dirs = [
-                workspace_root
-                / "ai"
-                / "skills"
-                / "universal-skills"
-                / "universal_skills"
-                / "skills",
-                workspace_root
-                / "agent-packages"
-                / "skills"
-                / "universal-skills"
-                / "universal_skills"
-                / "skills",
-                Path.home() / ".codeium" / "windsurf" / "skills",
-                Path.home() / ".config" / "devin" / "skills",
-            ]
+            skills_dirs = _candidate_skills_dirs(workspace_root)
 
             skills_dir = None
             for dir_path in skills_dirs:
@@ -708,55 +780,11 @@ class AgentClient:
                 logger.warning(f"Workspace root: {workspace_root}")
                 return []
 
-            skills = []
-            for skill_dir in skills_dir.iterdir():
-                if skill_dir.is_dir():
-                    skill_id = skill_dir.name
-                    # Try to read SKILL.md if it exists
-                    skill_md = skill_dir / "SKILL.md"
-                    description = ""
-                    if skill_md.exists():
-                        content = skill_md.read_text(encoding="utf-8")
-                        # Try to parse YAML frontmatter first
-                        lines = content.split("\n")
-                        in_yaml = False
-                        yaml_content = []
-
-                        for line in lines:
-                            if line.strip() == "---":
-                                if not in_yaml:
-                                    in_yaml = True
-                                else:
-                                    # End of YAML frontmatter
-                                    break
-                            elif in_yaml:
-                                yaml_content.append(line)
-
-                        # Parse YAML for description
-                        if yaml_content:
-                            with contextlib.suppress(Exception):
-                                # YAML parsing failed, fall back to simple parsing
-                                import yaml
-
-                                yaml_data = yaml.safe_load("\n".join(yaml_content))
-                                if (
-                                    isinstance(yaml_data, dict)
-                                    and "description" in yaml_data
-                                ):
-                                    description = yaml_data["description"]
-
-                        # If no description from YAML, try simple parsing
-                        if not description:
-                            for line in lines:
-                                line = line.strip()
-                                # Skip YAML markers and empty lines
-                                if line and line != "---" and not line.startswith("#"):
-                                    description = line
-                                    break
-
-                    skills.append(
-                        {"id": skill_id, "name": skill_id, "description": description}
-                    )
+            skills = [
+                _load_skill_entry(skill_dir)
+                for skill_dir in skills_dir.iterdir()
+                if skill_dir.is_dir()
+            ]
 
             logger.info(f"Loaded {len(skills)} skills from filesystem")
             return skills
