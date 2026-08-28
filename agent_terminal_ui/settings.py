@@ -332,6 +332,24 @@ class AppSettings:
         except Exception as e:
             logger.warning(f"Failed to save settings to {self._file}: {e}")
 
+    @staticmethod
+    def _coerce_env_value(env_val: str, schema_def: SettingDef | None) -> Any:
+        """Coerce a raw environment-variable string per its schema type.
+
+        Returns the raw string unchanged if there's no schema entry, the
+        type isn't boolean/integer, or an integer coercion fails to parse.
+        """
+        if not schema_def:
+            return env_val
+        if schema_def.type == "boolean":
+            return env_val.lower() in ("true", "1", "yes", "on")
+        if schema_def.type == "integer":
+            try:
+                return int(env_val)
+            except ValueError:
+                pass
+        return env_val
+
     def get(self, key: str, default: Any = None, expand: bool = True) -> Any:
         """Get a setting value, checking environment variables first.
 
@@ -346,17 +364,7 @@ class AppSettings:
         # 1. Check environment variables first (case-insensitively)
         env_val = os.environ.get(key) or os.environ.get(key.upper())
         if env_val is not None:
-            # Coerce types based on Schema if available
-            schema_def = self._schema.get(key)
-            if schema_def:
-                if schema_def.type == "boolean":
-                    return env_val.lower() in ("true", "1", "yes", "on")
-                elif schema_def.type == "integer":
-                    try:
-                        return int(env_val)
-                    except ValueError:
-                        pass
-            return env_val
+            return self._coerce_env_value(env_val, self._schema.get(key))
 
         value = self._data.get(key, default)
         if expand and isinstance(value, str):
