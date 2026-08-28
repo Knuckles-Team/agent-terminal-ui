@@ -8,13 +8,15 @@ Concept: AU-018 (Settings Screen)
 
 from __future__ import annotations
 
+from typing import Any
+
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Vertical, VerticalGroup, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Checkbox, Footer, Input, Select, Static
 
-from agent_terminal_ui.settings import SETTINGS_SCHEMA, AppSettings
+from agent_terminal_ui.settings import SETTINGS_SCHEMA, AppSettings, SettingDef
 
 
 class SettingsScreen(ModalScreen):
@@ -97,6 +99,56 @@ class SettingsScreen(ModalScreen):
         super().__init__(name=name, id=id, classes=classes)
         self._settings = settings
 
+    def _compose_setting_value_widget(
+        self, setting_def: SettingDef, value: Any
+    ) -> ComposeResult:
+        """Yield the single form-input widget appropriate for a setting's type."""
+        if setting_def.type == "string":
+            yield Input(
+                str(value or ""),
+                classes="setting-input",
+                name=setting_def.key,
+            )
+        elif setting_def.type == "boolean":
+            yield Checkbox(
+                value=bool(value),
+                classes="setting-input",
+                name=setting_def.key,
+            )
+        elif setting_def.type == "choices":
+            choices = [(c, c) for c in (setting_def.choices or [])]
+            yield Select(
+                choices,
+                value=str(value),
+                classes="setting-input",
+                name=setting_def.key,
+                allow_blank=False,
+            )
+        elif setting_def.type == "integer":
+            yield Input(
+                str(value or 0),
+                type="integer",
+                classes="setting-input",
+                name=setting_def.key,
+            )
+
+    def _compose_setting_group(self, setting_def: SettingDef) -> ComposeResult:
+        """Yield one setting's group: title, optional help, and its input."""
+        with VerticalGroup(
+            classes="setting-group",
+            name=setting_def.title.lower(),
+        ):
+            yield Static(setting_def.title, classes="setting-title")
+            if setting_def.help:
+                yield Static(
+                    f"[dim]{setting_def.help}[/dim]",
+                    classes="setting-help",
+                    markup=True,
+                )
+
+            value = self._settings.get(setting_def.key, expand=False)
+            yield from self._compose_setting_value_widget(setting_def, value)
+
     def compose(self) -> ComposeResult:
         """Compose the settings screen layout."""
         with Vertical(id="settings-container"):
@@ -110,52 +162,7 @@ class SettingsScreen(ModalScreen):
                 for setting_def in SETTINGS_SCHEMA:
                     if not setting_def.editable:
                         continue
-
-                    with VerticalGroup(
-                        classes="setting-group",
-                        name=setting_def.title.lower(),
-                    ):
-                        yield Static(
-                            setting_def.title,
-                            classes="setting-title",
-                        )
-                        if setting_def.help:
-                            yield Static(
-                                f"[dim]{setting_def.help}[/dim]",
-                                classes="setting-help",
-                                markup=True,
-                            )
-
-                        value = self._settings.get(setting_def.key, expand=False)
-
-                        if setting_def.type == "string":
-                            yield Input(
-                                str(value or ""),
-                                classes="setting-input",
-                                name=setting_def.key,
-                            )
-                        elif setting_def.type == "boolean":
-                            yield Checkbox(
-                                value=bool(value),
-                                classes="setting-input",
-                                name=setting_def.key,
-                            )
-                        elif setting_def.type == "choices":
-                            choices = [(c, c) for c in (setting_def.choices or [])]
-                            yield Select(
-                                choices,
-                                value=str(value),
-                                classes="setting-input",
-                                name=setting_def.key,
-                                allow_blank=False,
-                            )
-                        elif setting_def.type == "integer":
-                            yield Input(
-                                str(value or 0),
-                                type="integer",
-                                classes="setting-input",
-                                name=setting_def.key,
-                            )
+                    yield from self._compose_setting_group(setting_def)
 
         yield Footer()
 
