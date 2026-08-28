@@ -1989,6 +1989,45 @@ class CommandProcessor:
                 table.add_row(f"  {type_name}", str(by_type[type_name]))
         return table
 
+    @staticmethod
+    def _truncate(value: Any, limit: int = 80) -> Any:
+        """Shorten an over-long string for single-line table display."""
+        if isinstance(value, str) and len(value) > limit:
+            return value[: limit - 3] + "..."
+        return value
+
+    @staticmethod
+    def _first_value(*candidates: Any, default: Any = "") -> Any:
+        """Return the first truthy candidate, or ``default`` when there is none."""
+        for candidate in candidates:
+            if candidate:
+                return candidate
+        return default
+
+    @staticmethod
+    def _named_entries(value: Any) -> Any:
+        """Normalize a ``{name: info}`` mapping into a list of named dicts."""
+        entries = value or []
+        if isinstance(entries, dict):
+            return [
+                {"name": name, **(info if isinstance(info, dict) else {})}
+                for name, info in entries.items()
+            ]
+        return entries
+
+    def _graph_node_row(self, node: dict[str, Any]) -> tuple[str, str, str]:
+        """Build the table cells for one graph node."""
+        labels = node.get("labels") or []
+        labels_str = ", ".join(labels) if labels else node.get("type", "")
+        props = node.get("properties") or {}
+        name = self._first_value(
+            props.get("name"),
+            props.get("title"),
+            props.get("content"),
+            default=node.get("name", ""),
+        )
+        return str(node.get("id", "")), str(labels_str), str(self._truncate(name))
+
     def _render_graph_nodes(
         self, nodes: list[dict[str, Any]], node_type: str | None
     ) -> Table:
@@ -2000,18 +2039,7 @@ class CommandProcessor:
         table.add_column("Name")
 
         for node in nodes:
-            labels = node.get("labels") or []
-            labels_str = ", ".join(labels) if labels else node.get("type", "")
-            props = node.get("properties") or {}
-            name = (
-                props.get("name")
-                or props.get("title")
-                or props.get("content")
-                or node.get("name", "")
-            )
-            if isinstance(name, str) and len(name) > 80:
-                name = name[:77] + "..."
-            table.add_row(str(node.get("id", "")), str(labels_str), str(name))
+            table.add_row(*self._graph_node_row(node))
         return table
 
     def _render_graph_search(self, query: str, hits: list[dict[str, Any]]) -> Table:
@@ -2474,6 +2502,44 @@ class CommandProcessor:
             )
         return table
 
+    def _impact_row(self, entry: dict[str, Any]) -> tuple[str, str, str, str, str]:
+        """Build the table cells for one ``/impact`` entry."""
+        props = entry.get("properties") or {}
+        name = self._first_value(
+            entry.get("name"),
+            props.get("name"),
+            entry.get("symbol"),
+            props.get("symbol"),
+            default=str(entry.get("id", "")),
+        )
+        node_type = self._first_value(
+            entry.get("type"),
+            entry.get("label"),
+            (entry.get("labels") or [""])[0],
+            default=props.get("type", ""),
+        )
+        file_path = self._first_value(
+            entry.get("file"),
+            entry.get("path"),
+            props.get("file"),
+            props.get("path"),
+            default="",
+        )
+        depth = self._first_value(entry.get("depth"), default=entry.get("distance"))
+        relationship = self._first_value(
+            entry.get("relationship"),
+            entry.get("rel_type"),
+            entry.get("edge_type"),
+            default="",
+        )
+        return (
+            str(name),
+            str(node_type),
+            str(file_path),
+            str(depth) if depth is not None else "",
+            str(relationship),
+        )
+
     def _render_impact_table(self, symbol: str, impacts: list[dict[str, Any]]) -> Table:
         """Build a Rich table for ``/impact`` output."""
         table = Table(title=f"Impact: {symbol}", expand=True)
@@ -2484,42 +2550,7 @@ class CommandProcessor:
         table.add_column("Relationship")
 
         for entry in impacts:
-            props = entry.get("properties") or {}
-            name = (
-                entry.get("name")
-                or props.get("name")
-                or entry.get("symbol")
-                or props.get("symbol")
-                or str(entry.get("id", ""))
-            )
-            node_type = (
-                entry.get("type")
-                or entry.get("label")
-                or (entry.get("labels") or [""])[0]
-                or props.get("type", "")
-            )
-            file_path = (
-                entry.get("file")
-                or entry.get("path")
-                or props.get("file")
-                or props.get("path")
-                or ""
-            )
-            depth = entry.get("depth") or entry.get("distance")
-            depth_str = str(depth) if depth is not None else ""
-            relationship = (
-                entry.get("relationship")
-                or entry.get("rel_type")
-                or entry.get("edge_type")
-                or ""
-            )
-            table.add_row(
-                str(name),
-                str(node_type),
-                str(file_path),
-                depth_str,
-                str(relationship),
-            )
+            table.add_row(*self._impact_row(entry))
         return table
 
     def _render_resources_table(self, resources: list[dict[str, Any]]) -> Table:
@@ -2542,6 +2573,24 @@ class CommandProcessor:
             table.add_row(str(r_type), str(name), str(description))
         return table
 
+    @staticmethod
+    def _format_progress(progress: Any) -> str:
+        """Format a pipeline-phase progress value for display."""
+        if progress is None:
+            return ""
+        if isinstance(progress, int | float) and progress <= 1:
+            return f"{progress * 100:.0f}%"
+        return str(progress)
+
+    def _pipeline_row(self, phase: dict[str, Any]) -> tuple[str, str, str, str]:
+        """Build the table cells for one pipeline phase."""
+        return (
+            str(phase.get("name") or phase.get("phase", "")),
+            str(phase.get("state") or phase.get("status", "")),
+            str(phase.get("last_run") or phase.get("last_executed", "")),
+            self._format_progress(phase.get("progress")),
+        )
+
     def _render_pipeline_status(self, status: dict[str, Any]) -> Table:
         """Build a Rich table of pipeline-phase status."""
         title = f"Pipeline ({status.get('status', 'unknown')})"
@@ -2551,26 +2600,19 @@ class CommandProcessor:
         table.add_column("Last Run")
         table.add_column("Progress", justify="right")
 
-        phases = status.get("phases") or []
-        if isinstance(phases, dict):
-            phases = [
-                {"name": name, **(info if isinstance(info, dict) else {})}
-                for name, info in phases.items()
-            ]
-        for phase in phases:
-            name = phase.get("name") or phase.get("phase", "")
-            state = phase.get("state") or phase.get("status", "")
-            last_run = phase.get("last_run") or phase.get("last_executed", "")
-            progress = phase.get("progress")
-            progress_str = (
-                f"{progress * 100:.0f}%"
-                if isinstance(progress, int | float) and progress <= 1
-                else str(progress)
-                if progress is not None
-                else ""
-            )
-            table.add_row(str(name), str(state), str(last_run), progress_str)
+        for phase in self._named_entries(status.get("phases")):
+            table.add_row(*self._pipeline_row(phase))
         return table
+
+    @staticmethod
+    def _maintenance_row(operation: dict[str, Any]) -> tuple[str, str, str, str]:
+        """Build the table cells for one maintenance operation."""
+        return (
+            str(operation.get("name") or operation.get("operation", "")),
+            str(operation.get("last_run") or operation.get("last_executed", "")),
+            str(operation.get("items_pruned", operation.get("pruned", 0))),
+            str(operation.get("items_updated", operation.get("updated", 0))),
+        )
 
     def _render_maintenance_status(self, status: dict[str, Any]) -> Table:
         """Build a Rich table of maintenance-operation status."""
@@ -2581,18 +2623,8 @@ class CommandProcessor:
         table.add_column("Items Pruned", justify="right")
         table.add_column("Items Updated", justify="right")
 
-        operations = status.get("operations") or []
-        if isinstance(operations, dict):
-            operations = [
-                {"name": name, **(info if isinstance(info, dict) else {})}
-                for name, info in operations.items()
-            ]
-        for operation in operations:
-            name = operation.get("name") or operation.get("operation", "")
-            last_run = operation.get("last_run") or operation.get("last_executed", "")
-            pruned = operation.get("items_pruned", operation.get("pruned", 0))
-            updated = operation.get("items_updated", operation.get("updated", 0))
-            table.add_row(str(name), str(last_run), str(pruned), str(updated))
+        for operation in self._named_entries(status.get("operations")):
+            table.add_row(*self._maintenance_row(operation))
         return table
 
     def _render_cron_calendar(self, tasks: list[dict[str, Any]]) -> Table:
@@ -2623,6 +2655,40 @@ class CommandProcessor:
             )
         return table
 
+    @staticmethod
+    def _format_duration(duration: Any) -> str:
+        """Format a cron execution duration for display."""
+        if isinstance(duration, int | float):
+            return f"{duration}"
+        return str(duration) if duration else ""
+
+    def _cron_log_row(self, entry: dict[str, Any]) -> tuple[str, str, str, str, str]:
+        """Build the table cells for one cron execution log entry."""
+        name = self._first_value(
+            entry.get("task_name"),
+            entry.get("name"),
+            default=entry.get("task_id", ""),
+        )
+        started = self._first_value(
+            entry.get("started_at"),
+            entry.get("timestamp"),
+            default=entry.get("start_time", ""),
+        )
+        duration = self._first_value(
+            entry.get("duration"), default=entry.get("duration_ms", "")
+        )
+        status = self._first_value(entry.get("status"), default=entry.get("result", ""))
+        output = self._first_value(
+            entry.get("output"), default=entry.get("message", "")
+        )
+        return (
+            str(name),
+            str(started),
+            self._format_duration(duration),
+            str(status),
+            str(self._truncate(output)),
+        )
+
     def _render_cron_logs(self, logs: list[dict[str, Any]], limit: int) -> Table:
         """Build a Rich table summarizing recent cron executions."""
         table = Table(title=f"Cron Logs (latest {limit})", expand=True)
@@ -2633,30 +2699,7 @@ class CommandProcessor:
         table.add_column("Output")
 
         for entry in logs:
-            name = (
-                entry.get("task_name") or entry.get("name") or entry.get("task_id", "")
-            )
-            started = (
-                entry.get("started_at")
-                or entry.get("timestamp")
-                or entry.get("start_time", "")
-            )
-            duration = entry.get("duration") or entry.get("duration_ms", "")
-            if isinstance(duration, int | float):
-                duration_str = f"{duration}"
-            else:
-                duration_str = str(duration) if duration else ""
-            status = entry.get("status") or entry.get("result", "")
-            output = entry.get("output") or entry.get("message", "")
-            if isinstance(output, str) and len(output) > 80:
-                output = output[:77] + "..."
-            table.add_row(
-                str(name),
-                str(started),
-                duration_str,
-                str(status),
-                str(output),
-            )
+            table.add_row(*self._cron_log_row(entry))
         return table
 
     def _render_backend_config(self, config: dict[str, Any]) -> Panel:
@@ -2687,98 +2730,120 @@ class CommandProcessor:
     #  CONCEPT:TU-KG.compute.prompt-management-ahe-rollback / KG-003
     # ─────────────────────────────────────────────────────────────────
 
+    async def _prompts_list(self, parts: list[str]) -> None:
+        """``/prompts list`` — render every prompt in the knowledge graph."""
+        prompts = await self.app._client.list_prompts()
+        if not prompts:
+            await self.app.query_one("Conversation").add_info(
+                "[yellow]No prompts found in KG.[/yellow]"
+            )
+            return
+        table = Table(
+            title="Prompts (CONCEPT:TU-KG.compute.prompt-management-ahe-rollback)",
+            expand=True,
+        )
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Name", style="bold")
+        table.add_column("Description")
+        table.add_column("Version", justify="right")
+        for p in prompts:
+            table.add_row(
+                str(p.get("id", "")),
+                str(p.get("name", "")),
+                str(p.get("description", ""))[:60],
+                str(p.get("version_number", "1")),
+            )
+        await self.app.query_one("Conversation").add_info(table)
+
+    async def _prompts_get(self, parts: list[str]) -> None:
+        """``/prompts get <id>`` — show one prompt's content."""
+        prompt = await self.app._client.get_prompt(parts[1])
+        content = prompt.get("content", "")
+        syntax = Syntax(content, "markdown", theme="monokai")
+        await self.app.query_one("Conversation").add_info(
+            Panel(syntax, title=f"Prompt: {prompt.get('name', parts[1])}")
+        )
+
+    async def _prompts_set(self, parts: list[str]) -> None:
+        """``/prompts set <id> <content>`` — update a prompt."""
+        result = await self.app._client.update_prompt(parts[1], parts[2])
+        version = result.get("version_number", "?")
+        await self.app.query_one("Conversation").add_info(
+            f"[green]✓ Updated prompt → version {version}[/green]"
+        )
+
+    async def _prompts_versions(self, parts: list[str]) -> None:
+        """``/prompts versions <id>`` — show a prompt's version history."""
+        versions = await self.app._client.get_prompt_versions(parts[1])
+        if not versions:
+            await self.app.query_one("Conversation").add_info(
+                "[yellow]No versions found.[/yellow]"
+            )
+            return
+        table = Table(title=f"Version History: {parts[1]}", expand=True)
+        table.add_column("Version", justify="right")
+        table.add_column("ID", style="cyan")
+        table.add_column("Author")
+        table.add_column("Timestamp")
+        for v in versions:
+            table.add_row(
+                str(v.get("version_number", "?")),
+                str(v.get("id", "")),
+                str(v.get("author", "")),
+                str(v.get("timestamp", "")),
+            )
+        await self.app.query_one("Conversation").add_info(table)
+
+    async def _prompts_rollback(self, parts: list[str]) -> None:
+        """``/prompts rollback <id> <ver>`` — restore an earlier version."""
+        result = await self.app._client.rollback_prompt(parts[1], parts[2])
+        version = result.get("version_number", "?")
+        await self.app.query_one("Conversation").add_info(
+            f"[green]✓ Rolled back to version {version}[/green]"
+        )
+
+    async def _prompts_add(self, parts: list[str]) -> None:
+        """``/prompts add <name> <content>`` — create a new prompt."""
+        name = parts[1]
+        content = parts[2]
+        result = await self.app._client.create_prompt(name, content)
+        prompt_name = result.get("name", name)
+        prompt_id = result.get("id", "?")
+        await self.app.query_one("Conversation").add_info(
+            f"[green]✓ Created prompt '{prompt_name}' ({prompt_id})[/green]"
+        )
+
+    async def _prompts_usage(self) -> None:
+        """Show the ``/prompts`` usage banner."""
+        await self.app.query_one("Conversation").add_info(
+            "[bold blue]Usage:[/bold blue]\n"
+            "  /prompts                     — list all prompts\n"
+            "  /prompts get <id>             — show prompt content\n"
+            "  /prompts set <id> <content>   — update prompt\n"
+            "  /prompts versions <id>        — show version history\n"
+            "  /prompts rollback <id> <ver>  — rollback to version\n"
+            "  /prompts add <name> <content> — create new prompt"
+        )
+
     async def cmd_prompts(self, args: str) -> None:
         """Manage system prompts: list, get, set, versions, rollback, add."""
         parts = args.strip().split(maxsplit=2)
         subcmd = parts[0].lower() if parts else ""
-
-        if not subcmd or subcmd == "list":
-            prompts = await self.app._client.list_prompts()
-            if not prompts:
-                await self.app.query_one("Conversation").add_info(
-                    "[yellow]No prompts found in KG.[/yellow]"
-                )
-                return
-            table = Table(
-                title="Prompts (CONCEPT:TU-KG.compute.prompt-management-ahe-rollback)",
-                expand=True,
-            )
-            table.add_column("ID", style="cyan", no_wrap=True)
-            table.add_column("Name", style="bold")
-            table.add_column("Description")
-            table.add_column("Version", justify="right")
-            for p in prompts:
-                table.add_row(
-                    str(p.get("id", "")),
-                    str(p.get("name", "")),
-                    str(p.get("description", ""))[:60],
-                    str(p.get("version_number", "1")),
-                )
-            await self.app.query_one("Conversation").add_info(table)
-
-        elif subcmd == "get" and len(parts) >= 2:
-            prompt = await self.app._client.get_prompt(parts[1])
-            content = prompt.get("content", "")
-            syntax = Syntax(content, "markdown", theme="monokai")
-            await self.app.query_one("Conversation").add_info(
-                Panel(syntax, title=f"Prompt: {prompt.get('name', parts[1])}")
-            )
-
-        elif subcmd == "set" and len(parts) >= 3:
-            result = await self.app._client.update_prompt(parts[1], parts[2])
-            version = result.get("version_number", "?")
-            await self.app.query_one("Conversation").add_info(
-                f"[green]✓ Updated prompt → version {version}[/green]"
-            )
-
-        elif subcmd == "versions" and len(parts) >= 2:
-            versions = await self.app._client.get_prompt_versions(parts[1])
-            if not versions:
-                await self.app.query_one("Conversation").add_info(
-                    "[yellow]No versions found.[/yellow]"
-                )
-                return
-            table = Table(title=f"Version History: {parts[1]}", expand=True)
-            table.add_column("Version", justify="right")
-            table.add_column("ID", style="cyan")
-            table.add_column("Author")
-            table.add_column("Timestamp")
-            for v in versions:
-                table.add_row(
-                    str(v.get("version_number", "?")),
-                    str(v.get("id", "")),
-                    str(v.get("author", "")),
-                    str(v.get("timestamp", "")),
-                )
-            await self.app.query_one("Conversation").add_info(table)
-
-        elif subcmd == "rollback" and len(parts) >= 3:
-            result = await self.app._client.rollback_prompt(parts[1], parts[2])
-            version = result.get("version_number", "?")
-            await self.app.query_one("Conversation").add_info(
-                f"[green]✓ Rolled back to version {version}[/green]"
-            )
-
-        elif subcmd == "add" and len(parts) >= 3:
-            name = parts[1]
-            content = parts[2]
-            result = await self.app._client.create_prompt(name, content)
-            prompt_name = result.get("name", name)
-            prompt_id = result.get("id", "?")
-            await self.app.query_one("Conversation").add_info(
-                f"[green]✓ Created prompt '{prompt_name}' ({prompt_id})[/green]"
-            )
-
-        else:
-            await self.app.query_one("Conversation").add_info(
-                "[bold blue]Usage:[/bold blue]\n"
-                "  /prompts                     — list all prompts\n"
-                "  /prompts get <id>             — show prompt content\n"
-                "  /prompts set <id> <content>   — update prompt\n"
-                "  /prompts versions <id>        — show version history\n"
-                "  /prompts rollback <id> <ver>  — rollback to version\n"
-                "  /prompts add <name> <content> — create new prompt"
-            )
+        # subcommand -> (minimum token count, handler)
+        handlers: dict[str, tuple[int, Callable[[list[str]], Awaitable[None]]]] = {
+            "": (0, self._prompts_list),
+            "list": (1, self._prompts_list),
+            "get": (2, self._prompts_get),
+            "set": (3, self._prompts_set),
+            "versions": (2, self._prompts_versions),
+            "rollback": (3, self._prompts_rollback),
+            "add": (3, self._prompts_add),
+        }
+        entry = handlers.get(subcmd)
+        if entry is None or len(parts) < entry[0]:
+            await self._prompts_usage()
+            return
+        await entry[1](parts)
 
     async def cmd_skills_only(self, args: str) -> None:
         """List and manage agent skills (pre-baked capabilities)."""
