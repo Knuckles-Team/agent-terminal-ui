@@ -158,6 +158,61 @@ class TestCommandMethodsMapToClient:
         )
 
 
+def _has_documented_http_verb(method: Callable[..., Any]) -> bool:
+    """Whether a method's docstring documents an HTTP verb + path-like token."""
+    doc = inspect.getdoc(method) or ""
+    return bool(_HTTP_VERB_PATTERN.search(doc) and re.search(r"[/`'\"]/?\w+", doc))
+
+
+def _public_delegation_targets(source: str, name: str, public: set[str]) -> set[str]:
+    """Other PUBLIC ``AgentClient`` methods this source calls via ``self.*()``."""
+    return {
+        match
+        for match in _SELF_DELEGATION_PATTERN.findall(source)
+        if match in public and match != name
+    }
+
+
+def _delegates_to_routed_helper(source: str, name: str) -> bool:
+    """Whether this source delegates to a ``self`` helper (public or private,
+    e.g. ``_obs_get``) whose own source references a backend route -- the
+    path is just assembled one hop away."""
+    for match in set(_SELF_DELEGATION_PATTERN.findall(source)):
+        if match == name:
+            continue
+        helper = getattr(AgentClient, match, None)
+        if helper is None:
+            continue
+        try:
+            helper_source = inspect.getsource(helper)
+        except (OSError, TypeError):
+            continue
+        if _PATH_IN_SOURCE_PATTERN.search(helper_source):
+            return True
+    return False
+
+
+def _method_references_backend_route(name: str, public: set[str]) -> bool | None:
+    """Whether one ``AgentClient`` method satisfies the soft backend-route check.
+
+    Returns None if the method's source couldn't be introspected (skipped,
+    same as the original inline ``continue``); otherwise True (passes) or
+    False (violates -- reported by the caller).
+    """
+    method = getattr(AgentClient, name)
+    try:
+        source = inspect.getsource(method)
+    except (OSError, TypeError):
+        return None
+
+    return (
+        bool(_PATH_IN_SOURCE_PATTERN.search(source))
+        or _has_documented_http_verb(method)
+        or bool(_public_delegation_targets(source, name, public))
+        or _delegates_to_routed_helper(source, name)
+    )
+
+
 class TestClientMethodsReferenceBackendRoutes:
     """Each AgentClient method must reference a documented backend route."""
 
@@ -175,50 +230,11 @@ class TestClientMethodsReferenceBackendRoutes:
           ``self`` (e.g. ``get_impact`` -> ``get_graph_impact``).
         """
         public = set(_public_async_methods(AgentClient))
-        violators: list[str] = []
-        for name in public:
-            method = getattr(AgentClient, name)
-            try:
-                source = inspect.getsource(method)
-            except (OSError, TypeError):
-                continue
-
-            has_path = bool(_PATH_IN_SOURCE_PATTERN.search(source))
-            doc = inspect.getdoc(method) or ""
-            has_documented_verb = bool(
-                _HTTP_VERB_PATTERN.search(doc) and re.search(r"[/`'\"]/?\w+", doc)
-            )
-            delegates = {
-                match
-                for match in _SELF_DELEGATION_PATTERN.findall(source)
-                if match in public and match != name
-            }
-
-            # Also accept delegation to a routed helper on ``self`` (public or
-            # private, e.g. ``_obs_get``) whose own source references a backend
-            # route — the path is just assembled one hop away.
-            routed_helper = False
-            for match in set(_SELF_DELEGATION_PATTERN.findall(source)):
-                if match == name:
-                    continue
-                helper = getattr(AgentClient, match, None)
-                if helper is None:
-                    continue
-                try:
-                    helper_source = inspect.getsource(helper)
-                except (OSError, TypeError):
-                    continue
-                if _PATH_IN_SOURCE_PATTERN.search(helper_source):
-                    routed_helper = True
-                    break
-
-            if (
-                not has_path
-                and not has_documented_verb
-                and not delegates
-                and not routed_helper
-            ):
-                violators.append(name)
+        violators = [
+            name
+            for name in public
+            if _method_references_backend_route(name, public) is False
+        ]
 
         if violators:
             rendered = "\n".join(f"  - AgentClient.{n}" for n in violators)
