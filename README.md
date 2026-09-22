@@ -11,7 +11,7 @@
     <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
 </p>
 
-A [Textual](https://textual.textualize.io/)-based terminal interface for interacting with AI agents. Connects to an [agent-utilities](https://github.com/pydantic/agent-utilities) backend through a normalized transport adapter. The currently shipped adapter uses ACP (JSON-RPC + SSE).
+A [Textual](https://textual.textualize.io/)-based terminal interface for interacting with AI agents. Connects to an [agent-utilities](https://github.com/pydantic/agent-utilities)-based agent server through a normalized transport adapter. The currently shipped adapter uses A2A (JSON-RPC + SSE) for chat and REST for capability, run, and dashboard surfaces.
 
 > [!NOTE]
 > This library is in early development and subject to change.
@@ -23,7 +23,7 @@ A [Textual](https://textual.textualize.io/)-based terminal interface for interac
 ### Features
 
 #### Core Functionality
-- **Normalized protocol adapter** -- ACP JSON-RPC + SSE events are translated into one UI event vocabulary for interactive and headless clients
+- **Normalized protocol adapter** -- A2A JSON-RPC + SSE task/status events are translated into one UI event vocabulary for interactive and headless clients
 - **Dynamic workflow sidebar** -- discovers graph nodes from sideband events at runtime; nodes are never hardcoded
 - **Phase labels** -- Planning, Discovery, Execution, Validation
 - **Completed node markers** -- checkmarks on finished specialists
@@ -207,6 +207,10 @@ Start the `agent-utilities` backend server, then launch the TUI:
 ```bash
 agent-terminal-ui
 ```
+
+Set `AGENT_URL` to your agent server and `AGENT_BEARER_TOKEN` to your bearer
+credential before using chat. See [Configuration](docs/configuration.md) for the
+full settings reference.
 
 Or run with `uv` if installed locally:
 

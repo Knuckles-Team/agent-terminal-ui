@@ -33,6 +33,13 @@
 - NEVER use `# type: ignore`. It is better to leave the issue and have the user work with you to fix it.
 - Don't put types in quotes unless it is absolutely necessary to avoid circular imports and forward references.
 
+# Chat Transport
+Chat turns use the agent server's authenticated A2A JSON-RPC boundary at `{AGENT_URL}/a2a`: `message/stream` streams one durable task's state transitions over SSE, `tasks/resubscribe` re-attaches and `tasks/cancel` cancels. `AGENT_BEARER_TOKEN` carries the caller's bearer credential. This is the one chat transport; do not add a second chat endpoint or an ACP-style path. (A rebrand of the agent server is pending — keep this section and code comments naming it generically rather than baking in a product name that is about to change.)
+- Keep the HTTP transport behind `AgentClient` and model its responses explicitly.
+- Keep chat availability distinct from the agent server's REST availability.
+- Keep docs concise and factual; use present-tense architecture and display names.
+- Add focused tests for behavior changes and keep generated build output out of commits.
+
 # Documentation Instructions
 - Keep it very concise
 - No emojis or em dashes.

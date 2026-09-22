@@ -3,13 +3,14 @@
 `agent-terminal-ui` is a [Textual](https://textual.textualize.io/)-based terminal
 user interface for interacting with AI agents built on the
 [agent-utilities](https://github.com/pydantic/agent-utilities) platform. It connects
-to an agent backend over dual protocols — AG-UI (SSE streaming) and ACP
-(JSON-RPC + SSE) — and renders live workflow activity, tool execution, and
-human-in-the-loop approvals in the terminal.
+to an agent server over its REST gateway and its authenticated A2A JSON-RPC + SSE
+boundary, and renders live workflow activity, tool execution, and human-in-the-loop
+approvals in the terminal.
 
 This site is the official documentation for the client: its architecture, configuration
 surface, durable session infrastructure, and the autonomous goal and multi-session
-workflows it supports.
+workflows it supports. The chat turn uses the agent server's authenticated A2A
+streaming boundary; see the [current architecture](architecture.md).
 
 ## Highlights
 
@@ -55,5 +56,6 @@ Launch the terminal interface:
 agent-terminal-ui
 ```
 
-Consult the [Configuration](configuration.md) reference to point the client at your
-agent backend and tune its behavior.
+Set `AGENT_URL` to your agent server and `AGENT_BEARER_TOKEN` to your bearer
+credential before using chat. See [Configuration](configuration.md) for the full
+settings reference.

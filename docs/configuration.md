@@ -116,7 +116,7 @@ Custom pricing can be set via `tracker.set_pricing(model, input, output, cached)
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `AGENT_URL` | `http://localhost:8000` | Agent backend URL (interactive and headless). |
-| `ACP_URL` | `{AGENT_URL}/acp` | Override for the ACP mount used by `client.py`'s hand-rolled JSON-RPC/SSE convention. Defaults to `{AGENT_URL}/acp` when unset. |
+| `AGENT_BEARER_TOKEN` | unset | Bearer credential sent on every Graph OS request, including A2A chat at `{AGENT_URL}/a2a`. |
 | `AGENT_THEME` | `tokyo-night` | Startup theme (any Textual built-in theme name). |
 | `TEXTUAL_ANIMATIONS` | `full` | Set to `none` to disable entrance animations (reduced motion). |
 | `AGENT_UTILITIES_DATA_DIR` | platform default | Override the directory for the SQLite session store. |

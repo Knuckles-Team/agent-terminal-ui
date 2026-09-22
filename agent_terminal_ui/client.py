@@ -1,17 +1,19 @@
 #!/usr/bin/python
 """Agent Client implementation for the terminal UI.
 
-This module provides high-level client wrappers for interacting with the agent
-server. "ACP" here names this repo's own hand-rolled JSON-RPC-over-HTTP +
-SSE convention (session create → ``POST {base}/acp/rpc/{id}`` → stream
-``GET {base}/acp/stream/{id}``) — it is not an integration with Zed's
-``agent-client-protocol`` SDK; this client speaks HTTP/SSE directly via
-``httpx`` and has no dependency on that package.
+Conversation turns use GraphOS's authenticated A2A JSON-RPC boundary at
+``{base}/a2a``: ``message/stream`` admits one durable task and streams its
+state transitions as Server-Sent Events, ``tasks/resubscribe`` re-attaches to
+a task after a disconnect, and ``tasks/cancel`` cancels it. The conversation
+(session) identity is the A2A ``contextId`` this client mints; the server owns
+every task. Graph and operator capabilities use the GraphOS REST gateway.
 """
 
 import contextlib
 import json
 import logging
+import os
+import uuid
 from collections.abc import AsyncGenerator, Callable
 from pathlib import Path
 from typing import Any
@@ -31,12 +33,85 @@ from agent_terminal_ui.capabilities import (
 
 logger = logging.getLogger(__name__)
 
-#: Prefix the gateway mounts the canonical Knowledge-Graph REST table under
-#: (``agent_utilities.gateway.graph_api.register_graph_routes(app,
-#: prefix="/api")``). The ``/graph/*`` action twins live there, unlike the
-#: server's own un-prefixed routers (``/models``, ``/chats``, ``/tools``,
-#: ``/mcp/*``).
+#: Prefix the gateway mounts the canonical Knowledge-Graph REST table under.
+#: The ``/graph/*`` action twins live there, unlike the server's own
+#: un-prefixed routers (``/models``, ``/chats``, ``/tools``, ``/mcp/*``).
 GATEWAY_API_PREFIX = "/api"
+
+#: The GraphOS A2A JSON-RPC endpoint and its Agent Card.
+A2A_PATH = "/a2a"
+AGENT_CARD_PATH = "/.well-known/agent-card.json"
+
+#: A2A task states that end a stream.
+_FINAL_STATES = frozenset({"completed", "canceled", "failed", "rejected"})
+_FAILED_STATES = frozenset({"failed", "rejected"})
+
+
+class A2ATransportError(RuntimeError):
+    """GraphOS answered a JSON-RPC request with an error object."""
+
+    def __init__(self, error: dict[str, Any]) -> None:
+        super().__init__(str(error.get("message") or "A2A request failed"))
+        self.code = error.get("code")
+
+
+def _sse_frames(lines: list[str]) -> list[dict[str, Any]]:
+    """Decode the JSON-RPC frame carried by one SSE event's ``data`` lines."""
+    data = "\n".join(line[5:].lstrip() for line in lines if line.startswith("data:"))
+    if not data:
+        return []
+    frame = json.loads(data)
+    return [frame] if isinstance(frame, dict) else []
+
+
+def _frame_result(frame: dict[str, Any]) -> dict[str, Any]:
+    error = frame.get("error")
+    if isinstance(error, dict):
+        raise A2ATransportError(error)
+    result = frame.get("result")
+    if not isinstance(result, dict):
+        raise A2ATransportError({"message": "A2A frame carried no result"})
+    return result
+
+
+def _graph_os_metadata(result: dict[str, Any]) -> dict[str, Any]:
+    metadata = result.get("metadata")
+    graph_os = metadata.get("graphOs") if isinstance(metadata, dict) else None
+    return graph_os if isinstance(graph_os, dict) else {}
+
+
+def new_session_id() -> str:
+    """Mint a new conversation identity (the A2A ``contextId``)."""
+    return f"tui-{uuid.uuid4().hex}"
+
+
+def normalize_a2a_event(
+    result: dict[str, Any], session_id: str
+) -> list[dict[str, Any]]:
+    """Map one A2A task/status event onto the TUI's normalized vocabulary.
+
+    A task and every non-final transition become a ``status`` sideband; a
+    final ``completed``/``canceled`` state ends the turn, and a final
+    ``failed``/``rejected`` state reports an error before ending it.
+    """
+    task_id = result.get("id") or result.get("taskId")
+    state = str((result.get("status") or {}).get("state") or "")
+    run_id = _graph_os_metadata(result).get("runId")
+    common: dict[str, Any] = {"session_id": session_id, "task_id": task_id}
+    if run_id:
+        common["run_id"] = run_id
+    status = {
+        "type": "sideband",
+        "data": {"type": "status", "state": state, "task_id": task_id},
+        **common,
+    }
+    if state not in _FINAL_STATES or result.get("final") is False:
+        return [status]
+    events = [status]
+    if state in _FAILED_STATES:
+        events.append({"type": "error", "message": f"task {state}", **common})
+    events.append({"type": "turn_end", "state": state, **common})
+    return events
 
 
 def _candidate_skills_dirs(workspace_root: Path) -> list[Path]:
@@ -211,152 +286,93 @@ _EVENT_NORMALIZERS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
 
 
 class AgentClient:
-    """Standardized wire client for this repo's hand-rolled ACP convention.
+    """The TUI's one GraphOS client: A2A for conversation, REST for the rest."""
 
-    The TUI treats this class as its one and only protocol adapter: callers
-    consume one normalized event vocabulary regardless of whether events
-    originated from an initial turn or an approval-resume stream. There is
-    currently no second adapter to select between.
-    """
-
-    protocol = "acp"
+    protocol = "a2a"
 
     def __init__(
-        self, base_url: str = "http://localhost:8000", acp_url: str | None = None
+        self,
+        base_url: str = "http://localhost:8000",
+        *,
+        bearer_token: str | None = None,
     ) -> None:
-        """Initialize the ACP client.
+        """Initialize the client.
 
         Args:
-            base_url: The base URL of the agent server.
-            acp_url: Optional explicit override for the ACP mount (e.g. from
-                the ``ACP_URL`` environment variable). Defaults to
-                ``{base_url}/acp``, which is where the gateway mounts it.
+            base_url: The GraphOS base URL.
+            bearer_token: The caller's bearer credential. GraphOS authenticates
+                every A2A and gateway request; without it network deployments
+                answer 401.
         """
         self.base_url: str = base_url.rstrip("/")
-        # The ACP mount is typically at /acp
-        self.acp_url = acp_url.rstrip("/") if acp_url else f"{self.base_url}/acp"
-        self._http_client = httpx.AsyncClient(timeout=30.0)
+        self.a2a_url = f"{self.base_url}{A2A_PATH}"
+        headers = {"Authorization": f"Bearer {bearer_token}"} if bearer_token else None
+        self._http_client = httpx.AsyncClient(timeout=30.0, headers=headers)
         self._current_session_id: str | None = None
+        self._current_task_id: str | None = None
 
     @property
     def current_session_id(self) -> str | None:
-        """Return the session most recently created or used by this client."""
+        """Return the conversation (A2A context) most recently used."""
         return self._current_session_id
 
-    async def create_session(self) -> str:
-        """Create a new ACP session."""
-        response = await self._http_client.post(f"{self.acp_url}/sessions")
-        response.raise_for_status()
-        payload = response.json()
-        session_id = payload.get("session_id") or payload.get("sessionId", "")
-        if session_id:
-            self._current_session_id = session_id
-        return session_id
+    @property
+    def current_task_id(self) -> str | None:
+        """Return the A2A task of the most recent turn, if any."""
+        return self._current_task_id
 
-    @staticmethod
-    def _normalize_event(event: dict[str, Any], session_id: str) -> dict[str, Any]:
-        """Normalize one ACP event into the event vocabulary used by every UI.
-
-        Keeping this translation in the transport adapter prevents initial turns
-        and approval-resume turns from producing subtly different event names.
-        Every normalized event carries its owning session id so consumers can
-        persist, export, and resume the same conversation.
-        """
-        event_type = event.get("type")
-        handler = (
-            _EVENT_NORMALIZERS.get(event_type) if isinstance(event_type, str) else None
+    async def _rpc(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
+        """One unary JSON-RPC call; a JSON-RPC error raises."""
+        response = await self._http_client.post(
+            self.a2a_url,
+            json={"jsonrpc": "2.0", "id": method, "method": method, "params": params},
         )
-        normalized: dict[str, Any] = handler(event) if handler else dict(event)
+        frame = response.json()
+        if not isinstance(frame, dict):
+            response.raise_for_status()
+            raise A2ATransportError({"message": "A2A response was not an object"})
+        return _frame_result(frame)
 
-        event_metadata = event.get("_event")
-        if isinstance(event_metadata, dict):
-            normalized.setdefault("_event", event_metadata)
-            run_id = event_metadata.get("run_id")
-            if run_id:
-                normalized.setdefault("run_id", run_id)
-        if event.get("run_id"):
-            normalized.setdefault("run_id", event["run_id"])
-        normalized.setdefault("session_id", session_id)
-        return normalized
-
-    async def send_rpc(
+    async def _rpc_stream(
         self,
-        session_id: str,
         method: str,
         params: dict[str, Any],
         headers: dict[str, str] | None = None,
-    ) -> None:
-        """Send a JSON-RPC request to the ACP session.
-
-        Args:
-            session_id: Active ACP session id.
-            method: JSON-RPC method name.
-            params: Method params (merged with ``sessionId``).
-            headers: Optional extra HTTP headers (used for multi-model
-                overrides such as ``x-agent-model-id``).
-        """
-        payload = {
-            "jsonrpc": "2.0",
-            "method": method,
-            "params": {"sessionId": session_id, **params},
-            "id": 1,
-        }
-        response = await self._http_client.post(
-            f"{self.acp_url}/rpc/{session_id}",
-            json=payload,
-            headers=headers or None,
-        )
-        response.raise_for_status()
-
-    async def stream_events(
-        self, session_id: str
     ) -> AsyncGenerator[dict[str, Any], None]:
-        """Stream SSE from back-end server."""
+        """One streaming JSON-RPC call; yields each event's ``result``."""
+        body = {"jsonrpc": "2.0", "id": method, "method": method, "params": params}
         async with self._http_client.stream(
-            "GET", f"{self.acp_url}/stream/{session_id}"
-        ) as stream:
-            async for line in stream.aiter_lines():
-                if line.startswith("data: "):
-                    try:
-                        event = json.loads(line[6:])
-                        yield event
-                    except json.JSONDecodeError:
-                        continue
-
-    async def submit_extraction(
-        self, *, text: str = "", url: str = "", rounds: int = 1, dedup: bool = True
-    ) -> dict[str, Any]:
-        """Submit a document fact-extraction job to the gateway (ECO-4.43)."""
-        resp = await self._http_client.post(
-            f"{self.base_url}/api/enhanced/extract/submit",
-            json={"text": text, "url": url, "rounds": rounds, "dedup": dedup},
-        )
-        resp.raise_for_status()
-        return resp.json()
-
-    async def stream_extraction(
-        self, job_id: str
-    ) -> AsyncGenerator[dict[str, Any], None]:
-        """Stream a job's extraction events (round_start|fact|…|job_done)."""
-        async with self._http_client.stream(
-            "GET",
-            f"{self.base_url}/api/enhanced/extract/stream/{job_id}",
+            "POST",
+            self.a2a_url,
+            json=body,
+            headers={"Accept": "text/event-stream", **(headers or {})},
             timeout=None,
-        ) as stream:
-            async for line in stream.aiter_lines():
-                if line.startswith("data: "):
-                    try:
-                        yield json.loads(line[6:])
-                    except json.JSONDecodeError:
-                        continue
+        ) as response:
+            if response.status_code >= 400:
+                await response.aread()
+                frame = response.json()
+                error = frame.get("error") if isinstance(frame, dict) else None
+                raise A2ATransportError(error if isinstance(error, dict) else {})
+            pending: list[str] = []
+            async for line in response.aiter_lines():
+                if line:
+                    pending.append(line)
+                    continue
+                for frame in _sse_frames(pending):
+                    yield _frame_result(frame)
+                pending = []
+            for frame in _sse_frames(pending):
+                yield _frame_result(frame)
 
-    async def extraction_jsonl(self, job_id: str) -> str:
-        """Fetch a job's facts as JSONL text (upstream parity)."""
-        resp = await self._http_client.get(
-            f"{self.base_url}/api/enhanced/extract/jsonl/{job_id}"
-        )
-        resp.raise_for_status()
-        return resp.text
+    async def _follow(
+        self, method: str, params: dict[str, Any], session_id: str, headers: Any = None
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        async for result in self._rpc_stream(method, params, headers=headers):
+            task_id = result.get("id") or result.get("taskId")
+            if task_id:
+                self._current_task_id = str(task_id)
+            for event in normalize_a2a_event(result, session_id):
+                yield event
 
     async def stream(
         self,
@@ -366,52 +382,72 @@ class AgentClient:
         mode_id: str | None = None,
         model: str | None = None,
     ) -> AsyncGenerator[dict[str, Any], None]:
-        """Stream real-time events from the ACP session.
+        """Run one conversation turn as a streamed A2A task.
 
-        Args:
-            query: The user prompt to send to the agent.
-            session_id: Optional existing session ID to resume.
-            parts: Optional list of multi-modal message parts.
-            model: Optional model identifier to use for this request.
+        ``mode_id`` and ``model`` are not part of the GraphOS A2A contract and
+        are not sent; routing selects the authorized agent. Only text parts
+        are carried.
 
         Yields:
-            Standardized ACP event dictionaries.
+            Normalized event dictionaries, starting with ``session_started``.
         """
+        session_id = session_id or new_session_id()
+        self._current_session_id = session_id
+        yield {"type": "session_started", "session_id": session_id}
+        if any((part or {}).get("type", "text") != "text" for part in parts or []):
+            yield {
+                "type": "error",
+                "message": "only text parts are supported by the GraphOS A2A transport",
+                "session_id": session_id,
+            }
+            return
+        texts = [query, *((part or {}).get("text", "") for part in parts or [])]
+        message = {
+            "role": "user",
+            "parts": [{"kind": "text", "text": text} for text in texts if text],
+            "messageId": uuid.uuid4().hex,
+            "contextId": session_id,
+        }
         try:
-            if not session_id:
-                session_id = await self.create_session()
-            self._current_session_id = session_id
+            async for event in self._follow(
+                "message/stream",
+                {"message": message},
+                session_id,
+                headers={"Idempotency-Key": uuid.uuid4().hex},
+            ):
+                yield event
+        except (A2ATransportError, httpx.HTTPError, ValueError) as exc:
+            logger.warning("A2A stream failed: %s", exc)
+            yield {"type": "error", "message": str(exc), "session_id": session_id}
 
-            # Surface identity before any response event.  This is deliberately
-            # an event rather than an out-of-band mutable property so interactive
-            # and headless consumers observe the same session contract.
-            yield {"type": "session_started", "session_id": session_id}
+    async def resubscribe(
+        self, task_id: str, *, last_event_id: str | None = None
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        """Re-attach to a task's stream after a disconnect.
 
-            # Handle mode selection
-            query, mode_id = _resolve_stream_mode(query, mode_id)
+        ``POST /a2a`` ``tasks/resubscribe``; ``last_event_id`` skips the state
+        the client already rendered.
+        """
+        session_id = self._current_session_id or new_session_id()
+        headers = {"Last-Event-ID": last_event_id} if last_event_id else None
+        async for event in self._follow(
+            "tasks/resubscribe", {"id": task_id}, session_id, headers=headers
+        ):
+            yield event
 
-            # Send the prompt as an RPC call. Include the model id as an
-            # ``x-agent-model-id`` header so the backend can apply the
-            # override without touching the RPC schema, but only when a
-            # model is actually selected (keeps the default call shape
-            # identical to the pre-multi-model behaviour).
-            rpc_params = {"content": query, "modeId": mode_id, "parts": parts or []}
-            rpc_kwargs: dict[str, Any] = {}
-            if model:
-                rpc_params["model"] = model
-                rpc_kwargs["headers"] = {"x-agent-model-id": model}
-            await self.send_rpc(session_id, "message/send", rpc_params, **rpc_kwargs)
+    async def cancel_task(self, task_id: str | None = None) -> dict[str, Any]:
+        """Cancel a task, the current turn's by default.
 
-            # Stream events from the session
-            async for event in self.stream_events(session_id):
-                yield self._normalize_event(event, session_id)
+        ``POST /a2a`` ``tasks/cancel``; returns the cancelled task.
+        """
+        target = task_id or self._current_task_id
+        if not target:
+            raise ValueError("no A2A task to cancel")
+        return await self._rpc("tasks/cancel", {"id": target})
 
-        except Exception as e:
-            logger.exception(f"ACP Stream Error: {e}")
-            error = {"type": "error", "message": str(e)}
-            if session_id:
-                error["session_id"] = session_id
-            yield error
+    async def get_task(self, task_id: str) -> dict[str, Any]:
+        """Read one owned task (``POST /a2a`` ``tasks/get``)."""
+        return await self._rpc("tasks/get", {"id": task_id})
 
     async def send_decision(
         self,
@@ -419,43 +455,27 @@ class AgentClient:
         feedback: str | None = None,
         session_id: str | None = None,
     ) -> AsyncGenerator[dict[str, Any], None]:
-        """Send tool approval decisions back to the agent.
+        """Tool-approval decisions are not part of the GraphOS A2A contract.
 
-        Args:
-            decisions: decision map.
-            feedback: Optional feedback for the agent.
-            session_id: Optional session id.
+        ``POST /a2a`` serves no approval method, so this yields one error
+        event instead of silently dropping the decision.
         """
-        try:
-            session_id = session_id or self._current_session_id
-            if not session_id:
-                logger.error("No session ID to send decision")
-                return
-            self._current_session_id = session_id
-
-            for call_id, decision in decisions.items():
-                await self.send_rpc(
-                    session_id,
-                    "approve_tool",
-                    {"call_id": call_id, "decision": decision, "feedback": feedback},
-                )
-
-            # resume streaming if needed
-            async for event in self.stream_events(session_id):
-                yield self._normalize_event(event, session_id)
-        except Exception as e:
-            logger.error(f"Decision Error: {e}")
-            error = {"type": "error", "message": str(e)}
-            if session_id:
-                error["session_id"] = session_id
-            yield error
+        yield {
+            "type": "error",
+            "message": "tool approval decisions are not supported by the GraphOS "
+            "A2A transport",
+            "session_id": session_id or self._current_session_id,
+        }
 
     async def get_metadata(self) -> dict[str, Any]:
-        """Fetch general agent metadata."""
+        """Fetch the GraphOS Agent Card for the ``/a2a`` endpoint.
+
+        ``GET /.well-known/agent-card.json``.
+        """
         try:
-            response = await self._http_client.get(f"{self.base_url}/a2a")
+            response = await self._http_client.get(f"{self.base_url}{AGENT_CARD_PATH}")
             return response.json()
-        except Exception:
+        except (httpx.HTTPError, ValueError):
             return {}
 
     @staticmethod
@@ -1629,5 +1649,9 @@ class AgentClient:
         await self._http_client.aclose()
 
 
-# Alias for backward compatibility and protocol-specific naming
-ACPClient = AgentClient
+def client_from_environment() -> AgentClient:
+    """The client for ``AGENT_URL`` authenticated by ``AGENT_BEARER_TOKEN``."""
+    return AgentClient(
+        base_url=os.getenv("AGENT_URL", "http://localhost:8000"),
+        bearer_token=os.getenv("AGENT_BEARER_TOKEN") or None,
+    )
