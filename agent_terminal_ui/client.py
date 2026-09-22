@@ -42,6 +42,13 @@ GATEWAY_API_PREFIX = "/api"
 A2A_PATH = "/a2a"
 AGENT_CARD_PATH = "/.well-known/agent-card.json"
 
+#: The typed Graph OS task a TUI mode asks for; Graph OS never routes free text.
+MODE_TASK_IRIS = {
+    "ask": "eg:task/communicate",
+    "plan": "eg:task/research",
+    "build": "eg:task/implement",
+}
+
 #: A2A task states that end a stream.
 _FINAL_STATES = frozenset({"completed", "canceled", "failed", "rejected"})
 _FAILED_STATES = frozenset({"failed", "rejected"})
@@ -421,9 +428,10 @@ class AgentClient:
     ) -> AsyncGenerator[dict[str, Any], None]:
         """Run one conversation turn as a streamed A2A task.
 
-        ``mode_id`` and ``model`` are not part of the GraphOS A2A contract and
-        are not sent; routing selects the authorized agent. Only text parts
-        are carried.
+        ``mode_id`` selects the typed task Graph OS routes on
+        (:data:`MODE_TASK_IRIS`; unknown modes use ``ask``); routing then selects
+        the authorized agent. ``model`` is not part of the A2A contract and is
+        not sent. Only text parts are carried.
 
         Yields:
             Normalized event dictionaries, starting with ``session_started``.
@@ -444,6 +452,11 @@ class AgentClient:
             "parts": [{"kind": "text", "text": text} for text in texts if text],
             "messageId": uuid.uuid4().hex,
             "contextId": session_id,
+            "metadata": {
+                "graphOsTaskIris": [
+                    MODE_TASK_IRIS.get(mode_id or "ask", MODE_TASK_IRIS["ask"])
+                ]
+            },
         }
         try:
             async for event in self._follow(
