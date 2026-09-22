@@ -7,7 +7,7 @@ small frontends can connect to shared platform services.
 
 ## System overview
 
-![Knuckles-Team runtime architecture](https://raw.githubusercontent.com/Knuckles-Team/pipelines/64e34ca63385200f5ddfef5286e6886bf7dc80b4/templates/mkdocs-theme/assets/runtime-architecture.svg)
+![Knuckles-Team runtime architecture](assets/runtime-architecture.svg)
 
 Graph OS currently serves the REST capability, run, and dashboard surfaces used
 by Agent Terminal UI. It does not mount the ACP-style chat endpoint. The client
