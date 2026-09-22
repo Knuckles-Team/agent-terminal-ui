@@ -2,7 +2,7 @@
 
 Agent Terminal UI is a Textual frontend for interactive and headless agent sessions. It renders streamed responses, tool activity, approvals, and live Graph OS capabilities.
 
-Graph OS provides the REST capability, run, and dashboard surfaces. The chat turn uses this repository's ACP-style JSON-RPC and SSE transport, which Graph OS does not currently mount. A compatible ACP endpoint is required for chat; see the [current architecture](architecture.md).
+Graph OS provides the REST capability, run, and dashboard surfaces. The chat turn uses Graph OS's authenticated A2A streaming boundary; see the [current architecture](architecture.md).
 
 ## Documentation
 
@@ -31,4 +31,4 @@ python -m pip install agent-terminal-ui
 agent-terminal-ui
 ```
 
-Set `AGENT_URL` to the Graph OS API and `ACP_URL` to a compatible ACP endpoint before using chat. See [Configuration](configuration.md) for settings.
+Set `AGENT_URL` to the Graph OS API and `AGENT_BEARER_TOKEN` to your bearer credential before using chat. See [Configuration](configuration.md) for settings.

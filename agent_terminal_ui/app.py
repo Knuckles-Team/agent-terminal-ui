@@ -42,7 +42,7 @@ from textual.message import Message
 
 # Core client and command imports
 from agent_terminal_ui.capability_provider import CapabilityCommandProvider
-from agent_terminal_ui.client import AgentClient
+from agent_terminal_ui.client import AgentClient, client_from_environment
 from agent_terminal_ui.commands import CommandProcessor
 
 # Screen imports
@@ -163,11 +163,9 @@ class AgentApp(App):
         self.theme = theme_name
 
         # Initialize client
-        server_url = os.getenv("AGENT_URL", "http://localhost:8000")
-        acp_url = os.getenv("ACP_URL") or None
-        self._client = client or AgentClient(base_url=server_url, acp_url=acp_url)
-        client_protocol = getattr(self._client, "protocol", "acp")
-        self._protocol = client_protocol if isinstance(client_protocol, str) else "acp"
+        self._client = client or client_from_environment()
+        client_protocol = getattr(self._client, "protocol", "a2a")
+        self._protocol = client_protocol if isinstance(client_protocol, str) else "a2a"
 
         self._cmd_processor = CommandProcessor(self)
         self.workspace_files: list[str] = []

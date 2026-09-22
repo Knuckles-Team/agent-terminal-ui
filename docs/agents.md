@@ -40,7 +40,7 @@
 - MCP server browser screen
 - Unified specialist discovery merging MCP agents and A2A peers
 - Real-time token and cost tracking in StatusLine widget
-- ACP protocol support for advanced session management and planning
+- Graph OS A2A streaming chat with resubscribe and cancel
 
 ## Session Journal (consolidated)
 

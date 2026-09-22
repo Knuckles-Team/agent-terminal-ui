@@ -8,7 +8,7 @@ Agent Terminal UI is a Textual terminal frontend for interactive and headless ag
 
 Graph OS provides the REST gateway for capability discovery and invocation, run inspection, and dashboard data. Agent Utilities owns agent execution and control-plane behavior. Epistemic Graph owns durable graph data and reasoning.
 
-The main chat client uses this repository's HTTP/SSE implementation of an ACP-style JSON-RPC transport. The current Graph OS deployment does not mount that chat endpoint; a compatible service must be configured through `ACP_URL`. The client does not use Zed's ACP SDK.
+Chat turns use Graph OS's authenticated A2A JSON-RPC boundary at `{AGENT_URL}/a2a`: `message/stream` streams one durable task's state transitions over SSE, `tasks/resubscribe` re-attaches and `tasks/cancel` cancels. `AGENT_BEARER_TOKEN` carries the caller's bearer credential.
 
 - `agent_terminal_ui/terminal_ui.py` provides the CLI and selects interactive or headless execution.
 - `agent_terminal_ui/client.py` owns Graph OS REST methods and the chat transport.
@@ -38,7 +38,7 @@ Run `pre-commit run --all-files` before committing. Run the test suite and stric
 
 - Keep platform HTTP behavior behind `AgentClient` and model responses explicitly.
 - Keep chat availability distinct from Graph OS REST availability.
-- Do not claim Graph OS provides the ACP-style chat endpoint unless the deployment exposes it.
+- Chat has one transport, Graph OS A2A; do not add a second chat endpoint or an ACP-style path.
 - Keep docs concise and factual; use present-tense architecture and display names.
 - Add focused tests for behavior changes and keep generated build output out of commits.
 
