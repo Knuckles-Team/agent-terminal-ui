@@ -1,59 +1,34 @@
-# agent-terminal-ui
+# Agent Terminal UI
 
-`agent-terminal-ui` is a [Textual](https://textual.textualize.io/)-based terminal
-user interface for interacting with AI agents built on the
-[agent-utilities](https://github.com/pydantic/agent-utilities) platform. It connects
-to an agent backend over dual protocols — AG-UI (SSE streaming) and ACP
-(JSON-RPC + SSE) — and renders live workflow activity, tool execution, and
-human-in-the-loop approvals in the terminal.
+Agent Terminal UI is a Textual frontend for interactive and headless agent sessions. It renders streamed responses, tool activity, approvals, and live Graph OS capabilities.
 
-This site is the official documentation for the client: its architecture, configuration
-surface, durable session infrastructure, and the autonomous goal and multi-session
-workflows it supports.
+Graph OS provides the REST capability, run, and dashboard surfaces. The chat turn uses this repository's ACP-style JSON-RPC and SSE transport, which Graph OS does not currently mount. A compatible ACP endpoint is required for chat; see the [current architecture](architecture.md).
 
-## Highlights
+## Documentation
 
-- **Lightweight by design** — the client is a thin frontend (~60–85 MB interactive,
-  ~30 MB headless). It never imports the heavy `agent_utilities` backend; all weight
-  stays in one shared backend service reached over HTTP/SSE.
-- **Interactive or headless** — run the full TUI, or
-  `agent-terminal-ui --headless --prompt "…"` for many concurrent non-interactive
-  sessions against one backend.
-- **Live workflow & tools** — a dynamic workflow sidebar, streaming Markdown
-  responses, expandable tool-call blocks, and human-in-the-loop approvals.
-- **Durable & recoverable** — SQLite-backed sessions, pre-turn checkpoints, and
-  side-git workspace snapshots with `/restore N`.
+- [Architecture](architecture.md)
+- [Configuration](configuration.md)
+- [Features](features.md)
+- [Session management](session_management.md)
+- [Agent View](agent_view.md)
+- [Goal command](goal_command.md)
+- [Concept registry](concepts.md)
 
-## Documentation map
+## Core platform
 
-- **[Architecture](architecture.md)** — protocol connectivity, key components,
-  environment variables, and implementation details.
-- **[Features](features.md)** — slash commands, keyboard shortcuts, and the model picker.
-- **[Configuration](configuration.md)** — the complete settings reference, hooks
-  configuration, and sandbox modes.
-- **[Session Management](session_management.md)** — durable session persistence,
-  pre-turn checkpointing, crash recovery, and workspace snapshots.
-- **[Agent View](agent_view.md)** — the multi-session dashboard and background agent
-  management.
-- **[Goal Command](goal_command.md)** — the autonomous `/goal` loop and its
-  Knowledge-Graph-native integration.
-- **[Agents & Issues](agents.md)** — known issues, recent changes, and the session journal.
-- **[Concepts](concepts.md)** — the stable concept registry (`CONCEPT:TUI-*`) tracing
-  the client's core ideas across documentation and source.
+- [Epistemic Graph](https://knuckles-team.github.io/epistemic-graph/)
+- [Agent Utilities](https://knuckles-team.github.io/agent-utilities/)
+- [Graph OS](https://knuckles-team.github.io/graph-os/)
+- [Agent Connector SDK](https://knuckles-team.github.io/agent-connector-sdk/)
+- [Agent Web UI](https://knuckles-team.github.io/agent-webui/)
 
-## Installation
+## Install and launch
 
-The client is published on [PyPI](https://pypi.org/project/agent-terminal-ui/):
+Install the package and launch the terminal client:
 
 ```bash
-pip install agent-terminal-ui
-```
-
-Launch the terminal interface:
-
-```bash
+python -m pip install agent-terminal-ui
 agent-terminal-ui
 ```
 
-Consult the [Configuration](configuration.md) reference to point the client at your
-agent backend and tune its behavior.
+Set `AGENT_URL` to the Graph OS API and `ACP_URL` to a compatible ACP endpoint before using chat. See [Configuration](configuration.md) for settings.

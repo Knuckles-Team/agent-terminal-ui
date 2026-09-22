@@ -1,49 +1,24 @@
-# Architecture
+# Agent Terminal UI architecture
 
-`agent-terminal-ui` is a thin, lightweight **frontend**. All heavy work — the
-knowledge-graph engine, embeddings, model orchestration — lives in the shared
-`agent-utilities` **backend**, which the client reaches over HTTP/SSE. The client
-itself never imports `agent_utilities`, so a single instance stays in the tens of
-MB and many can run against one backend.
+Agent Terminal UI is a lightweight Textual client for interactive and headless
+agent sessions. It calls Graph OS REST APIs for capabilities, run inspection, and
+dashboard data. The client does not import the `agent_utilities` package, so many
+small frontends can connect to shared platform services.
 
 ## System overview
 
-```mermaid
-flowchart LR
-    subgraph term["Terminal / tty"]
-        UI["AgentApp (Textual TUI)<br/>interactive, ~60-85MB"]
-    end
-    subgraph head["Headless"]
-        HL["HeadlessRunner + StreamSink<br/>no widget tree, ~30MB"]
-    end
+![Knuckles-Team runtime architecture](https://raw.githubusercontent.com/Knuckles-Team/pipelines/64e34ca63385200f5ddfef5286e6886bf7dc80b4/templates/mkdocs-theme/assets/runtime-architecture.svg)
 
-    UI -->|AgentClient| C
-    HL -->|AgentClient| C
-    C["AgentClient<br/>HTTP + SSE (httpx)"]
+Graph OS currently serves the REST capability, run, and dashboard surfaces used
+by Agent Terminal UI. It does not mount the ACP-style chat endpoint. The client
+defaults `ACP_URL` to `{AGENT_URL}/acp`; chat therefore requires a compatible ACP
+service configured at that address. Graph OS alone does not complete the chat
+path. Agent Terminal UI implements this repository's HTTP/SSE convention and does
+not use Zed's ACP SDK.
 
-    subgraph backend["agent-utilities backend (shared, heavy)"]
-        GW["Gateway / ACP + AG-UI<br/>/api/* , /acp/*"]
-        KG["KG engine + embeddings<br/>(the ~1.5GB cost)"]
-        DASH["/api/dashboard/*"]
-        GW --- KG
-        DASH --- KG
-    end
-
-    C -->|"stream() turns"| GW
-    C -->|"/api/dashboard/full"| DASH
-    C -->|"/api/enhanced/graph/*"| GW
-    C -->|"/api/capabilities/*"| GW
-    C -->|"/api/runs/*"| GW
-
-    classDef heavy fill:#3a1f1f,stroke:#a44;
-    classDef light fill:#1f2a3a,stroke:#48a;
-    class KG heavy;
-    class UI,HL,C light;
-```
-
-**Key boundary:** the frontend talks to the backend *only* through `AgentClient`.
-A dedicated test (`tests/test_import_guard.py`) fails the build if importing the
-app, the dashboard, the `/goal` parser, or the headless runner pulls in
+**Client boundary:** the TUI communicates through `AgentClient`. A dedicated
+test (`tests/test_import_guard.py`) fails the build if importing the app, the
+dashboard, the `/goal` parser, or the headless runner pulls in
 `agent_utilities`, `torch`, or other heavy libraries.
 
 ## Run modes
@@ -60,14 +35,13 @@ the headless `StreamSink` present the same event vocabulary.
 
 ## Protocol connection
 
-`agent-terminal-ui` consumes one normalized event vocabulary through
+Agent Terminal UI consumes one normalized event vocabulary through
 `AgentClient`, which is the only adapter this package ships. It speaks
-**ACP** — this repo's own hand-rolled JSON-RPC (over HTTP) + SSE convention,
+**ACP** is this repository's own JSON-RPC-over-HTTP and SSE convention,
 *not* an integration with Zed's `agent-client-protocol` SDK; there is no
-dependency on that package and nothing here imports it. A future second
-adapter (e.g. AG-UI) could implement the same normalized stream contract
-without changing screen code, but no selector flag exists today because
-there is only one adapter to select.
+dependency on that package and nothing here imports it. Graph OS's REST APIs
+serve the TUI's capability and run surfaces, but its current deployment does not
+provide this chat endpoint.
 
 The workflow sidebar discovers graph nodes from sideband events at runtime — nodes
 are never hardcoded. They appear as the graph emits `specialist_enter` /
@@ -75,14 +49,14 @@ are never hardcoded. They appear as the graph emits `specialist_enter` /
 Validation) and completion markers derive from `routing_started`,
 `routing_completed`, and `verification_result` events.
 
-The backend uses **unified specialist discovery** (`discover_all_specialists()`)
+Agent Utilities provides **unified specialist discovery** (`discover_all_specialists()`)
 to merge MCP agents and A2A peers into a single roster. Both emit the same
 sideband events, so the TUI does not distinguish between them. The `tools-bound`
 event includes `toolset_count`, `dev_tools`, and `mcp_tools` fields.
 
 ## Capability platform and run events
 
-The capability UI consumes the gateway-owned schema 2.0 contract through
+The capability UI consumes the Graph OS gateway-owned schema 2.0 contract through
 `AgentClient`: catalog search, detail, preflight, and governed invocation. Action
 legacy REST routes are descriptive and `frontend_executable=false`; the frontend
 executes exclusively through `execution.governed_invoke_route` at
@@ -98,13 +72,13 @@ active but broken backend is degraded; blocked or disabled tools are unavailable
 
 Preflight requests contain only `action`, `inputs`, and `target`. They never send
 a caller-selected actor identity. A preview is not authorization: invocation is
-blocked unless the gateway reports it executable now. Unknown side effects fail
+blocked unless Graph OS reports it executable now. Unknown side effects fail
 closed, allowed mutations require operator confirmation, and execution performs
 the authoritative policy check.
 
 HTTP 202 approval responses are modeled as pending rather than success. The UI
 freezes the exact input request, requires an explicit grant, then resumes with
-the gateway-bound `approval_id`, `run_id`, and `session_id`.
+the Graph OS-issued `approval_id`, `run_id`, and `session_id`.
 A normal HTTP 202 `running` response is an asynchronous acknowledgement. The UI
 does not label it complete; the authoritative result arrives later as a
 `tool_result` run event.
@@ -123,7 +97,7 @@ The shared terminal predicate contains exactly `run_completed`, `run_failed`,
 events are progress: in particular, `graph_complete` cannot stop follow because
 `final_output` and `run_completed` may still arrive.
 
-Sensitive results remain gateway-redacted in this inspector. It does not
+Sensitive results remain Graph OS-redacted in this inspector. It does not
 silently follow a claim URL or retain a revealed value; reveal-once is a
 separate, explicitly gated extension rather than part of generic replay.
 
@@ -137,10 +111,10 @@ generated forms; dedicated Terminal UI commands are declared as native overrides
 ## Service dashboard over HTTP
 
 The Alt+D service dashboard (`screens/dashboard.py`) fetches its layout and widget
-data from the backend gateway over HTTP — `GET /api/dashboard/full` and
-`/api/dashboard/data` via `AgentClient` — rather than constructing the gateway
+data from Graph OS over HTTP: `GET /api/dashboard/full` and
+`/api/dashboard/data` via `AgentClient`, rather than constructing the Graph OS
 aggregator in-process. This keeps the dashboard, like everything else, free of an
-in-process `agent_utilities` import; if the backend is unreachable it degrades to
+in-process `agent_utilities` import; if Graph OS is unavailable it degrades to
 a placeholder.
 
 ## Key components
@@ -175,8 +149,8 @@ a placeholder.
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `AGENT_URL` | `http://localhost:8000` | Agent backend URL (used by both interactive and headless modes). |
-| `ACP_URL` | `{AGENT_URL}/acp` | Override for the ACP mount used by `client.py`'s hand-rolled JSON-RPC/SSE convention. Defaults to `{AGENT_URL}/acp` when unset. |
+| `AGENT_URL` | `http://localhost:8000` | Graph OS REST API base URL (used by interactive and headless modes). |
+| `ACP_URL` | `{AGENT_URL}/acp` | ACP-style chat endpoint override. Graph OS does not currently mount this route, so configure a compatible endpoint for chat. |
 | `AGENT_THEME` | `tokyo-night` | Initial theme (any Textual built-in theme name). |
 
 See [Configuration](configuration.md) for the full settings reference.
@@ -210,7 +184,7 @@ See [Configuration](configuration.md) for the full settings reference.
 
 ## Packaging
 
-A slim, runtime-only `Dockerfile` (python:3.13-slim) ships the frontend and its
-direct dependencies — no test/shell extras, no `agent_utilities`. Point it at a
-shared backend with `AGENT_URL`. Because the backend is the heavy component, run
-**one** backend service and many lightweight frontends against it.
+A slim, runtime-only `Dockerfile` (`python:3.13-slim`) ships the frontend and its
+direct dependencies, without test/shell extras or `agent_utilities`. Point it at
+Graph OS with `AGENT_URL`. A shared Graph OS deployment can serve many lightweight
+frontends.
