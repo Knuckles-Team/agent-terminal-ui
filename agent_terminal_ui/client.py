@@ -85,6 +85,25 @@ def new_session_id() -> str:
     return f"tui-{uuid.uuid4().hex}"
 
 
+def _artifact_events(result: dict[str, Any], session_id: str) -> list[dict[str, Any]]:
+    artifact = result.get("artifact") or {}
+    text = "".join(
+        str(part.get("text") or "")
+        for part in artifact.get("parts") or ()
+        if isinstance(part, dict) and part.get("kind", "text") == "text"
+    )
+    if not text:
+        return []
+    return [
+        {
+            "type": "text",
+            "content": text,
+            "session_id": session_id,
+            "task_id": result.get("taskId"),
+        }
+    ]
+
+
 def normalize_a2a_event(
     result: dict[str, Any], session_id: str
 ) -> list[dict[str, Any]]:
@@ -92,8 +111,12 @@ def normalize_a2a_event(
 
     A task and every non-final transition become a ``status`` sideband; a
     final ``completed``/``canceled`` state ends the turn, and a final
-    ``failed``/``rejected`` state reports an error before ending it.
+    ``failed``/``rejected`` state reports an error before ending it. The
+    completed task's answer arrives as an ``artifact-update`` and renders as
+    ``text``.
     """
+    if result.get("kind") == "artifact-update":
+        return _artifact_events(result, session_id)
     task_id = result.get("id") or result.get("taskId")
     state = str((result.get("status") or {}).get("state") or "")
     run_id = _graph_os_metadata(result).get("runId")
