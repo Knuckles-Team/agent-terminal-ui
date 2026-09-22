@@ -72,3 +72,9 @@ ignore = ["E402"]
 python_version = "3.11"
 ignore_missing_imports = true
 check_untyped_defs = true
+
+[tool.pipelines_hooks.public_surface]
+repository = "Knuckles-Team/agent-terminal-ui"
+distribution = "agent-terminal-ui"
+pages_url = "https://knuckles-team.github.io/agent-terminal-ui/"
+mcp_server = false
