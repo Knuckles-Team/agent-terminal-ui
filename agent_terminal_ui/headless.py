@@ -12,11 +12,10 @@ widget and this headless ``StreamSink`` present the same event vocabulary.
 
 from __future__ import annotations
 
-import os
 import sys
 from typing import Any, Protocol, TextIO, runtime_checkable
 
-from agent_terminal_ui.client import AgentClient
+from agent_terminal_ui.client import AgentClient, client_from_environment
 
 # Events that end a turn (mirrors screens/main.py handling).
 _DONE_MARKER = "[DONE]"
@@ -172,7 +171,7 @@ async def run_headless(
     ``http://localhost:8000``), streams the turn to stdout, and closes the
     client. No Textual application is created.
     """
-    client = AgentClient(base_url=os.getenv("AGENT_URL", "http://localhost:8000"))
+    client = client_from_environment()
     try:
         await HeadlessRunner(client).run_prompt(prompt, mode_id=mode_id, model=model)
     finally:

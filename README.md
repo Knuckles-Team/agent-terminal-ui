@@ -50,7 +50,7 @@ python -m pip install agent-terminal-ui
 agent-terminal-ui
 ```
 
-Set `AGENT_URL` to the Graph OS API and `ACP_URL` to a compatible ACP endpoint before using chat. See [Configuration](docs/configuration.md) for settings.
+Set `AGENT_URL` to the Graph OS API and `AGENT_BEARER_TOKEN` to your bearer credential before using chat. See [Configuration](docs/configuration.md) for settings.
 
 ## Contributing
 

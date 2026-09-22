@@ -37,11 +37,14 @@ the headless `StreamSink` present the same event vocabulary.
 
 Agent Terminal UI consumes one normalized event vocabulary through
 `AgentClient`, which is the only adapter this package ships. It speaks
-**ACP** is this repository's own JSON-RPC-over-HTTP and SSE convention,
-*not* an integration with Zed's `agent-client-protocol` SDK; there is no
-dependency on that package and nothing here imports it. Graph OS's REST APIs
-serve the TUI's capability and run surfaces, but its current deployment does not
-provide this chat endpoint.
+**A2A** — the agent server's served JSON-RPC-over-HTTP + SSE boundary at
+`{AGENT_URL}/a2a` — for chat turns, and its REST gateway for capability and run
+surfaces; there is no dependency on Zed's `agent-client-protocol` SDK and
+nothing here imports it. Task and status events map onto the normalized
+vocabulary as status sidebands and a final `turn_end` (an `error` first for a
+failed or rejected task). A future second adapter (e.g. AG-UI) could implement
+the same normalized stream contract without changing screen code, but no
+selector flag exists today because there is only one adapter to select.
 
 The workflow sidebar discovers graph nodes from sideband events at runtime — nodes
 are never hardcoded. They appear as the graph emits `specialist_enter` /
@@ -85,7 +88,7 @@ does not label it complete; the authoritative result arrives later as a
 
 Run discovery and inspection consume event schema 1.0 through `GET /api/runs`,
 `GET /api/runs/{run_id}`, and cursor replay at
-`GET /api/runs/{run_id}/events`. Stream metadata observed on normal ACP turns is
+`GET /api/runs/{run_id}/events`. The run id carried by A2A task metadata is
 preserved so `/run` can inspect the current run. Mission Control polls from the
 last sequence cursor, drains `has_more` pages without delay, deduplicates by
 sequence, and renders `retained_from` gaps as explicit replay resets. The replay
@@ -124,7 +127,7 @@ a placeholder.
 | `app.py` | Main Textual application: screen composition, message queuing, exit confirmation, key bindings. Accepts an injectable `client` for testing. |
 | `terminal_ui.py` | CLI entry point; parses flags and lazily dispatches to the TUI or the headless runner. |
 | `headless.py` | `HeadlessRunner` + `StreamSink` + `RenderSink` protocol — the no-widget-tree run path. |
-| `client.py` | ACP client, normalized SSE parsing, and capability/run/dashboard HTTP methods. |
+| `client.py` | Graph OS A2A chat client (SSE parsing, event normalization, cancel/resubscribe) and capability/run/dashboard HTTP methods. |
 | `capabilities.py` | Typed catalog, preflight, schema-field, invocation, and run-event models. |
 | `capability_provider.py` | Live capability provider for Textual's global command palette. |
 | `commands.py` | Slash-command processor with the full command set. |
@@ -149,8 +152,8 @@ a placeholder.
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `AGENT_URL` | `http://localhost:8000` | Graph OS REST API base URL (used by interactive and headless modes). |
-| `ACP_URL` | `{AGENT_URL}/acp` | ACP-style chat endpoint override. Graph OS does not currently mount this route, so configure a compatible endpoint for chat. |
+| `AGENT_URL` | `http://localhost:8000` | Graph OS base URL: the REST gateway and the `/a2a` chat boundary (used by interactive and headless modes). |
+| `AGENT_BEARER_TOKEN` | unset | Bearer credential for the Graph OS REST gateway and A2A chat. |
 | `AGENT_THEME` | `tokyo-night` | Initial theme (any Textual built-in theme name). |
 
 See [Configuration](configuration.md) for the full settings reference.

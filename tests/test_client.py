@@ -1,131 +1,260 @@
-import ast
-from pathlib import Path
-from unittest.mock import AsyncMock, patch
+"""GraphOS A2A conversation transport of the terminal UI client."""
 
+import ast
+import json
+from pathlib import Path
+from typing import Any
+
+import httpx
 import pytest
 
-from agent_terminal_ui.client import AgentClient
+from agent_terminal_ui.client import A2ATransportError, AgentClient
+
+_TASK = "a2a-" + "1" * 64
+_CONTEXT = "a2a-context-" + "2" * 64
 
 
-@pytest.fixture
-def run_client():
-    client = AgentClient()
-    return client
+def _sse(*frames: dict[str, Any]) -> bytes:
+    blocks = []
+    for index, frame in enumerate(frames):
+        blocks.append(f"id: e{index}\nevent: message\ndata: {json.dumps(frame)}\n\n")
+    return "".join(blocks).encode()
 
 
-@pytest.mark.asyncio
-async def test_create_session(run_client):
-    with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
-        from unittest.mock import MagicMock
-
-        mock_response = MagicMock()
-        mock_response.raise_for_status = lambda: None
-        mock_response.json.return_value = {"session_id": "test_123"}
-        mock_post.return_value = mock_response
-
-        session_id = await run_client.create_session()
-        assert session_id == "test_123"
+def _result(result: dict[str, Any]) -> dict[str, Any]:
+    return {"jsonrpc": "2.0", "id": "message/stream", "result": result}
 
 
-@pytest.mark.asyncio
-async def test_stream_mode_injection(run_client):
-    with (
-        patch.object(run_client, "create_session", return_value="sess_1"),
-        patch.object(run_client, "send_rpc", new_callable=AsyncMock) as mock_rpc,
-        patch.object(run_client, "stream_events") as mock_stream,
-    ):
-        # Make stream return empty
-        async def empty_gen(*args, **kwargs):
-            for _ in []:
-                yield
-
-        mock_stream.side_effect = empty_gen
-
-        async for _ in run_client.stream("/plan list files"):
-            pass
-
-        mock_rpc.assert_called_with(
-            "sess_1",
-            "message/send",
-            {"content": "list files", "modeId": "plan", "parts": []},
-        )
-
-
-@pytest.mark.asyncio
-async def test_stream_propagates_session_identity_and_normalizes_deltas(run_client):
-    """Every event should identify one session and use the shared delta name."""
-
-    async def raw_events(_session_id):
-        yield {"type": "text-delta", "delta": "hel"}
-        yield {"type": "text-delta", "text": "lo"}
-        yield {"type": "turn-end", "usage": {"total_tokens": 3}}
-
-    with (
-        patch.object(run_client, "create_session", return_value="sess-stream"),
-        patch.object(run_client, "send_rpc", new_callable=AsyncMock),
-        patch.object(run_client, "stream_events", side_effect=raw_events),
-    ):
-        events = [event async for event in run_client.stream("hello")]
-
-    assert events[0] == {
-        "type": "session_started",
-        "session_id": "sess-stream",
+def _task(state: str) -> dict[str, Any]:
+    return {
+        "id": _TASK,
+        "contextId": _CONTEXT,
+        "kind": "task",
+        "status": {"state": state},
+        "metadata": {"graphOs": {"runId": _TASK}},
     }
-    assert [event["type"] for event in events[1:3]] == [
-        "text_delta",
-        "text_delta",
-    ]
-    assert [event["content"] for event in events[1:3]] == ["hel", "lo"]
-    assert all(event["session_id"] == "sess-stream" for event in events)
-    assert run_client.current_session_id == "sess-stream"
 
 
-@pytest.mark.asyncio
-async def test_send_decision_reuses_session_and_normalizes_resume_stream(run_client):
-    """Approval resumes should stay on the active session and event contract."""
+def _status(state: str, *, final: bool) -> dict[str, Any]:
+    return {
+        "taskId": _TASK,
+        "contextId": _CONTEXT,
+        "kind": "status-update",
+        "status": {"state": state},
+        "final": final,
+        "metadata": {"graphOs": {"runId": _TASK}},
+    }
 
-    async def resumed_events(_session_id):
-        yield {"type": "text-delta", "delta": "resumed"}
-        yield {"type": "turn-end"}
 
-    run_client._current_session_id = "sess-approval"
-    with (
-        patch.object(run_client, "send_rpc", new_callable=AsyncMock) as mock_rpc,
-        patch.object(run_client, "stream_events", side_effect=resumed_events),
-    ):
-        events = [
-            event
-            async for event in run_client.send_decision(
-                {"call-1": "accept"}, feedback="continue"
-            )
-        ]
+class _Recorder:
+    def __init__(self, responder: Any) -> None:
+        self.requests: list[httpx.Request] = []
+        self._responder = responder
 
-    mock_rpc.assert_awaited_once_with(
-        "sess-approval",
-        "approve_tool",
-        {
-            "call_id": "call-1",
-            "decision": "accept",
-            "feedback": "continue",
-        },
+    def __call__(self, request: httpx.Request) -> httpx.Response:
+        self.requests.append(request)
+        return self._responder(request)
+
+
+def _client(responder: Any, **kwargs: Any) -> tuple[AgentClient, _Recorder]:
+    recorder = _Recorder(responder)
+    client = AgentClient(base_url="http://graph-os.test", **kwargs)
+    client._http_client = httpx.AsyncClient(
+        transport=httpx.MockTransport(recorder),
+        headers=client._http_client.headers,
     )
-    assert events[0] == {
-        "type": "text_delta",
-        "content": "resumed",
-        "session_id": "sess-approval",
+    return client, recorder
+
+
+@pytest.mark.asyncio
+async def test_stream_runs_one_authenticated_a2a_task_to_its_final_state():
+    body = _sse(
+        _result(_task("submitted")),
+        _result(_status("working", final=False)),
+        _result(_status("completed", final=True)),
+    )
+    client, recorder = _client(
+        lambda request: httpx.Response(
+            200, content=body, headers={"content-type": "text/event-stream"}
+        ),
+        bearer_token="tok",
+    )
+
+    events = [event async for event in client.stream("hello", session_id="ctx-1")]
+
+    request = recorder.requests[0]
+    sent = json.loads(request.content)
+    assert request.url.path == "/a2a"
+    assert request.headers["Authorization"] == "Bearer tok"
+    assert request.headers["Idempotency-Key"]
+    assert sent["method"] == "message/stream"
+    assert sent["params"]["message"]["contextId"] == "ctx-1"
+    assert sent["params"]["message"]["parts"] == [{"kind": "text", "text": "hello"}]
+    assert [event["type"] for event in events] == [
+        "session_started",
+        "sideband",
+        "sideband",
+        "sideband",
+        "turn_end",
+    ]
+    assert [e["data"]["state"] for e in events if e["type"] == "sideband"] == [
+        "submitted",
+        "working",
+        "completed",
+    ]
+    assert all(event["session_id"] == "ctx-1" for event in events)
+    assert events[-1]["run_id"] == _TASK
+    assert client.current_task_id == _TASK
+    await client.close()
+
+
+@pytest.mark.asyncio
+async def test_failed_task_reports_an_error_before_ending_the_turn():
+    body = _sse(_result(_task("submitted")), _result(_status("failed", final=True)))
+    client, _ = _client(lambda request: httpx.Response(200, content=body))
+
+    events = [event async for event in client.stream("hello")]
+
+    assert [event["type"] for event in events[-2:]] == ["error", "turn_end"]
+    await client.close()
+
+
+@pytest.mark.asyncio
+async def test_unauthenticated_or_refused_stream_surfaces_one_error_event():
+    client, _ = _client(
+        lambda request: httpx.Response(
+            503,
+            json={
+                "jsonrpc": "2.0",
+                "id": 1,
+                "error": {"code": -32003, "message": "assembly unavailable"},
+            },
+        )
+    )
+
+    events = [event async for event in client.stream("hello", session_id="s")]
+
+    assert events[-1] == {
+        "type": "error",
+        "message": "assembly unavailable",
+        "session_id": "s",
     }
-    assert events[1] == {"type": "turn_end", "session_id": "sess-approval"}
+    await client.close()
 
 
-# ── D-FE-2 regression coverage ──────────────────────────────────────────
-#
-# (a) ``agent-client-protocol`` (Zed's real ACP SDK) is not a dependency of
-#     this package: nothing in ``agent_terminal_ui`` imports
-#     ``agent_client_protocol``, and ``AgentClient`` must construct and work
-#     even when that package is not importable/installed at all.
-# (b) ``ACP_URL`` is now actually read (see ``AgentApp.__init__`` in
-#     ``app.py``) rather than being a documented-but-dead env var; at the
-#     client level this is exercised via the ``acp_url`` constructor kwarg.
+@pytest.mark.asyncio
+async def test_error_frame_mid_stream_ends_the_turn_with_an_error():
+    body = _sse(
+        _result(_task("submitted")),
+        {"jsonrpc": "2.0", "id": 1, "error": {"code": -32001, "message": "gone"}},
+    )
+    client, _ = _client(lambda request: httpx.Response(200, content=body))
+
+    events = [event async for event in client.stream("hello", session_id="s")]
+
+    assert events[-1]["type"] == "error" and events[-1]["message"] == "gone"
+    await client.close()
+
+
+@pytest.mark.asyncio
+async def test_non_text_parts_are_refused_before_any_request():
+    client, recorder = _client(lambda request: httpx.Response(500))
+
+    events = [
+        event
+        async for event in client.stream("x", parts=[{"type": "image", "url": "u"}])
+    ]
+
+    assert events[-1]["type"] == "error"
+    assert recorder.requests == []
+    await client.close()
+
+
+@pytest.mark.asyncio
+async def test_cancel_targets_the_current_turns_task():
+    body = _sse(_result(_task("working")))
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        payload = json.loads(request.content)
+        if payload["method"] == "tasks/cancel":
+            assert payload["params"] == {"id": _TASK}
+            return httpx.Response(
+                200,
+                json={"jsonrpc": "2.0", "id": 1, "result": _task("canceled")},
+            )
+        return httpx.Response(200, content=body)
+
+    client, _ = _client(respond)
+    [event async for event in client.stream("hello")]
+
+    cancelled = await client.cancel_task()
+
+    assert cancelled["status"]["state"] == "canceled"
+    await client.close()
+
+
+@pytest.mark.asyncio
+async def test_cancel_without_a_task_is_refused_locally():
+    client, recorder = _client(lambda request: httpx.Response(500))
+    with pytest.raises(ValueError):
+        await client.cancel_task()
+    assert recorder.requests == []
+    await client.close()
+
+
+@pytest.mark.asyncio
+async def test_cancel_error_raises_the_json_rpc_error():
+    client, _ = _client(
+        lambda request: httpx.Response(
+            409,
+            json={
+                "jsonrpc": "2.0",
+                "id": 1,
+                "error": {"code": -32002, "message": "not cancelable"},
+            },
+        )
+    )
+    with pytest.raises(A2ATransportError) as caught:
+        await client.cancel_task(_TASK)
+    assert caught.value.code == -32002
+    await client.close()
+
+
+@pytest.mark.asyncio
+async def test_resubscribe_sends_the_last_event_id():
+    body = _sse(_result(_status("completed", final=True)))
+    client, recorder = _client(lambda request: httpx.Response(200, content=body))
+
+    events = [event async for event in client.resubscribe(_TASK, last_event_id="e0")]
+
+    request = recorder.requests[0]
+    assert json.loads(request.content)["method"] == "tasks/resubscribe"
+    assert request.headers["Last-Event-ID"] == "e0"
+    assert events[-1]["type"] == "turn_end"
+    await client.close()
+
+
+@pytest.mark.asyncio
+async def test_tool_approval_decisions_are_refused_explicitly():
+    client = AgentClient()
+    events = [event async for event in client.send_decision({"c1": "accept"})]
+    assert [event["type"] for event in events] == ["error"]
+    await client.close()
+
+
+@pytest.mark.asyncio
+async def test_metadata_reads_the_agent_card():
+    card = {"name": "GraphOS", "capabilities": {"streaming": True}}
+    client, recorder = _client(lambda request: httpx.Response(200, json=card))
+
+    assert await client.get_metadata() == card
+    assert recorder.requests[0].url.path == "/.well-known/agent-card.json"
+    await client.close()
+
+
+# ``agent-client-protocol`` (Zed's ACP SDK) is not a dependency of this
+# package: nothing in ``agent_terminal_ui`` imports ``agent_client_protocol``,
+# and ``AgentClient`` must construct even when it is not importable at all.
 
 
 def _imported_module_names(node: ast.AST) -> list[str | None]:
@@ -149,8 +278,8 @@ def _assert_no_agent_client_protocol_import(py_file: Path) -> None:
 
 def test_agent_client_protocol_module_is_not_imported_by_this_package():
     """``agent_client_protocol`` (the real Zed ACP SDK) must not be a runtime
-    dependency of this client — this repo speaks its own hand-rolled
-    JSON-RPC/SSE convention, not that SDK's wire format."""
+    dependency of this client — conversation turns use GraphOS's A2A
+    JSON-RPC/SSE boundary, not that SDK's wire format."""
     import agent_terminal_ui
 
     package_dir = Path(agent_terminal_ui.__file__).parent
@@ -180,17 +309,4 @@ def test_agent_client_constructs_with_agent_client_protocol_hidden(monkeypatch):
     importlib.reload(client_module)
     client = client_module.AgentClient(base_url="http://localhost:8000")
     assert client.base_url == "http://localhost:8000"
-    assert client.acp_url == "http://localhost:8000/acp"
-
-
-def test_acp_url_override_replaces_derived_default():
-    """D-FE-2(b): passing ``acp_url`` overrides the ``{base_url}/acp`` default."""
-    client = AgentClient(
-        base_url="http://localhost:8000", acp_url="http://otherhost:9001/acp"
-    )
-    assert client.acp_url == "http://otherhost:9001/acp"
-
-
-def test_acp_url_defaults_when_not_provided():
-    client = AgentClient(base_url="http://localhost:8000")
-    assert client.acp_url == "http://localhost:8000/acp"
+    assert client.a2a_url == "http://localhost:8000/a2a"
