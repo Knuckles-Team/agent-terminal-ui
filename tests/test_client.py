@@ -69,6 +69,18 @@ async def test_stream_runs_one_authenticated_a2a_task_to_its_final_state():
     body = _sse(
         _result(_task("submitted")),
         _result(_status("working", final=False)),
+        _result(
+            {
+                "taskId": _TASK,
+                "contextId": _CONTEXT,
+                "kind": "artifact-update",
+                "artifact": {
+                    "artifactId": f"{_TASK}:answer",
+                    "parts": [{"kind": "text", "text": "the answer"}],
+                },
+                "lastChunk": True,
+            }
+        ),
         _result(_status("completed", final=True)),
     )
     client, recorder = _client(
@@ -92,9 +104,11 @@ async def test_stream_runs_one_authenticated_a2a_task_to_its_final_state():
         "session_started",
         "sideband",
         "sideband",
+        "text",
         "sideband",
         "turn_end",
     ]
+    assert events[3]["content"] == "the answer"
     assert [e["data"]["state"] for e in events if e["type"] == "sideband"] == [
         "submitted",
         "working",
