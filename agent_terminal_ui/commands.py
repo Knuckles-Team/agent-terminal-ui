@@ -2081,8 +2081,13 @@ class CommandProcessor:
 
         The engine-surface tools degrade cleanly to ``{"error": "..."}`` at
         HTTP 200 rather than raising, so callers check this before rendering.
+        A typed failed ``OperationResult`` carries ``{"code", "message"}``
+        instead; that is rendered as ``code: message``.
         """
         err = result.get("error") if isinstance(result, dict) else None
+        if isinstance(err, dict):
+            code, message = err.get("code"), err.get("message")
+            return f"{code}: {message}" if code and message else str(message or code)
         return str(err) if err else None
 
     @staticmethod

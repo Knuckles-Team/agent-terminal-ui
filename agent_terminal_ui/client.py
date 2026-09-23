@@ -205,6 +205,20 @@ _EVENT_NORMALIZERS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
 }
 
 
+
+def _failed_tool_result(response: httpx.Response) -> dict[str, Any] | None:
+    """The typed ``OperationResult`` of a ``{"status": "failed"}`` envelope, if any."""
+    try:
+        body = response.json()
+    except ValueError:
+        return None
+    if not isinstance(body, dict) or body.get("status") != "failed":
+        return None
+    result = body.get("result")
+    if isinstance(result, dict) and "error" in result:
+        return result
+    return None
+
 class AgentClient:
     """Standardized wire client for this repo's hand-rolled ACP convention.
 
@@ -964,9 +978,12 @@ class AgentClient:
         The action-routed twins in :data:`ACTION_TOOL_ROUTES` (KG-2.310)
         respond with ``{"status": "success", "result": <tool-json>}``; this
         helper returns the inner ``result`` object. Tool-level failures degrade
-        cleanly into ``result`` as ``{"error": "..."}`` (HTTP 200), while
-        transport/gateway failures raise ``httpx.HTTPStatusError`` for the
-        caller to render.
+        cleanly into ``result`` carrying an ``error``. A typed failed operation
+        arrives as ``{"status": "failed", "result": <OperationResult>}`` with
+        its public HTTP status (400/403/500/503, EH-386). It is returned the
+        same way, so the command renders the tool's own error. Any other
+        non-2xx response (transport/gateway failure) raises
+        ``httpx.HTTPStatusError`` for the caller to render.
 
         The gateway mounts the whole canonical KG route table under ``/api``
         (``register_graph_routes(app, prefix="/api")``), so the request URL is
@@ -984,6 +1001,10 @@ class AgentClient:
         response = await self._http_client.post(
             f"{self.base_url}{GATEWAY_API_PREFIX}{path}", json=payload
         )
+        if response.is_error:
+            failed = _failed_tool_result(response)
+            if failed is not None:
+                return failed
         response.raise_for_status()
         data = response.json()
         if isinstance(data, dict):
