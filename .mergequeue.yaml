@@ -35,7 +35,7 @@ gates:
   # workspace-root/system-interpreter fallback does not apply) rather than a
   # project dependency: ruff is not declared in pyproject.toml at all here (it
   # is only ever installed by the `ruff-pre-commit` hook's own hermetic env),
-  # version-pinned to match .pre-commit-config.yaml's `rev: ... # v0.15.12`
+  # version-pinned to match .config/pre-commit.yaml's `rev: ... # v0.15.12`
   # exactly so the queue enforces the identical ruleset a real commit would.
   - name: ruff
     command: ["bash", "-c", "uvx ruff@0.15.12 check --output-format concise ."]
@@ -53,7 +53,7 @@ gates:
     baseline_timeout: 600
     compare: pytest-ids
     on_timeout: defer
-    when_changed: ['*.py', '**/*.py', 'pyproject.toml', 'pytest.ini']
+    when_changed: ['*.py', '**/*.py', 'pyproject.toml']
 
   - name: full-suite
     command: ["bash", "-c",

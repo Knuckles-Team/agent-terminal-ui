@@ -47,6 +47,14 @@ profile = [
 [project.scripts]
 agent-terminal-ui = "agent_terminal_ui.terminal_ui:terminal_ui"
 
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = ["."]
+testpaths = ["tests"]
+env = ["AGENT_UTILITIES_TESTING=true", "TEXTUAL_ANIMATIONS=none"]
+markers = ["integration: Integration tests"]
+filterwarnings = ["ignore::RuntimeWarning"]
+
 [tool.uv.workspace]
 members = ["."]
 

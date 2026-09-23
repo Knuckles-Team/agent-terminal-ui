@@ -184,7 +184,8 @@ See [Configuration](configuration.md) for the full settings reference.
 
 ## Packaging
 
-A slim, runtime-only `Dockerfile` (`python:3.13-slim`) ships the frontend and its
+A slim, runtime-only `docker/Dockerfile` (`python:3.13-slim`; build from the repository
+root with `docker build -f docker/Dockerfile .`) ships the frontend and its
 direct dependencies, without test/shell extras or `agent_utilities`. Point it at
 Graph OS with `AGENT_URL`. A shared Graph OS deployment can serve many lightweight
 frontends.
