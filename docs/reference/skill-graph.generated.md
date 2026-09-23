@@ -17,6 +17,10 @@ Every concept and component this repo's own registries and documentation nav dec
 
 - **Architecture** — `architecture.md`
 
+## Capabilities
+
+- **Capabilities** — `capabilities.md`
+
 ## Configuration
 
 - **Configuration** — `configuration.md`
@@ -29,12 +33,23 @@ Every concept and component this repo's own registries and documentation nav dec
 
 - **Home** — `index.md`
 
+## Interfaces
+
+- **Interfaces** — `interfaces.md`
+
 ## Reference
 
 - **Concepts** — `concepts.md`
+- **Knowledge graph extraction** — `kg-extraction.md`
+- **Ecosystem glossary** — `glossary.md`
+- **Skill graph reference** — `reference/skill-graph.generated.md`
 
 ## Sessions & State
 
 - **Session Management** — `session_management.md`
+
+## Status
+
+- **Status** — `status.md`
 
 </div>
