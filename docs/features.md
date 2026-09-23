@@ -99,7 +99,7 @@ Session IDs remain stable across turns while each execution receives a distinct
 run ID; the palette and replay browser preserve both identities independently.
 
 Machine-readable native/generated support is recorded in
-[`capability-coverage.json`](capability-coverage.json).
+[`capability_coverage.json`](https://github.com/Knuckles-Team/agent-terminal-ui/blob/main/agent_terminal_ui/capability_coverage.json).
 
 ### `/model`
 

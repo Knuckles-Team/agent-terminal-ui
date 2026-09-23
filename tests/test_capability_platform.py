@@ -288,7 +288,7 @@ def test_run_event_page_reports_bounded_replay_reset() -> None:
 
 
 def test_capability_coverage_ledger_uses_supported_contract() -> None:
-    path = Path(__file__).parents[1] / "docs" / "capability-coverage.json"
+    path = Path(__file__).parents[1] / "agent_terminal_ui" / "capability_coverage.json"
     ledger = json.loads(path.read_text(encoding="utf-8"))
     allowed = {"native", "generated", "chat_only", "hidden", "unavailable"}
 
