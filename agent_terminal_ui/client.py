@@ -42,7 +42,12 @@ GATEWAY_API_PREFIX = "/api"
 def _candidate_skills_dirs(workspace_root: Path) -> list[Path]:
     """Directories checked, in order, for a universal-skills tree."""
     return [
-        workspace_root / "ai" / "skills" / "universal-skills" / "universal_skills" / "skills",
+        workspace_root
+        / "ai"
+        / "skills"
+        / "universal-skills"
+        / "universal_skills"
+        / "skills",
         workspace_root
         / "agent-packages"
         / "skills"
@@ -258,7 +263,9 @@ class AgentClient:
         persist, export, and resume the same conversation.
         """
         event_type = event.get("type")
-        handler = _EVENT_NORMALIZERS.get(event_type)
+        handler = (
+            _EVENT_NORMALIZERS.get(event_type) if isinstance(event_type, str) else None
+        )
         normalized: dict[str, Any] = handler(event) if handler else dict(event)
 
         event_metadata = event.get("_event")
@@ -913,12 +920,12 @@ class AgentClient:
         """Execute a (UQL) graph query verbatim, returning result rows.
 
         Thin pass-through to ``POST /api/enhanced/graph/query`` used by the
-        temporal scrubber, which appends the engine's ``|> AS OF @<ts>``
-        bi-temporal operator (KG-2.250) to the query string client-side. The
-        backend passes the query through to the engine unchanged.
+        temporal scrubber, which pins the query to an instant with the engine's
+        ``|> AS OF @<unix-seconds>`` bi-temporal stage (KG-2.250) client-side.
+        The backend passes the query through to the engine unchanged.
 
         Args:
-            query: The full UQL query string (already carrying any AS OF suffix).
+            query: The full UQL query string (already carrying any AS OF stage).
 
         Returns:
             List of result-row dictionaries.

@@ -6,6 +6,7 @@ widget composes, accepts an AS OF timestamp, and dims expired edges.
 
 from __future__ import annotations
 
+import pytest
 from textual.app import App, ComposeResult
 
 from agent_terminal_ui.widgets.graph_tree import GraphTree
@@ -13,19 +14,29 @@ from agent_terminal_ui.widgets.temporal_graph import (
     BASE_UQL,
     TemporalGraph,
     is_edge_expired,
-    with_as_of,
+    iso_to_unix_seconds,
+    temporal_uql,
 )
 
 
 class TestTemporalHelpers:
-    def test_with_as_of_appends_operator(self) -> None:
+    def test_base_query_is_uql_not_cypher(self) -> None:
+        assert BASE_UQL == "MATCH () |> LIMIT 200"
+        assert temporal_uql("") == BASE_UQL
+
+    def test_as_of_is_a_stage_in_unix_seconds_before_the_cap(self) -> None:
         assert (
-            with_as_of("MATCH (n) RETURN n", "2026-06-01T00:00:00Z")
-            == "MATCH (n) RETURN n |> AS OF @2026-06-01T00:00:00Z"
+            temporal_uql("2026-06-01T00:00:00Z")
+            == "MATCH () |> AS OF @1780272000 |> LIMIT 200"
         )
 
-    def test_with_as_of_strips_whitespace(self) -> None:
-        assert with_as_of("  MATCH (n)  ", "T").endswith("MATCH (n) |> AS OF @T")
+    def test_unzoned_timestamps_are_utc_and_offsets_apply(self) -> None:
+        assert iso_to_unix_seconds("2026-06-01T00:00:00") == 1780272000
+        assert iso_to_unix_seconds("2026-06-01T02:00:00+02:00") == 1780272000
+
+    def test_a_non_iso_timestamp_is_refused(self) -> None:
+        with pytest.raises(ValueError):
+            temporal_uql("yesterday")
 
     def test_edge_expired_when_valid_until_before_ts(self) -> None:
         edge = {"source": "a", "target": "b", "valid_until": "2026-05-01T00:00:00Z"}
@@ -99,5 +110,4 @@ async def test_temporal_graph_input_emits_as_of_query() -> None:
     assert captured, "AsOfRequested was not emitted on submit"
     iso_ts, query = captured[-1]
     assert iso_ts == "2026-06-01T00:00:00Z"
-    assert query == with_as_of(BASE_UQL, "2026-06-01T00:00:00Z")
-    assert "|> AS OF @" in query
+    assert query == "MATCH () |> AS OF @1780272000 |> LIMIT 200"
