@@ -3,13 +3,14 @@
 
 A thin entrypoint that adds a bi-temporal time scrubber over the existing
 :class:`GraphTree` text tree. The user types (or scrubs) a timestamp; on submit
-the widget re-issues the base graph query with the engine's ``|> AS OF @<ts>``
-operator (KG-2.250) appended and re-renders the tree at that historical instant.
+the widget issues the graph query pinned to that instant with the engine's
+bi-temporal ``|> AS OF @<unix-seconds>`` stage (KG-2.250) and re-renders the tree
+at that historical instant.
 Edges whose ``valid_until <= ts`` (expired) are rendered dimmed and tagged
 ``(expired)`` — the TUI honest equivalent of the webui greyed/dashed edges.
 
 This widget contains no business logic: it adapts the timestamp input into a
-query suffix (via :func:`with_as_of`) and renders whatever rows the backend
+UQL query (via :func:`temporal_uql`) and renders whatever rows the backend
 returns. Building the AS OF query string and classifying expired edges are pure
 functions so they are unit-testable without a backend.
 
@@ -18,6 +19,7 @@ Concept: TUI-22 (Temporal Graph Scrubber)
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any
 
 from textual.app import ComposeResult
@@ -28,22 +30,48 @@ from textual.widgets.tree import TreeNode
 
 from agent_terminal_ui.widgets.graph_tree import GraphTree
 
-# Base query re-issued at each scrubber instant. The backend translates UQL; we
-# only append the temporal operator.
-BASE_UQL = "MATCH (n) RETURN n LIMIT 200"
+# The scrubber's UQL: every node (`MATCH ()`), capped at 200 rows. `AS OF` is a
+# pipeline stage placed before the cap, and it takes unix seconds, not an ISO
+# string (`MATCH (n) RETURN n …` is Cypher and never parsed as UQL).
+_ALL_NODES = "MATCH ()"
+_ROW_CAP = "|> LIMIT 200"
+BASE_UQL = f"{_ALL_NODES} {_ROW_CAP}"
 
 
-def with_as_of(query: str, iso_ts: str) -> str:
-    """Append the bi-temporal ``|> AS OF @<ts>`` operator to a UQL query.
+def iso_to_unix_seconds(iso_ts: str) -> int:
+    """Convert an ISO-8601 timestamp to whole unix seconds (UTC when unzoned).
 
     Args:
-        query: The base UQL query string.
         iso_ts: An ISO-8601 timestamp (e.g. ``2026-06-01T00:00:00Z``).
 
     Returns:
-        The query with the temporal operator appended.
+        The instant as unix seconds, rounded down.
+
+    Raises:
+        ValueError: ``iso_ts`` is not an ISO-8601 timestamp.
     """
-    return f"{query.strip()} |> AS OF @{iso_ts}"
+    instant = datetime.fromisoformat(iso_ts.strip().replace("Z", "+00:00"))
+    if instant.tzinfo is None:
+        instant = instant.replace(tzinfo=UTC)
+    return int(instant.timestamp() // 1)
+
+
+def temporal_uql(iso_ts: str) -> str:
+    """The scrubber's UQL query for ``iso_ts`` (empty ⇒ the current graph).
+
+    Args:
+        iso_ts: An ISO-8601 timestamp, or ``""`` for now.
+
+    Returns:
+        ``MATCH () |> AS OF @<unix-seconds> |> LIMIT 200``, or :data:`BASE_UQL`.
+
+    Raises:
+        ValueError: ``iso_ts`` is not an ISO-8601 timestamp.
+    """
+    if not iso_ts.strip():
+        return BASE_UQL
+    seconds = iso_to_unix_seconds(iso_ts)
+    return f"{_ALL_NODES} |> AS OF @{seconds} {_ROW_CAP}"
 
 
 def is_edge_expired(edge: dict[str, Any], iso_ts: str) -> bool:
@@ -109,8 +137,12 @@ class TemporalGraph(Vertical):
     def on_input_submitted(self, event: Input.Submitted) -> None:
         """Scrub: rebuild the query for the entered timestamp and announce it."""
         iso_ts = event.value.strip()
+        try:
+            query = temporal_uql(iso_ts)
+        except ValueError:
+            self.tree.root.set_label(f"Not an ISO-8601 timestamp: {iso_ts}")
+            return
         self._current_ts = iso_ts
-        query = with_as_of(BASE_UQL, iso_ts) if iso_ts else BASE_UQL
         self.tree.root.set_label(f"Graph @ {iso_ts or 'now'}")
         self.post_message(self.AsOfRequested(iso_ts, query))
 
