@@ -66,7 +66,7 @@ where = ["."]
 include = ["agent_terminal_ui*"]
 
 [tool.setuptools.package-data]
-agent_terminal_ui = ["py.typed"]
+agent_terminal_ui = ["py.typed", "capability_coverage.json"]
 
 [tool.ruff]
 line-length = 88

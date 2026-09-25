@@ -105,7 +105,7 @@ separate, explicitly gated extension rather than part of generic replay.
 execution; neither the adapter nor the inspector assumes they are equal.
 
 The support contract is published in
-[`capability-coverage.json`](capability-coverage.json). Catalog entries default to
+[`capability_coverage.json`](https://github.com/Knuckles-Team/agent-terminal-ui/blob/main/agent_terminal_ui/capability_coverage.json). Catalog entries default to
 generated forms; dedicated Terminal UI commands are declared as native overrides.
 
 ## Service dashboard over HTTP

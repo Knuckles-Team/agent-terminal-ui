@@ -16,44 +16,23 @@ constraints, and let the agent work autonomously.
 
 ## Architecture
 
-```mermaid
-graph TD
-    subgraph "agent-utilities (Core)"
-        GS["GoalSpec<br/>(Pydantic Model)"]
-        GI["GoalIteration"]
-        GR["GoalResult"]
-        GC["GoalCheckpoint"]
-        GKG["GoalKGIntegration"]
-    end
+<div class="admonition architecture" markdown>
+<p class="admonition-title">Component flow</p>
 
-    subgraph "Knowledge Graph"
-        GN["GoalNode"]
-        CN["ConstitutionRule"]
-        FN["File / Symbol"]
-        RG["Related Goals"]
-    end
+- **`agent-terminal-ui` (TUI)** — the `/goal` command's `CommandProcessor`
+  **parses** the objective into a `GoalSpec` and **starts** the Goal Loop
+  Worker (on `AgentApp`), which **tracks** each `GoalIteration`, **checkpoints**
+  progress as a `GoalCheckpoint`, **displays** status on `GoalStatusWidget`, and
+  is also **visible in** Agent View (`AgentViewScreen`).
+- **`agent-utilities` (core)** — `GoalSpec` is **enriched** by
+  `GoalKGIntegration`, which fans out to the knowledge graph, and the loop's
+  **completion** produces a `GoalResult`.
+- **Knowledge graph** — `GoalKGIntegration` **queries** File/Symbol nodes,
+  **validates** against `ConstitutionRule`, and **finds similar** Related
+  Goals, then **persists** a `GoalNode`; the loop's `GoalResult` in turn
+  **updates** that `GoalNode`.
 
-    subgraph "agent-terminal-ui (TUI)"
-        CMD["/goal command<br/>(CommandProcessor)"]
-        LOOP["Goal Loop Worker<br/>(AgentApp)"]
-        GSW["GoalStatusWidget"]
-        AV["Agent View<br/>(AgentViewScreen)"]
-    end
-
-    CMD -->|"parse"| GS
-    GS -->|"enrich"| GKG
-    GKG -->|"query"| FN
-    GKG -->|"validate"| CN
-    GKG -->|"find similar"| RG
-    GKG -->|"persist"| GN
-    CMD -->|"start"| LOOP
-    LOOP -->|"track"| GI
-    LOOP -->|"checkpoint"| GC
-    LOOP -->|"display"| GSW
-    LOOP -->|"complete"| GR
-    GR -->|"update"| GN
-    LOOP -->|"visible in"| AV
-```
+</div>
 
 ## Usage
 

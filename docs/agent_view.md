@@ -13,43 +13,24 @@ background session management.
 
 ## Architecture
 
-```mermaid
-graph TD
-    subgraph "AgentApp"
-        MODES["MODES = {<br/>main: MainScreen<br/>agents: AgentViewScreen<br/>}"]
-        NAV["Navigation<br/>← Agent View<br/>→ Attach Session"]
-    end
+<div class="admonition architecture" markdown>
+<p class="admonition-title">Component flow</p>
 
-    subgraph "AgentViewScreen"
-        HDR["Header Banner"]
-        TBL["Session DataTable<br/>Status | Title | Preview | Active"]
-        PEEK["PeekPanel<br/>Last turn content<br/>+ inline reply"]
-        FTR["Footer (keybindings)"]
-    end
+- **`AgentApp`** owns the mode registry (`main` → `MainScreen`, `agents` →
+  `AgentViewScreen`) and the navigation between them (← **Agent View**,
+  **Attach Session** →).
+- **`AgentViewScreen`** composes a header banner, the session `DataTable`
+  (Status | Title | Preview | Active), the `PeekPanel` (last turn content plus
+  an inline reply box), and a keybindings footer. Navigating left from the app
+  opens the table; highlighting a row opens the peek panel; **Enter** returns
+  to navigation; navigating right returns to the app.
+- **`BackgroundAgentRunner`** tracks each background session (🟢 Working, 🟡
+  Waiting, ✅ Done) and persists status through `SessionManager` (SQLite v2),
+  which feeds the session table; sessions also register with `TaskManager`
+  (durable queue).
 
-    subgraph "BackgroundAgentRunner"
-        BS1["BackgroundSession #1<br/>🟢 Working"]
-        BS2["BackgroundSession #2<br/>🟡 Waiting"]
-        BS3["BackgroundSession #3<br/>✅ Done"]
-    end
+</div>
 
-    subgraph "Persistence"
-        SM["SessionManager<br/>(SQLite v2)"]
-        TM["TaskManager<br/>(Durable Queue)"]
-    end
-
-    MODES --> NAV
-    NAV -->|"← left"| TBL
-    TBL -->|"highlight"| PEEK
-    PEEK -->|"Enter"| NAV
-    NAV -->|"→ right"| MODES
-
-    BS1 --> SM
-    BS2 --> SM
-    BS3 --> SM
-    SM --> TBL
-    BS1 --> TM
-```
 
 ## Session Status Indicators
 
