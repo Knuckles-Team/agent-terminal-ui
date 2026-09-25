@@ -19,6 +19,7 @@ from rich.syntax import Syntax
 from rich.table import Table
 
 from agent_terminal_ui.tui.exit_confirm_screen import ExitConfirmScreen
+from agent_terminal_ui.client import GraphOSOperationError
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +86,7 @@ class CommandProcessor:
             "sdd": self.cmd_sdd,
             "impact": self.cmd_impact,
             "fleet": self.cmd_fleet,
+            "op": self.cmd_op,
             "mcp:reload": self.cmd_mcp_reload,
             "codemap": self.cmd_codemap,
             "resources": self.cmd_resources,
@@ -157,28 +159,8 @@ class CommandProcessor:
             )
 
     async def _run_gateway_command(self, cmd_name: str, text: str) -> None:
-        """Fall back to the gateway's commands/execute endpoint."""
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    f"{self.app.agent_client.base_url}/api/enhanced/commands/execute",
-                    json={"command": text},
-                    timeout=15.0,
-                )
-                if response.status_code != 200:
-                    self.app.notify(
-                        f"Gateway command failed: Code {response.status_code}",
-                        severity="error",
-                    )
-                    return
-                data = response.json()
-                await self._show_gateway_response(data.get("response_markdown", ""))
-                await self._apply_client_actions(data.get("client_actions", []))
-        except Exception as e:
-            self.app.notify(
-                f"Unknown command: /{cmd_name} (Gateway offline: {e})",
-                severity="warning",
-            )
+        """Unknown commands never execute through the retired gateway host."""
+        self.app.notify(f"Unknown command: /{cmd_name}", severity="warning")
 
     async def _show_gateway_response(self, response_markdown: str) -> None:
         """Render a gateway response in the conversation, or notify on failure."""
@@ -200,20 +182,9 @@ class CommandProcessor:
 
     async def cmd_help(self, args: str) -> None:
         """Show available commands and their descriptions."""
-        # CONCEPT:AU-ECO.messaging.shared-by-every-messaging
-        # Cross-surface descriptions come from the one agent-utilities command
-        # registry; TUI-only commands fall back to their handler docstring.
-        try:
-            from agent_utilities.messaging.commands import command_specs
-
-            registry = {
-                c["command"]: c["description"] for c in command_specs("terminal")
-            }
-        except Exception:  # noqa: BLE001 — registry optional; never break /help
-            registry = {}
         help_text = "[bold blue]Available Commands:[/bold blue]\n"
         for cmd in sorted(self.commands.keys()):
-            doc = registry.get(cmd) or self.commands[cmd].__doc__ or "No description"
+            doc = self.commands[cmd].__doc__ or "No description"
             help_text += f"- [bold]/{cmd}[/bold]: {doc}\n"
 
         await self.app.query_one("Conversation").add_info(help_text)
@@ -566,11 +537,44 @@ class CommandProcessor:
             )
             return
         try:
-            await client.grant_fleet_approval(parts[1])
+            await client.invoke_op("approvals.grant", {"approval_id": parts[1]})
+        except GraphOSOperationError as exc:
+            if exc.code == "STEP_UP_REQUIRED" and exc.details.get("console_url"):
+                await conversation.add_info(
+                    "[yellow]Confirm in the web console: "
+                    f"{exc.details['console_url']}[/yellow]"
+                )
+                return
+            await conversation.add_info(f"[red]Grant refused: {exc.code}[/red]")
+            return
         except Exception as exc:
             await conversation.add_info(f"[red]Grant failed: {exc}[/red]")
             return
         await conversation.add_info(f"[green]Granted approval {parts[1]}.[/green]")
+
+    async def cmd_op(self, args: str) -> None:
+        """Invoke a GraphOS operation: /op <op.id> <JSON object>."""
+        op, _, raw = args.strip().partition(" ")
+        try:
+            params = json.loads(raw) if raw.strip() else {}
+        except json.JSONDecodeError:
+            self.app.notify("/op params must be a JSON object", severity="warning")
+            return
+        if not op or not isinstance(params, dict):
+            self.app.notify("Usage: /op <op.id> <JSON object>", severity="warning")
+            return
+        conversation = self.app.query_one("Conversation")
+        try:
+            result = await self.app.agent_client.invoke_op(op, params)
+        except GraphOSOperationError as exc:
+            if exc.code in {"CONFIRMATION_REQUIRED", "STEP_UP_REQUIRED"}:
+                await conversation.add_info(
+                    f"[yellow]{exc.code}: {json.dumps(exc.details)}[/yellow]"
+                )
+            else:
+                await conversation.add_info(f"[red]{exc.code}[/red]")
+            return
+        await conversation.add_info(json.dumps(result, indent=2, default=str))
 
     @staticmethod
     def _fleet_lines(topology: Any, approvals: list[dict[str, Any]]) -> list[str]:

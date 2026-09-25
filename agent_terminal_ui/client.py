@@ -62,6 +62,15 @@ class A2ATransportError(RuntimeError):
         self.code = error.get("code")
 
 
+class GraphOSOperationError(RuntimeError):
+    """An operation was refused by the versioned GraphOS API."""
+
+    def __init__(self, code: str, details: dict[str, Any] | None = None) -> None:
+        super().__init__(code)
+        self.code = code
+        self.details = details or {}
+
+
 def _sse_frames(lines: list[str]) -> list[dict[str, Any]]:
     """Decode the JSON-RPC frame carried by one SSE event's ``data`` lines."""
     data = "\n".join(line[5:].lstrip() for line in lines if line.startswith("data:"))
@@ -238,6 +247,7 @@ class AgentClient:
         self._http_client = httpx.AsyncClient(timeout=30.0, headers=headers)
         self._current_session_id: str | None = None
         self._current_task_id: str | None = None
+        self._pending_plans: dict[str, dict[str, Any]] = {}
 
     @property
     def current_session_id(self) -> str | None:
@@ -299,8 +309,110 @@ class AgentClient:
             task_id = result.get("id") or result.get("taskId")
             if task_id:
                 self._current_task_id = str(task_id)
+            self._remember_plan(result)
             for event in normalize_a2a_event(result, session_id):
                 yield event
+            status = result.get("status")
+            if isinstance(status, dict) and status.get("state") == "input-required":
+                plan = self._pending_plans.get(str(task_id))
+                if plan is None:
+                    yield {
+                        "type": "error",
+                        "message": (
+                            "A2A approval requires a complete plan binding "
+                            "or web console confirmation"
+                        ),
+                        "session_id": session_id,
+                    }
+                else:
+                    yield {
+                        "type": "tool_call",
+                        "data": {
+                            "call_id": str(task_id),
+                            "name": str(plan["op"]),
+                            "needs_approval": True,
+                        },
+                        "session_id": session_id,
+                    }
+                    yield {
+                        "type": "turn_end",
+                        "state": "input-required",
+                        "session_id": session_id,
+                    }
+
+    def _remember_plan(self, result: dict[str, Any]) -> None:
+        """Keep only a task's complete confirmation binding, never infer it."""
+        task_id = result.get("id") or result.get("taskId")
+        status = result.get("status")
+        if not task_id or not isinstance(status, dict):
+            return
+        if status.get("state") != "input-required":
+            self._pending_plans.pop(str(task_id), None)
+            return
+        message = status.get("message")
+        metadata = message.get("metadata") if isinstance(message, dict) else None
+        plan = metadata.get("graphOsPlan") if isinstance(metadata, dict) else None
+        if (
+            isinstance(plan, dict)
+            and isinstance(plan.get("plan_ref"), str)
+            and isinstance(plan.get("op"), str)
+            and isinstance(plan.get("params"), dict)
+        ):
+            self._pending_plans[str(task_id)] = plan
+
+    async def invoke_op(
+        self,
+        op: str,
+        params: dict[str, Any],
+        *,
+        plan_ref: str | None = None,
+        idempotency_key: str | None = None,
+    ) -> Any:
+        """Call one versioned operation using the shared GraphOS envelope."""
+        if not op or not isinstance(params, dict):
+            raise ValueError("operation id and object params are required")
+        headers = {"Idempotency-Key": idempotency_key or uuid.uuid4().hex}
+        if plan_ref:
+            headers["GraphOS-Plan-Ref"] = plan_ref
+        response = await self._http_client.post(
+            f"{self.base_url}/api/v1/ops/{quote(op, safe='.')}",
+            json=params,
+            headers=headers,
+        )
+        payload = response.json()
+        if not isinstance(payload, dict) or not isinstance(payload.get("ok"), bool):
+            raise GraphOSOperationError("INVALID_ENVELOPE")
+        if not payload["ok"]:
+            error = payload.get("error")
+            code = error.get("code") if isinstance(error, dict) else None
+            details = error.get("details") if isinstance(error, dict) else None
+            raise GraphOSOperationError(
+                code if isinstance(code, str) else "UNKNOWN",
+                details if isinstance(details, dict) else None,
+            )
+        response.raise_for_status()
+        return payload.get("result")
+
+    async def confirm_plan(
+        self,
+        *,
+        plan_ref: str,
+        op: str,
+        params: dict[str, Any],
+        idempotency_key: str | None = None,
+    ) -> dict[str, Any]:
+        """Resume a PLAN confirmation through the A2A authority pipeline."""
+        if not plan_ref or not op or not isinstance(params, dict):
+            raise ValueError("complete plan binding is required")
+        return await self._rpc(
+            "graphos.plan/confirm",
+            {
+                "plan_ref": plan_ref,
+                "op": op,
+                "params": params,
+                "idempotency_key": idempotency_key or uuid.uuid4().hex,
+            },
+        )
 
     async def stream(
         self,
@@ -389,17 +501,49 @@ class AgentClient:
         feedback: str | None = None,
         session_id: str | None = None,
     ) -> AsyncGenerator[dict[str, Any], None]:
-        """Tool-approval decisions are not part of the GraphOS A2A contract.
-
-        ``POST /a2a`` serves no approval method, so this yields one error
-        event instead of silently dropping the decision.
-        """
-        yield {
-            "type": "error",
-            "message": "tool approval decisions are not supported by the GraphOS "
-            "A2A transport",
-            "session_id": session_id or self._current_session_id,
-        }
+        """Confirm only a bound PLAN request; console plans stay in the browser."""
+        current_session = session_id or self._current_session_id
+        for task_id, decision in decisions.items():
+            if decision == "reject":
+                try:
+                    await self.cancel_task(task_id)
+                except (A2ATransportError, httpx.HTTPError, ValueError) as exc:
+                    yield {
+                        "type": "error",
+                        "message": str(exc),
+                        "session_id": current_session,
+                    }
+                    return
+                self._pending_plans.pop(task_id, None)
+                yield {
+                    "type": "turn_end",
+                    "state": "canceled",
+                    "session_id": current_session,
+                }
+                continue
+            plan = self._pending_plans.get(task_id)
+            if decision != "accept" or plan is None or plan.get("confirm") == "console":
+                yield {
+                    "type": "error",
+                    "message": "plan requires a valid A2A confirmation binding",
+                    "session_id": current_session,
+                }
+                return
+            try:
+                await self.confirm_plan(
+                    plan_ref=plan["plan_ref"], op=plan["op"], params=plan["params"]
+                )
+            except (A2ATransportError, httpx.HTTPError, ValueError) as exc:
+                yield {
+                    "type": "error",
+                    "message": str(exc),
+                    "session_id": current_session,
+                }
+                return
+            self._pending_plans.pop(task_id, None)
+            if current_session:
+                async for event in self.resubscribe(task_id):
+                    yield event
 
     async def submit_extraction(
         self, *, text: str = "", url: str = "", rounds: int = 1, dedup: bool = True

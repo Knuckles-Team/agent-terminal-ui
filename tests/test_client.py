@@ -8,7 +8,11 @@ from typing import Any
 import httpx
 import pytest
 
-from agent_terminal_ui.client import A2ATransportError, AgentClient
+from agent_terminal_ui.client import (
+    A2ATransportError,
+    AgentClient,
+    GraphOSOperationError,
+)
 
 _TASK = "a2a-" + "1" * 64
 _CONTEXT = "a2a-context-" + "2" * 64
@@ -256,6 +260,79 @@ async def test_tool_approval_decisions_are_refused_explicitly():
     client = AgentClient()
     events = [event async for event in client.send_decision({"c1": "accept"})]
     assert [event["type"] for event in events] == ["error"]
+    await client.close()
+
+
+@pytest.mark.asyncio
+async def test_versioned_operation_preserves_refusal_details():
+    client, recorder = _client(
+        lambda request: httpx.Response(
+            428,
+            json={
+                "ok": False,
+                "error": {
+                    "code": "STEP_UP_REQUIRED",
+                    "details": {"console_url": "/console/confirm/plan"},
+                },
+            },
+        )
+    )
+    with pytest.raises(GraphOSOperationError) as caught:
+        await client.invoke_op("approvals.grant", {"approval_id": "a1"})
+    assert caught.value.code == "STEP_UP_REQUIRED"
+    assert caught.value.details["console_url"] == "/console/confirm/plan"
+    assert recorder.requests[0].url.path == "/api/v1/ops/approvals.grant"
+    await client.close()
+
+
+@pytest.mark.asyncio
+async def test_confirm_plan_sends_full_binding():
+    client, recorder = _client(
+        lambda request: httpx.Response(
+            200, json={"jsonrpc": "2.0", "result": {"done": True}}
+        )
+    )
+    assert await client.confirm_plan(
+        plan_ref="p1", op="query.uql", params={"query": "MATCH ()"}
+    ) == {"done": True}
+    sent = json.loads(recorder.requests[0].content)
+    assert sent["method"] == "graphos.plan/confirm"
+    assert sent["params"]["params"] == {"query": "MATCH ()"}
+    await client.close()
+
+
+@pytest.mark.asyncio
+async def test_task_input_required_exposes_only_bound_approval():
+    bound = _status("input-required", final=False)
+    bound["status"]["message"] = {
+        "metadata": {
+            "graphOsPlan": {
+                "plan_ref": "p1",
+                "op": "query.uql",
+                "params": {"query": "MATCH ()"},
+                "confirm": "plan",
+            }
+        }
+    }
+    client, _ = _client(
+        lambda request: httpx.Response(200, content=_sse(_result(bound)))
+    )
+    events = [event async for event in client.stream("hello", session_id="ctx-1")]
+    assert [event["type"] for event in events][-2:] == ["tool_call", "turn_end"]
+    assert client._pending_plans[_TASK]["params"] == {"query": "MATCH ()"}
+    await client.close()
+
+
+@pytest.mark.asyncio
+async def test_unbound_input_required_fails_closed():
+    client, _ = _client(
+        lambda request: httpx.Response(
+            200, content=_sse(_result(_status("input-required", final=False)))
+        )
+    )
+    events = [event async for event in client.stream("hello", session_id="ctx-1")]
+    assert events[-1]["type"] == "error"
+    assert _TASK not in client._pending_plans
     await client.close()
 
 
