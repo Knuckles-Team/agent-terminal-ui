@@ -301,7 +301,9 @@ def test_capability_coverage_ledger_uses_supported_contract() -> None:
         assert override.get("entrypoint") or override.get("reason")
 
 
-def _route_capabilities_list(request: httpx.Request, body: dict[str, Any]) -> httpx.Response:
+def _route_capabilities_list(
+    request: httpx.Request, body: dict[str, Any]
+) -> httpx.Response:
     assert request.url.params["include_actions"] == "true"
     return httpx.Response(200, json={"status_code": 200, "data": _catalog_payload()})
 
@@ -321,7 +323,9 @@ def _route_capability_preflight(
     return httpx.Response(200, json=_preflight_payload())
 
 
-def _route_demo_tool_invoke(request: httpx.Request, body: dict[str, Any]) -> httpx.Response:
+def _route_demo_tool_invoke(
+    request: httpx.Request, body: dict[str, Any]
+) -> httpx.Response:
     assert body == {
         "action": "inspect",
         "inputs": {"action": "inspect", "value": 7},
@@ -338,7 +342,9 @@ def _route_demo_tool_invoke(request: httpx.Request, body: dict[str, Any]) -> htt
     )
 
 
-def _route_graph_mine_invoke(request: httpx.Request, body: dict[str, Any]) -> httpx.Response:
+def _route_graph_mine_invoke(
+    request: httpx.Request, body: dict[str, Any]
+) -> httpx.Response:
     expected_inputs = {
         "action": "cluster",
         "params_json": '{"features":[[1.0,2.0]]}',
@@ -394,8 +400,12 @@ def _route_run_events(request: httpx.Request, body: dict[str, Any]) -> httpx.Res
     return httpx.Response(200, json=_run_page_payload())
 
 
-def _route_events_schema(request: httpx.Request, body: dict[str, Any]) -> httpx.Response:
-    return httpx.Response(200, json={"schema_version": "1.0", "schema": {"type": "object"}})
+def _route_events_schema(
+    request: httpx.Request, body: dict[str, Any]
+) -> httpx.Response:
+    return httpx.Response(
+        200, json={"schema_version": "1.0", "schema": {"type": "object"}}
+    )
 
 
 #: The mock gateway's routing table, keyed by exact request path. Any path
@@ -884,7 +894,9 @@ class _RunBrowserHarness(App[None]):
 
     def on_mount(self) -> None:
         self.push_screen(
-            RunBrowserScreen(cast(AgentClient, self.agent_client), session_id="session-1")
+            RunBrowserScreen(
+                cast(AgentClient, self.agent_client), session_id="session-1"
+            )
         )
 
 

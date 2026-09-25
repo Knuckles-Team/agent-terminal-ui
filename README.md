@@ -16,7 +16,7 @@
 
 ## Overview
 
-Agent Terminal UI is a Textual frontend for interactive and headless agent sessions. It uses Graph OS REST APIs for live capability discovery and invocation, run inspection, and dashboard data. Its ACP-style chat transport is separate and requires a compatible endpoint.
+Agent Terminal UI is a Textual frontend for interactive and headless agent sessions. It uses Graph OS REST APIs for live capability discovery and invocation, run inspection, and dashboard data. Chat runs over Graph OS's authenticated A2A streaming boundary.
 
 ## Key capabilities
 
@@ -39,7 +39,7 @@ Agent Terminal UI is a Textual frontend for interactive and headless agent sessi
 
 ![Knuckles-Team runtime architecture](docs/assets/runtime-architecture.svg)
 
-Graph OS serves the REST capability, run, and dashboard surfaces used by this client. The main chat path uses this repository's HTTP/SSE ACP-style transport, which the current Graph OS deployment does not mount. A compatible ACP endpoint is required for chat; this project does not use Zed's ACP SDK.
+Graph OS serves the REST capability, run, and dashboard surfaces used by this client. Chat turns use Graph OS's authenticated A2A JSON-RPC and SSE boundary at `{AGENT_URL}/a2a` (`message/stream`, `tasks/resubscribe`, `tasks/cancel`) with `AGENT_BEARER_TOKEN`.
 
 ## Quick start
 

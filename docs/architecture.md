@@ -9,12 +9,10 @@ small frontends can connect to shared platform services.
 
 ![Knuckles-Team runtime architecture](assets/runtime-architecture.svg)
 
-Graph OS currently serves the REST capability, run, and dashboard surfaces used
-by Agent Terminal UI. It does not mount the ACP-style chat endpoint. The client
-defaults `ACP_URL` to `{AGENT_URL}/acp`; chat therefore requires a compatible ACP
-service configured at that address. Graph OS alone does not complete the chat
-path. Agent Terminal UI implements this repository's HTTP/SSE convention and does
-not use Zed's ACP SDK.
+Graph OS serves the REST capability, run, and dashboard surfaces used by Agent
+Terminal UI, and its authenticated A2A JSON-RPC and SSE boundary at
+`{AGENT_URL}/a2a` carries chat turns (`message/stream`, `tasks/resubscribe`,
+`tasks/cancel`).
 
 **Client boundary:** the TUI communicates through `AgentClient`. A dedicated
 test (`tests/test_import_guard.py`) fails the build if importing the app, the
@@ -37,7 +35,7 @@ the headless `StreamSink` present the same event vocabulary.
 
 Agent Terminal UI consumes one normalized event vocabulary through
 `AgentClient`, which is the only adapter this package ships. It speaks
-**A2A** — the agent server's served JSON-RPC-over-HTTP + SSE boundary at
+**A2A** — Graph OS's authenticated JSON-RPC-over-HTTP and SSE boundary at
 `{AGENT_URL}/a2a` — for chat turns, and its REST gateway for capability and run
 surfaces; there is no dependency on Zed's `agent-client-protocol` SDK and
 nothing here imports it. Task and status events map onto the normalized

@@ -213,6 +213,20 @@ def _load_skill_entry(skill_dir: Path) -> dict[str, Any]:
     return {"id": skill_id, "name": skill_id, "description": description}
 
 
+def _failed_tool_result(response: httpx.Response) -> dict[str, Any] | None:
+    """The typed ``OperationResult`` of a ``{"status": "failed"}`` envelope, if any."""
+    try:
+        body = response.json()
+    except ValueError:
+        return None
+    if not isinstance(body, dict) or body.get("status") != "failed":
+        return None
+    result = body.get("result")
+    if isinstance(result, dict) and "error" in result:
+        return result
+    return None
+
+
 class AgentClient:
     """The TUI's one GraphOS client: A2A for conversation, REST for the rest."""
 

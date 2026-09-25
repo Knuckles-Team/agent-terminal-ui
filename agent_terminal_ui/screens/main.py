@@ -310,7 +310,7 @@ class MainScreen(Screen):
     #: "turn_end" (and the text+"[DONE]" case) is handled separately below
     #: since it isn't a simple one-shot per-type handler.
     _EVENT_HANDLERS: ClassVar[
-        dict[str, Callable[["MainScreen", Conversation, dict[str, Any]], Awaitable[None]]]
+        dict[str, Callable[[MainScreen, Conversation, dict[str, Any]], Awaitable[None]]]
     ] = {
         "text": _handle_text_event,
         "text_delta": _handle_text_delta_event,
