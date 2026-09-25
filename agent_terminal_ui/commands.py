@@ -40,6 +40,7 @@ class CommandProcessor:
         """
         self.app = app
         self._log_widget = None  # cached reference
+        self._pending_op_plans: dict[str, tuple[str, dict[str, Any]]] = {}
         self.commands: dict[str, Callable[..., Awaitable[None]]] = {
             "help": self.cmd_help,
             "clear": self.cmd_clear,
@@ -87,6 +88,7 @@ class CommandProcessor:
             "impact": self.cmd_impact,
             "fleet": self.cmd_fleet,
             "op": self.cmd_op,
+            "confirm": self.cmd_confirm,
             "mcp:reload": self.cmd_mcp_reload,
             "codemap": self.cmd_codemap,
             "resources": self.cmd_resources,
@@ -550,12 +552,35 @@ class CommandProcessor:
             result = await self.app.agent_client.invoke_op(op, params)
         except GraphOSOperationError as exc:
             if exc.code in {"CONFIRMATION_REQUIRED", "STEP_UP_REQUIRED"}:
+                plan_ref = exc.details.get("plan_ref")
+                if exc.code == "CONFIRMATION_REQUIRED" and isinstance(plan_ref, str):
+                    self._pending_op_plans[plan_ref] = (op, params)
                 await conversation.add_info(
                     f"[yellow]{exc.code}: {json.dumps(exc.details)}[/yellow]"
                 )
             else:
                 await conversation.add_info(f"[red]{exc.code}[/red]")
             return
+        await conversation.add_info(json.dumps(result, indent=2, default=str))
+
+    async def cmd_confirm(self, args: str) -> None:
+        """Confirm a previewed PLAN operation: /confirm <plan_ref>."""
+        plan_ref = args.strip()
+        pending = self._pending_op_plans.get(plan_ref)
+        if pending is None:
+            self.app.notify("No pending PLAN with that reference", severity="warning")
+            return
+        op, params = pending
+        conversation = self.app.query_one("Conversation")
+        try:
+            result = await self.app.agent_client.invoke_op(
+                op, params, plan_ref=plan_ref
+            )
+        except GraphOSOperationError as exc:
+            self._pending_op_plans.pop(plan_ref, None)
+            await conversation.add_info(f"[red]Confirmation refused: {exc.code}[/red]")
+            return
+        self._pending_op_plans.pop(plan_ref, None)
         await conversation.add_info(json.dumps(result, indent=2, default=str))
 
     @staticmethod

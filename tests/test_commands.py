@@ -726,3 +726,42 @@ class TestCommandEdgeCases:
         # Verify the screen pushed is ExitConfirmScreen
         call_args = mock_app.push_screen.call_args
         assert isinstance(call_args[0][0], ExitConfirmScreen)
+
+
+@pytest.mark.asyncio
+async def test_op_plan_requires_explicit_confirm(command_processor, mock_app):
+    """The second call reuses exact previewed params and its lease reference."""
+    from agent_terminal_ui.client import GraphOSOperationError
+
+    mock_app.agent_client.invoke_op = AsyncMock(
+        side_effect=[
+            GraphOSOperationError(
+                "CONFIRMATION_REQUIRED", {"plan_ref": "p1", "op": "query.uql"}
+            ),
+            {"rows": [1]},
+        ]
+    )
+    await command_processor.cmd_op('query.uql {"query":"MATCH ()"}')
+    await command_processor.cmd_confirm("p1")
+    assert mock_app.agent_client.invoke_op.call_args.kwargs == {"plan_ref": "p1"}
+    assert mock_app.agent_client.invoke_op.call_args.args == (
+        "query.uql",
+        {"query": "MATCH ()"},
+    )
+
+
+@pytest.mark.asyncio
+async def test_console_plan_is_not_available_to_confirm(command_processor, mock_app):
+    from agent_terminal_ui.client import GraphOSOperationError
+
+    mock_app.agent_client.invoke_op = AsyncMock(
+        side_effect=GraphOSOperationError(
+            "STEP_UP_REQUIRED", {"plan_ref": "p2", "console_url": "/console/confirm/p2"}
+        )
+    )
+    await command_processor.cmd_op('approvals.grant {"approval_id":"a1"}')
+    await command_processor.cmd_confirm("p2")
+    assert mock_app.agent_client.invoke_op.await_count == 1
+    mock_app.notify.assert_called_with(
+        "No pending PLAN with that reference", severity="warning"
+    )
