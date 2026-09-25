@@ -14,7 +14,7 @@ import json
 import logging
 import os
 import uuid
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
@@ -213,108 +213,6 @@ def _load_skill_entry(skill_dir: Path) -> dict[str, Any]:
     return {"id": skill_id, "name": skill_id, "description": description}
 
 
-def _normalize_text_delta(event: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "type": "text_delta",
-        "content": event.get("delta") or event.get("text") or event.get("content", ""),
-    }
-
-
-def _normalize_text(event: dict[str, Any]) -> dict[str, Any]:
-    return {"type": "text", "content": event.get("content", "")}
-
-
-def _normalize_thinking(event: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "type": "sideband",
-        "data": {"type": "thought", "content": event.get("thought", "")},
-    }
-
-
-def _normalize_plan_updated(event: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "type": "sideband",
-        "data": {"type": "plan", "plan": event.get("plan", [])},
-    }
-
-
-def _normalize_tool_call(event: dict[str, Any]) -> dict[str, Any]:
-    return {"type": "tool_call", "data": event.get("call") or event.get("data") or {}}
-
-
-def _normalize_tool_output(event: dict[str, Any]) -> dict[str, Any]:
-    output_data = event.get("data")
-    if not isinstance(output_data, dict):
-        output_data = {key: value for key, value in event.items() if key != "type"}
-    return {"type": "tool_output", "data": output_data}
-
-
-def _normalize_error(event: dict[str, Any]) -> dict[str, Any]:
-    return {"type": "error", "message": event.get("message", "Unknown error")}
-
-
-def _normalize_turn_end(event: dict[str, Any]) -> dict[str, Any]:
-    normalized: dict[str, Any] = {"type": "turn_end"}
-    if event.get("usage") is not None:
-        normalized["usage"] = event["usage"]
-    return normalized
-
-
-def _normalize_usage(event: dict[str, Any]) -> dict[str, Any]:
-    return {"type": "usage", "data": event.get("usage") or event.get("data") or {}}
-
-
-def _normalize_session_started(_event: dict[str, Any]) -> dict[str, Any]:
-    return {"type": "session_started"}
-
-
-#: Slash-prefixes recognized by `_resolve_stream_mode`, in check order.
-_STREAM_MODE_PREFIXES: tuple[tuple[str, str], ...] = (
-    ("/plan ", "plan"),
-    ("/build ", "build"),
-    ("/chat ", "ask"),
-)
-
-
-def _resolve_stream_mode(query: str, mode_id: str | None) -> tuple[str, str]:
-    """Infer the ACP mode for a `stream()` call and strip its slash prefix.
-
-    An explicitly-passed `mode_id` always wins. Otherwise a recognized
-    slash-prefix (``/plan ``, ``/build ``, ``/chat ``) selects the mode and is
-    stripped from `query`; anything else defaults to ``"ask"`` unchanged.
-    """
-    if mode_id:
-        return query, mode_id
-    for prefix, resolved_mode in _STREAM_MODE_PREFIXES:
-        if query.startswith(prefix):
-            return query[len(prefix) :], resolved_mode
-    return query, "ask"
-
-
-#: Maps a raw ACP ``event["type"]`` (both dash and underscore spellings, where
-#: the upstream event source uses either) to the builder that produces the
-#: normalized event body. An event type with no entry here falls back to
-#: `dict(event)` unchanged -- see `_normalize_event`.
-_EVENT_NORMALIZERS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
-    "text-delta": _normalize_text_delta,
-    "text_delta": _normalize_text_delta,
-    "text": _normalize_text,
-    "thinking": _normalize_thinking,
-    "plan-updated": _normalize_plan_updated,
-    "plan_updated": _normalize_plan_updated,
-    "tool-call": _normalize_tool_call,
-    "tool_call": _normalize_tool_call,
-    "tool-output": _normalize_tool_output,
-    "tool_output": _normalize_tool_output,
-    "error": _normalize_error,
-    "turn-end": _normalize_turn_end,
-    "turn_end": _normalize_turn_end,
-    "usage": _normalize_usage,
-    "session-started": _normalize_session_started,
-    "session_started": _normalize_session_started,
-}
-
-
 class AgentClient:
     """The TUI's one GraphOS client: A2A for conversation, REST for the rest."""
 
@@ -502,6 +400,41 @@ class AgentClient:
             "A2A transport",
             "session_id": session_id or self._current_session_id,
         }
+
+    async def submit_extraction(
+        self, *, text: str = "", url: str = "", rounds: int = 1, dedup: bool = True
+    ) -> dict[str, Any]:
+        """Submit a document fact-extraction job to the gateway (ECO-4.43)."""
+        resp = await self._http_client.post(
+            f"{self.base_url}/api/enhanced/extract/submit",
+            json={"text": text, "url": url, "rounds": rounds, "dedup": dedup},
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+    async def stream_extraction(
+        self, job_id: str
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        """Stream a job's extraction events (round_start|fact|…|job_done)."""
+        async with self._http_client.stream(
+            "GET",
+            f"{self.base_url}/api/enhanced/extract/stream/{job_id}",
+            timeout=None,
+        ) as stream:
+            async for line in stream.aiter_lines():
+                if line.startswith("data: "):
+                    try:
+                        yield json.loads(line[6:])
+                    except json.JSONDecodeError:
+                        continue
+
+    async def extraction_jsonl(self, job_id: str) -> str:
+        """Fetch a job's facts as JSONL text (upstream parity)."""
+        resp = await self._http_client.get(
+            f"{self.base_url}/api/enhanced/extract/jsonl/{job_id}"
+        )
+        resp.raise_for_status()
+        return resp.text
 
     async def get_metadata(self) -> dict[str, Any]:
         """Fetch the GraphOS Agent Card for the ``/a2a`` endpoint.

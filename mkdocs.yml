@@ -1,5 +1,5 @@
 site_name: "agent-terminal-ui"
-site_description: "Textual-based terminal user interface for AI agents built on the agent-utilities platform — dual-protocol (AG-UI / ACP) chat, workflow visualization, session persistence, and autonomous goal loops."
+site_description: "Textual-based terminal user interface for AI agents built on the agent-utilities platform — A2A chat over the agent server, workflow visualization, session persistence, and autonomous goal loops."
 site_url: "https://knuckles-team.github.io/agent-terminal-ui/"
 repo_name: "Knuckles-Team/agent-terminal-ui"
 repo_url: "https://github.com/Knuckles-Team/agent-terminal-ui"

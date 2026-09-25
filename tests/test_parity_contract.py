@@ -87,7 +87,7 @@ def _public_async_methods(cls: type) -> list[str]:
     """Return public async method names declared on ``cls``.
 
     Includes both plain coroutines and async generators (e.g. ``stream``,
-    ``stream_events``) since both dispatch real HTTP traffic. Private
+    ``stream_extraction``) since both dispatch real HTTP traffic. Private
     helpers and cleanup coroutines (``close``, ``aclose``) are filtered
     because they are not required to reference a backend endpoint.
     """

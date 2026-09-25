@@ -4,7 +4,7 @@
 This module implements the primary Textual application for the agent terminal UI.
 It handles user input, streams normalized events through the configured
 AgentClient transport adapter, manages tool execution flows, and delegates
-UI rendering to the MainScreen. The currently shipped adapter speaks ACP.
+UI rendering to the MainScreen. The currently shipped adapter speaks A2A.
 
 Architecture:
     AgentApp (App) — protocol/client orchestration, global state
@@ -24,18 +24,7 @@ import re
 import time
 from typing import Any, ClassVar
 
-try:
-    from textual import work
-except ImportError:
-    # Fallback for older Textual versions: accept and ignore any work() kwargs
-    # (exclusive, thread, group, ...) so call sites type-check and run unchanged.
-    def work(*_args, **_kwargs):
-        def decorator(func):
-            return func
-
-        return decorator
-
-
+from textual import work
 from textual.app import App
 from textual.binding import Binding, BindingType
 from textual.message import Message

@@ -1,7 +1,7 @@
 # Project Constitution - agent-terminal-ui
 
 ## Vision & Mission
-**agent-terminal-ui** is a production-grade, Textual-based terminal interface designed to provide a fast, keyboard-centric workflow for agentic orchestration. It aims for feature parity with **Claude Code** while remaining protocol-native (AG-UI/ACP).
+**agent-terminal-ui** is a production-grade, Textual-based terminal interface designed to provide a fast, keyboard-centric workflow for agentic orchestration. It aims for feature parity with **Claude Code** while remaining protocol-native (A2A for chat, REST for capability/run surfaces).
 
 ## Core Principles
 ### Guiding Principles
@@ -17,7 +17,7 @@
 - **Testing**: Use `pytest` and `pytest-asyncio` for all tests.
 
 ## Governance
-- **Protocol Parity**: The TUI must support both AG-UI and ACP protocols.
+- **One Chat Transport**: The TUI speaks the agent server's authenticated A2A JSON-RPC + SSE boundary for chat; do not add a second chat endpoint or an ACP-style path.
 - **Extensibility**: Tool formatters and slash commands must be implemented via registry patterns to allow easy expansion.
 - **Decision Making**: Slash commands and shortcuts are prioritized based on user ergonomics and CLI standards.
 

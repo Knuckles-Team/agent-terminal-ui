@@ -27,7 +27,7 @@ from agent_terminal_ui.capabilities import (
     schema_default_text,
     schema_fields,
 )
-from agent_terminal_ui.client import AgentClient
+from agent_terminal_ui.client import AgentClient, new_session_id
 
 
 class CapabilityConfirmationScreen(ModalScreen[bool]):
@@ -846,9 +846,7 @@ class CapabilityPaletteScreen(ModalScreen[None]):
         target: str | None,
         invocation: CapabilityInvocation,
     ) -> None:
-        if not (
-            invocation.approval_id and invocation.run_id and invocation.session_id
-        ):
+        if not (invocation.approval_id and invocation.run_id and invocation.session_id):
             self._set_status(
                 "The gateway requested approval without complete server-bound "
                 "approval, run, and session identities; automatic resume is "
@@ -951,22 +949,22 @@ class CapabilityPaletteScreen(ModalScreen[None]):
         self._handle_invocation_completed()
 
     async def _stable_session_id(self) -> str | None:
-        """Return or create the stable session used by governed executions."""
+        """Return or mint the stable session used by governed executions.
+
+        Sessions are client-minted A2A ``contextId`` values (the server owns
+        every task, not the session) -- there is no server-side "create
+        session" call to fall back to.
+        """
         session_id = getattr(self.app, "current_session_id", None) or getattr(
             self.client, "current_session_id", None
         )
         if session_id:
             return str(session_id)
-        create_session = getattr(self.client, "create_session", None)
-        if not callable(create_session):
-            return None
-        created = await create_session()
-        if created:
-            remember_session = getattr(self.app, "remember_session_id", None)
-            if callable(remember_session):
-                remember_session(str(created))
-            return str(created)
-        return None
+        created = new_session_id()
+        remember_session = getattr(self.app, "remember_session_id", None)
+        if callable(remember_session):
+            remember_session(created)
+        return created
 
     def _remember_invocation_identity(self, invocation: CapabilityInvocation) -> None:
         """Preserve independent server-bound session and run identities."""
