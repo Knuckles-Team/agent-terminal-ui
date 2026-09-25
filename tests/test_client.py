@@ -337,6 +337,28 @@ async def test_unbound_input_required_fails_closed():
 
 
 @pytest.mark.asyncio
+async def test_console_input_required_cannot_offer_tui_approval():
+    console = _status("input-required", final=False)
+    console["status"]["message"] = {
+        "metadata": {
+            "graphOsPlan": {
+                "plan_ref": "p1",
+                "op": "approvals.grant",
+                "params": {"approval_id": "a1"},
+                "confirm": "console",
+            }
+        }
+    }
+    client, _ = _client(
+        lambda request: httpx.Response(200, content=_sse(_result(console)))
+    )
+    events = [event async for event in client.stream("hello", session_id="ctx-1")]
+    assert events[-1]["type"] == "error"
+    assert _TASK not in client._pending_plans
+    await client.close()
+
+
+@pytest.mark.asyncio
 async def test_metadata_reads_the_agent_card():
     card = {"name": "GraphOS", "capabilities": {"streaming": True}}
     client, recorder = _client(lambda request: httpx.Response(200, json=card))

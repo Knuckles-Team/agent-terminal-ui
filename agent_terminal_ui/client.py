@@ -357,6 +357,7 @@ class AgentClient:
             and isinstance(plan.get("plan_ref"), str)
             and isinstance(plan.get("op"), str)
             and isinstance(plan.get("params"), dict)
+            and plan.get("confirm") == "plan"
         ):
             self._pending_plans[str(task_id)] = plan
 
@@ -522,7 +523,7 @@ class AgentClient:
                 }
                 continue
             plan = self._pending_plans.get(task_id)
-            if decision != "accept" or plan is None or plan.get("confirm") == "console":
+            if decision != "accept" or plan is None:
                 yield {
                     "type": "error",
                     "message": "plan requires a valid A2A confirmation binding",
