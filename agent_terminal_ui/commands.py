@@ -162,24 +162,6 @@ class CommandProcessor:
         """Unknown commands never execute through the retired gateway host."""
         self.app.notify(f"Unknown command: /{cmd_name}", severity="warning")
 
-    async def _show_gateway_response(self, response_markdown: str) -> None:
-        """Render a gateway response in the conversation, or notify on failure."""
-        try:
-            conv = self.app.query_one("Conversation")
-            await conv.add_agent_response(response_markdown)
-        except Exception:
-            self.app.notify(response_markdown[:100], severity="information")
-
-    async def _apply_client_actions(self, client_actions: list[Any]) -> None:
-        """Apply the client-side actions requested by a gateway response."""
-        for action_dict in client_actions:
-            if action_dict.get("action") != "clear_chat":
-                continue
-            with contextlib.suppress(Exception):
-                conv = self.app.query_one("Conversation")
-                await conv.clear_conversation()
-                await conv.add_info("🧹 Chat log cleared via slash command.")
-
     async def cmd_help(self, args: str) -> None:
         """Show available commands and their descriptions."""
         help_text = "[bold blue]Available Commands:[/bold blue]\n"
