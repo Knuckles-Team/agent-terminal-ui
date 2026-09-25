@@ -30,7 +30,7 @@ from agent_terminal_ui.capabilities import (
     schema_fields,
 )
 from agent_terminal_ui.capability_provider import CapabilityCommandProvider
-from agent_terminal_ui.client import AgentClient
+from agent_terminal_ui.client import AgentClient, normalize_a2a_event
 from agent_terminal_ui.commands import CommandProcessor
 from agent_terminal_ui.tui.capability_palette import (
     CapabilityConfirmationScreen,
@@ -523,30 +523,25 @@ async def test_client_consumes_live_capability_and_run_contracts() -> None:
 
 
 def test_normalized_stream_event_preserves_canonical_run_identity() -> None:
-    normalized = AgentClient._normalize_event(
+    """A task's ``graphOs.runId`` metadata survives normalization independent
+    of the A2A session (``contextId``), so a governed run stays addressable
+    by its own identity (Run Mission Control) even though it was started
+    from a chat turn."""
+    events = normalize_a2a_event(
         {
-            "type": "text-delta",
-            "delta": "hi",
-            "_event": {"run_id": "run-1", "sequence": 2},
-        },
-        "session-1",
-    )
-
-    assert normalized["type"] == "text_delta"
-    assert normalized["run_id"] == "run-1"
-    assert normalized["_event"]["sequence"] == 2
-
-    started = AgentClient._normalize_event(
-        {
-            "type": "run_started",
-            "run_id": "run-execution-2",
-            "session_id": "session-stable-1",
+            "id": "a2a-" + "1" * 64,
+            "status": {"state": "working"},
+            "metadata": {"graphOs": {"runId": "run-execution-2"}},
         },
         "session-stable-1",
     )
-    assert started["session_id"] == "session-stable-1"
-    assert started["run_id"] == "run-execution-2"
-    assert started["session_id"] != started["run_id"]
+
+    assert len(events) == 1
+    status = events[0]
+    assert status["type"] == "sideband"
+    assert status["session_id"] == "session-stable-1"
+    assert status["run_id"] == "run-execution-2"
+    assert status["session_id"] != status["run_id"]
 
 
 @pytest.mark.asyncio
