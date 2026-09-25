@@ -16,7 +16,7 @@ from textual.app import App, ComposeResult
 from agent_terminal_ui.tui.status_line import StatusLine
 from agent_terminal_ui.widgets.conversation import Conversation
 
-# Entrance animations are disabled in tests via pytest.ini (TEXTUAL_ANIMATIONS=none)
+# Entrance animations are disabled in tests via pyproject.toml [tool.pytest.ini_options] env (TEXTUAL_ANIMATIONS=none)
 # so these goldens capture the resting state deterministically.
 
 # Themes the UI is expected to render uniformly under (all Textual built-ins).
