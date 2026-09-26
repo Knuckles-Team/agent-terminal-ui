@@ -290,6 +290,76 @@ async def test_unfinished_plan_confirmation_keeps_pending_call() -> None:
 
 
 @pytest.mark.asyncio
+async def test_task_approval_sends_bound_session_message_and_resumes() -> None:
+    def respond(request: httpx.Request) -> httpx.Response:
+        method = json.loads(request.content)["method"]
+        if method == "graphos.plan/confirm":
+            return httpx.Response(
+                200,
+                json={
+                    "jsonrpc": "2.0",
+                    "result": {"accepted": True, "call_id": "call-1"},
+                },
+            )
+        return httpx.Response(
+            200, content=_sse(_result(_status("completed", final=True)))
+        )
+
+    client, recorder = _client(respond)
+    bound = _status("input-required", final=False)
+    bound["status"]["message"] = {
+        "metadata": {
+            "graphOsApproval": {
+                "call_id": "call-1",
+                "plan_ref": "plan-1",
+                "op": "query.uql",
+                "params_digest": "a" * 64,
+                "work_item_version": 4,
+            }
+        }
+    }
+    client._remember_plan(bound)
+    events = [
+        event
+        async for event in client.send_decision({_TASK: "accept"}, session_id="ctx")
+    ]
+    assert _TASK not in client._pending_plans
+    assert events[-1]["type"] == "turn_end"
+    sent = json.loads(recorder.requests[0].content)["params"]
+    assert sent["task_id"] == _TASK
+    assert sent["decision"] == "approve"
+    assert sent["message"]["metadata"]["graphOsApproval"]["call_id"] == "call-1"
+    assert [json.loads(req.content)["method"] for req in recorder.requests] == [
+        "graphos.plan/confirm",
+        "tasks/resubscribe",
+    ]
+    await client.close()
+
+
+@pytest.mark.asyncio
+async def test_task_approval_rejected_receipt_keeps_pending_call() -> None:
+    client, recorder = _client(
+        lambda request: httpx.Response(
+            200,
+            json={"jsonrpc": "2.0", "result": {"accepted": False, "call_id": "call-1"}},
+        )
+    )
+    client._pending_plans[_TASK] = {
+        "kind": "task",
+        "call_id": "call-1",
+        "plan_ref": "plan-1",
+        "op": "query.uql",
+        "params_digest": "a" * 64,
+        "work_item_version": 4,
+    }
+    events = [event async for event in client.send_decision({_TASK: "accept"})]
+    assert [event["type"] for event in events] == ["error"]
+    assert _TASK in client._pending_plans
+    assert len(recorder.requests) == 1
+    await client.close()
+
+
+@pytest.mark.asyncio
 async def test_versioned_operation_preserves_refusal_details():
     client, recorder = _client(
         lambda request: httpx.Response(

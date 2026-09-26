@@ -351,6 +351,18 @@ class AgentClient:
             return
         message = status.get("message")
         metadata = message.get("metadata") if isinstance(message, dict) else None
+        approval = (
+            metadata.get("graphOsApproval") if isinstance(metadata, dict) else None
+        )
+        if isinstance(approval, dict) and (
+            isinstance(approval.get("call_id"), str)
+            and isinstance(approval.get("plan_ref"), str)
+            and isinstance(approval.get("op"), str)
+            and isinstance(approval.get("params_digest"), str)
+            and isinstance(approval.get("work_item_version"), int)
+        ):
+            self._pending_plans[str(task_id)] = {"kind": "task", **approval}
+            return
         plan = metadata.get("graphOsPlan") if isinstance(metadata, dict) else None
         if (
             isinstance(plan, dict)
@@ -412,6 +424,36 @@ class AgentClient:
                 "op": op,
                 "params": params,
                 "idempotency_key": idempotency_key or uuid.uuid4().hex,
+            },
+        )
+
+    async def answer_task_approval(
+        self, task_id: str, plan: dict[str, Any], decision: str
+    ) -> dict[str, Any]:
+        """Submit one authenticated message bound to a pending A2A call."""
+        if decision not in {"approve", "deny"}:
+            raise ValueError("invalid task approval decision")
+        binding = {
+            "task_id": task_id,
+            "work_item_version": plan["work_item_version"],
+            "call_id": plan["call_id"],
+            "plan_ref": plan["plan_ref"],
+            "op": plan["op"],
+            "params_digest": plan["params_digest"],
+        }
+        return await self._rpc(
+            "graphos.plan/confirm",
+            {
+                **binding,
+                "decision": decision,
+                "idempotency_key": uuid.uuid4().hex,
+                "message": {
+                    "role": "user",
+                    "kind": "message",
+                    "messageId": uuid.uuid4().hex,
+                    "parts": [{"kind": "text", "text": decision}],
+                    "metadata": {"graphOsApproval": binding},
+                },
             },
         )
 
@@ -505,6 +547,42 @@ class AgentClient:
         """Confirm only a bound PLAN request; console plans stay in the browser."""
         current_session = session_id or self._current_session_id
         for task_id, decision in decisions.items():
+            plan = self._pending_plans.get(task_id)
+            if plan is not None and plan.get("kind") == "task":
+                if decision not in {"accept", "reject"}:
+                    yield {
+                        "type": "error",
+                        "message": "invalid task approval decision",
+                        "session_id": current_session,
+                    }
+                    return
+                try:
+                    outcome = await self.answer_task_approval(
+                        task_id, plan, "approve" if decision == "accept" else "deny"
+                    )
+                except (A2ATransportError, httpx.HTTPError, ValueError) as exc:
+                    yield {
+                        "type": "error",
+                        "message": str(exc),
+                        "session_id": current_session,
+                    }
+                    return
+                if (
+                    not isinstance(outcome, dict)
+                    or outcome.get("accepted") is not True
+                    or outcome.get("call_id") != plan["call_id"]
+                ):
+                    yield {
+                        "type": "error",
+                        "message": "task approval was not accepted",
+                        "session_id": current_session,
+                    }
+                    return
+                self._pending_plans.pop(task_id, None)
+                if current_session:
+                    async for event in self.resubscribe(task_id):
+                        yield event
+                continue
             if decision == "reject":
                 try:
                     await self.cancel_task(task_id)
@@ -522,7 +600,6 @@ class AgentClient:
                     "session_id": current_session,
                 }
                 continue
-            plan = self._pending_plans.get(task_id)
             if decision != "accept" or plan is None:
                 yield {
                     "type": "error",
