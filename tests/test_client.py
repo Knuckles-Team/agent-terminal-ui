@@ -360,6 +360,30 @@ async def test_task_approval_rejected_receipt_keeps_pending_call() -> None:
 
 
 @pytest.mark.asyncio
+async def test_task_approval_retry_reuses_its_idempotency_key() -> None:
+    client, recorder = _client(
+        lambda request: httpx.Response(
+            200, json={"jsonrpc": "2.0", "result": {"accepted": True}}
+        )
+    )
+    plan = {
+        "call_id": "call-1",
+        "plan_ref": "plan-1",
+        "op": "query.uql",
+        "params_digest": "a" * 64,
+        "work_item_version": 4,
+    }
+    await client.answer_task_approval(_TASK, plan, "approve")
+    await client.answer_task_approval(_TASK, plan, "approve")
+    keys = [
+        json.loads(request.content)["params"]["idempotency_key"]
+        for request in recorder.requests
+    ]
+    assert keys[0] == keys[1]
+    await client.close()
+
+
+@pytest.mark.asyncio
 async def test_versioned_operation_preserves_refusal_details():
     client, recorder = _client(
         lambda request: httpx.Response(

@@ -446,7 +446,9 @@ class AgentClient:
             {
                 **binding,
                 "decision": decision,
-                "idempotency_key": uuid.uuid4().hex,
+                "idempotency_key": uuid.uuid5(
+                    uuid.NAMESPACE_OID, f"{task_id}:{plan['call_id']}:{decision}"
+                ).hex,
                 "message": {
                     "role": "user",
                     "kind": "message",
