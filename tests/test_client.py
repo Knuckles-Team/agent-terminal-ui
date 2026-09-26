@@ -264,6 +264,32 @@ async def test_tool_approval_decisions_are_refused_explicitly():
 
 
 @pytest.mark.asyncio
+async def test_unfinished_plan_confirmation_keeps_pending_call() -> None:
+    client, recorder = _client(
+        lambda request: httpx.Response(
+            200,
+            json={
+                "jsonrpc": "2.0",
+                "result": {"state": "input-required", "code": "CONFIRMATION_REQUIRED"},
+            },
+        )
+    )
+    client._pending_plans[_TASK] = {
+        "plan_ref": "p1",
+        "op": "query.uql",
+        "params": {"query": "MATCH ()"},
+        "confirm": "plan",
+    }
+    events = [event async for event in client.send_decision({_TASK: "accept"})]
+    assert [event["type"] for event in events] == ["error"]
+    assert _TASK in client._pending_plans
+    assert [json.loads(request.content)["method"] for request in recorder.requests] == [
+        "graphos.plan/confirm"
+    ]
+    await client.close()
+
+
+@pytest.mark.asyncio
 async def test_versioned_operation_preserves_refusal_details():
     client, recorder = _client(
         lambda request: httpx.Response(

@@ -531,13 +531,22 @@ class AgentClient:
                 }
                 return
             try:
-                await self.confirm_plan(
+                outcome = await self.confirm_plan(
                     plan_ref=plan["plan_ref"], op=plan["op"], params=plan["params"]
                 )
             except (A2ATransportError, httpx.HTTPError, ValueError) as exc:
                 yield {
                     "type": "error",
                     "message": str(exc),
+                    "session_id": current_session,
+                }
+                return
+            if not isinstance(outcome, dict) or (
+                outcome.get("state") == "input-required"
+            ):
+                yield {
+                    "type": "error",
+                    "message": "plan confirmation did not complete",
                     "session_id": current_session,
                 }
                 return
