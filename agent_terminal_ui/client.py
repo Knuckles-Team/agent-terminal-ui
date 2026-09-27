@@ -1,21 +1,27 @@
 #!/usr/bin/python
 """Agent Client implementation for the terminal UI.
 
-This module provides high-level client wrappers for interacting with the agent
-server. "ACP" here names this repo's own hand-rolled JSON-RPC-over-HTTP +
-SSE convention (session create → ``POST {base}/acp/rpc/{id}`` → stream
-``GET {base}/acp/stream/{id}``) — it is not an integration with Zed's
-``agent-client-protocol`` SDK; this client speaks HTTP/SSE directly via
-``httpx`` and has no dependency on that package.
+Conversation turns use GraphOS's authenticated A2A JSON-RPC boundary at
+``{base}/a2a``: ``message/stream`` admits one durable task and streams its
+state transitions as Server-Sent Events, ``tasks/resubscribe`` re-attaches to
+a task after a disconnect, and ``tasks/cancel`` cancels it. The conversation
+(session) identity is the A2A ``contextId`` this client mints; the server owns
+every task. Graph and operator capabilities use the GraphOS REST gateway.
 """
+
+from __future__ import annotations
 
 import contextlib
 import json
 import logging
-from collections.abc import AsyncGenerator, Callable
+import os
+import re
+import sys
+import uuid
+from collections.abc import AsyncGenerator, Mapping
 from pathlib import Path
 from typing import Any
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 import httpx
 
@@ -31,18 +37,164 @@ from agent_terminal_ui.capabilities import (
 
 logger = logging.getLogger(__name__)
 
-#: Prefix the gateway mounts the canonical Knowledge-Graph REST table under
-#: (``agent_utilities.gateway.graph_api.register_graph_routes(app,
-#: prefix="/api")``). The ``/graph/*`` action twins live there, unlike the
-#: server's own un-prefixed routers (``/models``, ``/chats``, ``/tools``,
-#: ``/mcp/*``).
+#: Prefix the gateway mounts the canonical Knowledge-Graph REST table under.
+#: The ``/graph/*`` action twins live there, unlike the server's own
+#: un-prefixed routers (``/models``, ``/chats``, ``/tools``, ``/mcp/*``).
 GATEWAY_API_PREFIX = "/api"
+
+#: The GraphOS A2A JSON-RPC endpoint and its Agent Card.
+A2A_PATH = "/a2a"
+AGENT_CARD_PATH = "/.well-known/agent-card.json"
+
+#: The typed Graph OS task a TUI mode asks for; Graph OS never routes free text.
+MODE_TASK_IRIS = {
+    "ask": "eg:task/communicate",
+    "plan": "eg:task/research",
+    "build": "eg:task/implement",
+}
+
+#: A2A task states that end a stream.
+_FINAL_STATES = frozenset({"completed", "canceled", "failed", "rejected"})
+_FAILED_STATES = frozenset({"failed", "rejected"})
+
+
+class A2ATransportError(RuntimeError):
+    """GraphOS answered a JSON-RPC request with an error object."""
+
+    def __init__(self, error: dict[str, Any]) -> None:
+        super().__init__(str(error.get("message") or "A2A request failed"))
+        self.code = error.get("code")
+
+
+class GraphOSOperationError(RuntimeError):
+    """An operation was refused by the versioned GraphOS API."""
+
+    def __init__(self, code: str, details: dict[str, Any] | None = None) -> None:
+        super().__init__(code)
+        self.code = code
+        self.details = details or {}
+
+
+class _OperationTransport:
+    """Pass one request's confirmation headers to the generated client."""
+
+    def __init__(self, client: AgentClient, headers: dict[str, str]) -> None:
+        self.client = client
+        self.headers = headers
+
+    async def invoke(self, op_id: str, params: Mapping[str, Any]) -> dict[str, Any]:
+        response = await self.client._http_client.post(
+            f"{self.client.base_url}/api/v1/ops/{quote(op_id, safe='.')}",
+            json=dict(params),
+            headers=self.headers,
+        )
+        try:
+            payload = response.json()
+        except ValueError as exc:
+            raise GraphOSOperationError("INVALID_ENVELOPE") from exc
+        if not isinstance(payload, dict) or not isinstance(payload.get("ok"), bool):
+            raise GraphOSOperationError("INVALID_ENVELOPE")
+        if payload["ok"]:
+            response.raise_for_status()
+        return payload
+
+
+def _sse_frames(lines: list[str]) -> list[dict[str, Any]]:
+    """Decode the JSON-RPC frame carried by one SSE event's ``data`` lines."""
+    data = "\n".join(line[5:].lstrip() for line in lines if line.startswith("data:"))
+    if not data:
+        return []
+    frame = json.loads(data)
+    return [frame] if isinstance(frame, dict) else []
+
+
+def _frame_result(frame: dict[str, Any]) -> dict[str, Any]:
+    error = frame.get("error")
+    if isinstance(error, dict):
+        raise A2ATransportError(error)
+    result = frame.get("result")
+    if not isinstance(result, dict):
+        raise A2ATransportError({"message": "A2A frame carried no result"})
+    return result
+
+
+def _graph_os_metadata(result: dict[str, Any]) -> dict[str, Any]:
+    metadata = result.get("metadata")
+    graph_os = metadata.get("graphOs") if isinstance(metadata, dict) else None
+    return graph_os if isinstance(graph_os, dict) else {}
+
+
+def new_session_id() -> str:
+    """Mint a new conversation identity (the A2A ``contextId``)."""
+    return f"tui-{uuid.uuid4().hex}"
+
+
+def _is_approval_operation(op: str) -> bool:
+    """Identify the approval namespace while its durable authority is unserved."""
+    return op.lower().startswith("approvals.")
+
+
+def _artifact_events(result: dict[str, Any], session_id: str) -> list[dict[str, Any]]:
+    artifact = result.get("artifact") or {}
+    text = "".join(
+        str(part.get("text") or "")
+        for part in artifact.get("parts") or ()
+        if isinstance(part, dict) and part.get("kind", "text") == "text"
+    )
+    if not text:
+        return []
+    return [
+        {
+            "type": "text",
+            "content": text,
+            "session_id": session_id,
+            "task_id": result.get("taskId"),
+        }
+    ]
+
+
+def normalize_a2a_event(
+    result: dict[str, Any], session_id: str
+) -> list[dict[str, Any]]:
+    """Map one A2A task/status event onto the TUI's normalized vocabulary.
+
+    A task and every non-final transition become a ``status`` sideband; a
+    final ``completed``/``canceled`` state ends the turn, and a final
+    ``failed``/``rejected`` state reports an error before ending it. The
+    completed task's answer arrives as an ``artifact-update`` and renders as
+    ``text``.
+    """
+    if result.get("kind") == "artifact-update":
+        return _artifact_events(result, session_id)
+    task_id = result.get("id") or result.get("taskId")
+    state = str((result.get("status") or {}).get("state") or "")
+    run_id = _graph_os_metadata(result).get("runId")
+    common: dict[str, Any] = {"session_id": session_id, "task_id": task_id}
+    if run_id:
+        common["run_id"] = run_id
+    status = {
+        "type": "sideband",
+        "data": {"type": "status", "state": state, "task_id": task_id},
+        **common,
+    }
+    if state not in _FINAL_STATES or result.get("final") is False:
+        return [status]
+    events = [status]
+    if state in _FAILED_STATES:
+        events.append({"type": "error", "message": f"task {state}", **common})
+    events.append({"type": "turn_end", "state": state, **common})
+    return events
 
 
 def _candidate_skills_dirs(workspace_root: Path) -> list[Path]:
     """Directories checked, in order, for a universal-skills tree."""
     return [
-        workspace_root / "ai" / "skills" / "universal-skills" / "universal_skills" / "skills",
+        workspace_root
+        / "ai"
+        / "skills"
+        / "universal-skills"
+        / "universal_skills"
+        / "skills",
         workspace_root
         / "agent-packages"
         / "skills"
@@ -103,218 +255,403 @@ def _load_skill_entry(skill_dir: Path) -> dict[str, Any]:
     return {"id": skill_id, "name": skill_id, "description": description}
 
 
-def _normalize_text_delta(event: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "type": "text_delta",
-        "content": event.get("delta") or event.get("text") or event.get("content", ""),
-    }
-
-
-def _normalize_text(event: dict[str, Any]) -> dict[str, Any]:
-    return {"type": "text", "content": event.get("content", "")}
-
-
-def _normalize_thinking(event: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "type": "sideband",
-        "data": {"type": "thought", "content": event.get("thought", "")},
-    }
-
-
-def _normalize_plan_updated(event: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "type": "sideband",
-        "data": {"type": "plan", "plan": event.get("plan", [])},
-    }
-
-
-def _normalize_tool_call(event: dict[str, Any]) -> dict[str, Any]:
-    return {"type": "tool_call", "data": event.get("call") or event.get("data") or {}}
-
-
-def _normalize_tool_output(event: dict[str, Any]) -> dict[str, Any]:
-    output_data = event.get("data")
-    if not isinstance(output_data, dict):
-        output_data = {key: value for key, value in event.items() if key != "type"}
-    return {"type": "tool_output", "data": output_data}
-
-
-def _normalize_error(event: dict[str, Any]) -> dict[str, Any]:
-    return {"type": "error", "message": event.get("message", "Unknown error")}
-
-
-def _normalize_turn_end(event: dict[str, Any]) -> dict[str, Any]:
-    normalized: dict[str, Any] = {"type": "turn_end"}
-    if event.get("usage") is not None:
-        normalized["usage"] = event["usage"]
-    return normalized
-
-
-def _normalize_usage(event: dict[str, Any]) -> dict[str, Any]:
-    return {"type": "usage", "data": event.get("usage") or event.get("data") or {}}
-
-
-def _normalize_session_started(_event: dict[str, Any]) -> dict[str, Any]:
-    return {"type": "session_started"}
-
-
-#: Slash-prefixes recognized by `_resolve_stream_mode`, in check order.
-_STREAM_MODE_PREFIXES: tuple[tuple[str, str], ...] = (
-    ("/plan ", "plan"),
-    ("/build ", "build"),
-    ("/chat ", "ask"),
-)
-
-
-def _resolve_stream_mode(query: str, mode_id: str | None) -> tuple[str, str]:
-    """Infer the ACP mode for a `stream()` call and strip its slash prefix.
-
-    An explicitly-passed `mode_id` always wins. Otherwise a recognized
-    slash-prefix (``/plan ``, ``/build ``, ``/chat ``) selects the mode and is
-    stripped from `query`; anything else defaults to ``"ask"`` unchanged.
-    """
-    if mode_id:
-        return query, mode_id
-    for prefix, resolved_mode in _STREAM_MODE_PREFIXES:
-        if query.startswith(prefix):
-            return query[len(prefix) :], resolved_mode
-    return query, "ask"
-
-
-#: Maps a raw ACP ``event["type"]`` (both dash and underscore spellings, where
-#: the upstream event source uses either) to the builder that produces the
-#: normalized event body. An event type with no entry here falls back to
-#: `dict(event)` unchanged -- see `_normalize_event`.
-_EVENT_NORMALIZERS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
-    "text-delta": _normalize_text_delta,
-    "text_delta": _normalize_text_delta,
-    "text": _normalize_text,
-    "thinking": _normalize_thinking,
-    "plan-updated": _normalize_plan_updated,
-    "plan_updated": _normalize_plan_updated,
-    "tool-call": _normalize_tool_call,
-    "tool_call": _normalize_tool_call,
-    "tool-output": _normalize_tool_output,
-    "tool_output": _normalize_tool_output,
-    "error": _normalize_error,
-    "turn-end": _normalize_turn_end,
-    "turn_end": _normalize_turn_end,
-    "usage": _normalize_usage,
-    "session-started": _normalize_session_started,
-    "session_started": _normalize_session_started,
-}
-
-
 class AgentClient:
-    """Standardized wire client for this repo's hand-rolled ACP convention.
+    """The TUI's one GraphOS client: A2A for conversation, REST for the rest."""
 
-    The TUI treats this class as its one and only protocol adapter: callers
-    consume one normalized event vocabulary regardless of whether events
-    originated from an initial turn or an approval-resume stream. There is
-    currently no second adapter to select between.
-    """
-
-    protocol = "acp"
+    protocol = "a2a"
 
     def __init__(
-        self, base_url: str = "http://localhost:8000", acp_url: str | None = None
+        self,
+        base_url: str = "http://localhost:8000",
+        *,
+        bearer_token: str | None = None,
     ) -> None:
-        """Initialize the ACP client.
+        """Initialize the client.
 
         Args:
-            base_url: The base URL of the agent server.
-            acp_url: Optional explicit override for the ACP mount (e.g. from
-                the ``ACP_URL`` environment variable). Defaults to
-                ``{base_url}/acp``, which is where the gateway mounts it.
+            base_url: The GraphOS base URL.
+            bearer_token: The caller's bearer credential. Remote GraphOS
+                endpoints require it for every A2A and gateway request.
         """
+        if base_url != base_url.strip() or any(
+            character.isspace()
+            or ord(character) < 33
+            or ord(character) == 127
+            or character == "\\"
+            for character in base_url
+        ):
+            raise ValueError("invalid GraphOS endpoint")
+        parsed = urlsplit(base_url)
+        if (
+            parsed.scheme not in {"http", "https"}
+            or not parsed.hostname
+            or parsed.username is not None
+            or parsed.password is not None
+            or parsed.query
+            or parsed.fragment
+            or parsed.path not in {"", "/"}
+        ):
+            raise ValueError("invalid GraphOS endpoint")
+        try:
+            port = parsed.port
+        except ValueError as exc:
+            raise ValueError("invalid GraphOS endpoint") from exc
+        if port == 0:
+            raise ValueError("invalid GraphOS endpoint")
+        is_loopback = parsed.hostname.lower().rstrip(".") in {
+            "localhost",
+            "127.0.0.1",
+            "::1",
+        }
+        if parsed.scheme == "http" and not is_loopback:
+            raise ValueError("remote GraphOS endpoint requires TLS")
+        if bearer_token is not None and (
+            not bearer_token
+            or any(
+                character.isspace() or not 33 <= ord(character) <= 126
+                for character in bearer_token
+            )
+        ):
+            raise ValueError("invalid caller credential")
+        if not is_loopback and bearer_token is None:
+            raise ValueError("remote GraphOS endpoint requires caller credential")
         self.base_url: str = base_url.rstrip("/")
-        # The ACP mount is typically at /acp
-        self.acp_url = acp_url.rstrip("/") if acp_url else f"{self.base_url}/acp"
-        self._http_client = httpx.AsyncClient(timeout=30.0)
+        self.a2a_url = f"{self.base_url}{A2A_PATH}"
+        self._has_caller_credential = bearer_token is not None
+        headers = {"Authorization": f"Bearer {bearer_token}"} if bearer_token else None
+        self._http_client = httpx.AsyncClient(timeout=30.0, headers=headers)
         self._current_session_id: str | None = None
+        self._current_task_id: str | None = None
+        self._pending_plans: dict[str, dict[str, Any]] = {}
 
     @property
     def current_session_id(self) -> str | None:
-        """Return the session most recently created or used by this client."""
+        """Return the conversation (A2A context) most recently used."""
         return self._current_session_id
 
-    async def create_session(self) -> str:
-        """Create a new ACP session."""
-        response = await self._http_client.post(f"{self.acp_url}/sessions")
-        response.raise_for_status()
-        payload = response.json()
-        session_id = payload.get("session_id") or payload.get("sessionId", "")
-        if session_id:
-            self._current_session_id = session_id
-        return session_id
+    @property
+    def current_task_id(self) -> str | None:
+        """Return the A2A task of the most recent turn, if any."""
+        return self._current_task_id
 
-    @staticmethod
-    def _normalize_event(event: dict[str, Any], session_id: str) -> dict[str, Any]:
-        """Normalize one ACP event into the event vocabulary used by every UI.
+    async def _rpc(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
+        """One unary JSON-RPC call; a JSON-RPC error raises."""
+        response = await self._http_client.post(
+            self.a2a_url,
+            json={"jsonrpc": "2.0", "id": method, "method": method, "params": params},
+        )
+        frame = response.json()
+        if not isinstance(frame, dict):
+            response.raise_for_status()
+            raise A2ATransportError({"message": "A2A response was not an object"})
+        return _frame_result(frame)
 
-        Keeping this translation in the transport adapter prevents initial turns
-        and approval-resume turns from producing subtly different event names.
-        Every normalized event carries its owning session id so consumers can
-        persist, export, and resume the same conversation.
-        """
-        event_type = event.get("type")
-        handler = _EVENT_NORMALIZERS.get(event_type)
-        normalized: dict[str, Any] = handler(event) if handler else dict(event)
-
-        event_metadata = event.get("_event")
-        if isinstance(event_metadata, dict):
-            normalized.setdefault("_event", event_metadata)
-            run_id = event_metadata.get("run_id")
-            if run_id:
-                normalized.setdefault("run_id", run_id)
-        if event.get("run_id"):
-            normalized.setdefault("run_id", event["run_id"])
-        normalized.setdefault("session_id", session_id)
-        return normalized
-
-    async def send_rpc(
+    async def _rpc_stream(
         self,
-        session_id: str,
         method: str,
         params: dict[str, Any],
         headers: dict[str, str] | None = None,
-    ) -> None:
-        """Send a JSON-RPC request to the ACP session.
-
-        Args:
-            session_id: Active ACP session id.
-            method: JSON-RPC method name.
-            params: Method params (merged with ``sessionId``).
-            headers: Optional extra HTTP headers (used for multi-model
-                overrides such as ``x-agent-model-id``).
-        """
-        payload = {
-            "jsonrpc": "2.0",
-            "method": method,
-            "params": {"sessionId": session_id, **params},
-            "id": 1,
-        }
-        response = await self._http_client.post(
-            f"{self.acp_url}/rpc/{session_id}",
-            json=payload,
-            headers=headers or None,
-        )
-        response.raise_for_status()
-
-    async def stream_events(
-        self, session_id: str
     ) -> AsyncGenerator[dict[str, Any], None]:
-        """Stream SSE from back-end server."""
+        """One streaming JSON-RPC call; yields each event's ``result``."""
+        body = {"jsonrpc": "2.0", "id": method, "method": method, "params": params}
         async with self._http_client.stream(
-            "GET", f"{self.acp_url}/stream/{session_id}"
-        ) as stream:
-            async for line in stream.aiter_lines():
-                if line.startswith("data: "):
-                    try:
-                        event = json.loads(line[6:])
-                        yield event
-                    except json.JSONDecodeError:
-                        continue
+            "POST",
+            self.a2a_url,
+            json=body,
+            headers={"Accept": "text/event-stream", **(headers or {})},
+            timeout=None,
+        ) as response:
+            if response.status_code >= 400:
+                await response.aread()
+                frame = response.json()
+                error = frame.get("error") if isinstance(frame, dict) else None
+                raise A2ATransportError(error if isinstance(error, dict) else {})
+            pending: list[str] = []
+            async for line in response.aiter_lines():
+                if line:
+                    pending.append(line)
+                    continue
+                for frame in _sse_frames(pending):
+                    yield _frame_result(frame)
+                pending = []
+            for frame in _sse_frames(pending):
+                yield _frame_result(frame)
+
+    async def _follow(
+        self, method: str, params: dict[str, Any], session_id: str, headers: Any = None
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        async for result in self._rpc_stream(method, params, headers=headers):
+            task_id = result.get("id") or result.get("taskId")
+            if task_id:
+                self._current_task_id = str(task_id)
+            self._remember_plan(result)
+            for event in normalize_a2a_event(result, session_id):
+                yield event
+            status = result.get("status")
+            if isinstance(status, dict) and status.get("state") == "input-required":
+                plan = self._pending_plans.get(str(task_id))
+                if plan is None:
+                    yield {
+                        "type": "error",
+                        "message": (
+                            "A2A approval requires a complete plan binding "
+                            "or web console confirmation"
+                        ),
+                        "session_id": session_id,
+                    }
+                else:
+                    yield {
+                        "type": "tool_call",
+                        "data": {
+                            "call_id": str(task_id),
+                            "name": str(plan["op"]),
+                            "needs_approval": True,
+                        },
+                        "session_id": session_id,
+                    }
+                    yield {
+                        "type": "turn_end",
+                        "state": "input-required",
+                        "session_id": session_id,
+                    }
+
+    def _remember_plan(self, result: dict[str, Any]) -> None:
+        """Keep only a task's complete confirmation binding, never infer it."""
+        task_id = result.get("id") or result.get("taskId")
+        status = result.get("status")
+        if not task_id or not isinstance(status, dict):
+            return
+        if status.get("state") != "input-required":
+            self._pending_plans.pop(str(task_id), None)
+            return
+        self._pending_plans.pop(str(task_id), None)
+        message = status.get("message")
+        metadata = message.get("metadata") if isinstance(message, dict) else None
+        plan = metadata.get("graphOsPlan") if isinstance(metadata, dict) else None
+        if (
+            isinstance(plan, dict)
+            and isinstance(plan.get("plan_ref"), str)
+            and isinstance(plan.get("op"), str)
+            and isinstance(plan.get("params"), dict)
+            and plan.get("confirm") == "plan"
+            and not _is_approval_operation(plan["op"])
+        ):
+            self._pending_plans[str(task_id)] = plan
+
+    async def invoke_op(
+        self,
+        op: str,
+        params: dict[str, Any],
+        *,
+        plan_ref: str | None = None,
+        idempotency_key: str | None = None,
+    ) -> Any:
+        """Call one versioned operation using the shared GraphOS envelope."""
+        if (
+            not isinstance(op, str)
+            or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", op) is None
+            or ".." in op
+            or not isinstance(params, dict)
+        ):
+            raise ValueError("operation id and object params are required")
+        if _is_approval_operation(op):
+            raise GraphOSOperationError("APPROVAL_UNAVAILABLE")
+        if sys.version_info < (3, 12):
+            raise GraphOSOperationError("CLIENT_UNAVAILABLE")
+        try:
+            from graph_os.client._generated_models import schema_for
+            from graph_os.client.invoke import invoke
+        except ImportError as exc:
+            raise GraphOSOperationError("CLIENT_UNAVAILABLE") from exc
+        try:
+            schema_for(op)
+        except KeyError as exc:
+            raise GraphOSOperationError("UNKNOWN_OP") from exc
+        except FileNotFoundError as exc:
+            raise GraphOSOperationError("CLIENT_UNAVAILABLE") from exc
+        except RuntimeError as exc:
+            raise GraphOSOperationError("REGISTRY_MISMATCH") from exc
+        headers = {"Idempotency-Key": idempotency_key or uuid.uuid4().hex}
+        if plan_ref:
+            headers["GraphOS-Plan-Ref"] = plan_ref
+        try:
+            payload = await invoke(_OperationTransport(self, headers), op, params)
+        except RuntimeError as exc:
+            if str(exc) != "GraphOS registry digest mismatch":
+                raise
+            raise GraphOSOperationError("REGISTRY_MISMATCH") from exc
+        if not payload["ok"]:
+            error = payload.get("error")
+            code = error.get("code") if isinstance(error, dict) else None
+            details = error.get("details") if isinstance(error, dict) else None
+            raise GraphOSOperationError(
+                code if isinstance(code, str) else "UNKNOWN",
+                details if isinstance(details, dict) else None,
+            )
+        if "result" not in payload:
+            raise GraphOSOperationError("INVALID_ENVELOPE")
+        return payload.get("result")
+
+    async def confirm_plan(
+        self,
+        *,
+        plan_ref: str,
+        op: str,
+        params: dict[str, Any],
+        idempotency_key: str | None = None,
+    ) -> dict[str, Any]:
+        """Resume a PLAN confirmation through the A2A authority pipeline."""
+        if not plan_ref or not op or not isinstance(params, dict):
+            raise ValueError("complete plan binding is required")
+        if _is_approval_operation(op):
+            raise GraphOSOperationError("APPROVAL_UNAVAILABLE")
+        if not self._has_caller_credential:
+            raise GraphOSOperationError("CALLER_CREDENTIAL_REQUIRED")
+        return await self._rpc(
+            "graphos.plan/confirm",
+            {
+                "plan_ref": plan_ref,
+                "op": op,
+                "params": params,
+                "idempotency_key": idempotency_key or uuid.uuid4().hex,
+            },
+        )
+
+    async def stream(
+        self,
+        query: str,
+        session_id: str | None = None,
+        parts: list[dict[str, Any]] | None = None,
+        mode_id: str | None = None,
+        model: str | None = None,
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        """Run one conversation turn as a streamed A2A task.
+
+        ``mode_id`` selects the typed task Graph OS routes on
+        (:data:`MODE_TASK_IRIS`; unknown modes use ``ask``); routing then selects
+        the authorized agent. ``model`` is not part of the A2A contract and is
+        not sent. Only text parts are carried.
+
+        Yields:
+            Normalized event dictionaries, starting with ``session_started``.
+        """
+        session_id = session_id or new_session_id()
+        self._current_session_id = session_id
+        yield {"type": "session_started", "session_id": session_id}
+        if any((part or {}).get("type", "text") != "text" for part in parts or []):
+            yield {
+                "type": "error",
+                "message": "only text parts are supported by the GraphOS A2A transport",
+                "session_id": session_id,
+            }
+            return
+        texts = [query, *((part or {}).get("text", "") for part in parts or [])]
+        message = {
+            "role": "user",
+            "parts": [{"kind": "text", "text": text} for text in texts if text],
+            "messageId": uuid.uuid4().hex,
+            "contextId": session_id,
+            "metadata": {
+                "graphOsTaskIris": [
+                    MODE_TASK_IRIS.get(mode_id or "ask", MODE_TASK_IRIS["ask"])
+                ]
+            },
+        }
+        try:
+            async for event in self._follow(
+                "message/stream",
+                {"message": message},
+                session_id,
+                headers={"Idempotency-Key": uuid.uuid4().hex},
+            ):
+                yield event
+        except (A2ATransportError, httpx.HTTPError, ValueError) as exc:
+            logger.warning("A2A stream failed: %s", exc)
+            yield {"type": "error", "message": str(exc), "session_id": session_id}
+
+    async def resubscribe(
+        self, task_id: str, *, last_event_id: str | None = None
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        """Re-attach to a task's stream after a disconnect.
+
+        ``POST /a2a`` ``tasks/resubscribe``; ``last_event_id`` skips the state
+        the client already rendered.
+        """
+        session_id = self._current_session_id or new_session_id()
+        headers = {"Last-Event-ID": last_event_id} if last_event_id else None
+        async for event in self._follow(
+            "tasks/resubscribe", {"id": task_id}, session_id, headers=headers
+        ):
+            yield event
+
+    async def cancel_task(self, task_id: str | None = None) -> dict[str, Any]:
+        """Cancel a task, the current turn's by default.
+
+        ``POST /a2a`` ``tasks/cancel``; returns the cancelled task.
+        """
+        target = task_id or self._current_task_id
+        if not target:
+            raise ValueError("no A2A task to cancel")
+        return await self._rpc("tasks/cancel", {"id": target})
+
+    async def get_task(self, task_id: str) -> dict[str, Any]:
+        """Read one owned task (``POST /a2a`` ``tasks/get``)."""
+        return await self._rpc("tasks/get", {"id": task_id})
+
+    async def send_decision(
+        self,
+        decisions: dict[str, str],
+        feedback: str | None = None,
+        session_id: str | None = None,
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        """Confirm only a bound PLAN request; console plans stay in the browser."""
+        current_session = session_id or self._current_session_id
+        for task_id, decision in decisions.items():
+            if decision == "reject":
+                try:
+                    await self.cancel_task(task_id)
+                except (A2ATransportError, httpx.HTTPError, ValueError) as exc:
+                    yield {
+                        "type": "error",
+                        "message": str(exc),
+                        "session_id": current_session,
+                    }
+                    return
+                self._pending_plans.pop(task_id, None)
+                yield {
+                    "type": "turn_end",
+                    "state": "canceled",
+                    "session_id": current_session,
+                }
+                continue
+            plan = self._pending_plans.get(task_id)
+            if decision != "accept" or plan is None:
+                yield {
+                    "type": "error",
+                    "message": "plan requires a valid A2A confirmation binding",
+                    "session_id": current_session,
+                }
+                return
+            try:
+                await self.confirm_plan(
+                    plan_ref=plan["plan_ref"], op=plan["op"], params=plan["params"]
+                )
+            except (
+                A2ATransportError,
+                GraphOSOperationError,
+                httpx.HTTPError,
+                ValueError,
+            ) as exc:
+                yield {
+                    "type": "error",
+                    "message": str(exc),
+                    "session_id": current_session,
+                }
+                return
+            self._pending_plans.pop(task_id, None)
+            if current_session:
+                async for event in self.resubscribe(task_id):
+                    yield event
 
     async def submit_extraction(
         self, *, text: str = "", url: str = "", rounds: int = 1, dedup: bool = True
@@ -351,104 +688,15 @@ class AgentClient:
         resp.raise_for_status()
         return resp.text
 
-    async def stream(
-        self,
-        query: str,
-        session_id: str | None = None,
-        parts: list[dict[str, Any]] | None = None,
-        mode_id: str | None = None,
-        model: str | None = None,
-    ) -> AsyncGenerator[dict[str, Any], None]:
-        """Stream real-time events from the ACP session.
-
-        Args:
-            query: The user prompt to send to the agent.
-            session_id: Optional existing session ID to resume.
-            parts: Optional list of multi-modal message parts.
-            model: Optional model identifier to use for this request.
-
-        Yields:
-            Standardized ACP event dictionaries.
-        """
-        try:
-            if not session_id:
-                session_id = await self.create_session()
-            self._current_session_id = session_id
-
-            # Surface identity before any response event.  This is deliberately
-            # an event rather than an out-of-band mutable property so interactive
-            # and headless consumers observe the same session contract.
-            yield {"type": "session_started", "session_id": session_id}
-
-            # Handle mode selection
-            query, mode_id = _resolve_stream_mode(query, mode_id)
-
-            # Send the prompt as an RPC call. Include the model id as an
-            # ``x-agent-model-id`` header so the backend can apply the
-            # override without touching the RPC schema, but only when a
-            # model is actually selected (keeps the default call shape
-            # identical to the pre-multi-model behaviour).
-            rpc_params = {"content": query, "modeId": mode_id, "parts": parts or []}
-            rpc_kwargs: dict[str, Any] = {}
-            if model:
-                rpc_params["model"] = model
-                rpc_kwargs["headers"] = {"x-agent-model-id": model}
-            await self.send_rpc(session_id, "message/send", rpc_params, **rpc_kwargs)
-
-            # Stream events from the session
-            async for event in self.stream_events(session_id):
-                yield self._normalize_event(event, session_id)
-
-        except Exception as e:
-            logger.exception(f"ACP Stream Error: {e}")
-            error = {"type": "error", "message": str(e)}
-            if session_id:
-                error["session_id"] = session_id
-            yield error
-
-    async def send_decision(
-        self,
-        decisions: dict[str, str],
-        feedback: str | None = None,
-        session_id: str | None = None,
-    ) -> AsyncGenerator[dict[str, Any], None]:
-        """Send tool approval decisions back to the agent.
-
-        Args:
-            decisions: decision map.
-            feedback: Optional feedback for the agent.
-            session_id: Optional session id.
-        """
-        try:
-            session_id = session_id or self._current_session_id
-            if not session_id:
-                logger.error("No session ID to send decision")
-                return
-            self._current_session_id = session_id
-
-            for call_id, decision in decisions.items():
-                await self.send_rpc(
-                    session_id,
-                    "approve_tool",
-                    {"call_id": call_id, "decision": decision, "feedback": feedback},
-                )
-
-            # resume streaming if needed
-            async for event in self.stream_events(session_id):
-                yield self._normalize_event(event, session_id)
-        except Exception as e:
-            logger.error(f"Decision Error: {e}")
-            error = {"type": "error", "message": str(e)}
-            if session_id:
-                error["session_id"] = session_id
-            yield error
-
     async def get_metadata(self) -> dict[str, Any]:
-        """Fetch general agent metadata."""
+        """Fetch the GraphOS Agent Card for the ``/a2a`` endpoint.
+
+        ``GET /.well-known/agent-card.json``.
+        """
         try:
-            response = await self._http_client.get(f"{self.base_url}/a2a")
+            response = await self._http_client.get(f"{self.base_url}{AGENT_CARD_PATH}")
             return response.json()
-        except Exception:
+        except (httpx.HTTPError, ValueError):
             return {}
 
     @staticmethod
@@ -526,6 +774,8 @@ class AgentClient:
         session_id: str | None = None,
     ) -> CapabilityInvocation:
         """Execute or resume through the gateway-owned governance boundary."""
+        if approval_id is not None:
+            raise GraphOSOperationError("APPROVAL_UNAVAILABLE")
         encoded = quote(capability_id, safe="")
         payload: dict[str, Any] = {"action": action, "inputs": inputs}
         payload.update(
@@ -833,28 +1083,11 @@ class AgentClient:
     async def grant_fleet_approval(
         self, job_id: str, decision: str = "approved"
     ) -> dict[str, Any]:
-        """Resolve a pending fleet approval for a job.
-
-        Args:
-            job_id: The identifier of the fleet job awaiting approval.
-            decision: Either ``"approved"`` or ``"denied"``.
-
-        Returns:
-            The gateway response payload.
-
-        Raises:
-            ValueError: If *decision* is not supported by the gateway contract.
-        """
+        """Refuse legacy fleet grants until durable EH-590 authority is served."""
         if decision not in {"approved", "denied"}:
             msg = "decision must be 'approved' or 'denied'"
             raise ValueError(msg)
-
-        response = await self._http_client.post(
-            f"{self.base_url}/api/fleet/approvals/grant",
-            json={"job_id": job_id, "decision": decision},
-        )
-        response.raise_for_status()
-        return response.json()
+        raise GraphOSOperationError("APPROVAL_UNAVAILABLE")
 
     async def list_graph_nodes(
         self, node_type: str | None = None
@@ -913,12 +1146,12 @@ class AgentClient:
         """Execute a (UQL) graph query verbatim, returning result rows.
 
         Thin pass-through to ``POST /api/enhanced/graph/query`` used by the
-        temporal scrubber, which appends the engine's ``|> AS OF @<ts>``
-        bi-temporal operator (KG-2.250) to the query string client-side. The
-        backend passes the query through to the engine unchanged.
+        temporal scrubber, which pins the query to an instant with the engine's
+        ``|> AS OF @<unix-seconds>`` bi-temporal stage (KG-2.250) client-side.
+        The backend passes the query through to the engine unchanged.
 
         Args:
-            query: The full UQL query string (already carrying any AS OF suffix).
+            query: The full UQL query string (already carrying any AS OF stage).
 
         Returns:
             List of result-row dictionaries.
@@ -1622,5 +1855,9 @@ class AgentClient:
         await self._http_client.aclose()
 
 
-# Alias for backward compatibility and protocol-specific naming
-ACPClient = AgentClient
+def client_from_environment() -> AgentClient:
+    """The client for ``AGENT_URL`` authenticated by ``AGENT_BEARER_TOKEN``."""
+    return AgentClient(
+        base_url=os.getenv("AGENT_URL", "http://localhost:8000"),
+        bearer_token=os.getenv("AGENT_BEARER_TOKEN") or None,
+    )

@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
-from agent_terminal_ui.client import AgentClient
+from agent_terminal_ui.client import AgentClient, GraphOSOperationError
 
 
 @pytest.fixture
@@ -433,18 +433,15 @@ async def test_get_fleet_approvals_unwraps_dict_envelope(client: AgentClient) ->
 
 
 @pytest.mark.asyncio
-async def test_grant_fleet_approval_posts_job_and_decision(client: AgentClient) -> None:
-    """``grant_fleet_approval`` follows the fleet decision contract."""
+async def test_grant_fleet_approval_refuses_without_network(
+    client: AgentClient,
+) -> None:
+    """The legacy grant route stays closed until durable authority is served."""
     with patch.object(client._http_client, "post", new_callable=AsyncMock) as mock_post:
-        mock_post.return_value = _mock_response({"job_id": "job-1", "approved": False})
-
-        result = await client.grant_fleet_approval("job-1", decision="denied")
-
-        mock_post.assert_awaited_once_with(
-            "http://localhost:8000/api/fleet/approvals/grant",
-            json={"job_id": "job-1", "decision": "denied"},
-        )
-        assert result == {"job_id": "job-1", "approved": False}
+        with pytest.raises(GraphOSOperationError) as caught:
+            await client.grant_fleet_approval("job-1", decision="denied")
+        assert caught.value.code == "APPROVAL_UNAVAILABLE"
+        mock_post.assert_not_awaited()
 
 
 @pytest.mark.asyncio

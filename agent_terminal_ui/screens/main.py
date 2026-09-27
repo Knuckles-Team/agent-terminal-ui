@@ -180,7 +180,11 @@ class MainScreen(Screen):
         conversation = self.query_one("#conversation", Conversation)
         event_type = event.get("type")
 
-        handler = self._EVENT_HANDLERS.get(event_type)
+        handler = (
+            self._EVENT_HANDLERS.get(event_type)
+            if isinstance(event_type, str)
+            else None
+        )
         if handler is not None:
             await handler(self, conversation, event)
             return
@@ -310,7 +314,7 @@ class MainScreen(Screen):
     #: "turn_end" (and the text+"[DONE]" case) is handled separately below
     #: since it isn't a simple one-shot per-type handler.
     _EVENT_HANDLERS: ClassVar[
-        dict[str, Callable[["MainScreen", Conversation, dict[str, Any]], Awaitable[None]]]
+        dict[str, Callable[[MainScreen, Conversation, dict[str, Any]], Awaitable[None]]]
     ] = {
         "text": _handle_text_event,
         "text_delta": _handle_text_delta_event,

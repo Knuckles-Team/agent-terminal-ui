@@ -149,13 +149,14 @@ class RunBrowserScreen(ModalScreen[None]):
 
     def _run_browser_status(self, scope: str) -> tuple[str, str]:
         """The (message, color) pair for the status bar after filtering."""
-        if not self.catalog.runs:
+        catalog = self.catalog
+        if catalog is None or not catalog.runs:
             return (
                 f"No process-local runs are available for {scope}. "
                 "The bounded replay store may be empty or restarted.",
                 "yellow",
             )
-        message = f"{len(self.filtered)} of {len(self.catalog.runs)} runs ({scope})."
+        message = f"{len(self.filtered)} of {len(catalog.runs)} runs ({scope})."
         return message, "green"
 
     def _filter(self, query: str) -> None:

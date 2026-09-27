@@ -13,7 +13,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
-from agent_terminal_ui.client import AgentClient
+from agent_terminal_ui.client import A2ATransportError, AgentClient
 from agent_terminal_ui.commands import CommandProcessor
 from agent_terminal_ui.tui.agent_timer import SPINNER_FRAMES, AgentTimer
 from agent_terminal_ui.tui.exit_confirm_screen import (
@@ -249,203 +249,174 @@ def _make_response(payload, status_code: int = 200):
 async def test_client_init_normalises_trailing_slash():
     c = AgentClient(base_url="http://localhost:8000/")
     assert c.base_url == "http://localhost:8000"
-    assert c.acp_url == "http://localhost:8000/acp"
+    assert c.a2a_url == "http://localhost:8000/a2a"
     await c.close()
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "prompt,expected_mode,expected_content",
+    "mode,task_iri",
     [
-        ("/plan do things", "plan", "do things"),
-        ("/build a widget", "build", "a widget"),
-        ("/chat hi", "ask", "hi"),
-        ("just a query", "ask", "just a query"),
+        ("plan", "eg:task/research"),
+        ("build", "eg:task/implement"),
+        ("ask", "eg:task/communicate"),
     ],
 )
-async def test_stream_maps_mode_prefixes(prompt, expected_mode, expected_content):
+async def test_stream_selects_typed_a2a_task(mode, task_iri):
     c = AgentClient()
     sent = {}
 
-    async def fake_send_rpc(session_id, method, params, **kwargs):
-        sent["method"] = method
-        sent["params"] = params
+    async def fake_stream(method, params, headers=None):
+        sent.update({"method": method, "params": params, "headers": headers})
+        for frame in params.get("_test_frames", ()):
+            yield frame
 
-    async def empty_stream(session_id):
-        empty_items: list[dict] = []
-        for item in empty_items:
-            yield item
-
-    with (
-        patch.object(c, "create_session", AsyncMock(return_value="s1")),
-        patch.object(c, "send_rpc", AsyncMock(side_effect=fake_send_rpc)),
-        patch.object(c, "stream_events", side_effect=empty_stream),
-    ):
-        async for _ in c.stream(prompt):
-            pass
-
-    assert sent["params"]["modeId"] == expected_mode
-    assert sent["params"]["content"] == expected_content
-    await c.close()
-
-
-@pytest.mark.asyncio
-async def test_stream_maps_event_types():
-    c = AgentClient()
-
-    async def stream_events(sid):
-        assert sid is not None, "stream_events must be called with a valid session id"
-        yield {"type": "text-delta", "text": "hello"}
-        yield {"type": "text", "content": "world"}
-        yield {"type": "thinking", "thought": "ponder"}
-        yield {"type": "plan-updated", "plan": [{"id": "p1"}]}
-        yield {"type": "tool-call", "call": {"id": "c1"}}
-        yield {"type": "tool_call", "data": {"id": "c2"}}
-        yield {"type": "error", "message": "boom"}
-        yield {"type": "turn-end"}
-        yield {"type": "other", "extra": 1}
-
-    with (
-        patch.object(c, "create_session", AsyncMock(return_value="s1")),
-        patch.object(c, "send_rpc", AsyncMock()),
-        patch.object(c, "stream_events", side_effect=stream_events),
-    ):
-        events = [e async for e in c.stream("q", mode_id="plan")]
-
-    types = [e["type"] for e in events]
-    assert "text" in types and "sideband" in types and "tool_call" in types
-    assert "error" in types and "turn_end" in types
-    assert "other" in types  # falls through the else branch
-    await c.close()
-
-
-@pytest.mark.asyncio
-async def test_stream_surfaces_exception_as_error_event():
-    c = AgentClient()
-    with patch.object(c, "create_session", AsyncMock(side_effect=RuntimeError("nope"))):
-        events = [e async for e in c.stream("q")]
-    assert events[-1] == {"type": "error", "message": "nope"}
-    await c.close()
-
-
-@pytest.mark.asyncio
-async def test_stream_passes_model_through_rpc():
-    c = AgentClient()
-    captured: dict = {}
-    captured_headers: dict = {}
-
-    async def fake_send_rpc(session_id, method, params, **kwargs):
-        captured.update(params)
-        if kwargs.get("headers"):
-            captured_headers.update(kwargs["headers"])
-
-    async def empty_stream(sid):
-        assert sid is not None, "stream_events must be called with a valid session id"
-        empty_items: list[dict] = []
-        for item in empty_items:
-            yield item
-
-    with (
-        patch.object(c, "create_session", AsyncMock(return_value="sid")),
-        patch.object(c, "send_rpc", AsyncMock(side_effect=fake_send_rpc)),
-        patch.object(c, "stream_events", side_effect=empty_stream),
-    ):
-        async for _ in c.stream("hello", model="gpt-5"):
-            pass
-
-    assert captured["model"] == "gpt-5"
-    # Multi-model header should also flow through so the backend can apply
-    # a per-turn override without touching the RPC schema.
-    assert captured_headers.get("x-agent-model-id") == "gpt-5"
-    await c.close()
-
-
-@pytest.mark.asyncio
-async def test_stream_events_parses_sse():
-    c = AgentClient()
-    sse_lines = [
-        'data: {"type": "text", "content": "hi"}',
-        "data: not-json",  # swallowed
-        "ignored",
-    ]
-
-    class FakeStream:
-        def __init__(self, lines):
-            self._lines = lines
-
-        async def __aenter__(self):
-            return self
-
-        async def __aexit__(self, *exc):
-            return False
-
-        async def aiter_lines(self):
-            for line in self._lines:
-                yield line
-
-    with patch.object(c._http_client, "stream", return_value=FakeStream(sse_lines)):
-        out = [e async for e in c.stream_events("sess")]
-
-    assert out == [{"type": "text", "content": "hi"}]
-    await c.close()
-
-
-@pytest.mark.asyncio
-async def test_send_decision_no_session_returns_early():
-    c = AgentClient()
-    events = [e async for e in c.send_decision({"c1": "accept"})]
-    assert events == []
-    await c.close()
-
-
-@pytest.mark.asyncio
-async def test_send_decision_happy_path():
-    c = AgentClient()
-    with (
-        patch.object(c, "send_rpc", AsyncMock()) as mock_rpc,
-        patch.object(
-            c,
-            "stream_events",
-            side_effect=lambda sid: (
-                _AsyncGen([{"type": "text", "content": "x"}]) if sid else _AsyncGen([])
-            ),
-        ),
-    ):
+    with patch.object(c, "_rpc_stream", fake_stream):
         events = [
-            e
-            async for e in c.send_decision(
-                {"c1": "accept"}, feedback="ok", session_id="s"
-            )
+            event async for event in c.stream("hello", session_id="s1", mode_id=mode)
         ]
 
-    assert events == [{"type": "text", "content": "x", "session_id": "s"}]
-    mock_rpc.assert_awaited_once()
+    assert events == [{"type": "session_started", "session_id": "s1"}]
+    assert sent["method"] == "message/stream"
+    message = sent["params"]["message"]
+    assert message["parts"] == [{"kind": "text", "text": "hello"}]
+    assert message["metadata"]["graphOsTaskIris"] == [task_iri]
     await c.close()
 
 
-class _AsyncGen:
-    """Helper to return an async iterable from a plain list."""
+@pytest.mark.asyncio
+async def test_stream_maps_a2a_status_artifact_and_failure():
+    c = AgentClient()
 
-    def __init__(self, items):
-        self._items = items
+    async def frames(_method, _params, headers=None):
+        yield {"kind": "status-update", "taskId": "t1", "status": {"state": "working"}}
+        yield {
+            "kind": "artifact-update",
+            "taskId": "t1",
+            "artifact": {"parts": [{"kind": "text", "text": "answer"}]},
+        }
+        yield {
+            "kind": "status-update",
+            "taskId": "t1",
+            "status": {"state": "failed"},
+            "final": True,
+        }
 
-    def __aiter__(self):
-        self._iter = iter(self._items)
-        return self
-
-    async def __anext__(self):
-        try:
-            return next(self._iter)
-        except StopIteration as exc:
-            raise StopAsyncIteration from exc
+    with patch.object(c, "_rpc_stream", frames):
+        events = [event async for event in c.stream("q", session_id="s1")]
+    assert [event["type"] for event in events] == [
+        "session_started",
+        "sideband",
+        "text",
+        "sideband",
+        "error",
+        "turn_end",
+    ]
+    assert events[2]["content"] == "answer"
+    await c.close()
 
 
 @pytest.mark.asyncio
-async def test_send_decision_swallow_error():
+async def test_stream_surfaces_a2a_error_as_error_event():
     c = AgentClient()
-    with patch.object(c, "send_rpc", AsyncMock(side_effect=RuntimeError("bad"))):
-        events = [e async for e in c.send_decision({"c1": "accept"}, session_id="s")]
+
+    async def failing_stream(_method, _params, headers=None):
+        yield {"kind": "status-update", "taskId": "t1", "status": {"state": "working"}}
+        raise A2ATransportError({"message": "nope"})
+
+    with patch.object(c, "_rpc_stream", failing_stream):
+        events = [event async for event in c.stream("q", session_id="s1")]
+    assert events[-1] == {"type": "error", "message": "nope", "session_id": "s1"}
+    await c.close()
+
+
+@pytest.mark.asyncio
+async def test_stream_does_not_forward_unbound_model_hint():
+    c = AgentClient()
+    sent = {}
+
+    async def fake_stream(method, params, headers=None):
+        sent.update({"params": params, "headers": headers})
+        for frame in params.get("_test_frames", ()):
+            yield frame
+
+    with patch.object(c, "_rpc_stream", fake_stream):
+        events = [
+            event async for event in c.stream("hello", session_id="sid", model="gpt-5")
+        ]
+    assert events[0]["session_id"] == "sid"
+    assert "model" not in sent["params"]
+    assert "x-agent-model-id" not in sent["headers"]
+    await c.close()
+
+
+@pytest.mark.asyncio
+async def test_a2a_stream_parses_sse_frame():
+    frame = {
+        "jsonrpc": "2.0",
+        "result": {
+            "kind": "status-update",
+            "taskId": "t1",
+            "status": {"state": "working"},
+        },
+    }
+    body = f"data: {json.dumps(frame)}\n\n".encode()
+    c = AgentClient()
+    await c._http_client.aclose()
+    c._http_client = httpx.AsyncClient(
+        transport=httpx.MockTransport(lambda _: httpx.Response(200, content=body))
+    )
+    frames = [frame async for frame in c._rpc_stream("message/stream", {"message": {}})]
+    assert frames == [frame["result"]]
+    await c.close()
+
+
+@pytest.mark.asyncio
+async def test_send_decision_without_plan_binding_refuses():
+    c = AgentClient()
+    events = [event async for event in c.send_decision({"t1": "accept"})]
     assert events[-1]["type"] == "error"
+    await c.close()
+
+
+@pytest.mark.asyncio
+async def test_send_decision_confirms_bound_plan_with_caller_credential():
+    c = AgentClient(bearer_token="caller-token")
+    c._pending_plans["t1"] = {
+        "plan_ref": "p1",
+        "op": "query.uql",
+        "params": {"query": "MATCH ()"},
+    }
+
+    async def resumed(_task_id):
+        yield {"type": "text", "content": "answer", "session_id": "s1"}
+
+    with (
+        patch.object(c, "_rpc", AsyncMock(return_value={})) as rpc,
+        patch.object(c, "resubscribe", resumed),
+    ):
+        events = [
+            event async for event in c.send_decision({"t1": "accept"}, session_id="s1")
+        ]
+    assert events[-1]["content"] == "answer"
+    rpc.assert_awaited_once()
+    assert rpc.call_args.args[0] == "graphos.plan/confirm"
+    assert "t1" not in c._pending_plans
+    await c.close()
+
+
+@pytest.mark.asyncio
+async def test_send_decision_surfaces_signed_plan_refusal():
+    c = AgentClient(bearer_token="caller-token")
+    c._pending_plans["t1"] = {"plan_ref": "p1", "op": "query.uql", "params": {}}
+    with patch.object(
+        c, "_rpc", AsyncMock(side_effect=A2ATransportError({"message": "bad"}))
+    ):
+        events = [
+            event async for event in c.send_decision({"t1": "accept"}, session_id="s1")
+        ]
+    assert events[-1]["type"] == "error"
+    assert events[-1]["message"] == "bad"
     await c.close()
 
 
@@ -453,7 +424,7 @@ async def test_send_decision_swallow_error():
 async def test_get_metadata_and_get_chat_error_paths():
     c = AgentClient()
     with patch.object(c._http_client, "get", new_callable=AsyncMock) as mock_get:
-        mock_get.side_effect = RuntimeError("network")
+        mock_get.side_effect = httpx.ConnectError("network")
         assert await c.get_metadata() == {}
         assert await c.get_chat("cid") == {}
     await c.close()

@@ -726,3 +726,87 @@ class TestCommandEdgeCases:
         # Verify the screen pushed is ExitConfirmScreen
         call_args = mock_app.push_screen.call_args
         assert isinstance(call_args[0][0], ExitConfirmScreen)
+
+
+@pytest.mark.asyncio
+async def test_op_plan_requires_explicit_confirm(command_processor, mock_app):
+    """Confirmation reuses the exact previewed parameters and lease reference."""
+    from agent_terminal_ui.client import GraphOSOperationError
+
+    mock_app.agent_client.invoke_op = AsyncMock(
+        side_effect=[
+            GraphOSOperationError("CONFIRMATION_REQUIRED", {"plan_ref": "p1"}),
+            {"rows": [1]},
+        ]
+    )
+    await command_processor.process('/op query.uql {"query":"MATCH ()"}')
+    assert mock_app.agent_client.invoke_op.await_count == 1
+    await command_processor.process("/confirm p1")
+    assert mock_app.agent_client.invoke_op.call_args.args == (
+        "query.uql",
+        {"query": "MATCH ()"},
+    )
+    assert mock_app.agent_client.invoke_op.call_args.kwargs == {"plan_ref": "p1"}
+    await command_processor.process("/confirm p1")
+    assert mock_app.agent_client.invoke_op.await_count == 2
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("op", ["approvals.grant", "Approvals.Grant"])
+async def test_approval_op_stays_disabled(command_processor, mock_app, op):
+    mock_app.agent_client.invoke_op = AsyncMock()
+    await command_processor.process(f'/op {op} {{"approval_id":"a1"}}')
+    mock_app.agent_client.invoke_op.assert_not_awaited()
+    mock_app.notify.assert_called_with(
+        "Approval operations require the web console", severity="warning"
+    )
+
+
+@pytest.mark.asyncio
+async def test_op_reports_optional_client_unavailable(command_processor, mock_app):
+    from agent_terminal_ui.client import GraphOSOperationError
+
+    mock_app.agent_client.invoke_op = AsyncMock(
+        side_effect=GraphOSOperationError("CLIENT_UNAVAILABLE")
+    )
+    await command_processor.process('/op query.uql {"query":"MATCH ()"}')
+    conversation = mock_app.query_one.return_value
+    conversation.add_info.assert_awaited_once_with(
+        "[yellow]CLIENT_UNAVAILABLE: {}[/yellow]"
+    )
+    assert command_processor._pending_op_plans == {}
+
+
+@pytest.mark.asyncio
+async def test_console_step_up_cannot_be_confirmed_locally(command_processor, mock_app):
+    from agent_terminal_ui.client import GraphOSOperationError
+
+    mock_app.agent_client.invoke_op = AsyncMock(
+        side_effect=GraphOSOperationError("STEP_UP_REQUIRED", {"plan_ref": "p2"})
+    )
+    await command_processor.process('/op query.uql {"query":"MATCH ()"}')
+    await command_processor.process("/confirm p2")
+    assert mock_app.agent_client.invoke_op.await_count == 1
+    mock_app.notify.assert_called_with(
+        "No pending PLAN with that reference", severity="warning"
+    )
+
+
+@pytest.mark.asyncio
+async def test_unknown_command_never_falls_back_to_network(command_processor, mock_app):
+    mock_app.agent_client.invoke_op = AsyncMock()
+    await command_processor.process("/unlisted-command")
+    mock_app.agent_client.invoke_op.assert_not_awaited()
+    mock_app.notify.assert_called_with(
+        "Unknown command: /unlisted-command", severity="warning"
+    )
+
+
+@pytest.mark.asyncio
+async def test_legacy_fleet_grant_stays_disabled(command_processor, mock_app):
+    mock_app.agent_client.grant_fleet_approval = AsyncMock()
+    await command_processor.process("/fleet grant approval-1")
+    mock_app.agent_client.grant_fleet_approval.assert_not_awaited()
+    mock_app.notify.assert_called_with(
+        "Approval operations require the web console", severity="warning"
+    )

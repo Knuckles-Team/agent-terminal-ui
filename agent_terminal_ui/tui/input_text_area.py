@@ -31,9 +31,7 @@ def _iter_workspace_files():
     for root, dirs, filenames in os.walk("."):
         # Exclude common noisy directories
         dirs[:] = [
-            d
-            for d in dirs
-            if not d.startswith(".") and d not in _NOISY_DIR_NAMES
+            d for d in dirs if not d.startswith(".") and d not in _NOISY_DIR_NAMES
         ]
         for f in filenames:
             rel_path = os.path.relpath(os.path.join(root, f), ".")
@@ -492,7 +490,7 @@ class InputTextArea(TextArea):
             self._last_key_was_backslash = False
             self.insert("\n")
         elif not self._autocomplete_slash_command():
-            self.post_message(self.Submitted(self.text))
+            self.post_message(self.Submitted(self.document.text))
         return True
 
     def _autocomplete_slash_command(self) -> bool:
@@ -506,8 +504,7 @@ class InputTextArea(TextArea):
         matches = [
             cmd
             for cmd in self._commands.keys()
-            if cmd.startswith(current_text_enter[1:])
-            and cmd != current_text_enter[1:]
+            if cmd.startswith(current_text_enter[1:]) and cmd != current_text_enter[1:]
         ]
         if not matches:
             return False
