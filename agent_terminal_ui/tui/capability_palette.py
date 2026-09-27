@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import copy
 import json
 from dataclasses import dataclass
 from typing import Any, ClassVar
@@ -129,17 +128,6 @@ class CapabilityConfirmationScreen(ModalScreen[bool]):
             self.action_confirm()
         elif event.button.id == "capability-confirm-cancel":
             self.action_cancel()
-
-
-@dataclass(frozen=True, slots=True)
-class _PendingCapabilityApproval:
-    """The exact broker request and server-bound identities awaiting approval."""
-
-    descriptor: CapabilityDescriptor
-    action: CapabilityAction
-    inputs: dict[str, Any]
-    target: str | None
-    invocation: CapabilityInvocation
 
 
 @dataclass(frozen=True, slots=True)
@@ -271,7 +259,6 @@ class CapabilityPaletteScreen(ModalScreen[None]):
         self.field_widget_ids: dict[str, str] = {}
         self.preflight: CapabilityPreflight | None = None
         self.run_id: str | None = None
-        self._pending_approval: _PendingCapabilityApproval | None = None
         self._detail_live = False
         self._suppress_action_change = False
 
@@ -840,39 +827,25 @@ class CapabilityPaletteScreen(ModalScreen[None]):
 
     def _handle_invocation_approval_required(
         self,
-        descriptor: CapabilityDescriptor,
-        action: CapabilityAction,
-        inputs: dict[str, Any],
-        target: str | None,
         invocation: CapabilityInvocation,
     ) -> None:
+        self._set_approval_buttons(enabled=False)
+        self.query_one("#capability-preflight-button", Button).disabled = True
+        self.query_one("#capability-invoke-button", Button).disabled = True
         if not (invocation.approval_id and invocation.run_id and invocation.session_id):
             self._set_status(
                 "The gateway requested approval without complete server-bound "
-                "approval, run, and session identities; automatic resume is "
-                "disabled.",
+                "approval, run, and session identities. Resume is disabled.",
                 color="red",
             )
             return
-        self._pending_approval = _PendingCapabilityApproval(
-            descriptor=descriptor,
-            action=action,
-            inputs=copy.deepcopy(inputs),
-            target=target,
-            invocation=invocation,
-        )
-        self._set_approval_buttons(enabled=True)
-        self.query_one("#capability-preflight-button", Button).disabled = True
-        self.query_one("#capability-invoke-button", Button).disabled = True
         self._set_status(
             f"Run {invocation.run_id} is waiting for approval "
-            f"{invocation.approval_id}. Approve to resume this exact request, "
-            "or deny it.",
+            f"{invocation.approval_id}. Open the web console to review it.",
             color="yellow",
         )
 
     def _handle_invocation_accepted(self) -> None:
-        self._pending_approval = None
         self._set_approval_buttons(enabled=False)
         if self.run_id:
             self._set_status(
@@ -888,7 +861,6 @@ class CapabilityPaletteScreen(ModalScreen[None]):
             )
 
     def _handle_invocation_completed(self) -> None:
-        self._pending_approval = None
         self._set_approval_buttons(enabled=False)
         if self.run_id:
             self._set_status(
@@ -933,9 +905,7 @@ class CapabilityPaletteScreen(ModalScreen[None]):
 
         self._remember_invocation_identity(invocation)
         if invocation.approval_required:
-            self._handle_invocation_approval_required(
-                descriptor, action, inputs, target, invocation
-            )
+            self._handle_invocation_approval_required(invocation)
             return
 
         if invocation.accepted:
@@ -984,61 +954,6 @@ class CapabilityPaletteScreen(ModalScreen[None]):
     def _set_approval_buttons(self, *, enabled: bool) -> None:
         self.query_one("#capability-approve-button", Button).disabled = not enabled
         self.query_one("#capability-deny-button", Button).disabled = not enabled
-
-    async def _resolve_pending_approval(self, decision: str) -> None:
-        """Grant/deny a pending approval and resume only the exact bound request."""
-        pending = self._pending_approval
-        if pending is None:
-            self._set_status("There is no pending capability approval.", color="yellow")
-            return
-        approval_id = pending.invocation.approval_id
-        run_id = pending.invocation.run_id
-        session_id = pending.invocation.session_id
-        if not approval_id or not run_id or not session_id:
-            self._set_status(
-                "Pending approval identity is incomplete; resume is disabled.",
-                color="red",
-            )
-            return
-
-        self._set_approval_buttons(enabled=False)
-        self._set_status(f"Recording {decision} for approval {approval_id}...")
-        try:
-            response = await self.client.grant_fleet_approval(approval_id, decision)
-        except Exception as exc:
-            self._set_approval_buttons(enabled=True)
-            self._set_status(
-                f"Approval update failed: {type(exc).__name__}: {exc}", color="red"
-            )
-            return
-
-        self.query_one("#capability-result", Static).update(
-            Syntax(
-                json.dumps(response, indent=2, sort_keys=True, default=str),
-                "json",
-                word_wrap=True,
-            )
-        )
-        if decision == "denied":
-            self._pending_approval = None
-            self._set_status(
-                f"Approval {approval_id} was denied; run {run_id} was not resumed.",
-                color="yellow",
-            )
-            return
-
-        self._set_status(
-            f"Approval {approval_id} granted; resuming the exact bound request..."
-        )
-        await self._invoke(
-            pending.descriptor,
-            pending.action,
-            pending.inputs,
-            target=pending.target,
-            approval_id=approval_id,
-            run_id=run_id,
-            session_id=session_id,
-        )
 
     def on_input_changed(self, event: Input.Changed) -> None:
         if event.input.id == "capability-palette-search":
@@ -1092,14 +1007,10 @@ class CapabilityPaletteScreen(ModalScreen[None]):
 
             self.app.push_screen(RunInspectorScreen(self.client, self.run_id))
         elif button_id == "capability-approve-button":
-            self.run_worker(
-                self._resolve_pending_approval("approved"),
-                group="capability-approval",
-                exclusive=True,
+            self._set_status(
+                "Approval is available in the web console.", color="yellow"
             )
         elif button_id == "capability-deny-button":
-            self.run_worker(
-                self._resolve_pending_approval("denied"),
-                group="capability-approval",
-                exclusive=True,
+            self._set_status(
+                "Approval is available in the web console.", color="yellow"
             )

@@ -17,8 +17,9 @@ import pytest
 
 @pytest.fixture
 def agent_app(monkeypatch):
-    """Ensure ACP_URL is unset and return a fresh AgentApp instance."""
-    monkeypatch.delenv("ACP_URL", raising=False)
+    """Return a fresh AgentApp instance with a local GraphOS endpoint."""
+    monkeypatch.setenv("AGENT_URL", "http://localhost:8000")
+    monkeypatch.delenv("AGENT_BEARER_TOKEN", raising=False)
     from agent_terminal_ui.app import AgentApp
 
     return AgentApp()
@@ -185,21 +186,23 @@ async def test_handle_tool_approval_result_with_decisions(agent_app):
 
 
 @pytest.mark.asyncio
-async def test_acp_url_env_var_overrides_derived_url(monkeypatch):
-    """D-FE-2(b): ``ACP_URL`` is now actually read, not silently dropped."""
-    monkeypatch.setenv("ACP_URL", "http://otherhost:9999/acp")
+async def test_app_uses_graphos_endpoint_and_caller_token(monkeypatch):
+    """The app uses the same authenticated GraphOS client as headless mode."""
+    monkeypatch.setenv("AGENT_BEARER_TOKEN", "caller-token")
     monkeypatch.setenv("AGENT_URL", "http://localhost:8000")
     from agent_terminal_ui.app import AgentApp
 
     app = AgentApp()
-    assert app._client.acp_url == "http://otherhost:9999/acp"
+    assert app._client.a2a_url == "http://localhost:8000/a2a"
+    assert app._client._http_client.headers["Authorization"] == "Bearer caller-token"
 
 
 @pytest.mark.asyncio
-async def test_acp_url_defaults_to_agent_url_derivation(monkeypatch):
-    monkeypatch.delenv("ACP_URL", raising=False)
+async def test_app_derives_a2a_url_without_caller_token(monkeypatch):
+    monkeypatch.delenv("AGENT_BEARER_TOKEN", raising=False)
     monkeypatch.setenv("AGENT_URL", "http://localhost:8000")
     from agent_terminal_ui.app import AgentApp
 
     app = AgentApp()
-    assert app._client.acp_url == "http://localhost:8000/acp"
+    assert app._client.a2a_url == "http://localhost:8000/a2a"
+    assert "Authorization" not in app._client._http_client.headers

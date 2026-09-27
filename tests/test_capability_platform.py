@@ -30,7 +30,11 @@ from agent_terminal_ui.capabilities import (
     schema_fields,
 )
 from agent_terminal_ui.capability_provider import CapabilityCommandProvider
-from agent_terminal_ui.client import AgentClient
+from agent_terminal_ui.client import (
+    AgentClient,
+    GraphOSOperationError,
+    normalize_a2a_event,
+)
 from agent_terminal_ui.commands import CommandProcessor
 from agent_terminal_ui.tui.capability_palette import (
     CapabilityConfirmationScreen,
@@ -301,7 +305,9 @@ def test_capability_coverage_ledger_uses_supported_contract() -> None:
         assert override.get("entrypoint") or override.get("reason")
 
 
-def _route_capabilities_list(request: httpx.Request, body: dict[str, Any]) -> httpx.Response:
+def _route_capabilities_list(
+    request: httpx.Request, body: dict[str, Any]
+) -> httpx.Response:
     assert request.url.params["include_actions"] == "true"
     return httpx.Response(200, json={"status_code": 200, "data": _catalog_payload()})
 
@@ -321,7 +327,9 @@ def _route_capability_preflight(
     return httpx.Response(200, json=_preflight_payload())
 
 
-def _route_demo_tool_invoke(request: httpx.Request, body: dict[str, Any]) -> httpx.Response:
+def _route_demo_tool_invoke(
+    request: httpx.Request, body: dict[str, Any]
+) -> httpx.Response:
     assert body == {
         "action": "inspect",
         "inputs": {"action": "inspect", "value": 7},
@@ -338,7 +346,9 @@ def _route_demo_tool_invoke(request: httpx.Request, body: dict[str, Any]) -> htt
     )
 
 
-def _route_graph_mine_invoke(request: httpx.Request, body: dict[str, Any]) -> httpx.Response:
+def _route_graph_mine_invoke(
+    request: httpx.Request, body: dict[str, Any]
+) -> httpx.Response:
     expected_inputs = {
         "action": "cluster",
         "params_json": '{"features":[[1.0,2.0]]}',
@@ -394,8 +404,12 @@ def _route_run_events(request: httpx.Request, body: dict[str, Any]) -> httpx.Res
     return httpx.Response(200, json=_run_page_payload())
 
 
-def _route_events_schema(request: httpx.Request, body: dict[str, Any]) -> httpx.Response:
-    return httpx.Response(200, json={"schema_version": "1.0", "schema": {"type": "object"}})
+def _route_events_schema(
+    request: httpx.Request, body: dict[str, Any]
+) -> httpx.Response:
+    return httpx.Response(
+        200, json={"schema_version": "1.0", "schema": {"type": "object"}}
+    )
 
 
 #: The mock gateway's routing table, keyed by exact request path. Any path
@@ -427,7 +441,7 @@ async def test_client_consumes_live_capability_and_run_contracts() -> None:
             return httpx.Response(404, json={"detail": "not found"})
         return route(request, body)
 
-    client = AgentClient("http://gateway.test")
+    client = AgentClient("https://gateway.test")
     await client._http_client.aclose()
     client._http_client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
     try:
@@ -477,14 +491,15 @@ async def test_client_consumes_live_capability_and_run_contracts() -> None:
             action=path_action.id,
             session_id="session-stable-1",
         )
-        resumed = await client.invoke_capability(
-            "graph_mine",
-            path_inputs,
-            action=path_action.id,
-            approval_id=pending.approval_id,
-            run_id=pending.run_id,
-            session_id=pending.session_id,
-        )
+        with pytest.raises(GraphOSOperationError, match="APPROVAL_UNAVAILABLE"):
+            await client.invoke_capability(
+                "graph_mine",
+                path_inputs,
+                action=path_action.id,
+                approval_id=pending.approval_id,
+                run_id=pending.run_id,
+                session_id=pending.session_id,
+            )
         runs = await client.list_runs(status="completed")
         summary = await client.get_run_summary("run-1")
         page = await client.get_run_events("run-1")
@@ -500,10 +515,12 @@ async def test_client_consumes_live_capability_and_run_contracts() -> None:
     assert pending.approval_required
     assert pending.http_status == 202
     assert pending.approval_id == "approval-1"
-    assert pending.run_id == resumed.run_id == "run-pending-1"
-    assert pending.session_id == resumed.session_id == "session-stable-1"
-    assert resumed.accepted
-    assert resumed.succeeded
+    assert pending.run_id == "run-pending-1"
+    assert pending.session_id == "session-stable-1"
+    assert (
+        sum(path == "/api/capabilities/graph_mine/invoke" for _, path, _ in requests)
+        == 1
+    )
     assert runs.runs[0].status == "completed"
     assert summary.event_count == 2
     assert [event.sequence for event in page.events] == [1, 2]
@@ -523,30 +540,19 @@ async def test_client_consumes_live_capability_and_run_contracts() -> None:
 
 
 def test_normalized_stream_event_preserves_canonical_run_identity() -> None:
-    normalized = AgentClient._normalize_event(
+    events = normalize_a2a_event(
         {
-            "type": "text-delta",
-            "delta": "hi",
-            "_event": {"run_id": "run-1", "sequence": 2},
-        },
-        "session-1",
-    )
-
-    assert normalized["type"] == "text_delta"
-    assert normalized["run_id"] == "run-1"
-    assert normalized["_event"]["sequence"] == 2
-
-    started = AgentClient._normalize_event(
-        {
-            "type": "run_started",
-            "run_id": "run-execution-2",
-            "session_id": "session-stable-1",
+            "kind": "status-update",
+            "taskId": "task-1",
+            "status": {"state": "working"},
+            "metadata": {"graphOs": {"runId": "run-execution-2"}},
         },
         "session-stable-1",
     )
-    assert started["session_id"] == "session-stable-1"
-    assert started["run_id"] == "run-execution-2"
-    assert started["session_id"] != started["run_id"]
+    assert events[0]["session_id"] == "session-stable-1"
+    assert events[0]["run_id"] == "run-execution-2"
+    assert events[0]["task_id"] == "task-1"
+    assert events[0]["session_id"] != events[0]["run_id"]
 
 
 @pytest.mark.asyncio
@@ -719,7 +725,7 @@ async def test_palette_requires_confirmation_for_side_effects() -> None:
 
 
 @pytest.mark.asyncio
-async def test_palette_resumes_exact_server_bound_request_after_approval() -> None:
+async def test_palette_keeps_approval_in_web_console() -> None:
     client = _FakeCapabilityClient(mutates=True, approval_required=True)
     app = _PaletteHarness(client)
 
@@ -736,21 +742,12 @@ async def test_palette_resumes_exact_server_bound_request_after_approval() -> No
 
         palette = app.screen
         assert isinstance(palette, CapabilityPaletteScreen)
-        assert not palette.query_one("#capability-approve-button").disabled
+        assert palette.query_one("#capability-approve-button").disabled
+        assert palette.query_one("#capability-deny-button").disabled
         assert client.invocation_calls == [
             {"action": "inspect", "value": 9, "verbose": False}
         ]
-
-        # Editing the visible form cannot alter the frozen approval request.
-        palette.query_one("#capability-field-1", Input).value = "999"
-        await pilot.click("#capability-approve-button")
-        await pilot.pause(0.2)
-
-        assert client.approval_calls == [("approval-1", "approved")]
-        assert client.invocation_calls[1] == client.invocation_calls[0]
-        assert client.invocation_options[1]["approval_id"] == "approval-1"
-        assert client.invocation_options[1]["run_id"] == "run-pending-1"
-        assert client.invocation_options[1]["session_id"] == "session-stable-1"
+        assert client.approval_calls == []
         assert app.observed_run_id == "run-pending-1"
 
 
@@ -889,7 +886,9 @@ class _RunBrowserHarness(App[None]):
 
     def on_mount(self) -> None:
         self.push_screen(
-            RunBrowserScreen(cast(AgentClient, self.agent_client), session_id="session-1")
+            RunBrowserScreen(
+                cast(AgentClient, self.agent_client), session_id="session-1"
+            )
         )
 
 
