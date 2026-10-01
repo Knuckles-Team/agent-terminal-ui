@@ -13,7 +13,7 @@
     {
       "id": "TUI-RUNTIME-R001",
       "title": "Terminal operation client issues typed commands with pending approvals",
-      "delivery_state": "BUILDING",
+      "delivery_state": "BUILT",
       "evidence": [
         {
           "kind": "branch",
