@@ -1,10 +1,10 @@
-# EH-622 design and integration plan
+# TUI-RUNTIME-001 design and integration plan
 
 ## Existing wiring and architecture
 
 At the current public main revision, `CommandProcessor` in `agent_terminal_ui/commands.py` owns slash-command dispatch and the `/capabilities` and `/run` commands. `AgentClient` in `agent_terminal_ui/client.py` owns HTTP transport, session events and the older `/api/capabilities/*` and `/api/runs/*` routes. `agent_terminal_ui/app.py`, `screens/main.py`, `tui/input_text_area.py`, `tui/capability_palette.py` and `tui/run_inspector.py` are presentation consumers. This is the path to extend; no parallel command router, HTTP client or local GraphOS gateway should be created.
 
-An EH-622 implementation candidate exists on a separate Git branch, but it is not part of public main and does not establish release acceptance. It prototypes `/op`, `/confirm`, a lazy generated-client import and fail-closed approval behavior. Review and compose its exact changes rather than rebuilding the same transport from scratch. The current main package targets Python `>=3.11,<3.15`; GraphOS generated-client compatibility must be handled without raising that base floor silently.
+A TUI-RUNTIME-R001 implementation candidate exists on a separate Git branch, but it is not part of public main and does not establish release acceptance. It prototypes `/op`, `/confirm`, a lazy generated-client import and fail-closed approval behavior. Review and compose its exact changes rather than rebuilding the same transport from scratch. The current main package targets Python `>=3.11,<3.15`; GraphOS generated-client compatibility must be handled without raising that base floor silently.
 
 ```text
 keyboard / slash command

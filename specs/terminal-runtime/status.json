@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "spec_id": "TUI-RUNTIME-001",
+  "owner_repo": "agent-terminal-ui",
+  "requirement_ids": [
+    "TUI-RUNTIME-R001",
+    "TUI-RUNTIME-R002"
+  ],
+  "delivery_state": "SPECIFIED",
+  "acceptance_state": "NOT_AUDITED",
+  "evidence": [],
+  "requirements": [
+    {
+      "id": "TUI-RUNTIME-R001",
+      "title": "Terminal operation client issues typed commands with pending approvals",
+      "delivery_state": "BUILDING",
+      "evidence": [
+        {
+          "kind": "branch",
+          "result": "passed",
+          "commit": "2b5f3212591c3fa202514467a6970234d5f1ebf8",
+          "url": "https://github.com/Knuckles-Team/agent-terminal-ui/commit/2b5f3212591c3fa202514467a6970234d5f1ebf8",
+          "description": "Implementation commit is published on a branch; not yet merged to the default branch."
+        }
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R002",
+      "title": "Terminal chat transport is reconciled with the current Graph OS boundary",
+      "delivery_state": "BUILT",
+      "evidence": [
+        {
+          "kind": "branch",
+          "result": "passed",
+          "commit": "18f70ebdc8f831af887ef76286f6b9ae087f1352",
+          "url": "https://github.com/Knuckles-Team/agent-terminal-ui/commit/18f70ebdc8f831af887ef76286f6b9ae087f1352",
+          "description": "Implementation commit is published on a branch; not yet merged to the default branch."
+        }
+      ]
+    }
+  ]
+}

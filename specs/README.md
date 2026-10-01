@@ -4,11 +4,11 @@ This tracked directory contains public, owner-native build contracts for the ter
 
 ## Structure and index
 
-Each `specs/<lower-kebab-name>/` directory contains `spec.md` (behavior and acceptance), `plan.md` (architecture and reuse), `test-spec.md` (positive, negative, quality and release proof), `tasks.md` (implementation order), and `status.json` (machine-readable state and evidence). Start from [`_template/`](_template/). A stable requirement ID remains in the documents and status file even when the directory has a descriptive name.
+Each `specs/<lower-kebab-name>/` directory contains `spec.md` (behavior and acceptance), `plan.md` (architecture and reuse), `test-spec.md` (positive, negative, quality and release proof), `tasks.md` (implementation order), `requirements.md` (the definition of every requirement ID the spec owns), and `status.json` (machine-readable state and evidence, with one entry per requirement ID in its `requirements` array, each carrying its own `delivery_state` and evidence). Start from [`_template/`](_template/). A stable requirement ID remains in the documents and status file even when the directory has a descriptive name. A requirement counts as delivered only once its evidence includes a merged-head commit on the default branch.
 
 | Spec | Requirement | Delivery | Acceptance | Scope |
 |---|---|---|---|---|
-| [Terminal GraphOS operation client](eh-622-terminal-runtime/spec.md) | EH-622 | SPECIFIED | NOT_AUDITED | TUI command, transport, PLAN confirmation and fail-closed approval boundary |
+| [Terminal GraphOS operation client](terminal-runtime/spec.md) | TUI-RUNTIME-001 | SPECIFIED | NOT_AUDITED | TUI command, transport, PLAN confirmation and fail-closed approval boundary |
 
 ## State legend
 
