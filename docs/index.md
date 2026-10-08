@@ -57,3 +57,11 @@ agent-terminal-ui
 
 Consult the [Configuration](configuration.md) reference to point the client at your
 agent backend and tune its behavior.
+
+## Specification delivery
+
+<a href="spec-delivery/">Open the specification delivery dashboard</a> for
+current specification status, delivery timelines, velocity and burndown, and
+open pull request and issue snapshots. It refreshes with each main-branch push.
+Unknown completion dates and unavailable history are labeled explicitly;
+individual requirements and pull requests do not count as completed specifications.
