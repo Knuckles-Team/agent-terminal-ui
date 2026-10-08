@@ -846,9 +846,7 @@ class CapabilityPaletteScreen(ModalScreen[None]):
         target: str | None,
         invocation: CapabilityInvocation,
     ) -> None:
-        if not (
-            invocation.approval_id and invocation.run_id and invocation.session_id
-        ):
+        if not (invocation.approval_id and invocation.run_id and invocation.session_id):
             self._set_status(
                 "The gateway requested approval without complete server-bound "
                 "approval, run, and session identities; automatic resume is "

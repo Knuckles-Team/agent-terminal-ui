@@ -154,6 +154,18 @@ file as a known, unavoidable limitation. Only commit once `pre-commit run
 --all-files` passes cleanly; if a check legitimately cannot pass, stop and explain
 why rather than bypassing it.
 
+## Approved Source-Only Merge Policy
+
+For small source-only repairs, the user-approved source-merge policy permits
+merge with focused regression coverage, normal lint/type/security checks, and
+no new failures versus the same current-main revision in the same environment.
+Record the baseline revision, commands, existing failures, and deferred gates
+in the PR. This is an explicit exception to the fully-green prerequisite above;
+do not suppress checks or report deferred checks as passing. Release gates and
+full native qualification for native changes remain required. The all-files
+pre-commit gate still runs; publication through the GitHub API does not run the
+local pre-push release checks, which must be disclosed in the PR receipt.
+
 ## Working with Git Worktrees (multi-session)
 
 Multiple agents/sessions work the `agent-packages/*` repos concurrently. **Do not
