@@ -315,6 +315,7 @@ class AgentClient:
         async with self._http_client.stream(
             "GET", f"{self.acp_url}/stream/{session_id}"
         ) as stream:
+            stream.raise_for_status()
             async for line in stream.aiter_lines():
                 if line.startswith("data: "):
                     try:
