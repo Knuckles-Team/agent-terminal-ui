@@ -1046,3 +1046,21 @@ async def test_agent_app_handle_tool_call_and_output():
         # tool calls directly
         # but just handled via sideband/MainScreen in the new architecture.
         # We just verify pending calls was updated.
+
+
+@pytest.mark.asyncio
+async def test_exit_confirm_screen_initially_focuses_cancel() -> None:
+    from textual.app import App
+
+    class _Host(App):
+        def on_mount(self) -> None:
+            self.push_screen(ExitConfirmScreen())
+
+    app = _Host()
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        screen = app.screen
+        assert isinstance(screen, ExitConfirmScreen)
+        cancel = screen.query_one("#no", ClickableLabel)
+        assert app.focused is cancel
+        assert cancel.has_focus

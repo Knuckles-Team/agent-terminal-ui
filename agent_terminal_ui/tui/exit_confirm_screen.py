@@ -141,7 +141,7 @@ class ExitConfirmScreen(ModalScreen[bool]):
 
     def on_mount(self) -> None:
         """Set initial focus to the No button (safer default)."""
-        self.set_focus(None, "#no")
+        self.set_focus(self.query_one("#no", ClickableLabel))
 
     def action_confirm_exit(self) -> None:
         """Confirm exit action (Y key)."""
