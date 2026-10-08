@@ -369,25 +369,22 @@ async def test_stream_events_parses_sse():
         "ignored",
     ]
 
-    class FakeStream:
-        def __init__(self, lines):
-            self._lines = lines
+    def handle(request: httpx.Request) -> httpx.Response:
+        assert request.method == "GET"
+        assert request.url.path == "/acp/stream/sess"
+        return httpx.Response(
+            200,
+            headers={"content-type": "text/event-stream"},
+            text="\n".join(sse_lines),
+        )
 
-        async def __aenter__(self):
-            return self
-
-        async def __aexit__(self, *exc):
-            return False
-
-        async def aiter_lines(self):
-            for line in self._lines:
-                yield line
-
-    with patch.object(c._http_client, "stream", return_value=FakeStream(sse_lines)):
+    await c.close()
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as transport:
+        c._http_client = transport
         out = [e async for e in c.stream_events("sess")]
 
     assert out == [{"type": "text", "content": "hi"}]
-    await c.close()
+
 
 
 @pytest.mark.asyncio
