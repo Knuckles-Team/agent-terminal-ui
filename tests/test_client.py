@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+import httpx
 import pytest
 
 from agent_terminal_ui.client import AgentClient
@@ -208,3 +209,52 @@ def test_normalize_event_preserves_unknown_types(event: dict[str, Any]) -> None:
     normalized = AgentClient._normalize_event(event, "session-invalid-type")
     assert normalized == {**original, "session_id": "session-invalid-type"}
     assert event == original
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status_code", [401, 403, 500, 503])
+async def test_stream_http_error_reports_failure_and_preserves_session(
+    status_code: int,
+) -> None:
+    stream_requests = 0
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        nonlocal stream_requests
+        if request.method == "POST":
+            assert request.url.path == "/acp/rpc/session-retry"
+            return httpx.Response(200, json={})
+        assert request.url.path == "/acp/stream/session-retry"
+        stream_requests += 1
+        if stream_requests == 1:
+            return httpx.Response(status_code, text="upstream unavailable")
+        return httpx.Response(
+            200,
+            headers={"content-type": "text/event-stream"},
+            text='data: {"type": "text-delta", "delta": "recovered"}\n\n'
+            'data: {"type": "turn-end"}\n\n',
+        )
+
+    client = AgentClient()
+    await client.aclose()
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as transport:
+        client._http_client = transport
+        failed = [
+            event
+            async for event in client.stream("first", session_id="session-retry")
+        ]
+        assert [event["type"] for event in failed] == ["session_started", "error"]
+        assert str(status_code) in failed[-1]["message"]
+        assert failed[-1]["session_id"] == "session-retry"
+        assert client.current_session_id == "session-retry"
+
+        recovered = [
+            event
+            async for event in client.stream("retry", session_id="session-retry")
+        ]
+        assert [event["type"] for event in recovered] == [
+            "session_started",
+            "text_delta",
+            "turn_end",
+        ]
+        assert recovered[1]["content"] == "recovered"
+        assert all(event["session_id"] == "session-retry" for event in recovered)
