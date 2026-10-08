@@ -147,15 +147,15 @@ class RunBrowserScreen(ModalScreen[None]):
         ).lower()
         return normalized_query in haystack
 
-    def _run_browser_status(self, scope: str) -> tuple[str, str]:
+    def _run_browser_status(self, scope: str, catalog: RunCatalog) -> tuple[str, str]:
         """The (message, color) pair for the status bar after filtering."""
-        if not self.catalog.runs:
+        if not catalog.runs:
             return (
                 f"No process-local runs are available for {scope}. "
                 "The bounded replay store may be empty or restarted.",
                 "yellow",
             )
-        message = f"{len(self.filtered)} of {len(self.catalog.runs)} runs ({scope})."
+        message = f"{len(self.filtered)} of {len(catalog.runs)} runs ({scope})."
         return message, "green"
 
     def _filter(self, query: str) -> None:
@@ -168,7 +168,7 @@ class RunBrowserScreen(ModalScreen[None]):
         if self.catalog is None:
             return
         scope = f"session {self.session_id}" if self.session_id else "all sessions"
-        message, color = self._run_browser_status(scope)
+        message, color = self._run_browser_status(scope, self.catalog)
         self.query_one("#run-browser-status", Static).update(
             f"[{color}]{escape(message)}[/{color}]"
         )

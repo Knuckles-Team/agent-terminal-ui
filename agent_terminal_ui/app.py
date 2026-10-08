@@ -424,8 +424,7 @@ class AgentApp(App):
         if combined:
             self._user_message_queue[-1]["message"] = combined
             await self._notify_conversation(
-                f"[dim italic]Combined queued message: "
-                f"{combined[:100]}...[/dim italic]"
+                f"[dim italic]Combined queued message: {combined[:100]}...[/dim italic]"
             )
         else:
             parts = self._collect_pending_parts(value)

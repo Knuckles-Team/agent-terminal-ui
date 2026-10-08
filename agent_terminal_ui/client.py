@@ -42,7 +42,12 @@ GATEWAY_API_PREFIX = "/api"
 def _candidate_skills_dirs(workspace_root: Path) -> list[Path]:
     """Directories checked, in order, for a universal-skills tree."""
     return [
-        workspace_root / "ai" / "skills" / "universal-skills" / "universal_skills" / "skills",
+        workspace_root
+        / "ai"
+        / "skills"
+        / "universal-skills"
+        / "universal_skills"
+        / "skills",
         workspace_root
         / "agent-packages"
         / "skills"
@@ -258,7 +263,9 @@ class AgentClient:
         persist, export, and resume the same conversation.
         """
         event_type = event.get("type")
-        handler = _EVENT_NORMALIZERS.get(event_type)
+        handler = (
+            _EVENT_NORMALIZERS.get(event_type) if isinstance(event_type, str) else None
+        )
         normalized: dict[str, Any] = handler(event) if handler else dict(event)
 
         event_metadata = event.get("_event")

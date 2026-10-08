@@ -1,5 +1,6 @@
 import ast
 from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -141,6 +142,8 @@ def _assert_no_agent_client_protocol_import(py_file: Path) -> None:
     """Assert one source file never imports ``agent_client_protocol``."""
     tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
     for node in ast.walk(tree):
+        if not isinstance(node, (ast.Import, ast.ImportFrom)):
+            continue
         for name in _imported_module_names(node):
             assert name is None or not name.startswith("agent_client_protocol"), (
                 f"{py_file} imports agent_client_protocol at {node.lineno}"
@@ -194,3 +197,14 @@ def test_acp_url_override_replaces_derived_default():
 def test_acp_url_defaults_when_not_provided():
     client = AgentClient(base_url="http://localhost:8000")
     assert client.acp_url == "http://localhost:8000/acp"
+
+
+@pytest.mark.parametrize(
+    "event",
+    [{}, {"type": None}, {"type": 7}, {"type": []}, {"type": {}}, {"type": "unknown"}],
+)
+def test_normalize_event_preserves_unknown_types(event: dict[str, Any]) -> None:
+    original = dict(event)
+    normalized = AgentClient._normalize_event(event, "session-invalid-type")
+    assert normalized == {**original, "session_id": "session-invalid-type"}
+    assert event == original

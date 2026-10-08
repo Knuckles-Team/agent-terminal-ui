@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -87,3 +88,24 @@ async def test_propagated_session_identity_drives_export(
 
     app._client.get_chat.assert_awaited_once_with("session-export")
     assert (tmp_path / "wave1.md").exists()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "event",
+    [{}, {"type": None}, {"type": 7}, {"type": []}, {"type": {}}, {"type": "unknown"}],
+)
+async def test_unknown_event_types_preserve_current_response(
+    app, event: dict[str, Any]
+) -> None:
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        screen = app._get_main_screen()
+        assert screen is not None
+        conversation = screen.query_one("#conversation", Conversation)
+        await screen.handle_agent_event({"type": "text_delta", "content": "unchanged"})
+        response = conversation._current_response
+        await screen.handle_agent_event(event)
+        assert conversation._current_response is response
+        assert response is not None
+        assert response.content == "unchanged"
