@@ -10,4 +10,14 @@
 
 `TUI-RUNTIME-R002` (reconciling the primary chat transport with the current GraphOS boundary) is not covered by the tasks above:
 
-- [ ] Select one canonical transport for the TUI's primary conversational connection to GraphOS in place of the unmounted streaming and remote-procedure routes it currently expects; update `AgentClient` to that transport atomically and remove the superseded code path only after session, authentication, streaming and cancel behavior are proven by integration tests (closes `TUI-RUNTIME-R002`).
+- [x] Select one canonical transport for the TUI's primary conversational connection to GraphOS in place of the unmounted streaming and remote-procedure routes it currently expects; update `AgentClient` to that transport atomically and remove the superseded code path only after session, authentication, streaming and cancel behavior are proven by integration tests (closes `TUI-RUNTIME-R002`).
+
+## Decomposition children (tracked)
+
+- [ ] **TUI-RUNTIME-R001.1:** Known op and object params produce one versioned request with correct envelope
+- [ ] **TUI-RUNTIME-R001.2:** Verified caller header reaches remote GraphOS only over TLS
+- [ ] **TUI-RUNTIME-R001.3:** One /confirm resumes exactly the issued plan
+- [x] **TUI-RUNTIME-R001.4:** Typed success renders and chat remains functional
+- [ ] **TUI-RUNTIME-R001.5:** Pending request is displayed; no effect is asserted
+- [ ] **TUI-RUNTIME-R001.6:** Base chat works; compatible optional install enables /op
+- [ ] **TUI-RUNTIME-R001.7:** Legacy screens still render or use served replacement

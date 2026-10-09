@@ -4,7 +4,14 @@
   "owner_repo": "agent-terminal-ui",
   "requirement_ids": [
     "TUI-RUNTIME-R001",
-    "TUI-RUNTIME-R002"
+    "TUI-RUNTIME-R002",
+    "TUI-RUNTIME-R001.1",
+    "TUI-RUNTIME-R001.2",
+    "TUI-RUNTIME-R001.3",
+    "TUI-RUNTIME-R001.4",
+    "TUI-RUNTIME-R001.5",
+    "TUI-RUNTIME-R001.6",
+    "TUI-RUNTIME-R001.7"
   ],
   "delivery_state": "LANDED",
   "acceptance_state": "NOT_AUDITED",
@@ -21,7 +28,7 @@
     {
       "id": "TUI-RUNTIME-R001",
       "title": "Terminal operation client issues typed commands with pending approvals",
-      "delivery_state": "LANDED",
+      "delivery_state": "BUILDING",
       "evidence": [
         {
           "kind": "merged_head",
@@ -45,6 +52,56 @@
           "description": "Merged to main via PR #10, which replaces the hand-rolled ACP JSON-RPC-over-HTTP+SSE transport in agent_terminal_ui/client.py with GraphOS's canonical A2A JSON-RPC boundary and removes the superseded ACP code path. The prior status.json evidence commit (18f70ebdc8f831af887ef76286f6b9ae087f1352) was a mislabeled, unrelated fix; corrected here to the actual merged transport-replacement evidence."
         }
       ]
+    },
+    {
+      "id": "TUI-RUNTIME-R001.1",
+      "title": "Known op and object params produce one versioned request with correct envelope",
+      "delivery_state": "SPECIFIED",
+      "evidence": []
+    },
+    {
+      "id": "TUI-RUNTIME-R001.2",
+      "title": "Verified caller header reaches remote GraphOS only over TLS",
+      "delivery_state": "SPECIFIED",
+      "evidence": []
+    },
+    {
+      "id": "TUI-RUNTIME-R001.3",
+      "title": "One /confirm resumes exactly the issued plan",
+      "delivery_state": "SPECIFIED",
+      "evidence": []
+    },
+    {
+      "id": "TUI-RUNTIME-R001.4",
+      "title": "Typed success renders and chat remains functional",
+      "delivery_state": "LANDED",
+      "evidence": [
+        {
+          "kind": "merged_head",
+          "result": "passed",
+          "commit": "00fa879f55f85c9128ab006e13de6e23a94091d8",
+          "url": "https://github.com/Knuckles-Team/agent-terminal-ui/commit/00fa879f55f85c9128ab006e13de6e23a94091d8",
+          "description": "TUI-RUNTIME-R001.4 merged to the default branch in this commit."
+        }
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R001.5",
+      "title": "Pending request is displayed; no effect is asserted",
+      "delivery_state": "SPECIFIED",
+      "evidence": []
+    },
+    {
+      "id": "TUI-RUNTIME-R001.6",
+      "title": "Base chat works; compatible optional install enables /op",
+      "delivery_state": "SPECIFIED",
+      "evidence": []
+    },
+    {
+      "id": "TUI-RUNTIME-R001.7",
+      "title": "Legacy screens still render or use served replacement",
+      "delivery_state": "SPECIFIED",
+      "evidence": []
     }
   ]
 }
