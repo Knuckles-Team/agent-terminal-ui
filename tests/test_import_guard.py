@@ -12,6 +12,8 @@ See: reports/agent-terminal-ui-baseline-2026-06-11.md
 import subprocess
 import sys
 
+import pytest
+
 # Heavy modules that must never be pulled into a frontend instance.
 FORBIDDEN = (
     "agent_utilities",
@@ -41,12 +43,14 @@ def _run_probe(body: str) -> set[str]:
     return {line for line in out.stdout.splitlines() if line}
 
 
+@pytest.mark.spec("TUI-RUNTIME-R001.7")
 def test_importing_app_does_not_import_backend() -> None:
     """A bare ``import agent_terminal_ui.app`` stays free of heavy backend libs."""
     leaked = _run_probe("import agent_terminal_ui.app")
     assert leaked == set(), f"frontend import leaked heavy modules: {sorted(leaked)}"
 
 
+@pytest.mark.spec("TUI-RUNTIME-R001.7")
 def test_goal_parsing_does_not_import_backend() -> None:
     """``/goal`` parsing uses the vendored spec, not ``agent_utilities``."""
     leaked = _run_probe(
@@ -56,12 +60,14 @@ def test_goal_parsing_does_not_import_backend() -> None:
     assert leaked == set(), f"goal parsing leaked heavy modules: {sorted(leaked)}"
 
 
+@pytest.mark.spec("TUI-RUNTIME-R001.7")
 def test_dashboard_screen_does_not_import_backend() -> None:
     """The dashboard fetches over HTTP; importing it must not pull the backend."""
     leaked = _run_probe("import agent_terminal_ui.screens.dashboard")
     assert leaked == set(), f"dashboard import leaked heavy modules: {sorted(leaked)}"
 
 
+@pytest.mark.spec("TUI-RUNTIME-R001.7")
 def test_headless_runner_is_thin() -> None:
     """Headless mode must not import the TUI (textual) or the backend."""
     leaked = _run_probe(

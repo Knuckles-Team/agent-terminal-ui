@@ -729,6 +729,7 @@ class TestCommandEdgeCases:
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.3")
 async def test_op_plan_requires_explicit_confirm(command_processor, mock_app):
     """Confirmation reuses the exact previewed parameters and lease reference."""
     from agent_terminal_ui.client import GraphOSOperationError
@@ -753,6 +754,7 @@ async def test_op_plan_requires_explicit_confirm(command_processor, mock_app):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("op", ["approvals.grant", "Approvals.Grant"])
+@pytest.mark.spec("TUI-RUNTIME-R001.5")
 async def test_approval_op_stays_disabled(command_processor, mock_app, op):
     mock_app.agent_client.invoke_op = AsyncMock()
     await command_processor.process(f'/op {op} {{"approval_id":"a1"}}')
@@ -763,6 +765,7 @@ async def test_approval_op_stays_disabled(command_processor, mock_app, op):
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.6")
 async def test_op_reports_optional_client_unavailable(command_processor, mock_app):
     from agent_terminal_ui.client import GraphOSOperationError
 
@@ -778,6 +781,7 @@ async def test_op_reports_optional_client_unavailable(command_processor, mock_ap
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.3")
 async def test_console_step_up_cannot_be_confirmed_locally(command_processor, mock_app):
     from agent_terminal_ui.client import GraphOSOperationError
 
@@ -793,6 +797,7 @@ async def test_console_step_up_cannot_be_confirmed_locally(command_processor, mo
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.7")
 async def test_unknown_command_never_falls_back_to_network(command_processor, mock_app):
     mock_app.agent_client.invoke_op = AsyncMock()
     await command_processor.process("/unlisted-command")
@@ -803,6 +808,7 @@ async def test_unknown_command_never_falls_back_to_network(command_processor, mo
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.5")
 async def test_legacy_fleet_grant_stays_disabled(command_processor, mock_app):
     mock_app.agent_client.grant_fleet_approval = AsyncMock()
     await command_processor.process("/fleet grant approval-1")
