@@ -1,6 +1,10 @@
 # Project specific
 tmp/
 
+# CI-materialized shared Pages theme checkout (see pages_pipeline.yml); never tracked.
+.pipeline-theme/
+.pipeline-contract/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

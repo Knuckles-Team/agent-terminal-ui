@@ -1,26 +1,59 @@
-<h1 align="center">
-    agent-terminal-ui
-</h1>
+# Agent Terminal UI
+
 <p align="center">
-    <p align="center">Terminal user interface for AI agents built on <a href="https://github.com/pydantic/agent-utilities">agent-utilities</a>.</p>
-</p>
-<p align="center">
-    <a href="https://github.com/astral-sh/uv"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json" alt="uv"></a>
-    <a href="https://github.com/astral-sh/ty"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ty/main/assets/badge/v0.json" alt="ty"></a>
-    <a href="https://pypi.org/project/agent-terminal-ui/"><img src="https://img.shields.io/pypi/v/agent-terminal-ui" alt="PyPI"></a>
-    <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <img src="docs/assets/brands/agent-terminal-ui-logo-v1.png" alt="Agent Terminal UI logo" width="220">
 </p>
 
-A [Textual](https://textual.textualize.io/)-based terminal interface for interacting with AI agents. Connects to an [agent-utilities](https://github.com/pydantic/agent-utilities) backend through a normalized transport adapter. The currently shipped adapter uses ACP (JSON-RPC + SSE).
+<p align="center">
+  <b>The terminal frontend for Graph OS agent sessions.</b><br>
+  <sub>Textual-based TUI connecting to a Graph OS-served agent backend through a normalized ACP transport adapter.</sub>
+</p>
+
+[![GitHub Repo stars](https://img.shields.io/github/stars/Knuckles-Team/agent-terminal-ui)](https://github.com/Knuckles-Team/agent-terminal-ui/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/Knuckles-Team/agent-terminal-ui)](https://github.com/Knuckles-Team/agent-terminal-ui/forks)
+[![GitHub contributors](https://img.shields.io/github/contributors/Knuckles-Team/agent-terminal-ui)](https://github.com/Knuckles-Team/agent-terminal-ui/graphs/contributors)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub last commit (by committer)](https://img.shields.io/github/last-commit/Knuckles-Team/agent-terminal-ui)](https://github.com/Knuckles-Team/agent-terminal-ui/commits/main)
+[![GitHub issues](https://img.shields.io/github/issues/Knuckles-Team/agent-terminal-ui)](https://github.com/Knuckles-Team/agent-terminal-ui/issues)
+[![GitHub top language](https://img.shields.io/github/languages/top/Knuckles-Team/agent-terminal-ui)](https://github.com/Knuckles-Team/agent-terminal-ui)
+[![PyPI - Version](https://img.shields.io/pypi/v/agent-terminal-ui)](https://pypi.org/project/agent-terminal-ui/)
+[![PyPI - Downloads](https://img.shields.io/pypi/dd/agent-terminal-ui)](https://pypi.org/project/agent-terminal-ui/)
+[![Build](https://github.com/Knuckles-Team/agent-terminal-ui/actions/workflows/pipeline.yml/badge.svg)](https://github.com/Knuckles-Team/agent-terminal-ui/actions/workflows/pipeline.yml)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://knuckles-team.github.io/agent-terminal-ui/)
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
+[![ty](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ty/main/assets/badge/v0.json)](https://github.com/astral-sh/ty)
+
+<p align="center">
+  <a href="https://knuckles-team.github.io/agent-terminal-ui/">Documentation</a> ·
+  <a href="https://knuckles-team.github.io/agent-terminal-ui/architecture/">Architecture</a> ·
+  <a href="https://knuckles-team.github.io/agent-terminal-ui/features/">Features</a> ·
+  <a href="https://knuckles-team.github.io/agent-terminal-ui/configuration/">Configuration</a>
+</p>
+
+## Overview
+
+Agent Terminal UI is a [Textual](https://textual.textualize.io/)-based terminal interface
+for interacting with agents served by [Graph OS](https://knuckles-team.github.io/graph-os/).
+It connects to a Graph OS-hosted `agent-utilities` backend through a normalized transport
+adapter; the currently shipped adapter uses ACP (JSON-RPC + SSE).
 
 > [!NOTE]
 > This library is in early development and subject to change.
 
-> **Documentation** — Architecture, configuration, durable session management, and
-> the autonomous goal and multi-session workflows are maintained in the
-> [official documentation](https://knuckles-team.github.io/agent-terminal-ui/).
+## Key Capabilities
 
-### Features
+- Dual-protocol chat with a dynamic workflow sidebar discovered from live sideband events.
+- Durable, crash-recoverable sessions: checkpoints, fork/resume, offline queueing, and archives.
+- Workspace snapshots and rollback, reasoning-effort tiers, and multi-tier context compaction.
+- A durable background task queue, lifecycle hooks, desktop notifications, and a governed
+  tool-approval and workspace-trust model.
+- A live capability palette and run Mission Control over the Graph OS gateway catalog.
+
+The full command, keyboard shortcut, and module reference lives in
+[Features](#features) below and in the
+[official documentation](https://knuckles-team.github.io/agent-terminal-ui/).
+
+## Features
 
 #### Core Functionality
 - **Normalized protocol adapter** -- ACP JSON-RPC + SSE events are translated into one UI event vocabulary for interactive and headless clients
@@ -199,10 +232,9 @@ A [Textual](https://textual.textualize.io/)-based terminal interface for interac
 - **Real-time token and cost tracking** -- integrated in the status line for session monitoring
 - **Memory Auto-loading** -- backend automatically includes `AGENTS.md` and `MEMORY.md` in the system prompt for project-aware reasoning.
 
-
 ## Usage
 
-Start the `agent-utilities` backend server, then launch the TUI:
+Start the Graph OS-hosted `agent-utilities` backend server, then launch the TUI:
 
 ```bash
 agent-terminal-ui
@@ -288,7 +320,6 @@ include **nord**, **gruvbox**, **dracula**, **monokai**, **textual-dark**, and
 Switch themes live with the `/theme <name>` command, or set the startup theme via
 the `AGENT_THEME` environment variable.
 
-
 ## Development
 
 ### Prerequisites
@@ -315,3 +346,18 @@ Run formatting, linting, and type checking:
 ```bash
 uv run ruff format && uv run ruff check --fix && uv run ty check
 ```
+
+## Documentation
+
+Start at the [Agent Terminal UI documentation](https://knuckles-team.github.io/agent-terminal-ui/).
+It includes [Architecture](https://knuckles-team.github.io/agent-terminal-ui/architecture/),
+[Features](https://knuckles-team.github.io/agent-terminal-ui/features/), and
+[Configuration](https://knuckles-team.github.io/agent-terminal-ui/configuration/) references.
+
+## Contributing
+
+See [AGENTS.md](AGENTS.md) for contribution and validation guidance.
+
+## License
+
+Agent Terminal UI is released under the MIT License.
