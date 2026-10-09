@@ -18,6 +18,7 @@ from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Table
 
+from agent_terminal_ui.client import GraphOSOperationError
 from agent_terminal_ui.tui.exit_confirm_screen import ExitConfirmScreen
 
 logger = logging.getLogger(__name__)
@@ -39,6 +40,7 @@ class CommandProcessor:
         """
         self.app = app
         self._log_widget = None  # cached reference
+        self._pending_op_plans: dict[str, tuple[str, dict[str, Any]]] = {}
         self.commands: dict[str, Callable[..., Awaitable[None]]] = {
             "help": self.cmd_help,
             "clear": self.cmd_clear,
@@ -85,6 +87,8 @@ class CommandProcessor:
             "sdd": self.cmd_sdd,
             "impact": self.cmd_impact,
             "fleet": self.cmd_fleet,
+            "op": self.cmd_op,
+            "confirm": self.cmd_confirm,
             "mcp:reload": self.cmd_mcp_reload,
             "codemap": self.cmd_codemap,
             "resources": self.cmd_resources,
@@ -157,28 +161,8 @@ class CommandProcessor:
             )
 
     async def _run_gateway_command(self, cmd_name: str, text: str) -> None:
-        """Fall back to the gateway's commands/execute endpoint."""
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    f"{self.app.agent_client.base_url}/api/enhanced/commands/execute",
-                    json={"command": text},
-                    timeout=15.0,
-                )
-                if response.status_code != 200:
-                    self.app.notify(
-                        f"Gateway command failed: Code {response.status_code}",
-                        severity="error",
-                    )
-                    return
-                data = response.json()
-                await self._show_gateway_response(data.get("response_markdown", ""))
-                await self._apply_client_actions(data.get("client_actions", []))
-        except Exception as e:
-            self.app.notify(
-                f"Unknown command: /{cmd_name} (Gateway offline: {e})",
-                severity="warning",
-            )
+        """Unknown commands have no implicit network execution path."""
+        self.app.notify(f"Unknown command: /{cmd_name}", severity="warning")
 
     async def _show_gateway_response(self, response_markdown: str) -> None:
         """Render a gateway response in the conversation, or notify on failure."""
@@ -556,21 +540,53 @@ class CommandProcessor:
             f"[dim]conf {conf}%  {tags}[/dim]"
         )
 
-    async def _fleet_grant(
-        self, conversation: Any, client: Any, parts: list[str]
-    ) -> None:
-        """``/fleet grant <approval_id>`` — approve one pending fleet action."""
-        if len(parts) < 2:
-            await conversation.add_info(
-                "[yellow]Usage: /fleet grant <approval_id>[/yellow]"
+    async def cmd_op(self, args: str) -> None:
+        """Invoke a GraphOS operation: /op <op.id> <JSON object>."""
+        op, _, raw = args.strip().partition(" ")
+        try:
+            params = json.loads(raw) if raw.strip() else {}
+        except json.JSONDecodeError:
+            self.app.notify("/op params must be a JSON object", severity="warning")
+            return
+        if not op or not isinstance(params, dict):
+            self.app.notify("Usage: /op <op.id> <JSON object>", severity="warning")
+            return
+        if op.lower().startswith("approvals."):
+            self.app.notify(
+                "Approval operations require the web console", severity="warning"
             )
             return
+        conversation = self.app.query_one("Conversation")
         try:
-            await client.grant_fleet_approval(parts[1])
-        except Exception as exc:
-            await conversation.add_info(f"[red]Grant failed: {exc}[/red]")
+            result = await self.app.agent_client.invoke_op(op, params)
+        except GraphOSOperationError as exc:
+            if exc.code == "CONFIRMATION_REQUIRED":
+                plan_ref = exc.details.get("plan_ref")
+                if isinstance(plan_ref, str) and plan_ref:
+                    self._pending_op_plans[plan_ref] = (op, params)
+            await conversation.add_info(
+                f"[yellow]{exc.code}: {json.dumps(exc.details)}[/yellow]"
+            )
             return
-        await conversation.add_info(f"[green]Granted approval {parts[1]}.[/green]")
+        await conversation.add_info(json.dumps(result, indent=2, default=str))
+
+    async def cmd_confirm(self, args: str) -> None:
+        """Confirm a previewed PLAN operation: /confirm <plan_ref>."""
+        plan_ref = args.strip()
+        pending = self._pending_op_plans.pop(plan_ref, None)
+        if pending is None:
+            self.app.notify("No pending PLAN with that reference", severity="warning")
+            return
+        op, params = pending
+        conversation = self.app.query_one("Conversation")
+        try:
+            result = await self.app.agent_client.invoke_op(
+                op, params, plan_ref=plan_ref
+            )
+        except GraphOSOperationError as exc:
+            await conversation.add_info(f"[red]Confirmation refused: {exc.code}[/red]")
+            return
+        await conversation.add_info(json.dumps(result, indent=2, default=str))
 
     @staticmethod
     def _fleet_lines(topology: Any, approvals: list[dict[str, Any]]) -> list[str]:
@@ -585,8 +601,6 @@ class CommandProcessor:
             action = approval.get("action", "")
             target = approval.get("target") or approval.get("subject") or ""
             lines.append(f"- {approval_id}: {action} {target}".rstrip())
-        if approvals:
-            lines.append("[dim]Grant with /fleet grant <id>[/dim]")
         return lines
 
     async def _fleet_overview(self, conversation: Any, client: Any) -> None:
@@ -600,7 +614,7 @@ class CommandProcessor:
         await conversation.add_info("\n".join(self._fleet_lines(topology, approvals)))
 
     async def cmd_fleet(self, args: str) -> None:
-        """Show fleet topology and approvals, or grant one with ``grant <id>``."""
+        """Show fleet topology and pending approvals."""
         conversation = self.app.query_one("Conversation")
         client = getattr(self.app, "agent_client", None)
         if client is None:
@@ -611,7 +625,9 @@ class CommandProcessor:
 
         parts = args.strip().split()
         if parts and parts[0] == "grant":
-            await self._fleet_grant(conversation, client, parts)
+            self.app.notify(
+                "Approval operations require the web console", severity="warning"
+            )
             return
         await self._fleet_overview(conversation, client)
 

@@ -307,9 +307,13 @@ Example: If you type "fix the bug in app.py" followed by "and add a test for it"
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `AGENT_URL` | `http://localhost:8000` | Agent server URL (interactive and headless) |
-| `ACP_URL` | `{AGENT_URL}/acp` | Override for the ACP mount used by `client.py`'s hand-rolled JSON-RPC/SSE convention (session create, `rpc/{id}`, `stream/{id}`). Defaults to `{AGENT_URL}/acp` when unset. |
+| `AGENT_URL` | `http://localhost:8000` | GraphOS base URL for A2A chat and REST operations |
+| `AGENT_BEARER_TOKEN` | unset | Caller credential for GraphOS; required for remote endpoints |
 | `AGENT_THEME` | `tokyo-night` | Startup theme (any Textual built-in theme name) |
+
+The `/op` command requires Python 3.12 or newer and an installed GraphOS
+distribution containing its generated client. Chat remains available on Python
+3.11. Without the generated client, `/op` refuses with `CLIENT_UNAVAILABLE`.
 
 ### Themes
 
