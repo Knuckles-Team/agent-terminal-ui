@@ -441,7 +441,7 @@ async def test_client_consumes_live_capability_and_run_contracts() -> None:
             return httpx.Response(404, json={"detail": "not found"})
         return route(request, body)
 
-    client = AgentClient("https://gateway.test")
+    client = AgentClient("https://gateway.test", bearer_token="caller-token")
     await client._http_client.aclose()
     client._http_client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
     try:
