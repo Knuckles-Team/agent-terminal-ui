@@ -70,6 +70,14 @@ repos:
   hooks:
   - id: nbqa-ruff
     args: ["--fix"]
+- repo: https://github.com/Knuckles-Team/pipelines
+  rev: main
+  hooks:
+  - id: spec-status
+  - id: spec-decomposition
+  - id: spec-trailers
+    stages: [pre-push, manual]
+    args: ["--base-ref", "origin/main"]
 - repo: local
   hooks:
   - id: dependency-readiness
