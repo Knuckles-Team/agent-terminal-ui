@@ -95,6 +95,7 @@ def _registry_digest() -> str:
         "https://remote.example\\path",
     ],
 )
+@pytest.mark.spec("TUI-RUNTIME-R001.2")
 def test_graphos_endpoint_refuses_unsafe_urls(url: str) -> None:
     with pytest.raises(ValueError):
         AgentClient(base_url=url, bearer_token="caller-token")
@@ -103,17 +104,20 @@ def test_graphos_endpoint_refuses_unsafe_urls(url: str) -> None:
 @pytest.mark.parametrize(
     "token", ["", " ", "token\nvalue", "token\tvalue", "tok\u00e9n"]
 )
+@pytest.mark.spec("TUI-RUNTIME-R001.2")
 def test_graphos_client_rejects_invalid_caller_credential(token: str) -> None:
     with pytest.raises(ValueError, match="invalid caller credential"):
         AgentClient(base_url="https://remote.example", bearer_token=token)
 
 
+@pytest.mark.spec("TUI-RUNTIME-R001.2")
 def test_remote_graphos_endpoint_requires_explicit_caller_credential() -> None:
     with pytest.raises(ValueError, match="requires caller credential"):
         AgentClient(base_url="https://remote.example")
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.2")
 async def test_remote_graphos_environment_requires_operator_credential(
     monkeypatch,
 ) -> None:
@@ -129,6 +133,7 @@ async def test_remote_graphos_environment_requires_operator_credential(
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R002")
 async def test_stream_runs_one_authenticated_a2a_task_to_its_final_state():
     body = _sse(
         _result(_task("submitted")),
@@ -188,6 +193,7 @@ async def test_stream_runs_one_authenticated_a2a_task_to_its_final_state():
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.4")
 async def test_failed_task_reports_an_error_before_ending_the_turn():
     body = _sse(_result(_task("submitted")), _result(_status("failed", final=True)))
     client, _ = _client(lambda request: httpx.Response(200, content=body))
@@ -199,6 +205,7 @@ async def test_failed_task_reports_an_error_before_ending_the_turn():
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.4")
 async def test_unauthenticated_or_refused_stream_surfaces_one_error_event():
     client, _ = _client(
         lambda request: httpx.Response(
@@ -222,6 +229,7 @@ async def test_unauthenticated_or_refused_stream_surfaces_one_error_event():
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.4")
 async def test_error_frame_mid_stream_ends_the_turn_with_an_error():
     body = _sse(
         _result(_task("submitted")),
@@ -250,6 +258,7 @@ async def test_non_text_parts_are_refused_before_any_request():
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R002")
 async def test_cancel_targets_the_current_turns_task():
     body = _sse(_result(_task("working")))
 
@@ -273,6 +282,7 @@ async def test_cancel_targets_the_current_turns_task():
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R002")
 async def test_cancel_without_a_task_is_refused_locally():
     client, recorder = _client(lambda request: httpx.Response(500))
     with pytest.raises(ValueError):
@@ -300,6 +310,7 @@ async def test_cancel_error_raises_the_json_rpc_error():
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R002")
 async def test_resubscribe_sends_the_last_event_id():
     body = _sse(_result(_status("completed", final=True)))
     client, recorder = _client(lambda request: httpx.Response(200, content=body))
@@ -345,6 +356,7 @@ async def test_versioned_operation_preserves_refusal_details():
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.1")
 async def test_versioned_operation_uses_generated_digest_contract() -> None:
     client, recorder = _client(
         lambda _request: httpx.Response(
@@ -362,6 +374,7 @@ async def test_versioned_operation_uses_generated_digest_contract() -> None:
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.1")
 async def test_versioned_operation_rejects_stale_registry() -> None:
     client, _recorder = _client(
         lambda _request: httpx.Response(
@@ -380,6 +393,7 @@ async def test_versioned_operation_rejects_stale_registry() -> None:
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.1")
 async def test_versioned_operation_rejects_unregistered_op_before_network() -> None:
     client, recorder = _client(lambda _request: httpx.Response(500))
     with pytest.raises(GraphOSOperationError) as caught:
@@ -390,6 +404,7 @@ async def test_versioned_operation_rejects_unregistered_op_before_network() -> N
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.6")
 async def test_versioned_operation_refuses_python_311_without_network(
     monkeypatch,
 ) -> None:
@@ -405,6 +420,7 @@ async def test_versioned_operation_refuses_python_311_without_network(
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.6")
 async def test_python_311_keeps_a2a_chat_when_ops_client_is_unavailable(
     monkeypatch,
 ) -> None:
@@ -420,6 +436,7 @@ async def test_python_311_keeps_a2a_chat_when_ops_client_is_unavailable(
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.1")
 async def test_versioned_operation_refuses_incomplete_client_wheel(
     monkeypatch,
 ) -> None:
@@ -452,6 +469,7 @@ async def test_approval_operation_is_refused_before_network(op: str):
 @pytest.mark.parametrize(
     "op", ["query/uql", "query..uql", "query.uql?x=1", "query.uql\n", ""]
 )
+@pytest.mark.spec("TUI-RUNTIME-R001.1")
 async def test_versioned_operation_refuses_unsafe_ids_without_network(op: str):
     client, recorder = _client(
         lambda _request: httpx.Response(200, json={"ok": True, "result": {}})
@@ -464,6 +482,7 @@ async def test_versioned_operation_refuses_unsafe_ids_without_network(op: str):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("malformed", ["non_json", "missing_result"])
+@pytest.mark.spec("TUI-RUNTIME-R001.1")
 async def test_versioned_operation_refuses_malformed_success_envelope(
     malformed: str,
 ):
@@ -486,6 +505,7 @@ async def test_versioned_operation_refuses_malformed_success_envelope(
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.3")
 async def test_confirm_plan_sends_full_binding():
     client, recorder = _client(
         lambda request: httpx.Response(
@@ -504,6 +524,7 @@ async def test_confirm_plan_sends_full_binding():
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.3")
 async def test_unsigned_plan_confirmation_refuses_before_network():
     client, recorder = _client(lambda _request: httpx.Response(500))
     with pytest.raises(GraphOSOperationError) as caught:
@@ -516,6 +537,7 @@ async def test_unsigned_plan_confirmation_refuses_before_network():
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.5")
 async def test_unsigned_input_required_decision_cannot_resume_a2a_task():
     client, recorder = _client(lambda _request: httpx.Response(500))
     client._pending_plans[_TASK] = {
@@ -531,6 +553,7 @@ async def test_unsigned_input_required_decision_cannot_resume_a2a_task():
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.3")
 async def test_confirm_plan_refuses_approval_operation_without_network():
     client, recorder = _client(lambda _request: httpx.Response(500))
     with pytest.raises(GraphOSOperationError) as caught:
@@ -543,6 +566,7 @@ async def test_confirm_plan_refuses_approval_operation_without_network():
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.5")
 async def test_task_input_required_exposes_only_bound_approval():
     bound = _status("input-required", final=False)
     bound["status"]["message"] = {
@@ -565,6 +589,7 @@ async def test_task_input_required_exposes_only_bound_approval():
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.5")
 async def test_unbound_input_required_fails_closed():
     client, _ = _client(
         lambda request: httpx.Response(
@@ -578,6 +603,7 @@ async def test_unbound_input_required_fails_closed():
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.5")
 async def test_console_input_required_cannot_offer_tui_approval():
     console = _status("input-required", final=False)
     console["status"]["message"] = {
@@ -600,6 +626,7 @@ async def test_console_input_required_cannot_offer_tui_approval():
 
 
 @pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.5")
 async def test_forged_plan_binding_cannot_offer_approval_operation():
     forged = _status("input-required", final=False)
     forged["status"]["message"] = {
@@ -658,6 +685,7 @@ def _assert_no_agent_client_protocol_import(py_file: Path) -> None:
             )
 
 
+@pytest.mark.spec("TUI-RUNTIME-R001.7")
 def test_agent_client_protocol_module_is_not_imported_by_this_package():
     """``agent_client_protocol`` (the real Zed ACP SDK) must not be a runtime
     dependency of this client — conversation turns use GraphOS's A2A
