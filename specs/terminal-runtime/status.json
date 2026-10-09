@@ -6,35 +6,43 @@
     "TUI-RUNTIME-R001",
     "TUI-RUNTIME-R002"
   ],
-  "delivery_state": "SPECIFIED",
+  "delivery_state": "LANDED",
   "acceptance_state": "NOT_AUDITED",
-  "evidence": [],
+  "evidence": [
+    {
+      "kind": "merged_head",
+      "result": "passed",
+      "commit": "d2b5cea055c81657f8645510059fba13a8cc5280",
+      "url": "https://github.com/Knuckles-Team/agent-terminal-ui/commit/d2b5cea055c81657f8645510059fba13a8cc5280",
+      "description": "Merge commit for PR #10 (feat/tui-runtime-r001-r002-20261009) onto main; delivers both requirements."
+    }
+  ],
   "requirements": [
     {
       "id": "TUI-RUNTIME-R001",
       "title": "Terminal operation client issues typed commands with pending approvals",
-      "delivery_state": "BUILT",
+      "delivery_state": "LANDED",
       "evidence": [
         {
-          "kind": "branch",
+          "kind": "merged_head",
           "result": "passed",
-          "commit": "2b5f3212591c3fa202514467a6970234d5f1ebf8",
-          "url": "https://github.com/Knuckles-Team/agent-terminal-ui/commit/2b5f3212591c3fa202514467a6970234d5f1ebf8",
-          "description": "Implementation commit is published on a branch; not yet merged to the default branch."
+          "commit": "d2b5cea055c81657f8645510059fba13a8cc5280",
+          "url": "https://github.com/Knuckles-Team/agent-terminal-ui/commit/d2b5cea055c81657f8645510059fba13a8cc5280",
+          "description": "Merged to main via PR #10, rebasing the prior branch commit 2b5f3212591c3fa202514467a6970234d5f1ebf8 (feat(tui): use GraphOS A2A and generated operation client). Targeted unit tests (tests/test_client.py, tests/test_tui_components.py, tests/test_commands.py, tests/test_capability_platform.py, tests/test_app_handlers.py, tests/test_client_methods.py) pass against the installed generated GraphOS client: 233 passed."
         }
       ]
     },
     {
       "id": "TUI-RUNTIME-R002",
       "title": "Terminal chat transport is reconciled with the current Graph OS boundary",
-      "delivery_state": "BUILT",
+      "delivery_state": "LANDED",
       "evidence": [
         {
-          "kind": "branch",
+          "kind": "merged_head",
           "result": "passed",
-          "commit": "18f70ebdc8f831af887ef76286f6b9ae087f1352",
-          "url": "https://github.com/Knuckles-Team/agent-terminal-ui/commit/18f70ebdc8f831af887ef76286f6b9ae087f1352",
-          "description": "Implementation commit is published on a branch; not yet merged to the default branch."
+          "commit": "d2b5cea055c81657f8645510059fba13a8cc5280",
+          "url": "https://github.com/Knuckles-Team/agent-terminal-ui/commit/d2b5cea055c81657f8645510059fba13a8cc5280",
+          "description": "Merged to main via PR #10, which replaces the hand-rolled ACP JSON-RPC-over-HTTP+SSE transport in agent_terminal_ui/client.py with GraphOS's canonical A2A JSON-RPC boundary and removes the superseded ACP code path. The prior status.json evidence commit (18f70ebdc8f831af887ef76286f6b9ae087f1352) was a mislabeled, unrelated fix; corrected here to the actual merged transport-replacement evidence."
         }
       ]
     }
