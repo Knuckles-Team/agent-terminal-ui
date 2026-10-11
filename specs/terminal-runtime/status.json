@@ -161,7 +161,9 @@
       "title": "Packaged development skill carries the rapid-delivery contract",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [
+        "tests/test_skill_package.py:10"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R004",
@@ -175,14 +177,18 @@
       "title": "Docs layout matches agent-webui",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [
+        "tests/test_docs_layout.py:9"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R006",
       "title": "Pyproject configures the pipelines hook sections",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [
+        "tests/test_precommit_hooks.py:9"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R007",
@@ -203,7 +209,9 @@
       "title": "AGENTS.md sections match agent-webui",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [
+        "tests/test_docs_layout.py:17"
+      ]
     }
   ]
 }

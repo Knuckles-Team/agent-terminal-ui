@@ -232,6 +232,26 @@ is what Dependabot flags. Rules:
 4. **Patch CVEs with a version floor at the source, then re-lock.** `uv` resolves one version
    graph-wide, so a lower-bound in the extra that pulls a dependency raises it for the whole lock.
 
+## Commands
+
+```bash
+uv run --frozen pytest tests -q          # test suite
+agent-terminal-ui                        # run the terminal app
+uvx --from pre-commit==4.6.0 pre-commit run --files $(git diff --name-only origin/main...HEAD)
+```
+
+## Quality gates
+
+`.pre-commit-config.yaml` runs ruff, mypy, vulture, codespell, the spec hooks, `pytest` and `security-sanitizer`. A change must pass them before it lands. A gate must not be bypassed with a skip, a `type: ignore` comment or an allowlist entry.
+
+## Branching & isolation
+
+Work in a real `git worktree add` from `origin/main`. The canonical checkout must stay untouched. Stage explicit paths only, and never run `git stash`.
+
+## Documentation
+
+Docs live in `docs/` and publish through `mkdocs.yml`. The `ste-staged` hook checks new prose. Pages must stay short and factual.
+
 ## Specs: extend first
 
 Find the spec row that owns the behavior before any code change. Search with `git grep -n "<term>" -- specs`. Cite the row ID in the commit `Spec:` trailer. Extend the owning spec before any new spec text. Add a child row, a new rollup, or a dated `plan.md` "Amendments" entry. Create a new spec only for a capability that no spec owns. Audits, reviews, and carry-overs land in the owning spec. They never get a spec directory. Reuse an existing function, module, or store before adding one. The rules are the ecosystem [spec standard](https://github.com/Knuckles-Team/pipelines/blob/main/reference/spec-standard.md).

@@ -58,7 +58,7 @@ where = ["."]
 include = ["agent_terminal_ui*"]
 
 [tool.setuptools.package-data]
-agent_terminal_ui = ["py.typed"]
+agent_terminal_ui = ["py.typed", "skills/**/*"]
 
 [tool.ruff]
 line-length = 88
@@ -76,3 +76,9 @@ check_untyped_defs = true
 [tool.pipelines_hooks.ste]
 paths = ["README.md", "AGENTS.md", "CLAUDE.md", "CONTRIBUTING.md", "CHANGELOG.md", "docs", "specs"]
 exempt = ["specs/_template/*"]
+
+[tool.pipelines_hooks.public_surface]
+repository = "Knuckles-Team/agent-terminal-ui"
+distribution = "agent-terminal-ui"
+pages_url = "https://knuckles-team.github.io/agent-terminal-ui/"
+mcp_server = false

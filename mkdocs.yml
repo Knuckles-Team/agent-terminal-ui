@@ -47,6 +47,10 @@ extra:
 
 nav:
   - Home: index.md
+  - Start: start.md
+  - Status: status.md
+  - Deployment: deployment.md
+  - Design system: design-system.md
   - Architecture: architecture.md
   - Features: features.md
   - Configuration: configuration.md
