@@ -34,3 +34,35 @@ Keep the TUI's base Python 3.11 chat install working. Put a generated GraphOS op
 ## Quality and reuse
 
 Use the existing command registry, `AgentClient`, `httpx`, Textual widgets, and GraphOS generated models. Keep one transport normalization path and no duplicated request envelope construction. Run the repository's configured Ruff, type and pytest checks. The current repository has no configured CCCC, `jscpd` or Dupehound command or threshold; before acceptance, either add shared ecosystem invocations with an explicit baseline or record an agreed exception. Do not claim a numerical pass without a configured tool. Apply KISS through a single client and one-use confirmation state. No unrelated `/docs` edit is required; update README/configuration only where command or credential setup changes, and update AGENTS/constitution only if the contract itself changes.
+
+## Structure parity with agent-webui (2026-10-11)
+
+The operator requires agent-terminal-ui to use the same structure as agent-webui. The table compares structure only.
+
+| Element | agent-webui | agent-terminal-ui | Action |
+|---|---|---|---|
+| Specs | 6 area specs | 1 spec (`terminal-runtime`) | Decisions below; no new directory |
+| Workflows | `advisory.yml`, `release.yml` | `pages.yml`, `pipeline.yml` | Differs in names; add release caller (R007) |
+| Pages caller | `pages_pipeline.yml@main`, `spec_dashboard_enabled: true` | same | Same |
+| Python pipeline caller | none seen | `python_pipeline.yml@main` | Keep |
+| Pre-commit | `.config`/root config, 50+ hook ids incl. spec-standard, ste-staged, public-surface | root config, 26 ids | Add spec hooks (R004) |
+| `pyproject` hook sections | `public_surface`, `ste` | none | Add (R006) |
+| Packaged development skill | present | missing | Add (R003) |
+| Docs | start, status, deployment, design-system, apps, atlas, others | agent_view, configuration, session pages | Add four pages (R005) |
+| `mkdocs.yml` | present | present | Same |
+| AGENTS.md | Commands, Quality gates, Branching, Documentation, Specs | Working discipline, worktrees, Specs | Add headings (R009) |
+
+Area decisions, from the terminal code:
+
+| webui area | Terminal client has it? | Decision |
+|---|---|---|
+| Design system | Yes: `app.py` selects a Textual theme (`tokyo-night`) | New rollup `TUI-RUNTIME-R008` in the existing spec |
+| Decision evidence | Partly: `app.py` approval decisions, covered by `R001.5` | No new row |
+| Finance asset manager | No: `git grep` for finance and asset finds nothing | No spec |
+| API consumer | Yes: `client.py` GraphOS boundary, owned by `R001` and `R002` | No new row |
+| App surfaces | Yes: `screens/`, owned by `R001.7` | No new row |
+| Identity and access | Yes: bearer caller identity, owned by `R001.2` | No new row |
+
+### Amendments
+
+- 2026-10-11, rows `TUI-RUNTIME-R003` to `TUI-RUNTIME-R009`: the operator required agent-terminal-ui to match agent-webui structure. The old state had no structure rows. The new state adds seven rollups. Evidence: the comparison table above.

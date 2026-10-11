@@ -2,7 +2,7 @@
   "schema_version": 2,
   "spec_id": "TUI-RUNTIME-001",
   "owner_repo": "agent-terminal-ui",
-  "delivery_state": "VERIFIED",
+  "delivery_state": "SPECIFIED",
   "requirement_ids": [
     "TUI-RUNTIME-R001",
     "TUI-RUNTIME-R001.1",
@@ -12,7 +12,14 @@
     "TUI-RUNTIME-R001.5",
     "TUI-RUNTIME-R001.6",
     "TUI-RUNTIME-R001.7",
-    "TUI-RUNTIME-R002"
+    "TUI-RUNTIME-R002",
+    "TUI-RUNTIME-R003",
+    "TUI-RUNTIME-R004",
+    "TUI-RUNTIME-R005",
+    "TUI-RUNTIME-R006",
+    "TUI-RUNTIME-R007",
+    "TUI-RUNTIME-R008",
+    "TUI-RUNTIME-R009"
   ],
   "requirements": [
     {
@@ -148,6 +155,55 @@
         "tests/test_client.py:285",
         "tests/test_client.py:313"
       ]
+    },
+    {
+      "id": "TUI-RUNTIME-R003",
+      "title": "Packaged development skill carries the rapid-delivery contract",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R004",
+      "title": "Pre-commit runs the spec and sprawl hooks agent-webui runs",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R005",
+      "title": "Docs layout matches agent-webui",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R006",
+      "title": "Pyproject configures the pipelines hook sections",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R007",
+      "title": "Release workflow caller matches agent-webui",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R008",
+      "title": "Terminal theme tokens and accessibility are a stated contract",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R009",
+      "title": "AGENTS.md sections match agent-webui",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
     }
   ]
 }
