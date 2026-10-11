@@ -100,7 +100,7 @@
     },
     {
       "id": "TUI-RUNTIME-R001.5",
-      "title": "Pending request is displayed; no effect is asserted",
+      "title": "Pending request is displayed. No effect is asserted",
       "delivery_state": "VERIFIED",
       "landed_in": [
         "d309979d133f"
@@ -115,7 +115,7 @@
     },
     {
       "id": "TUI-RUNTIME-R001.6",
-      "title": "Base chat works; compatible optional install enables /op",
+      "title": "Base chat works. Compatible optional install enables /op",
       "delivery_state": "VERIFIED",
       "landed_in": [
         "d309979d133f"
