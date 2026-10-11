@@ -31,4 +31,9 @@ No manual-only proof substitutes for the negative tests. If a live identity prov
 | TUI-RUNTIME-R007 | File-level unit test in `tests/test_docs_layout.py` | Workflow calls pipelines at main | A SHA pin fails |
 | TUI-RUNTIME-R008 | File-level unit test in `tests/test_app_handlers.py` | Default theme and no-colour fallback hold | An unknown theme name falls back, not crashes |
 | TUI-RUNTIME-R009 | File-level unit test in `tests/test_docs_layout.py` | Four headings present | A missing heading fails |
-
+| TUI-RUNTIME-R010.1 | `tests/x::test_run_read_uses_graphos_operations` | Run read goes through the graph-os read operations. | The absent or malformed input displays "not available" |
+| TUI-RUNTIME-R010.2 | `tests/x::test_harness_config_shown` | Applied harness configuration is displayed. | The absent or malformed input displays "not available" |
+| TUI-RUNTIME-R010.3 | `tests/x::test_context_and_cost_shown` | Context use is displayed against the budget. | The absent or malformed input displays "not available" |
+| TUI-RUNTIME-R010.4 | `tests/x::test_plan_read_only` | Current plan is displayed read-only. | The absent or malformed input displays "not available" |
+| TUI-RUNTIME-R010.5 | `tests/x::test_termination_reasons_distinct` | Each termination reason has a distinct state. | The absent or malformed input displays "not available" |
+| TUI-RUNTIME-R010.6 | `tests/x::test_absent_operation_not_available` | Absent operation displays an honest state. | The absent or malformed input displays "not available" |
