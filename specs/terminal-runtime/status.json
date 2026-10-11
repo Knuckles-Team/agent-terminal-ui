@@ -245,42 +245,42 @@
     },
     {
       "id": "TUI-RUNTIME-R010.1",
-      "title": "Run read goes through the graph-os read operations",
+      "title": "Run operation wiring",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R010.2",
-      "title": "Applied harness configuration is displayed",
+      "title": "Applied configuration",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R010.3",
-      "title": "Context use is displayed against the budget",
+      "title": "Context and cost",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R010.4",
-      "title": "Current plan is displayed read-only",
+      "title": "Read-only current plan",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R010.5",
-      "title": "Each termination reason has a distinct state",
+      "title": "Distinct terminal reasons",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R010.6",
-      "title": "Absent operation displays an honest state",
+      "title": "Served surface proof",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []

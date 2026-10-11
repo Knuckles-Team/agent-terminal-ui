@@ -65,3 +65,8 @@ current specification status, delivery timelines, velocity and burndown, and
 open pull request and issue snapshots. It refreshes with each main-branch push.
 Unknown completion dates and unavailable history are labeled explicitly;
 individual requirements and pull requests do not count as completed specifications.
+
+## Planned run observation
+
+[TUI-RUNTIME-R010](https://github.com/Knuckles-Team/agent-terminal-ui/tree/main/specs/terminal-runtime) defines planned run reads and served acceptance.
+The specification does not establish runtime availability.
