@@ -31,9 +31,18 @@ No manual-only proof substitutes for the negative tests. If a live identity prov
 | TUI-RUNTIME-R007 | File-level unit test in `tests/test_docs_layout.py` | Workflow calls pipelines at main | A SHA pin fails |
 | TUI-RUNTIME-R008 | File-level unit test in `tests/test_app_handlers.py` | Default theme and no-colour fallback hold | An unknown theme name falls back, not crashes |
 | TUI-RUNTIME-R009 | File-level unit test in `tests/test_docs_layout.py` | Four headings present | A missing heading fails |
-| TUI-RUNTIME-R010.1 | `tests/x::test_run_read_uses_graphos_operations` | Run read goes through the graph-os read operations. | The absent or malformed input displays "not available" |
-| TUI-RUNTIME-R010.2 | `tests/x::test_harness_config_shown` | Applied harness configuration is displayed. | The absent or malformed input displays "not available" |
-| TUI-RUNTIME-R010.3 | `tests/x::test_context_and_cost_shown` | Context use is displayed against the budget. | The absent or malformed input displays "not available" |
-| TUI-RUNTIME-R010.4 | `tests/x::test_plan_read_only` | Current plan is displayed read-only. | The absent or malformed input displays "not available" |
-| TUI-RUNTIME-R010.5 | `tests/x::test_termination_reasons_distinct` | Each termination reason has a distinct state. | The absent or malformed input displays "not available" |
-| TUI-RUNTIME-R010.6 | `tests/x::test_absent_operation_not_available` | Absent operation displays an honest state. | The absent or malformed input displays "not available" |
+
+## Planned run-surface acceptance
+
+These tests are planned, not execution receipts. Each test must bind its exact requirement ID.
+Each case must enter the production UI, existing client, and a served GraphOS operation fixture.
+A mocked widget value alone must not count as served evidence.
+
+| Requirement | Planned test | Positive served requirement | Negative served requirement |
+|---|---|---|---|
+| TUI-RUNTIME-R010.1 | `tests/test_run_inspector_contract.py::test_run_read_uses_graphos_operations` | A selected run must render through the served operation and existing client. | Absent registration, timeout or denial must display unavailable without direct engine calls. |
+| TUI-RUNTIME-R010.2 | `tests/test_run_inspector_contract.py::test_harness_config_shown` | A committed configuration must retain its reference and values through the client. | Missing or inaccessible configuration must not use defaults or the latest configuration. |
+| TUI-RUNTIME-R010.3 | `tests/test_run_inspector_contract.py::test_context_and_cost_shown` | Measured zero must render as zero; aggregate cost must retain its solved-task label. | Null values must display unavailable; zero-solved abstention must not render zero cost. |
+| TUI-RUNTIME-R010.4 | `tests/test_run_inspector_contract.py::test_plan_read_only` | A fresh matching snapshot must preserve item order, revision and AU statuses. | Expired, wrong-run, regressing or unavailable snapshots must reveal no items or edit controls. |
+| TUI-RUNTIME-R010.5 | `tests/test_run_inspector_contract.py::test_termination_reasons_distinct` | Each of final_answer, context_overflow, stuck, step_budget and error must have its own label. | Unknown or missing reasons must display unavailable; overflow and stuck must not collapse to generic failure. |
+| TUI-RUNTIME-R010.6 | `tests/test_run_inspector_contract.py::test_run_surface_end_to_end` | A served fixture must render summary, configuration, context, cost and an available plan. | Denied reads after success must clear prior protected values; the UI must stay responsive without fabricated data. |

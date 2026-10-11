@@ -32,9 +32,9 @@
 - [ ] **TUI-RUNTIME-R008:** Theme tokens and no-colour fallback
 - [ ] **TUI-RUNTIME-R009:** AGENTS.md headings
 - [ ] **TUI-RUNTIME-R010:** Run harness surface (rollup of 1 to 6)
-- [ ] **TUI-RUNTIME-R010.1:** Run read goes through the graph-os read operations.
-- [ ] **TUI-RUNTIME-R010.2:** Applied harness configuration is displayed.
-- [ ] **TUI-RUNTIME-R010.3:** Context use is displayed against the budget.
-- [ ] **TUI-RUNTIME-R010.4:** Current plan is displayed read-only.
-- [ ] **TUI-RUNTIME-R010.5:** Each termination reason has a distinct state.
-- [ ] **TUI-RUNTIME-R010.6:** Absent operation displays an honest state.
+- [ ] **TUI-RUNTIME-R010.1:** Run operation wiring; implement the planned positive and negative served tests.
+- [ ] **TUI-RUNTIME-R010.2:** Applied configuration; implement the planned positive and negative served tests.
+- [ ] **TUI-RUNTIME-R010.3:** Context and cost; implement the planned positive and negative served tests.
+- [ ] **TUI-RUNTIME-R010.4:** Read-only current plan; implement the planned positive and negative served tests.
+- [ ] **TUI-RUNTIME-R010.5:** Distinct terminal reasons; implement the planned positive and negative served tests.
+- [ ] **TUI-RUNTIME-R010.6:** Served surface proof; implement the planned positive and negative served tests.

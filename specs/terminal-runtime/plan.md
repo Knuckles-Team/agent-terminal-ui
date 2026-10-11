@@ -65,20 +65,54 @@ Area decisions, from the terminal code:
 
 ## Run harness surface (TUI-RUNTIME-R010)
 
-Data flow: `RunBrowserScreen` (`run_inspector.py:27`) → `RunInspectorScreen._poll_once` (:399) → `AgentClient.get_run_summary` (`client.py:804`) → graph-os `runs.get` / `runs.metrics` → harness block.
+### Existing source and planned wiring
 
-Types and fields (names from the design brief): `harness_config` (`context_policy` with `soft_threshold`, `hard_threshold`, `recent_window_fraction`; `plan_scaffold`; `action_space`), `peakContextTokens`, `contextBudgetTokens`, `costUsd`, `terminationReason` (`final_answer` | `context_overflow` | `stuck` | `step_budget` | `error`), and the run's plan state.
+`CommandProcessor.cmd_run` (`agent_terminal_ui/commands.py:244`) → `open_run_inspector` (`app.py:869`) → `RunInspectorScreen._poll_once` (`tui/run_inspector.py:399`) → `AgentClient.get_run_summary` (`client.py:804`).
 
-Attach point: `RunInspectorScreen._poll_once` (`agent_terminal_ui/tui/run_inspector.py:399`) calls `client.get_run_summary` (`agent_terminal_ui/client.py:804`) into `RunSummary` (`capabilities.py:436`); a new harness block renders in the inspector, opened from `RunBrowserScreen` (`run_inspector.py:27`).
+Current source ends at `GET /api/runs/{id}`. It does not invoke `runs.get` or `runs.metrics`.
+The implementation must migrate this existing path only when the registered replacement has served proof.
 
-Failure behaviour: a refused or absent operation yields "not available". The client invents no value and displays no zero for an absent number. Each termination reason has its own label; `context_overflow` and `stuck` carry their own text.
+The client must use the versioned GraphOS operation transport and its generated envelope.
+It must not add another HTTP stack or call the engine directly.
 
-Reuse and new: the run view above stays; the harness block is new.
+### Model and wire-to-view mapping
 
-Decisions: the client reads `runs.get` and `runs.metrics` only. Rejected alternative: computing context use or cost in the client.
-The engine owns the run trace, and a client copy drifts.
+[GraphOS run reads](https://github.com/Knuckles-Team/graph-os/tree/main/specs/hosted-api-operations) own the served projection.
+`GRAPHOS-OPS-R021.4.5` serves per-run fields; `.3` and `.4` define aggregate models and operations.
+`GRAPHOS-OPS-R021.4.6` supplies registration and generated artifacts.
 
-Cross-repository: depends on three rows. The `GRAPHOS-OPS` row for run metrics serves `runs.get` and `runs.metrics`. The `AU-HARNESS` row for the run trace writes the fields. The `AU-HARNESS` row for `update_plan` owns the plan state.
+| GraphOS wire field | View label and behavior |
+|---|---|
+| `termination_reason` | Distinct final answer, context overflow, stuck, step budget and error labels |
+| `peak_context_tokens`, `context_budget_tokens` | Peak context tokens against run budget; never current occupancy |
+| `cost_usd` | Per-run USD cost |
+| `harness_config_ref`, `harness_config` | Applied decision reference and available configuration fields |
+| `current_plan` | Available snapshot items, revision and observation time; read-only |
+| `runs.metrics` result `cost_per_solved_task_usd` | Aggregate cost per solved task, with query grouping and abstention |
+
+The client must not accept RDF camelCase fields as alternate wire names.
+The client must preserve null availability and measured zero as different values.
+The engine defines solved tasks and computes aggregates under `EG-ORCH-VOCAB-R010`.
+Zero-solved cost abstention must display unavailable, never zero or per-run cost.
+Pair-level rates and configuration-level costs must retain separate group labels.
+
+### Current-plan prerequisite and refusals
+
+`AU-HARNESS-R014.1` through `.5` own mutable `PlanState` outside stored message history.
+Those rows supply no public snapshot read contract today.
+`GRAPHOS-OPS-R021.4.5` defines the required cross-boundary snapshot and blocks availability until the AU producer exists.
+The client must not derive a plan from messages, reconstruct state, or add a plan writer.
+An available empty plan must differ from unavailable state.
+Run switches, denied refreshes and expired snapshots must clear protected values from the previous display.
+A missing plan must not suppress other independently available trace fields.
+Unknown terminal reasons must display unavailable; the client must never infer success from a final answer alone.
+
+### Evidence and implementation order
+
+Implement the GraphOS producer before the consumer wiring, then field rendering and served acceptance.
+The six existing children remain the only client requirement family for this surface.
+The tests in test-spec.md are planned acceptance paths, not proof of implementation.
+Each row requires its own positive and negative served case through the production UI path above.
 
 ### Amendments
 

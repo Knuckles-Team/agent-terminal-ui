@@ -20,7 +20,7 @@
 |---|---|---|
 | TUI-RUNTIME-R001.1 | `/op <op-id> <JSON object>` validates the operation with the installed generated registry and invokes the versioned GraphOS endpoint. It rejects unknown IDs, malformed JSON, non-object input, and registry digest mismatch. | Command/client tests and installed-wheel contract test |
 | TUI-RUNTIME-R001.2 | The TUI transports the caller's verified credential to GraphOS over TLS for remote endpoints. It never fabricates a principal, persists a bearer in a conversation, or logs it. Missing credential and insecure remote endpoint fail closed. | Negative credential and transport tests |
-| TUI-RUNTIME-R001.3 | A side-effect PLAN is display-only until `/confirm <plan_ref>` sends the exact server-issued binding through `graphos.plan/confirm`; references are single use. A changed operation, parameters, digest, subject, or expired reference cannot execute. | A2A contract, tamper, replay and expiry tests |
+| TUI-RUNTIME-R001.3 | A side-effect PLAN is display-only until `/confirm <plan_ref>` sends the exact server-issued binding through `graphos.plan/confirm`; references are single use. A changed operation, parameters, digest, subject, or expired reference cannot run. | A2A contract, tamper, replay and expiry tests |
 | TUI-RUNTIME-R001.4 | The client parses the documented GraphOS error envelope and handles timeout, network failure, malformed response and non-success status without suggesting success. Chat remains usable after an operation failure. | Mock transport and TUI flow tests |
 | TUI-RUNTIME-R001.5 | An A2A `input-required` approval is surfaced as pending, not silently granted. Approval action methods stay unavailable until a signed, pending-call-bound exchange has a public GraphOS contract and served end-to-end proof. | Negative approval tests, later served identity receipt |
 | TUI-RUNTIME-R001.6 | Python 3.11 base installation remains usable without a GraphOS generated client. The operation feature is explicitly unavailable until a compatible optional client is installed. Dependency metadata and lock reflect the supported Python range. | Clean 3.11 install and command smoke |
@@ -46,3 +46,9 @@ Current delivery and acceptance state for each requirement ID above is recorded 
 |---|---|
 | This TUI's commands, transport, presentation and Python packaging (`TUI-RUNTIME-R001`) | GraphOS's generated operation client, versioned HTTP envelope and A2A methods (see links above). GeniusBot implements its own consumer |
 | Displaying and safely refusing or resuming an approval only after contract proof | GraphOS's signed A2A approval and durable human identity authority (see the A2A task projection link above), proven end to end before approval actions are enabled |
+
+## Run observation
+
+`TUI-RUNTIME-R010` and its six children define the read-only run surface.
+The owning requirements, plan and test specification define its producer dependencies and acceptance.
+The surface must distinguish unavailable values from measured zero and aggregate values from per-run values.
