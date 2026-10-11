@@ -1,4 +1,4 @@
-# TUI-RUNTIME-001 design and integration plan
+# TUI-RUNTIME design and integration plan
 
 ## Existing wiring and architecture
 

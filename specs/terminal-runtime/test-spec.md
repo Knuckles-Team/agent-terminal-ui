@@ -1,4 +1,4 @@
-# TUI-RUNTIME-001 test specification
+# TUI-RUNTIME test specification
 
 | Requirement | Layer and fixture | Expected positive result | Required negative proof |
 |---|---|---|---|

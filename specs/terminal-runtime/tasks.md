@@ -1,4 +1,4 @@
-# TUI-RUNTIME-001 implementation tasks
+# TUI-RUNTIME implementation tasks
 
 - [ ] Review the existing isolated TUI-RUNTIME-R001 source candidate against current main and this spec; preserve unrelated concurrent edits.
 - [ ] Confirm GraphOS's public generated registry, endpoint and A2A plan methods in an installed wheel; align the optional client dependency and Python support matrix.
