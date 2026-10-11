@@ -26,7 +26,7 @@ workflows it supports.
 
 ## Documentation map
 
-- **[Architecture](architecture.md)** — protocol connectivity, key components,
+- **[Architecture](plan.md)** — protocol connectivity, key components,
   environment variables, and implementation details.
 - **[Features](features.md)** — slash commands, keyboard shortcuts, and the model picker.
 - **[Configuration](configuration.md)** — the complete settings reference, hooks

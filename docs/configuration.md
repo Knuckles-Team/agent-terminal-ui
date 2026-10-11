@@ -139,5 +139,5 @@ agent-terminal-ui [--prompt TEXT] [--override] [--bg] [--headless] [--model ID]
 | `--headless` | Run `--prompt` without the TUI, streaming to stdout (requires `--prompt`). |
 | `--model ID` | Model id to use for a headless run. |
 
-See [Architecture](architecture.md#run-modes) for the interactive vs headless
+See [Architecture](plan.md#run-modes) for the interactive vs headless
 footprint comparison.

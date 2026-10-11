@@ -1,5 +1,7 @@
 # agent-terminal-ui specifications
 
+These specs follow the ecosystem [spec standard](https://github.com/Knuckles-Team/pipelines/blob/main/reference/spec-standard.md): one owning spec per capability, extend an existing spec before creating one, audits and reviews land in the owning spec, one ID and title form, one file set. The `spec-standard` gate enforces it.
+
 This tracked directory contains public, owner-native build contracts for the terminal UI. A contributor can implement a spec from this repository and its linked public contracts without access to private notes or infrastructure. The tracked [constitution](../.specify/memory/constitution.md) governs this repository.
 
 ## Structure and index
@@ -19,3 +21,5 @@ The report reads `status.json` as the source of truth. Delivery states are `UNKN
 ## Contribution path
 
 Propose the user behavior first, then document the existing implementation and public interfaces, write the test contract, and implement the smallest complete task set. Reuse the existing TUI command registry and client. Apply CCCC, jscpd, Dupehound and KISS requirements where configured; record a missing command or threshold as a gap rather than a pass. Include exact public revisions and check links when updating status. The ecosystem's [spec generator](https://github.com/Knuckles-Team/universal-skills/tree/main/universal_skills/development/spec-generator), [spec verifier](https://github.com/Knuckles-Team/universal-skills/tree/main/universal_skills/development/spec-verifier), and [Graph OS development skill](https://github.com/Knuckles-Team/graph-os/tree/main/graph_os/skills/graph-os-development) describe the same workflow.
+
+- [`TUI-RUNTIME`](terminal-runtime/spec.md) — Terminal GraphOS operation client

@@ -1,4 +1,4 @@
-# TUI-RUNTIME-001: Terminal GraphOS operation client
+# TUI-RUNTIME — Terminal GraphOS operation client
 
 **Owner:** agent-terminal-ui
 

@@ -1,4 +1,4 @@
-# TUI-RUNTIME-001 implementation tasks
+# TUI-RUNTIME implementation tasks
 
 - [ ] Review the existing isolated TUI-RUNTIME-R001 source candidate against current main and this spec; preserve unrelated concurrent edits.
 - [ ] Confirm GraphOS's public generated registry, endpoint and A2A plan methods in an installed wheel; align the optional client dependency and Python support matrix.
@@ -21,3 +21,13 @@
 - [ ] **TUI-RUNTIME-R001.5:** Pending request is displayed; no effect is asserted
 - [ ] **TUI-RUNTIME-R001.6:** Base chat works; compatible optional install enables /op
 - [ ] **TUI-RUNTIME-R001.7:** Legacy screens still render or use served replacement
+
+## Structure parity with agent-webui (tracked)
+
+- [ ] **TUI-RUNTIME-R003:** Packaged skill `agent-terminal-ui-development`
+- [ ] **TUI-RUNTIME-R004:** Pre-commit spec and sprawl hooks
+- [ ] **TUI-RUNTIME-R005:** Docs layout pages
+- [ ] **TUI-RUNTIME-R006:** Pyproject pipelines hook sections
+- [ ] **TUI-RUNTIME-R007:** Release workflow caller
+- [ ] **TUI-RUNTIME-R008:** Theme tokens and no-colour fallback
+- [ ] **TUI-RUNTIME-R009:** AGENTS.md headings
