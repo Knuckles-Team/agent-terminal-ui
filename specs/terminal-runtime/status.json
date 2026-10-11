@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "spec_id": "TUI-RUNTIME-001",
+  "spec_id": "TUI-RUNTIME",
   "owner_repo": "agent-terminal-ui",
   "delivery_state": "SPECIFIED",
   "requirement_ids": [
