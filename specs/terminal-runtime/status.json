@@ -19,7 +19,14 @@
     "TUI-RUNTIME-R006",
     "TUI-RUNTIME-R007",
     "TUI-RUNTIME-R008",
-    "TUI-RUNTIME-R009"
+    "TUI-RUNTIME-R009",
+    "TUI-RUNTIME-R010",
+    "TUI-RUNTIME-R010.1",
+    "TUI-RUNTIME-R010.2",
+    "TUI-RUNTIME-R010.3",
+    "TUI-RUNTIME-R010.4",
+    "TUI-RUNTIME-R010.5",
+    "TUI-RUNTIME-R010.6"
   ],
   "requirements": [
     {
@@ -220,6 +227,63 @@
       "verified_by": [
         "tests/test_docs_layout.py:17"
       ]
+    },
+    {
+      "id": "TUI-RUNTIME-R010",
+      "title": "Run harness surface is read-only and honest",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R010.1",
+        "TUI-RUNTIME-R010.2",
+        "TUI-RUNTIME-R010.3",
+        "TUI-RUNTIME-R010.4",
+        "TUI-RUNTIME-R010.5",
+        "TUI-RUNTIME-R010.6"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R010.1",
+      "title": "Run read goes through the graph-os read operations",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R010.2",
+      "title": "Applied harness configuration is displayed",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R010.3",
+      "title": "Context use is displayed against the budget",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R010.4",
+      "title": "Current plan is displayed read-only",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R010.5",
+      "title": "Each termination reason has a distinct state",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R010.6",
+      "title": "Absent operation displays an honest state",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
     }
   ]
 }

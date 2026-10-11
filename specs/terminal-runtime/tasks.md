@@ -31,3 +31,10 @@
 - [ ] **TUI-RUNTIME-R007:** Release workflow caller
 - [ ] **TUI-RUNTIME-R008:** Theme tokens and no-colour fallback
 - [ ] **TUI-RUNTIME-R009:** AGENTS.md headings
+- [ ] **TUI-RUNTIME-R010:** Run harness surface (rollup of 1 to 6)
+- [ ] **TUI-RUNTIME-R010.1:** Run read goes through the graph-os read operations.
+- [ ] **TUI-RUNTIME-R010.2:** Applied harness configuration is displayed.
+- [ ] **TUI-RUNTIME-R010.3:** Context use is displayed against the budget.
+- [ ] **TUI-RUNTIME-R010.4:** Current plan is displayed read-only.
+- [ ] **TUI-RUNTIME-R010.5:** Each termination reason has a distinct state.
+- [ ] **TUI-RUNTIME-R010.6:** Absent operation displays an honest state.

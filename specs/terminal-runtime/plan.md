@@ -63,6 +63,23 @@ Area decisions, from the terminal code:
 | App surfaces | Yes: `screens/`, owned by `R001.7` | No new row |
 | Identity and access | Yes: bearer caller identity, owned by `R001.2` | No new row |
 
+## Run harness surface (TUI-RUNTIME-R010)
+
+Data flow: `RunBrowserScreen` (`run_inspector.py:27`) → `RunInspectorScreen._poll_once` (:399) → `AgentClient.get_run_summary` (`client.py:804`) → graph-os `runs.get` / `runs.metrics` → harness block.
+
+Types and fields (names from the design brief): `harness_config` (`context_policy` with `soft_threshold`, `hard_threshold`, `recent_window_fraction`; `plan_scaffold`; `action_space`), `peakContextTokens`, `contextBudgetTokens`, `costUsd`, `terminationReason` (`final_answer` | `context_overflow` | `stuck` | `step_budget` | `error`), and the run's plan state.
+
+Attach point: `RunInspectorScreen._poll_once` (`agent_terminal_ui/tui/run_inspector.py:399`) calls `client.get_run_summary` (`agent_terminal_ui/client.py:804`) into `RunSummary` (`capabilities.py:436`); a new harness block renders in the inspector, opened from `RunBrowserScreen` (`run_inspector.py:27`).
+
+Failure behaviour: a refused or absent operation yields "not available". The client invents no value and displays no zero for an absent number. Each termination reason has its own label; `context_overflow` and `stuck` carry their own text.
+
+Reuse and new: the run view above stays; the harness block is new.
+
+Decisions: the client reads `runs.get` and `runs.metrics` only. Rejected alternative: computing context use or cost in the client.
+The engine owns the run trace, and a client copy drifts.
+
+Cross-repository: depends on three rows. The `GRAPHOS-OPS` row for run metrics serves `runs.get` and `runs.metrics`. The `AU-HARNESS` row for the run trace writes the fields. The `AU-HARNESS` row for `update_plan` owns the plan state.
+
 ### Amendments
 
 - 2026-10-11, rows `TUI-RUNTIME-R003` to `TUI-RUNTIME-R009`: the operator required agent-terminal-ui to match agent-webui structure. The old state had no structure rows. The new state adds seven rollups. Evidence: the comparison table above.
