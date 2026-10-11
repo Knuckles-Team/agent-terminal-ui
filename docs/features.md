@@ -168,7 +168,7 @@ agent-terminal-ui --headless --prompt "run the tests" --model claude-opus-4-8
 
 No Textual widget tree is loaded, so a headless instance is lightweight (~30MB) —
 suited to running many concurrent, non-interactive sessions against one shared
-backend. See [Architecture](plan.md#run-modes).
+backend. See [Architecture](architecture.md#run-modes).
 
 ## Conversation UI
 

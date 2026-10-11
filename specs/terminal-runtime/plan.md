@@ -20,7 +20,7 @@ keyboard / slash command
 | Boundary | Contract to implement or verify |
 |---|---|
 | Command input | `/op <registered-id> <JSON object>`; JSON is parsed once; a malformed or absent object is refused before any network call. `/confirm <opaque-plan-ref>` never accepts a caller-supplied substitute operation or parameters. |
-| Generated operation client | Resolve `schema_for(op)` and `invoke(transport, op, params)` lazily. The installed registry digest must match the server; missing package data or incompatible runtime yields `CLIENT_UNAVAILABLE`, not a fallback to an untyped endpoint. |
+| Generated operation client | Resolve `schema_for(op)` and `invoke(transport, op, params)` lazily. The installed registry digest must match the server. Missing package data or incompatible runtime yields `CLIENT_UNAVAILABLE`, not a fallback to an untyped endpoint. |
 | HTTP operation | Use GraphOS's public versioned operation endpoint, caller-scoped authorization header, structured result and stable error envelope. No direct import of graph-os server internals or AU knowledge-graph internals. |
 | A2A conversation | Reuse the GraphOS Agent Card and authenticated JSON-RPC task flow. Keep session/task identity on streaming and resumed turns; network errors must leave the UI responsive. |
 | PLAN | Store only the short-lived server binding necessary for display and one confirmation. Bind to exact plan reference, op, input digest, caller/session, registry digest and expiry; let server make the final authoritative check. Clear after use or failure. |
@@ -29,11 +29,11 @@ keyboard / slash command
 
 ## Compatibility and migration
 
-Keep the TUI's base Python 3.11 chat install working. Put a generated GraphOS operation client behind a compatible optional extra or runtime capability check; document the precise supported Python range in package metadata and lock. Where legacy capability/run APIs remain, inventory their callers and retire each only after a public replacement is served. The GeniusBot consumer must independently prove the same versioned envelope and identity rules; this repository only supplies its contract expectations.
+Keep the TUI's base Python 3.11 chat install working. Put a generated GraphOS operation client behind a compatible optional extra or runtime capability check. Document the precise supported Python range in package metadata and lock. Where legacy capability/run APIs remain, inventory their callers and retire each only after a public replacement is served. The GeniusBot consumer must independently prove the same versioned envelope and identity rules. This repository only supplies its contract expectations.
 
 ## Quality and reuse
 
-Use the existing command registry, `AgentClient`, `httpx`, Textual widgets, and GraphOS generated models. Keep one transport normalization path and no duplicated request envelope construction. Run the repository's configured Ruff, type and pytest checks. The current repository has no configured CCCC, `jscpd` or Dupehound command or threshold; before acceptance, either add shared ecosystem invocations with an explicit baseline or record an agreed exception. Do not claim a numerical pass without a configured tool. Apply KISS through a single client and one-use confirmation state. No unrelated `/docs` edit is required; update README/configuration only where command or credential setup changes, and update AGENTS/constitution only if the contract itself changes.
+Use the existing command registry, `AgentClient`, `httpx`, Textual widgets, and GraphOS generated models. Keep one transport normalization path and no duplicated request envelope construction. Run the repository's configured Ruff, type and pytest checks. The current repository has no configured CCCC, `jscpd` or Dupehound command or threshold. Before acceptance, either add shared ecosystem invocations with an explicit baseline or record an agreed exception. Do not claim a numerical pass without a configured tool. Apply KISS through a single client and one-use confirmation state. No unrelated `/docs` edit is required. Update README/configuration only where command or credential setup changes, and update AGENTS/constitution only if the contract itself changes.
 
 ## Structure parity with agent-webui (2026-10-11)
 

@@ -5,7 +5,7 @@
 **Delivery:** specified; implementation and acceptance require separate evidence.
 
 **Requirement:** TUI-RUNTIME-R001 (terminal-client share of the GraphOS command and A2A interface). See [`requirements.md`](requirements.md) for the full definition of every requirement ID this spec owns and [`status.json`](status.json) for their current delivery and acceptance state.
-**Related public owners:** [GraphOS hosted operation service](https://github.com/Knuckles-Team/graph-os/tree/main/specs/hosted-api-operations) supplies the operation registry, generated client and authorization boundary; its [A2A task projection](https://github.com/Knuckles-Team/graph-os/tree/main/specs/a2a-task-projection) supplies task methods. GeniusBot owns its own consumer implementation; this spec states the shared wire contract but does not assign its code to the TUI.
+**Related public owners:** [GraphOS hosted operation service](https://github.com/Knuckles-Team/graph-os/tree/main/specs/hosted-api-operations) supplies the operation registry, generated client and authorization boundary. Its [A2A task projection](https://github.com/Knuckles-Team/graph-os/tree/main/specs/a2a-task-projection) supplies task methods. GeniusBot owns its own consumer implementation. This spec states the shared wire contract but does not assign its code to the TUI.
 
 ## Purpose and user stories
 
@@ -23,7 +23,7 @@
 | TUI-RUNTIME-R001.3 | A side-effect PLAN is display-only until `/confirm <plan_ref>` sends the exact server-issued binding through `graphos.plan/confirm`; references are single use. A changed operation, parameters, digest, subject, or expired reference cannot execute. | A2A contract, tamper, replay and expiry tests |
 | TUI-RUNTIME-R001.4 | The client parses the documented GraphOS error envelope and handles timeout, network failure, malformed response and non-success status without suggesting success. Chat remains usable after an operation failure. | Mock transport and TUI flow tests |
 | TUI-RUNTIME-R001.5 | An A2A `input-required` approval is surfaced as pending, not silently granted. Approval action methods stay unavailable until a signed, pending-call-bound exchange has a public GraphOS contract and served end-to-end proof. | Negative approval tests, later served identity receipt |
-| TUI-RUNTIME-R001.6 | Python 3.11 base installation remains usable without a GraphOS generated client; the operation feature is explicitly unavailable until a compatible optional client is installed. Dependency metadata and lock reflect the supported Python range. | Clean 3.11 install and command smoke |
+| TUI-RUNTIME-R001.6 | Python 3.11 base installation remains usable without a GraphOS generated client. The operation feature is explicitly unavailable until a compatible optional client is installed. Dependency metadata and lock reflect the supported Python range. | Clean 3.11 install and command smoke |
 | TUI-RUNTIME-R001.7 | Existing `/capabilities`, `/run`, and conversation entry points either use the corresponding public GraphOS contracts or are clearly identified as legacy read-only paths during migration. No new AU knowledge-graph internals are imported. | Import and route inventory; UI regression tests |
 
 ## Scenarios and failure behavior
@@ -44,5 +44,5 @@ Current delivery and acceptance state for each requirement ID above is recorded 
 
 | Local ownership | Other owner contract |
 |---|---|
-| This TUI's commands, transport, presentation and Python packaging (`TUI-RUNTIME-R001`) | GraphOS's generated operation client, versioned HTTP envelope and A2A methods (see links above); GeniusBot implements its own consumer |
+| This TUI's commands, transport, presentation and Python packaging (`TUI-RUNTIME-R001`) | GraphOS's generated operation client, versioned HTTP envelope and A2A methods (see links above). GeniusBot implements its own consumer |
 | Displaying and safely refusing or resuming an approval only after contract proof | GraphOS's signed A2A approval and durable human identity authority (see the A2A task projection link above), proven end to end before approval actions are enabled |
