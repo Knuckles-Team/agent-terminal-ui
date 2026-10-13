@@ -55,7 +55,7 @@ class _RecordingTransport(httpx.AsyncBaseTransport):
 
 
 def _client_with(transport: httpx.AsyncBaseTransport) -> AgentClient:
-    client = AgentClient("http://agent.test")
+    client = AgentClient("http://localhost")
     client._http_client = httpx.AsyncClient(transport=transport, timeout=5.0)
     return client
 

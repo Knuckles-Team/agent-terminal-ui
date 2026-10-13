@@ -3,7 +3,7 @@
 This module enforces the parity invariant that every slash command handler
 registered in ``CommandProcessor.commands`` resolves to a real method on
 ``AgentClient`` when it claims to reach the backend, and that every method on
-``AgentClient`` references a known backend endpoint in its source.
+``AgentClient`` reaches a known backend endpoint or fails closed locally.
 
 The tests use pure source introspection (``inspect.getsource`` + regex) and
 never open a socket, so the entire module runs in well under five seconds.
@@ -15,12 +15,13 @@ Failure modes:
 * A slash command gets added that calls ``self.app._client.foo()`` where
   ``foo`` is not defined on ``AgentClient`` -- the test prints the offending
   method and command name.
-* A new ``AgentClient`` method is added without any HTTP verb or path in its
-  body -- the test prints the method name.
+* An action method has no verifiable route or transport delegation -- the
+  test prints its name.
+* A deliberately fail-closed method starts a network request -- its behavioral
+  test fails against a recording transport.
 
-Both failures flag a parity bug that a human must resolve: either the new
-client method needs to be written, or the command handler needs to stop
-calling a non-existent method.
+Resolve route failures with a concrete backend route or checked adapter.
+Keep local refusals fail-closed and prove they make no request.
 """
 
 from __future__ import annotations
@@ -32,7 +33,7 @@ from typing import Any
 
 import pytest
 
-from agent_terminal_ui.client import AgentClient
+from agent_terminal_ui.client import A2A_PATH, AgentClient, _OperationTransport
 from agent_terminal_ui.commands import CommandProcessor
 
 pytestmark = pytest.mark.integration
@@ -195,14 +196,32 @@ def _delegates_to_routed_helper(source: str, name: str) -> bool:
 def _method_references_backend_route(name: str, public: set[str]) -> bool | None:
     """Whether one ``AgentClient`` method satisfies the soft backend-route check.
 
-    Returns None if the method's source couldn't be introspected (skipped,
-    same as the original inline ``continue``); otherwise True (passes) or
-    False (violates -- reported by the caller).
+    Returns None if the method is deliberately fail-closed or its source
+    cannot be introspected; otherwise True (passes) or False (violates).
     """
     method = getattr(AgentClient, name)
     try:
         source = inspect.getsource(method)
     except (OSError, TypeError):
+        return None
+
+    if name == "invoke_op":
+        adapter = inspect.getsource(_OperationTransport.invoke)
+        return (
+            "_OperationTransport(self, headers)" in source
+            and bool(_PATH_IN_SOURCE_PATTERN.search(adapter))
+        )
+    if name == "confirm_plan":
+        rpc_source = inspect.getsource(AgentClient._rpc)
+        init_source = inspect.getsource(AgentClient.__init__)
+        return (
+            bool(re.search(r"self\._rpc\(\s*['\"]graphos\.plan/confirm", source))
+            and "self._http_client.post(" in rpc_source
+            and "self.a2a_url" in rpc_source
+            and 'self.a2a_url = f"{self.base_url}{A2A_PATH}"' in init_source
+            and A2A_PATH == "/a2a"
+        )
+    if name == "grant_fleet_approval":
         return None
 
     return (
@@ -214,10 +233,10 @@ def _method_references_backend_route(name: str, public: set[str]) -> bool | None
 
 
 class TestClientMethodsReferenceBackendRoutes:
-    """Each AgentClient method must reference a documented backend route."""
+    """Each client action routes through a known boundary or refuses locally."""
 
     def test_every_public_async_method_has_http_path_in_source(self) -> None:
-        """Every public async method must reference a backend route.
+        """Every public async method must reach a route or fail closed.
 
         A method passes the soft check if any of the following holds:
 
@@ -228,6 +247,10 @@ class TestClientMethodsReferenceBackendRoutes:
         * Its docstring documents an HTTP verb alongside a path-like token.
         * It is a thin alias that delegates to another public method on
           ``self`` (e.g. ``get_impact`` -> ``get_graph_impact``).
+        * It delegates through a checked transport adapter or RPC route.
+
+        ``grant_fleet_approval`` is excluded because it refuses before any
+        request; a recording-transport test verifies that behavior.
         """
         public = set(_public_async_methods(AgentClient))
         violators = [
@@ -239,9 +262,9 @@ class TestClientMethodsReferenceBackendRoutes:
         if violators:
             rendered = "\n".join(f"  - AgentClient.{n}" for n in violators)
             pytest.fail(
-                "Public AgentClient methods must reference a backend route "
-                "(URL literal, documented HTTP verb + path, or delegate "
-                f"to another client method):\n{rendered}"
+                "Public AgentClient methods must reach a backend route through "
+                "source or a checked adapter, or fail closed locally:\n"
+                f"{rendered}"
             )
 
     def test_client_methods_declare_coroutines(self) -> None:
