@@ -26,7 +26,13 @@
     "TUI-RUNTIME-R010.3",
     "TUI-RUNTIME-R010.4",
     "TUI-RUNTIME-R010.5",
-    "TUI-RUNTIME-R010.6"
+    "TUI-RUNTIME-R010.6",
+    "TUI-RUNTIME-R002.1",
+    "TUI-RUNTIME-R002.2",
+    "TUI-RUNTIME-R002.3",
+    "TUI-RUNTIME-R002.4",
+    "TUI-RUNTIME-R002.5",
+    "TUI-RUNTIME-R002.6"
   ],
   "requirements": [
     {
@@ -151,7 +157,7 @@
     {
       "id": "TUI-RUNTIME-R002",
       "title": "Terminal chat transport is reconciled with the current Graph OS boundary",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "SPECIFIED",
       "landed_in": [
         "d2b5cea055c8",
         "d309979d133f"
@@ -161,6 +167,14 @@
         "tests/test_client.py:261",
         "tests/test_client.py:285",
         "tests/test_client.py:313"
+      ],
+      "rollup_of": [
+        "TUI-RUNTIME-R002.1",
+        "TUI-RUNTIME-R002.2",
+        "TUI-RUNTIME-R002.3",
+        "TUI-RUNTIME-R002.4",
+        "TUI-RUNTIME-R002.5",
+        "TUI-RUNTIME-R002.6"
       ]
     },
     {
@@ -281,6 +295,48 @@
     {
       "id": "TUI-RUNTIME-R010.6",
       "title": "Served surface proof",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R002.1",
+      "title": "Preserve original chat transport acceptance",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R002.2",
+      "title": "Validate the host receipt and scope",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R002.3",
+      "title": "Define the terminal consumer adapter",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R002.4",
+      "title": "Honor producer-selected modes and unify the log view",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R002.5",
+      "title": "Enforce tenant scope and bound log lifecycle",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R002.6",
+      "title": "Prove the served consumer journey",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
