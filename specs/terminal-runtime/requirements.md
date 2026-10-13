@@ -56,3 +56,9 @@ mandatory before replacing Python. No existing requirement is removed.
 R002 cutover also requires working OpenCode coexistence and served parity for
 skill access, parallel GraphOS agents, streaming, cancellation, approvals and
 session recovery. Retain OpenCode until the operator accepts the replacement.
+
+## Native discovery slice
+
+| ID | Requirement | Verification |
+|---|---|---|
+| `TUI-RUNTIME-R002.7` | **Native configured discovery.** Model: Rust reads AGENT_URL and AGENT_BEARER_TOKEN. Behavior: Fetch the GraphOS Agent Card and render its name or a redacted error. Wiring: Use one authenticated HTTP client, Tokio and Ratatui. Refusal: Require TLS and credentials remotely; reject redirects, invalid cards and responses over 1 MiB. Local cancellation stops discovery only. No task submission, approval or remote cancellation is enabled. | Native HTTP fixture tests verify the request, credential transport, error refusal and cancellation. A terminal buffer test verifies the unavailable task actions. A served GraphOS receipt remains separate evidence. |

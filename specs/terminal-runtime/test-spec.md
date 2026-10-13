@@ -18,7 +18,7 @@
 4. Separately prove the served human-to-WorkItem approval binding before enabling approval routes. A pending task display is not an approval receipt.
 5. Run configured CCCC, `jscpd` and Dupehound ecosystem checks if installed. They are currently absent from this repository's tracked configuration. Record that as an acceptance gap until thresholds and commands are published. Review KISS against the reuse table in `plan.md`.
 
-No manual-only proof substitutes for the negative tests. If a live identity provider is unavailable, keep approval disabled and acceptance pending rather than requiring private infrastructure to run the baseline tests.
+No manual-only proof substitutes for the negative tests. If a live identity provider is unavailable, keep approval disabled and acceptance pending. Baseline tests must not require private infrastructure.
 
 ## Structure parity rows
 
@@ -112,3 +112,13 @@ Exercise approval denial, expired confirmation and identity mismatch. No client
 may grant an effect locally. Compare served results and refusal behavior at
 recorded client and GraphOS heads. Cutover requires operator acceptance after
 parity and performance evidence. Verify OpenCode remains a working rollback path.
+
+## Native discovery tests (R002.7)
+
+Run cargo test with the native/agent-terminal-ui manifest after slot allocation.
+The discovery integration tests serve real loopback HTTP responses. They verify
+the existing Agent Card route, caller header, invalid endpoint refusal,
+authentication errors, redirects, malformed cards and cancellation during a
+pending response. Renderer tests use the terminal buffer to verify refusal and
+unavailable task actions. The size-limit case checks bounded input. A Linux pseudo-terminal smoke passed discovery, refusal/retry, cancellation and
+terminal restoration. These fixtures are not a served GraphOS deployment receipt.

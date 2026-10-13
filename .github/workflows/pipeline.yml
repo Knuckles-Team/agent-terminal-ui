@@ -35,3 +35,19 @@ jobs:
       - name: spec-trailers
         if: github.event_name == 'pull_request'
         run: uvx --from 'git+https://github.com/Knuckles-Team/pipelines@main' pipelines-hook spec-trailers --base-ref "origin/${{ github.base_ref }}"
+
+  native-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ github.event_name == 'pull_request' && 10 || 60 }}
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rust toolchain
+        run: rustup toolchain install 1.96.0 --profile minimal --component rustfmt --component clippy
+      - name: Native format
+        run: cargo +1.96.0 fmt --manifest-path native/agent-terminal-ui/Cargo.toml --check
+      - name: Native tests
+        run: cargo +1.96.0 test --locked --manifest-path native/agent-terminal-ui/Cargo.toml
+      - name: Native Clippy
+        run: cargo +1.96.0 clippy --locked --manifest-path native/agent-terminal-ui/Cargo.toml --all-targets -- -D warnings

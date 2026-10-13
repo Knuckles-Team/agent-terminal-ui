@@ -71,3 +71,5 @@ GraphOS producer contracts R009.2 through R009.6 and R010.7 are prerequisites. M
 Two shared validation slots are occupied by GraphOS and Immich at delegation.
 Do not start a broad Rust build or full-suite push hook without coordination.
 Record deferred validation as deferred, never passed.
+
+- [ ] **TUI-RUNTIME-R002.7:** Build the native discovery entry point and run its HTTP, refusal, cancellation and rendering tests.

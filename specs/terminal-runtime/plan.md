@@ -224,3 +224,21 @@ working OpenCode rollback path until the operator accepts the replacement.
 Canonical skill: `agent_terminal_ui/skills/agent-terminal-ui-development/SKILL.md`.
 OpenCode provisioning must expose that maintained file, rather than a forked
 copy of its instructions. Provisioning itself is not delivered by this spec.
+
+### Native discovery entry point (R002.7)
+
+The separate native/agent-terminal-ui executable reads the existing AGENT_URL
+and AGENT_BEARER_TOKEN settings. Its single HTTP client fetches
+/.well-known/agent-card.json. Ratatui renders discovery state while Tokio handles
+the request and terminal input. A response name does not prove task capabilities.
+The c key cancels local discovery; r retries after completion; q exits and
+restores the terminal. There is no task, approval or engine execution path.
+
+The Python executable and OpenCode remain available. Native compilation uses a coordinated validation slot. Source and format checks
+alone do not establish delivery or served GraphOS acceptance.
+
+The initial Linux check passed six native tests with real loopback HTTP fixtures.
+The cold two-job build took 38 seconds. Formatting and Clippy passed with warnings
+denied. A pseudo-terminal smoke passed discovery, refusal/retry, cancellation and terminal restoration.
+This evidence covers discovery only. No configured live GraphOS endpoint
+was available, and no served streaming or approval acceptance is claimed.

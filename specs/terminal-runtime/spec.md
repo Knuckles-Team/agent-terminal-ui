@@ -73,3 +73,7 @@ and policy, and EG owns graph and reasoning. A broker requires measured benefit
 and may retain only principal-scoped authorized views. Success requires the
 served protocol, failure and performance acceptance in test-spec.md. Definitions
 and local tests alone do not establish runtime verification.
+
+R002.7 adds only configured native discovery and its local request lifecycle.
+It must not imply streaming, remote task cancellation or approval readiness.
+The Python client and OpenCode remain available during this slice.
