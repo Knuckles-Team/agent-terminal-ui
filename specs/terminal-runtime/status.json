@@ -396,8 +396,10 @@
     {
       "id": "TUI-RUNTIME-R002.1.1",
       "title": "Validate native task correlation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "3c592ffc6075"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/tests/correlation.rs:11",
         "native/agent-terminal-ui/tests/correlation.rs:41",
@@ -409,8 +411,10 @@
     {
       "id": "TUI-RUNTIME-R002.1.2",
       "title": "Read a native task snapshot",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "3c592ffc6075"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/tests/task_snapshot.rs:117",
         "native/agent-terminal-ui/tests/task_snapshot.rs:154",
@@ -429,8 +433,10 @@
     {
       "id": "TUI-RUNTIME-R002.1.4",
       "title": "Read an existing task in the native terminal",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "3c592ffc6075"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/main.rs:215",
         "native/agent-terminal-ui/src/main.rs:241",
