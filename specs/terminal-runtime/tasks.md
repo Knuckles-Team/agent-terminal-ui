@@ -74,3 +74,5 @@ Do not start a broad Rust build or full-suite push hook without coordination.
 Record deferred validation as deferred, never passed.
 
 - [ ] **TUI-RUNTIME-R002.7:** Build the native discovery entry point and run its HTTP, refusal, cancellation and rendering tests.
+
+- [ ] **TUI-RUNTIME-R008.2:** Prove full native presentation parity and the required render performance.

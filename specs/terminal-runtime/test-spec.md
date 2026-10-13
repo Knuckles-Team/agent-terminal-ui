@@ -123,3 +123,7 @@ authentication errors, redirects, malformed cards and cancellation during a
 pending response. Renderer tests use the terminal buffer to verify refusal and
 unavailable task actions. The size-limit case checks bounded input. A Linux pseudo-terminal smoke passed discovery, refusal/retry, cancellation and
 terminal restoration. These fixtures are not a served GraphOS deployment receipt.
+
+## Native presentation acceptance remainder
+
+TUI-RUNTIME-R008.2 remains pending. Test every supported theme, contrast, keyboard action, selection, scroll position and reduced-motion setting. Compare Python and native clients on the same fixture. Use the R002 render benchmark before acceptance. Discovery wrapping alone does not close this row.
