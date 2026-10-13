@@ -238,3 +238,6 @@ snapshot_report.html
 # standalone against its own tracked lock instead of the ecosystem workspace.
 # Never tracked.
 .uv-workspace-siblings/
+
+# Native terminal build output
+native/agent-terminal-ui/target/

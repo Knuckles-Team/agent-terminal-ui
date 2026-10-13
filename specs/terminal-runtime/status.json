@@ -32,7 +32,8 @@
     "TUI-RUNTIME-R002.3",
     "TUI-RUNTIME-R002.4",
     "TUI-RUNTIME-R002.5",
-    "TUI-RUNTIME-R002.6"
+    "TUI-RUNTIME-R002.6",
+    "TUI-RUNTIME-R002.7"
   ],
   "requirements": [
     {
@@ -174,7 +175,8 @@
         "TUI-RUNTIME-R002.3",
         "TUI-RUNTIME-R002.4",
         "TUI-RUNTIME-R002.5",
-        "TUI-RUNTIME-R002.6"
+        "TUI-RUNTIME-R002.6",
+        "TUI-RUNTIME-R002.7"
       ]
     },
     {
@@ -340,6 +342,19 @@
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R002.7",
+      "title": "Native configured discovery",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [
+        "native/agent-terminal-ui/src/main.rs:94",
+        "native/agent-terminal-ui/tests/discovery.rs:110",
+        "native/agent-terminal-ui/tests/discovery.rs:29",
+        "native/agent-terminal-ui/tests/discovery.rs:50",
+        "native/agent-terminal-ui/tests/discovery.rs:73"
+      ]
     }
   ]
 }
