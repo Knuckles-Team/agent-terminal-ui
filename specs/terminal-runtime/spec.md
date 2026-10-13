@@ -52,3 +52,14 @@ Current delivery and acceptance state for each requirement ID above is recorded 
 `TUI-RUNTIME-R010` and its six children define the read-only run surface.
 The owning requirements, plan and test specification define its producer dependencies and acceptance.
 The surface must distinguish unavailable values from measured zero and aggregate values from per-run values.
+
+<!-- spec-definition-patch:r002-consumer-spec -->
+## TUI-RUNTIME-R002 consumer slice
+
+R002 stays intact. It keeps the full original chat transport requirement. Child R002.1 repeats that acceptance in the rollup. Children .2 through .6 define the host receipt and log consumer. GraphOS owns host startup, interface selection, authority, scope checks, redacted log production and host lifetime. The terminal consumes a versioned HostLaunchReceipt and its opaque authorized log reference. Local paths, strings and environment values never grant access.
+
+GraphOS producer contracts R009.2 through R009.6 and R010.7 are prerequisites. R010.7 puts web_logs in HostLaunchRequest, but the current HostLaunchReceipt v1 contract omits that field. GraphOS must bind the effective preference into the authenticated receipt or handoff, scoped to host, workspace, tenant and principal. Until GraphOS supplies it, the TUI makes zero log reads. The required host redacted sink remains enabled. This definition does not claim current producer exports. It leaves TUI-RUNTIME-R010 and its run-inspector obligations intact.
+
+AU:116 source SHA-256 08a22602bd677e4fc39260d058503fa73a2216ad40bbe817c17d3bef256722ef. Map its remaining consumer obligation to R002.2, .3, .5 and .6 after the producer clauses.
+AU:117 source SHA-256 fddbc1b35588be4427396a7aa827414d9d7bba01a8837f905a8b1c9b1eac4694. Map its remaining mode and unified-view obligation to R002.2 through .6, especially .4. Child .1 preserves the original chat transport acceptance. These mappings claim no runtime delivery.
+<!-- /spec-definition-patch -->

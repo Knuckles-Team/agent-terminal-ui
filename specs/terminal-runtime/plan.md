@@ -117,3 +117,23 @@ Each row requires its own positive and negative served case through the producti
 ### Amendments
 
 - 2026-10-11, rows `TUI-RUNTIME-R003` to `TUI-RUNTIME-R009`: the operator required agent-terminal-ui to match agent-webui structure. The old state had no structure rows. The new state adds seven rollups. Evidence: the comparison table above.
+
+<!-- spec-definition-patch:r002-consumer-plan -->
+## TUI-RUNTIME-R002 consumer boundary
+
+The GraphOS owner must publish contracts R009.2 through R009.6 and R010.7. Those contracts bind a versioned HostLaunchReceipt, interface mode, workspace and opaque tenant-authorized log reference. GraphOS authorizes each read and reconnect. It supplies record order and rotation gaps. These IDs are producer prerequisites. They do not claim existing runtime exports. The terminal never grants authority or reads a local log path. R010.7 places web_logs in HostLaunchRequest, but the current HostLaunchReceipt v1 contract omits it. GraphOS must bind the effective boolean into an authenticated receipt or handoff, scoped to host, workspace, tenant and principal. Until GraphOS supplies that field, TUI log reads stay disabled. The required host redacted sink remains enabled. This is a producer prerequisite, not a claim of an existing export.
+
+Dependency order:
+1. Keep the original R002 chat transport acceptance in child .1.
+2. Consume the receipt. Validate version, readiness, endpoint, session, workspace, host, mode, tenant, expiry and bound web_logs preference.
+3. Define the adapter signature: `agent_terminal_ui.app.run_host_terminal(receipt: HostLaunchReceipt, *, client: AgentClient, log_reader: HostLogReader | None) -> None`.
+4. Define HostLogReader in agent_terminal_ui.client. Its asynchronous method is `read(log_ref: str, *, cursor: str | None, limit: int) -> HostLogBatch`.
+5. Subscribe in terminal and both modes only when the bound web_logs preference is true. A false or absent preference and every web-mode case make zero TUI reads; chat continues. Keep the required host sink enabled. Reuse CommandProcessor.cmd_logs, MainScreen.action_toggle_logs and RichLog.
+6. Bound reads, queued bytes, lines, timeouts and cancellation as requirements.md states. On rotation, expose a tenant-local gap. On denial, clear protected state. Never stop GraphOS resources.
+7. Exercise the full served path on a real host, client and TUI. Use the fixed seed and two tenants after producer contracts are available.
+
+The TUI defines consumer interfaces here. It does not claim existing exports. Extend AgentClient, the application, CommandProcessor.cmd_logs and MainScreen.action_toggle_logs. Do not add another router, transport, local gateway or file reader. This slice leaves the TUI-RUNTIME-R010 inspector obligations intact.
+
+AU:116 SHA-256 08a22602bd677e4fc39260d058503fa73a2216ad40bbe817c17d3bef256722ef. Map the remaining TUI obligation to R002.2, .3, .5 and .6.
+AU:117 SHA-256 fddbc1b35588be4427396a7aa827414d9d7bba01a8837f905a8b1c9b1eac4694. Map its remaining mode and unified-view obligation to R002.2 through .6, especially .4. R002.1 preserves the parent acceptance. These are definition mappings only.
+<!-- /spec-definition-patch -->
