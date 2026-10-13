@@ -346,8 +346,10 @@
     {
       "id": "TUI-RUNTIME-R002.7",
       "title": "Native configured discovery",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "e8711e7f49bf"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/main.rs:94",
         "native/agent-terminal-ui/tests/discovery.rs:110",
