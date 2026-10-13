@@ -58,6 +58,7 @@ impl GraphOsClient {
         let http = Client::builder()
             .default_headers(headers)
             .redirect(reqwest::redirect::Policy::none())
+            .retry(reqwest::retry::never())
             .timeout(Duration::from_secs(10))
             .build()
             .map_err(|_| "Cannot initialize GraphOS transport")?;
@@ -76,7 +77,7 @@ impl GraphOsClient {
         }
         let mut url = self.card_url.clone();
         url.set_path("/a2a");
-        let mut response = self
+        let response = self
             .http
             .post(url)
             .json(&serde_json::json!({
@@ -91,18 +92,44 @@ impl GraphOsClient {
         if !response.status().is_success() {
             return Err("GraphOS task read refused or unavailable");
         }
-        let mut bytes = Vec::new();
-        while let Some(chunk) = response
-            .chunk()
-            .await
-            .map_err(|_| "GraphOS response interrupted")?
-        {
-            if chunk.len() > MAX_RESPONSE_BYTES.saturating_sub(bytes.len()) {
-                return Err("GraphOS task snapshot exceeds size limit");
-            }
-            bytes.extend_from_slice(&chunk);
+        let bytes = read_task_response(response).await?;
+        parse_task_snapshot(task_id, "task-snapshot", &bytes)
+    }
+
+    pub async fn cancel_task(
+        &self,
+        binding: &TaskCorrelation,
+    ) -> Result<TaskSnapshot, &'static str> {
+        if binding.task_id().chars().count() > 80 {
+            return Err("Invalid task identifier");
         }
-        parse_task_snapshot(task_id, &bytes)
+        let mut url = self.card_url.clone();
+        url.set_path("/a2a");
+        let response = self
+            .http
+            .post(url)
+            .json(&serde_json::json!({
+                "jsonrpc": "2.0",
+                "id": "task-cancel",
+                "method": "tasks/cancel",
+                "params": {"id": binding.task_id()},
+            }))
+            .send()
+            .await
+            .map_err(|_| "GraphOS cancellation outcome unknown")?;
+        if !response.status().is_success() {
+            return Err("GraphOS cancellation refused or unavailable");
+        }
+        let bytes = read_task_response(response).await?;
+        let task = parse_task_snapshot(binding.task_id(), "task-cancel", &bytes)?;
+        binding.validate_binding(&task.correlation)?;
+        if task.state != TaskState::Canceled {
+            return Err("GraphOS cancellation not acknowledged");
+        }
+        Ok(TaskSnapshot {
+            correlation: binding.clone(),
+            state: task.state,
+        })
     }
 
     pub async fn discover(&self) -> Result<String, &'static str> {
@@ -137,11 +164,30 @@ impl GraphOsClient {
     }
 }
 
-fn parse_task_snapshot(task_id: &str, bytes: &[u8]) -> Result<TaskSnapshot, &'static str> {
+async fn read_task_response(mut response: reqwest::Response) -> Result<Vec<u8>, &'static str> {
+    let mut bytes = Vec::new();
+    while let Some(chunk) = response
+        .chunk()
+        .await
+        .map_err(|_| "GraphOS response interrupted")?
+    {
+        if chunk.len() > MAX_RESPONSE_BYTES.saturating_sub(bytes.len()) {
+            return Err("GraphOS task snapshot exceeds size limit");
+        }
+        bytes.extend_from_slice(&chunk);
+    }
+    Ok(bytes)
+}
+
+fn parse_task_snapshot(
+    task_id: &str,
+    request_id: &str,
+    bytes: &[u8],
+) -> Result<TaskSnapshot, &'static str> {
     let envelope: serde_json::Value =
         serde_json::from_slice(bytes).map_err(|_| "Invalid GraphOS task response")?;
     if envelope.get("jsonrpc").and_then(|v| v.as_str()) != Some("2.0")
-        || envelope.get("id").and_then(|v| v.as_str()) != Some("task-snapshot")
+        || envelope.get("id").and_then(|v| v.as_str()) != Some(request_id)
         || envelope.get("error").is_some()
     {
         return Err("Invalid or refused GraphOS task response");

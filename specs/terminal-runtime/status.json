@@ -39,7 +39,8 @@
     "TUI-RUNTIME-R002.1.1",
     "TUI-RUNTIME-R002.1.2",
     "TUI-RUNTIME-R002.1.3",
-    "TUI-RUNTIME-R002.1.4"
+    "TUI-RUNTIME-R002.1.4",
+    "TUI-RUNTIME-R002.1.5"
   ],
   "requirements": [
     {
@@ -251,8 +252,8 @@
         "99b67585d433"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:318",
-        "native/agent-terminal-ui/src/main.rs:355"
+        "native/agent-terminal-ui/src/main.rs:424",
+        "native/agent-terminal-ui/src/main.rs:461"
       ]
     },
     {
@@ -340,7 +341,8 @@
         "TUI-RUNTIME-R002.1.1",
         "TUI-RUNTIME-R002.1.2",
         "TUI-RUNTIME-R002.1.3",
-        "TUI-RUNTIME-R002.1.4"
+        "TUI-RUNTIME-R002.1.4",
+        "TUI-RUNTIME-R002.1.5"
       ]
     },
     {
@@ -386,7 +388,7 @@
         "e8711e7f49bf"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:294",
+        "native/agent-terminal-ui/src/main.rs:400",
         "native/agent-terminal-ui/tests/discovery.rs:110",
         "native/agent-terminal-ui/tests/discovery.rs:29",
         "native/agent-terminal-ui/tests/discovery.rs:50",
@@ -438,11 +440,24 @@
         "3c592ffc6075"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:215",
-        "native/agent-terminal-ui/src/main.rs:241",
-        "native/agent-terminal-ui/src/main.rs:257",
-        "native/agent-terminal-ui/src/main.rs:393",
-        "native/agent-terminal-ui/src/main.rs:444"
+        "native/agent-terminal-ui/src/main.rs:321",
+        "native/agent-terminal-ui/src/main.rs:347",
+        "native/agent-terminal-ui/src/main.rs:363",
+        "native/agent-terminal-ui/src/main.rs:499",
+        "native/agent-terminal-ui/src/main.rs:550"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R002.1.5",
+      "title": "Acknowledge native remote cancellation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [
+        "native/agent-terminal-ui/src/main.rs:563",
+        "native/agent-terminal-ui/src/main.rs:580",
+        "native/agent-terminal-ui/src/main.rs:619",
+        "native/agent-terminal-ui/src/main.rs:679",
+        "native/agent-terminal-ui/tests/cancellation.rs:116"
       ]
     }
   ]
