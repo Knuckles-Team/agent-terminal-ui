@@ -30,6 +30,7 @@ No manual-only proof substitutes for the negative tests. If a live identity prov
 | TUI-RUNTIME-R006 | File-level unit test in `tests/test_precommit_hooks.py` | Both sections present | A missing section fails |
 | TUI-RUNTIME-R007 | File-level unit test in `tests/test_docs_layout.py` | Workflow calls pipelines at main | A SHA pin fails |
 | TUI-RUNTIME-R008 | File-level unit test in `tests/test_app_handlers.py` | Default theme and no-colour fallback hold | An unknown theme name falls back, not crashes |
+| TUI-RUNTIME-R008.1 | Production native draw function with Ratatui TestBackend | Resize from 100 to 40 columns preserves wrapped discovery status and complete keyboard help; Tokyo Night tokens render | Nonempty NO_COLOR resets foreground and background; unsupported AGENT_THEME falls back without panic |
 | TUI-RUNTIME-R009 | File-level unit test in `tests/test_docs_layout.py` | Four headings present | A missing heading fails |
 
 ## Planned run-surface acceptance
