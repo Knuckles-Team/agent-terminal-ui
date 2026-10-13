@@ -1,7 +1,7 @@
 INHERIT: .pipeline-theme/templates/mkdocs-theme/base.mkdocs.yml
 
 site_name: "agent-terminal-ui"
-site_description: "Textual-based terminal user interface for AI agents built on Graph OS — dual-protocol (AG-UI / ACP) chat, workflow visualization, session persistence, and autonomous goal loops."
+site_description: "Textual-based terminal user interface for SI agents built on Graph OS — dual-protocol (AG-UI / ACP) chat, workflow visualization, session persistence, and autonomous goal loops."
 site_url: "https://knuckles-team.github.io/agent-terminal-ui/"
 repo_name: "Knuckles-Team/agent-terminal-ui"
 repo_url: "https://github.com/Knuckles-Team/agent-terminal-ui"

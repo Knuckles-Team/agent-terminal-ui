@@ -11,7 +11,7 @@ works iteratively toward a measurable end-state without manual intervention.
 The agent plans, executes, validates, and re-plans until the objective is met
 or the maximum iteration count is reached.
 
-This is the equivalent of a "24/7 AI employee" — define the goal, set the
+This SI goal loop runs within configured limits: define the goal, set the
 constraints, and let the agent work autonomously.
 
 ## Architecture

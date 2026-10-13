@@ -222,7 +222,7 @@ knowledge_graph.db-shm
 session_*.md
 !docs/session_management.md
 
-# AI agent scratch (do not commit) — keep repo roots pristine
+# SI agent scratch (do not commit) — keep repo roots pristine
 .agent/
 .agents/
 .agent_data/

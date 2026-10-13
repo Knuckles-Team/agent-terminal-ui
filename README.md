@@ -195,7 +195,7 @@ The full command, keyboard shortcut, and module reference lives in
   - `/queue` -- show current message queue status
   - `/queue:clear` -- clear all queued messages
   - `/queue:toggle` -- enable/disable message queuing
-  - `/model` -- switch between available AI models
+  - `/model` -- switch between available models used by SI agents
   - `/theme` -- switch between available themes
   - `/compact` -- compact conversation context to save tokens
   - `/diff` -- show interactive diff viewer for recent changes
@@ -282,7 +282,7 @@ lightweight frontends against it.
 - **Ctrl+T** -- Toggle task list view
 - **Ctrl+U** -- Clear input buffer
 - **Ctrl+Y** -- Restore cleared input buffer
-- **Alt+P** -- Switch AI model
+- **Alt+P** -- Switch the model used by the SI agent
 - **Alt+T** -- Toggle Extended Thinking (for reasoning models)
 - **Alt+O** -- Toggle Fast Mode
 - **Shift+Tab** -- Cycle reasoning effort (OFF → HIGH → MAX)
