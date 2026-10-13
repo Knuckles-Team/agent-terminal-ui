@@ -30,6 +30,7 @@
 - [ ] **TUI-RUNTIME-R006:** Pyproject pipelines hook sections
 - [ ] **TUI-RUNTIME-R007:** Release workflow caller
 - [ ] **TUI-RUNTIME-R008:** Theme tokens and no-colour fallback
+- [ ] **TUI-RUNTIME-R008.1:** Wrap native discovery status and help after resize; verify startup palette and NO_COLOR with production renderer tests.
 - [ ] **TUI-RUNTIME-R009:** AGENTS.md headings
 - [ ] **TUI-RUNTIME-R010:** Run harness surface (rollup of 1 to 6)
 - [ ] **TUI-RUNTIME-R010.1:** Run operation wiring; implement the planned positive and negative served tests.
@@ -73,3 +74,5 @@ Do not start a broad Rust build or full-suite push hook without coordination.
 Record deferred validation as deferred, never passed.
 
 - [ ] **TUI-RUNTIME-R002.7:** Build the native discovery entry point and run its HTTP, refusal, cancellation and rendering tests.
+
+- [ ] **TUI-RUNTIME-R008.2:** Prove full native presentation parity and the required render performance.

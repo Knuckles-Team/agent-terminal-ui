@@ -19,6 +19,8 @@
     "TUI-RUNTIME-R006",
     "TUI-RUNTIME-R007",
     "TUI-RUNTIME-R008",
+    "TUI-RUNTIME-R008.1",
+    "TUI-RUNTIME-R008.2",
     "TUI-RUNTIME-R009",
     "TUI-RUNTIME-R010",
     "TUI-RUNTIME-R010.1",
@@ -231,6 +233,29 @@
       "title": "Terminal theme tokens and accessibility are a stated contract",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R008.1",
+        "TUI-RUNTIME-R008.2"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R008.1",
+      "title": "Native discovery presentation remains readable after resize",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "99b67585d433"
+      ],
+      "verified_by": [
+        "native/agent-terminal-ui/src/main.rs:138",
+        "native/agent-terminal-ui/src/main.rs:175"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R008.2",
+      "title": "Complete native presentation parity",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
       "verified_by": []
     },
     {
@@ -351,7 +376,7 @@
         "e8711e7f49bf"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:94",
+        "native/agent-terminal-ui/src/main.rs:114",
         "native/agent-terminal-ui/tests/discovery.rs:110",
         "native/agent-terminal-ui/tests/discovery.rs:29",
         "native/agent-terminal-ui/tests/discovery.rs:50",
