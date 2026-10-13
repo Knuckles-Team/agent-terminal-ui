@@ -43,11 +43,11 @@
 ## TUI-RUNTIME-R002 consumer work order
 
 - [ ] **TUI-RUNTIME-R002.1:** Keep the original chat path until integration proves session, authentication, streaming and cancellation.
-- [ ] **TUI-RUNTIME-R002.2:** Consume the GraphOS receipt. Reject bad version, readiness, scope and bindings before reads.
+- [ ] **TUI-RUNTIME-R002.2:** Require GraphOS to bind web_logs into the authenticated receipt or handoff. Validate mode, scope and bindings before reads; missing preference means zero reads.
 - [ ] **TUI-RUNTIME-R002.3:** Define run_host_terminal and HostLogReader. Reuse the existing app and AgentClient.
-- [ ] **TUI-RUNTIME-R002.4:** Route terminal and both modes to one log view. Keep web mode reader-free.
+- [ ] **TUI-RUNTIME-R002.4:** Subscribe only for terminal/both with bound web_logs=true. Disabled, missing and web-mode cases make zero TUI reads; chat and the required host sink continue.
 - [ ] **TUI-RUNTIME-R002.5:** Reauthorize reads and reconnects. Bound data. Expose gaps. Clear denied state. Cancel only the owned reader.
-- [ ] **TUI-RUNTIME-R002.6:** Prove seeded tenant isolation and the served mode/log path on the real host, client and TUI.
+- [ ] **TUI-RUNTIME-R002.6:** Prove seeded tenant isolation across mode and web_logs enabled/disabled cases on the real host, client and TUI.
 
 GraphOS producer contracts R009.2 through R009.6 and R010.7 are prerequisites. Mock-only tests do not establish them.
 <!-- /spec-definition-patch -->
