@@ -100,3 +100,15 @@ Broker qualification also checks socket/pipe permissions, impersonated
 principal, mixed tenants, changed policy epoch, bounded retention and a slow
 subscriber. Every rejected scope yields zero protected records. Record replay
 sequences and resnapshot generation; no independent graph or MCP path is allowed.
+
+## OpenCode cutover evidence
+
+Start from working OpenCode skill access and GraphOS connectivity. Keep that
+installation available while testing the native terminal. In each client,
+discover and invoke the maintained development skill. Run two GraphOS-managed
+agents concurrently and stream both tasks. Cancel one without affecting the other.
+Disconnect and recover the surviving task with unchanged task/context/run IDs.
+Exercise approval denial, expired confirmation and identity mismatch. No client
+may grant an effect locally. Compare served results and refusal behavior at
+recorded client and GraphOS heads. Cutover requires operator acceptance after
+parity and performance evidence. Verify OpenCode remains a working rollback path.

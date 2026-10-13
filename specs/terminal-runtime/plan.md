@@ -142,7 +142,7 @@ AU:117 SHA-256 fddbc1b35588be4427396a7aa827414d9d7bba01a8837f905a8b1c9b1eac4694.
 
 ### 2026-10-13: Rust thin-client migration (R002, R001, R008, R010)
 
-Decision: migrate presentation to Rust with asynchronous execution. Keep GraphOS as
+Decision: use Rust with Ratatui for native terminal rendering and Tokio for asynchronous execution. Keep GraphOS as
 runtime, policy, authentication, task and operation authority. EG owns graph
 storage and reasoning. The terminal must not embed a graph replica, planner,
 model runtime, tool executor or second MCP authority. Existing Python stays
@@ -167,7 +167,7 @@ normalization and CommandProcessor semantics; share public wire fixtures with
 Python instead of building a second protocol. The renderer draws presentation state
 only. The asynchronous runtime owns transport, cancellation, deadlines and bounded queues. UI
 input and resize must remain responsive while a request or reconnect is pending.
-Renderer and runtime libraries remain engineering choices, not acceptance requirements.
+The operator selected Ratatui. Acceptance measures rendering behavior, not the library brand.
 Preserve keyboard navigation, dynamic theme tokens, no-color and reduced-motion
 behavior, selection and scroll position. Approval uses a distinct modal.
 
@@ -205,3 +205,22 @@ or verified. Existing generated VERIFIED labels describe source/test bindings,
 not served deployment proof. The missing producer methods remain blockers.
 Keep pipeline callers and shared hooks at `@main` / `rev: main`. Parent reviews
 and merges the non-draft PR. No version or dependency change is needed here.
+
+### OpenCode coexistence and cutover
+
+The goal is a native terminal connected directly to GraphOS that replaces
+OpenCode. First establish working OpenCode access to the terminal development
+skill and GraphOS. Keep OpenCode installed and usable throughout implementation
+and validation. A Rust build or mock test cannot authorize its removal.
+
+Before cutover, demonstrate skill discovery and invocation in both clients.
+Prove parallel GraphOS agents, streaming, cancellation, approval refusal and session recovery. GraphOS owns parallel task admission and
+lifecycle; the TUI only presents and controls authorized tasks. Preserve each
+agent's task/context/run bindings. Do not spawn a second local orchestrator.
+Record exact client and producer heads, served receipts and parity gaps. Require
+operator approval after parity evidence and the performance gates pass. Keep a
+working OpenCode rollback path until the operator accepts the replacement.
+
+Canonical skill: `agent_terminal_ui/skills/agent-terminal-ui-development/SKILL.md`.
+OpenCode provisioning must expose that maintained file, rather than a forked
+copy of its instructions. Provisioning itself is not delivered by this spec.

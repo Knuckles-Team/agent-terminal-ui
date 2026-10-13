@@ -7,7 +7,7 @@ in [`test-spec.md`](test-spec.md), and the work order in [`tasks.md`](tasks.md).
 
 | ID | Requirement | Verification |
 |---|---|---|
-| `TUI-RUNTIME-R001` | **Terminal operation client issues typed commands with pending approvals.** Agent-terminal-ui's client and commands modules validate an operation ID and JSON input against the installed generated Graph OS registry before invoking it, and surface an A2A approval exchange as pending rather than granting it locally; approval actions stay unavailable until the corresponding Graph OS contract is proven end to end. | Command and client unit tests plus negative approval tests confirm invalid operations are rejected and pending approvals are never silently granted. |
+| `TUI-RUNTIME-R001` | **Terminal operation client issues typed commands with pending approvals.** Agent-terminal-ui's client and commands modules validate an operation ID and JSON input against the installed generated Graph OS registry before invoking it, and surface an A2A approval exchange as pending rather than granting it locally; approval actions stay unavailable until the corresponding Graph OS contract is proven end to end. | Command and client tests confirm invalid operations are rejected. Negative approval tests confirm pending approvals are never silently granted. |
 | `TUI-RUNTIME-R001.1` | **Known op and object params produce one versioned request with correct envelope.** Child slice of `TUI-RUNTIME-R001` (see tasks.md). | Unit command parser plus httpx.MockTransport. Installed generated registry artifact. Known op and object params produce one versioned request with correct envelope. Empty ID, malformed JSON, array input, unknown op, missing registry file and digest mismatch make zero effect requests |
 | `TUI-RUNTIME-R001.2` | **Verified caller header reaches remote GraphOS only over TLS.** Child slice of `TUI-RUNTIME-R001` (see tasks.md). | Client transport with loopback and remote URLs, fake bearer. Verified caller header reaches remote GraphOS only over TLS. Remote HTTP, absent/invalid bearer, credential in exception/log/snapshot all fail |
 | `TUI-RUNTIME-R001.3` | **One /confirm resumes exactly the issued plan.** Child slice of `TUI-RUNTIME-R001` (see tasks.md). | A2A fake server that issues a PLAN with binding and expiry. One /confirm resumes exactly the issued plan. Tampered op/input/digest/subject, expired plan and replay are rejected before any effect. Server also rejects stale lease |
@@ -52,3 +52,7 @@ remain fail-closed. R008 requires keyboard, theme, no-color and responsive
 rendering parity. R010 consumes only authorized run projections, never a local
 graph replica. The performance and multiple-client gates in test-spec.md are
 mandatory before replacing Python. No existing requirement is removed.
+
+R002 cutover also requires working OpenCode coexistence and served parity for
+skill access, parallel GraphOS agents, streaming, cancellation, approvals and
+session recovery. Retain OpenCode until the operator accepts the replacement.
