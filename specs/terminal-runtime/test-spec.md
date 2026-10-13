@@ -122,3 +122,33 @@ authentication errors, redirects, malformed cards and cancellation during a
 pending response. Renderer tests use the terminal buffer to verify refusal and
 unavailable task actions. The size-limit case checks bounded input. A Linux pseudo-terminal smoke passed discovery, refusal/retry, cancellation and
 terminal restoration. These fixtures are not a served GraphOS deployment receipt.
+
+## One-shot tool-task acceptance
+
+| Requirement | Planned test | Required observation |
+|---|---|---|
+| TUI-RUNTIME-R002.8.1 | `tests/test_one_shot_task_contract.py::test_one_shot_request_and_scope_model` | Model acceptance in requirements.md must pass through the existing task path. |
+| TUI-RUNTIME-R002.8.2 | `tests/test_one_shot_task_contract.py::test_one_shot_lifecycle_and_output` | Behavior acceptance in requirements.md must pass through the existing task path. |
+| TUI-RUNTIME-R002.8.3 | `tests/test_one_shot_task_contract.py::test_one_shot_uses_existing_task_transport` | Wiring acceptance in requirements.md must pass through the existing task path. |
+| TUI-RUNTIME-R002.8.4 | `tests/test_one_shot_task_contract.py::test_one_shot_preapproval_refusal` | Refusal acceptance in requirements.md must pass through the existing task path. |
+| TUI-RUNTIME-R002.8.5 | `tests/test_one_shot_task_contract.py::test_one_shot_evidence_and_reconnect` | Evidence acceptance in requirements.md must pass through the existing task path. |
+| TUI-RUNTIME-R002.8.6 | `tests/test_one_shot_task_contract.py::test_served_one_shot_scope_and_lifecycle` | Hot-path proof acceptance in requirements.md must pass through the existing task path. |
+
+Seed 104 must create two principals, one workspace and a controlled connector with independently recorded effects.
+Start the real CLI with one typed operation and its fixed idempotency key.
+Observe one task, ordered output, separate task/context/run identifiers and a server terminal reason.
+Test matching preapproval, absent approval, expiry, revocation, changed parameters, foreign principal and changed policy/registry revisions.
+Only matching, admitted authority may allow an effect without a prompt; every other case must display pending or refusal.
+The backend must observe zero unapproved effects and at most one connector operation invocation for the same admitted request.
+Test duplicate events, out-of-order events, replay gaps, timeout after submission and cancellation before and after acknowledgement.
+Reconnect must observe the same task and must not submit again.
+Detach must print the task ID and preserve the remote task.
+A new --observe-task process must authenticate again, observe the same task and make zero submission or confirmation calls.
+Denied observation must reveal no output; denial after success must clear protected output.
+Unknown JSON fields, duplicate keys and input above 64 KiB must cause zero network calls.
+--override must never convert pending approval into authorization in this mode.
+The fixture must record exact producer and consumer revisions and independent backend counts.
+Unavailable producer contracts block acceptance; a mock client cannot replace served proof.
+
+The fixture must send request JSON through standard input.
+Assert that argv, stdout diagnostics, logs and exception messages contain neither raw parameters nor the preapproval reference.

@@ -33,7 +33,14 @@
     "TUI-RUNTIME-R002.4",
     "TUI-RUNTIME-R002.5",
     "TUI-RUNTIME-R002.6",
-    "TUI-RUNTIME-R002.7"
+    "TUI-RUNTIME-R002.7",
+    "TUI-RUNTIME-R002.8",
+    "TUI-RUNTIME-R002.8.1",
+    "TUI-RUNTIME-R002.8.2",
+    "TUI-RUNTIME-R002.8.3",
+    "TUI-RUNTIME-R002.8.4",
+    "TUI-RUNTIME-R002.8.5",
+    "TUI-RUNTIME-R002.8.6"
   ],
   "requirements": [
     {
@@ -176,7 +183,8 @@
         "TUI-RUNTIME-R002.4",
         "TUI-RUNTIME-R002.5",
         "TUI-RUNTIME-R002.6",
-        "TUI-RUNTIME-R002.7"
+        "TUI-RUNTIME-R002.7",
+        "TUI-RUNTIME-R002.8"
       ]
     },
     {
@@ -357,6 +365,63 @@
         "native/agent-terminal-ui/tests/discovery.rs:50",
         "native/agent-terminal-ui/tests/discovery.rs:73"
       ]
+    },
+    {
+      "id": "TUI-RUNTIME-R002.8",
+      "title": "One-shot background task visibility",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R002.8.1",
+        "TUI-RUNTIME-R002.8.2",
+        "TUI-RUNTIME-R002.8.3",
+        "TUI-RUNTIME-R002.8.4",
+        "TUI-RUNTIME-R002.8.5",
+        "TUI-RUNTIME-R002.8.6"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R002.8.1",
+      "title": "Model",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R002.8.2",
+      "title": "Behavior",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R002.8.3",
+      "title": "Wiring",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R002.8.4",
+      "title": "Refusal",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R002.8.5",
+      "title": "Evidence",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R002.8.6",
+      "title": "Hot-path proof",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
     }
   ]
 }

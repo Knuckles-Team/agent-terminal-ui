@@ -77,3 +77,12 @@ and local tests alone do not establish runtime verification.
 R002.7 adds only configured native discovery and its local request lifecycle.
 It must not imply streaming, remote task cancellation or approval readiness.
 The Python client and OpenCode remain available during this slice.
+
+## One-shot tool task
+
+TUI-RUNTIME-R002.8 and its children define one governed background tool-task command.
+An operator must see task identity, lifecycle, output, approval requests and termination through one terminal invocation.
+The terminal must preserve GraphOS authority and must not run the tool locally.
+A server-attested matching preapproval may suppress a permission prompt; a local flag supplies no authority.
+Unavailable producer contracts must leave this mode unavailable without removing existing chat or discovery behavior.
+Success requires the served CLI acceptance and exact producer bindings in plan.md.

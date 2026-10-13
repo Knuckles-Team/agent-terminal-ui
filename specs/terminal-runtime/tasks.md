@@ -73,3 +73,13 @@ Do not start a broad Rust build or full-suite push hook without coordination.
 Record deferred validation as deferred, never passed.
 
 - [ ] **TUI-RUNTIME-R002.7:** Build the native discovery entry point and run its HTTP, refusal, cancellation and rendering tests.
+
+## One-shot tool-task work order
+
+- [ ] **TUI-RUNTIME-R002.8:** Complete the six consumer children after the exact GraphOS payload and preapproval bindings exist.
+- [ ] **TUI-RUNTIME-R002.8.1:** Model; implement the planned test_one_shot_request_and_scope_model acceptance.
+- [ ] **TUI-RUNTIME-R002.8.2:** Behavior; implement the planned test_one_shot_lifecycle_and_output acceptance.
+- [ ] **TUI-RUNTIME-R002.8.3:** Wiring; implement the planned test_one_shot_uses_existing_task_transport acceptance.
+- [ ] **TUI-RUNTIME-R002.8.4:** Refusal; implement the planned test_one_shot_preapproval_refusal acceptance.
+- [ ] **TUI-RUNTIME-R002.8.5:** Evidence; implement the planned test_one_shot_evidence_and_reconnect acceptance.
+- [ ] **TUI-RUNTIME-R002.8.6:** Hot-path proof; implement the planned test_served_one_shot_scope_and_lifecycle acceptance.
