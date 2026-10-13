@@ -77,3 +77,8 @@ and local tests alone do not establish runtime verification.
 R002.7 adds only configured native discovery and its local request lifecycle.
 It must not imply streaming, remote task cancellation or approval readiness.
 The Python client and OpenCode remain available during this slice.
+
+R002.1.1 adds the native task correlation model. Server task and context IDs are
+required; the server run ID is optional and never inferred. The model validates
+subsequent events against the initial binding. This child enables no transport
+actions and does not close served streaming or cutover acceptance.

@@ -242,3 +242,30 @@ The cold two-job build took 38 seconds. Formatting and Clippy passed with warnin
 denied. A pseudo-terminal smoke passed discovery, refusal/retry, cancellation and terminal restoration.
 This evidence covers discovery only. No configured live GraphOS endpoint
 was available, and no served streaming or approval acceptance is claimed.
+
+### 2026-10-13: Native task correlation model (R002.1.1)
+
+Reuse AgentClient's task, status-update and artifact-update wire fields. Add a
+native typed model with an immutable task/context/run binding and explicit
+validation before returning an event. Share a redacted JSON fixture with the
+Python normalizer tests. This model has no network or retry behavior. Native
+submission and streaming still require the missing served producer proof.
+
+### 2026-10-13: Unary snapshot delivery and remaining producer gaps
+
+Rechecked TUI main 4239e3b and GraphOS main 331044ed. The authenticated
+GraphOS A2A facade serves tasks/get and tasks/cancel. The separate agent-host
+endpoint supports message/send only. An Agent Card alone does not prove task
+read capability. The native task view uses only the unary tasks/get method.
+
+GraphOS still lacks message/stream. Its tasks/resubscribe handler returns an
+explicit refusal. Host receipts, bound web_logs and log-reader exports remain
+specifications. R002.1.3 and R002.2 through R002.6 stay pending. OpenCode and
+Python remain available. No cutover, performance or complete migration claim
+is made by the model and snapshot children.
+
+Native HTTP tests cover the request, credential, response bounds and refusals.
+The executable was also checked through the real GraphOS HTTP handlers and
+A2AService with upstream test authority and authentication fixtures. That
+check covers the handler boundary, not production identity, tenant isolation,
+TLS or WorkItem authority. It requires no native EG build.

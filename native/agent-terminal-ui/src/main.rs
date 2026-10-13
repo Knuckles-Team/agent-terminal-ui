@@ -1,4 +1,7 @@
-use agent_terminal_ui_native::GraphOsClient;
+use agent_terminal_ui_native::{
+    GraphOsClient, TaskSnapshot,
+    correlation::{TaskCorrelation, TaskState},
+};
 use crossterm::event::{Event, EventStream, KeyCode, KeyEventKind, KeyModifiers};
 use futures_util::StreamExt;
 use ratatui::{
@@ -22,7 +25,7 @@ fn presentation_style(theme: &str, no_color: &str) -> Style {
 
 fn draw(frame: &mut Frame, status: &str, style: Style) {
     let text = format!(
-        "{status}\n\nDiscovery only. Task streaming and approvals remain unavailable.\n\nr: retry discovery | c: cancel local request | q / Ctrl+C: quit"
+        "{status}\n\nRead-only preview. Task streaming and approvals remain unavailable.\n\nr: refresh read | c: cancel local request | q / Ctrl+C: quit"
     );
     frame.render_widget(
         Paragraph::new(text)
@@ -33,29 +36,102 @@ fn draw(frame: &mut Frame, status: &str, style: Style) {
     );
 }
 
-async fn run(client: Arc<GraphOsClient>) -> Result<(), &'static str> {
+fn selected_task(value: Result<String, env::VarError>) -> Result<Option<String>, &'static str> {
+    match value {
+        Ok(task) if task.trim().is_empty() || task.chars().any(char::is_control) => {
+            Err("AGENT_TASK_ID must be a non-empty task identifier")
+        }
+        Ok(task) => Ok(Some(task)),
+        Err(env::VarError::NotPresent) => Ok(None),
+        Err(env::VarError::NotUnicode(_)) => Err("AGENT_TASK_ID must be valid Unicode"),
+    }
+}
+
+fn snapshot_status(snapshot: &TaskSnapshot) -> String {
+    let state = match snapshot.state {
+        TaskState::Submitted => "submitted",
+        TaskState::Working => "working",
+        TaskState::InputRequired => "input-required",
+        TaskState::AuthRequired => "auth-required",
+        TaskState::Completed => "completed",
+        TaskState::Canceled => "canceled",
+        TaskState::Failed => "failed",
+        TaskState::Rejected => "rejected",
+    };
+    format!(
+        "Task ID: {}\nContext ID: {}\nRun ID: {}\nState: {state}",
+        snapshot.correlation.task_id(),
+        snapshot.correlation.context_id(),
+        snapshot.correlation.run_id().unwrap_or("unavailable"),
+    )
+}
+
+enum ReadStatus {
+    Discovery(String),
+    Task(TaskSnapshot),
+}
+
+async fn read_status(
+    client: &GraphOsClient,
+    task_id: Option<&str>,
+) -> Result<ReadStatus, &'static str> {
+    match task_id {
+        Some(task_id) => client.get_task(task_id).await.map(ReadStatus::Task),
+        None => client.discover().await.map(ReadStatus::Discovery),
+    }
+}
+
+fn completed_status(
+    result: Result<Result<ReadStatus, &'static str>, tokio::task::JoinError>,
+    binding: &mut Option<TaskCorrelation>,
+) -> String {
+    match result {
+        Ok(Ok(ReadStatus::Discovery(name))) => format!("Agent Card received: {name}"),
+        Ok(Ok(ReadStatus::Task(mut snapshot))) => {
+            if let Some(initial) = binding {
+                if let Err(error) = initial.validate_binding(&snapshot.correlation) {
+                    return error.to_owned();
+                }
+                snapshot.correlation = initial.clone();
+            } else {
+                *binding = Some(snapshot.correlation.clone());
+            }
+            snapshot_status(&snapshot)
+        }
+        Ok(Err(error)) => error.to_owned(),
+        Err(error) if error.is_cancelled() => {
+            "Local read canceled. No remote task was canceled.".to_owned()
+        }
+        Err(_) => "Read request interrupted".to_owned(),
+    }
+}
+
+async fn run(client: Arc<GraphOsClient>, task_id: Option<String>) -> Result<(), &'static str> {
     let theme = env::var("AGENT_THEME").unwrap_or_else(|_| "tokyo-night".to_owned());
     let no_color = env::var("NO_COLOR").unwrap_or_default();
     let style = presentation_style(&theme, &no_color);
+    let loading = if task_id.is_some() {
+        "Reading GraphOS task..."
+    } else {
+        "Discovering GraphOS..."
+    };
     let mut terminal = ratatui::init();
     let mut events = EventStream::new();
     let mut request = tokio::spawn({
         let client = client.clone();
-        async move { client.discover().await }
+        let task_id = task_id.clone();
+        async move { read_status(&client, task_id.as_deref()).await }
     });
     let mut pending = true;
-    let mut status = String::from("Discovering GraphOS...");
+    let mut status = loading.to_owned();
+    let mut binding = None;
     let result = async {
         loop {
             terminal.draw(|frame| draw(frame, &status, style)).map_err(|_| "Cannot draw terminal")?;
             tokio::select! {
                 result = &mut request, if pending => {
                     pending = false;
-                    status = match result {
-                        Ok(Ok(name)) => format!("Agent Card received: {name}"),
-                        Ok(Err(error)) => error.to_owned(),
-                        Err(_) => "Discovery request interrupted".to_owned(),
-                    };
+                    status = completed_status(result, &mut binding);
                 }
                 event = events.next() => {
                     let Some(Ok(event)) = event else { return Err("Terminal input unavailable"); };
@@ -68,13 +144,14 @@ async fn run(client: Arc<GraphOsClient>) -> Result<(), &'static str> {
                             KeyCode::Char('c') if pending => {
                                 request.abort();
                                 pending = false;
-                                status = "Local discovery canceled. No remote task was canceled.".to_owned();
+                                status = completed_status((&mut request).await, &mut binding);
                             }
                             KeyCode::Char('r') if !pending => {
                                 let client = client.clone();
-                                request = tokio::spawn(async move { client.discover().await });
+                                let task_id = task_id.clone();
+                                request = tokio::spawn(async move { read_status(&client, task_id.as_deref()).await });
                                 pending = true;
-                                status = "Discovering GraphOS...".to_owned();
+                                status = loading.to_owned();
                             }
                             _ => {}
                         }
@@ -92,8 +169,11 @@ async fn run(client: Arc<GraphOsClient>) -> Result<(), &'static str> {
 async fn main() -> ExitCode {
     let endpoint = env::var("AGENT_URL").unwrap_or_else(|_| "http://localhost:8000".to_owned());
     let token = env::var("AGENT_BEARER_TOKEN").ok();
-    let result = match GraphOsClient::new(&endpoint, token.as_deref()) {
-        Ok(client) => run(Arc::new(client)).await,
+    let result = match selected_task(env::var("AGENT_TASK_ID")) {
+        Ok(task_id) => match GraphOsClient::new(&endpoint, token.as_deref()) {
+            Ok(client) => run(Arc::new(client), task_id).await,
+            Err(error) => Err(error),
+        },
         Err(error) => Err(error),
     };
     match result {
@@ -107,9 +187,109 @@ async fn main() -> ExitCode {
 
 #[cfg(test)]
 mod tests {
-    use super::{draw, presentation_style};
+    use super::{
+        ReadStatus, completed_status, draw, presentation_style, selected_task, snapshot_status,
+    };
+    use agent_terminal_ui_native::{
+        TaskSnapshot,
+        correlation::{TaskCorrelation, TaskState},
+    };
     use ratatui::style::{Color, Style};
     use ratatui::{Terminal, backend::TestBackend};
+    use std::env::VarError;
+
+    fn task_read(task_id: &str, context_id: &str, run_id: Option<&str>) -> ReadStatus {
+        let mut task = serde_json::json!({
+            "kind": "task", "id": task_id, "contextId": context_id,
+            "status": {"state": "working"}
+        });
+        if let Some(run_id) = run_id {
+            task["metadata"] = serde_json::json!({"graphOs": {"runId": run_id}});
+        }
+        ReadStatus::Task(TaskSnapshot {
+            correlation: TaskCorrelation::from_task(&task).unwrap(),
+            state: TaskState::Working,
+        })
+    }
+
+    // spec: TUI-RUNTIME-R002.1.4
+    #[test]
+    fn refresh_rejects_changed_binding_and_retains_omitted_run() {
+        let mut binding = None;
+        completed_status(
+            Ok(Ok(task_read("task-one", "context-two", Some("run-three")))),
+            &mut binding,
+        );
+        let initial = binding.clone();
+        for changed in [
+            task_read("other-task", "context-two", Some("run-three")),
+            task_read("task-one", "other-context", Some("run-three")),
+            task_read("task-one", "context-two", Some("other-run")),
+        ] {
+            let status = completed_status(Ok(Ok(changed)), &mut binding);
+            assert_eq!(status, "Task correlation mismatch");
+            assert_eq!(binding, initial);
+        }
+        let status = completed_status(
+            Ok(Ok(task_read("task-one", "context-two", None))),
+            &mut binding,
+        );
+        assert!(status.contains("Run ID: run-three"));
+        assert_eq!(binding, initial);
+    }
+
+    // spec: TUI-RUNTIME-R002.1.4
+    #[test]
+    fn refresh_does_not_acquire_a_later_run_binding() {
+        let mut binding = None;
+        completed_status(
+            Ok(Ok(task_read("task-one", "context-two", None))),
+            &mut binding,
+        );
+        let status = completed_status(
+            Ok(Ok(task_read("task-one", "context-two", Some("later-run")))),
+            &mut binding,
+        );
+        assert_eq!(status, "Task correlation mismatch");
+        assert_eq!(binding.as_ref().unwrap().run_id(), None);
+    }
+
+    // spec: TUI-RUNTIME-R002.1.4
+    #[tokio::test]
+    async fn denial_and_local_cancellation_preserve_initial_binding() {
+        let mut binding = None;
+        completed_status(
+            Ok(Ok(task_read("task-one", "context-two", Some("run-three")))),
+            &mut binding,
+        );
+        let initial = binding.clone();
+        assert_eq!(
+            completed_status(
+                Ok(Err("GraphOS task read refused or unavailable")),
+                &mut binding
+            ),
+            "GraphOS task read refused or unavailable"
+        );
+        assert_eq!(binding, initial);
+        let request = tokio::spawn(std::future::pending::<Result<ReadStatus, &'static str>>());
+        request.abort();
+        assert_eq!(
+            completed_status(request.await, &mut binding),
+            "Local read canceled. No remote task was canceled."
+        );
+        assert_eq!(binding, initial);
+        assert_eq!(
+            completed_status(
+                Ok(Ok(task_read(
+                    "task-one",
+                    "other-context",
+                    Some("run-three")
+                ))),
+                &mut binding,
+            ),
+            "Task correlation mismatch"
+        );
+    }
 
     // spec: TUI-RUNTIME-R002.7
     #[test]
@@ -160,7 +340,7 @@ mod tests {
                 "status clipped at {width} columns: {text}"
             );
             for help in [
-                "r: retry discovery",
+                "r: refresh read",
                 "c: cancel local request",
                 "q / Ctrl+C: quit",
             ] {
@@ -207,6 +387,70 @@ mod tests {
                         .all(|cell| cell.fg == Color::Reset && cell.bg == Color::Reset)
                 );
             }
+        }
+    }
+
+    // spec: TUI-RUNTIME-R002.1.4
+    #[test]
+    fn task_view_renders_distinct_identifiers_and_missing_run() {
+        let mut terminal = Terminal::new(TestBackend::new(100, 16)).unwrap();
+        for run_id in [None, Some("run-three")] {
+            let mut task = serde_json::json!({
+                "kind": "task", "id": "task-one", "contextId": "context-two",
+                "status": {"state": "working"}
+            });
+            if let Some(run_id) = run_id {
+                task["metadata"] = serde_json::json!({"graphOs": {"runId": run_id}});
+            }
+            let snapshot = TaskSnapshot {
+                correlation: TaskCorrelation::from_task(&task).unwrap(),
+                state: TaskState::Working,
+            };
+            terminal
+                .draw(|frame| draw(frame, &snapshot_status(&snapshot), Style::default()))
+                .unwrap();
+            let text: String = terminal
+                .backend()
+                .buffer()
+                .content()
+                .iter()
+                .map(|cell| cell.symbol())
+                .collect();
+            assert!(text.contains("Task ID: task-one"));
+            assert!(text.contains("Context ID: context-two"));
+            assert!(text.contains(&format!("Run ID: {}", run_id.unwrap_or("unavailable"))));
+            assert!(text.contains("State: working"));
+            let refused = completed_status(
+                Ok(Err("GraphOS task read refused or unavailable")),
+                &mut Some(snapshot.correlation.clone()),
+            );
+            terminal
+                .draw(|frame| draw(frame, &refused, Style::default()))
+                .unwrap();
+            let text: String = terminal
+                .backend()
+                .buffer()
+                .content()
+                .iter()
+                .map(|cell| cell.symbol())
+                .collect();
+            assert!(text.contains("GraphOS task read refused or unavailable"));
+            for protected in ["task-one", "context-two", "run-three", "State: working"] {
+                assert!(!text.contains(protected));
+            }
+        }
+    }
+
+    // spec: TUI-RUNTIME-R002.1.4
+    #[test]
+    fn task_selection_rejects_empty_and_control_identifiers() {
+        assert_eq!(selected_task(Err(VarError::NotPresent)), Ok(None));
+        assert_eq!(
+            selected_task(Ok("task-one".to_owned())),
+            Ok(Some("task-one".to_owned()))
+        );
+        for invalid in ["", " ", "task\nsecret", "task\u{1b}"] {
+            assert!(selected_task(Ok(invalid.to_owned())).is_err());
         }
     }
 }

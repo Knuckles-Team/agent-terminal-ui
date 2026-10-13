@@ -127,3 +127,18 @@ terminal restoration. These fixtures are not a served GraphOS deployment receipt
 ## Native presentation acceptance remainder
 
 TUI-RUNTIME-R008.2 remains pending. Test every supported theme, contrast, keyboard action, selection, scroll position and reduced-motion setting. Compare Python and native clients on the same fixture. Use the R002 render benchmark before acceptance. Discovery wrapping alone does not close this row.
+
+## Native task correlation tests (R002.1.1)
+
+Native tests consume the same task, status and text artifact fixture as the
+Python normalizer. Assert three distinct IDs and preservation across valid events. Test missing task/context IDs, absent run without inference and each mismatched ID. Reject invalid status, artifact shapes and unknown kinds. Rejection must preserve the existing binding. Run the native
+correlation integration test and the Python shared-fixture test. These tests do
+not establish served GraphOS streaming or cutover acceptance.
+
+## Native task view
+
+TUI-RUNTIME-R002.1.4 tests select an existing task with AGENT_TASK_ID. Display separate task, context and run IDs, with missing run labeled unavailable. A denied refresh clears prior values. Empty selection makes zero requests. Run the binary under a pseudo-terminal against the production GraphOS HTTP handlers and upstream test authority. Verify local cancellation and terminal restoration. This fixture does not qualify production identity or tenant isolation.
+
+## Native snapshot transport
+
+TUI-RUNTIME-R002.1.2 runs loopback HTTP tests for tasks/get. Check the exact JSON-RPC request, credential and matching response. Reject HTTP errors, redirects, malformed or mismatched envelopes, invalid task shapes and oversized responses. TUI-RUNTIME-R002.1.3 remains pending until the original served chat and recovery matrix passes.
