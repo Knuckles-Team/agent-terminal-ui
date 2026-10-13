@@ -10,7 +10,7 @@
 
 | Concept ID | Name | Description |
 |------------|------|-------------|
-| `CONCEPT:TU-OS.governance.tui` | Core API Client | Primary API client for Terminal UI for Agentic AI! |
+| `CONCEPT:TU-OS.governance.tui` | Core API Client | Primary API client for Terminal UI for Agentic SI! |
 | `CONCEPT:TU-OS.governance.tui-2` | MCP Server | Model Context Protocol server entry point |
 | `CONCEPT:TU-OS.governance.tui-3` | A2A Agent | Agent-to-Agent protocol server |
 
