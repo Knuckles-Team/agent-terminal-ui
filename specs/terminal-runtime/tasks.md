@@ -76,3 +76,10 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R002.7:** Build the native discovery entry point and run its HTTP, refusal, cancellation and rendering tests.
 
 - [ ] **TUI-RUNTIME-R008.2:** Prove full native presentation parity and the required render performance.
+- [ ] **TUI-RUNTIME-R002.1.1:** Add the native task correlation model and shared wire fixture tests.
+  Keep transport activation under R002.1 until served producer proof exists.
+
+- [ ] **TUI-RUNTIME-R002.1.4:** Wire the read-only native task view and verify it through real HTTP handlers.
+
+- [ ] **TUI-RUNTIME-R002.1.2:** Validate read-only snapshots through the authenticated native client.
+- [ ] **TUI-RUNTIME-R002.1.3:** Complete the original served chat, recovery and cutover acceptance.

@@ -35,7 +35,11 @@
     "TUI-RUNTIME-R002.4",
     "TUI-RUNTIME-R002.5",
     "TUI-RUNTIME-R002.6",
-    "TUI-RUNTIME-R002.7"
+    "TUI-RUNTIME-R002.7",
+    "TUI-RUNTIME-R002.1.1",
+    "TUI-RUNTIME-R002.1.2",
+    "TUI-RUNTIME-R002.1.3",
+    "TUI-RUNTIME-R002.1.4"
   ],
   "requirements": [
     {
@@ -247,8 +251,8 @@
         "99b67585d433"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:138",
-        "native/agent-terminal-ui/src/main.rs:175"
+        "native/agent-terminal-ui/src/main.rs:318",
+        "native/agent-terminal-ui/src/main.rs:355"
       ]
     },
     {
@@ -331,7 +335,13 @@
       "title": "Preserve original chat transport acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R002.1.1",
+        "TUI-RUNTIME-R002.1.2",
+        "TUI-RUNTIME-R002.1.3",
+        "TUI-RUNTIME-R002.1.4"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R002.2",
@@ -376,11 +386,63 @@
         "e8711e7f49bf"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:114",
+        "native/agent-terminal-ui/src/main.rs:294",
         "native/agent-terminal-ui/tests/discovery.rs:110",
         "native/agent-terminal-ui/tests/discovery.rs:29",
         "native/agent-terminal-ui/tests/discovery.rs:50",
         "native/agent-terminal-ui/tests/discovery.rs:73"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R002.1.1",
+      "title": "Validate native task correlation",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "3c592ffc6075"
+      ],
+      "verified_by": [
+        "native/agent-terminal-ui/tests/correlation.rs:11",
+        "native/agent-terminal-ui/tests/correlation.rs:41",
+        "native/agent-terminal-ui/tests/correlation.rs:53",
+        "native/agent-terminal-ui/tests/correlation.rs:87",
+        "tests/test_native_task_correlation.py:11"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R002.1.2",
+      "title": "Read a native task snapshot",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "3c592ffc6075"
+      ],
+      "verified_by": [
+        "native/agent-terminal-ui/tests/task_snapshot.rs:117",
+        "native/agent-terminal-ui/tests/task_snapshot.rs:154",
+        "native/agent-terminal-ui/tests/task_snapshot.rs:178",
+        "native/agent-terminal-ui/tests/task_snapshot.rs:58",
+        "native/agent-terminal-ui/tests/task_snapshot.rs:98"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R002.1.3",
+      "title": "Complete served native chat transport",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R002.1.4",
+      "title": "Read an existing task in the native terminal",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "3c592ffc6075"
+      ],
+      "verified_by": [
+        "native/agent-terminal-ui/src/main.rs:215",
+        "native/agent-terminal-ui/src/main.rs:241",
+        "native/agent-terminal-ui/src/main.rs:257",
+        "native/agent-terminal-ui/src/main.rs:393",
+        "native/agent-terminal-ui/src/main.rs:444"
       ]
     }
   ]
