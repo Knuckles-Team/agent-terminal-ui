@@ -713,3 +713,18 @@ client = AgentClient(base_url='http://localhost:8000')
 assert client.a2a_url == 'http://localhost:8000/a2a'
 """
     subprocess.run([sys.executable, "-c", script], check=True, capture_output=True)
+
+
+@pytest.mark.asyncio
+async def test_legacy_fleet_grant_is_refused_before_network():
+    client, recorder = _client(lambda _request: httpx.Response(500))
+    with pytest.raises(GraphOSOperationError) as caught:
+        await client.grant_fleet_approval("job-1")
+    assert caught.value.code == "APPROVAL_UNAVAILABLE"
+    assert recorder.requests == []
+    await client.close()
+
+
+def test_remote_cleartext_endpoint_requires_tls() -> None:
+    with pytest.raises(ValueError, match="remote GraphOS endpoint requires TLS"):
+        AgentClient("http://agent.test")

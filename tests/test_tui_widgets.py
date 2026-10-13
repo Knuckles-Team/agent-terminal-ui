@@ -798,9 +798,9 @@ class TestModelConfiguration:
         """AgentApp should read AGENT_URL env var for server connection."""
         from agent_terminal_ui.app import AgentApp
 
-        with patch.dict(os.environ, {"AGENT_URL": "http://10.0.0.18:9000"}):
+        with patch.dict(os.environ, {"AGENT_URL": "http://localhost:9000"}):
             app = AgentApp()
-            assert app._client.base_url == "http://10.0.0.18:9000"
+            assert app._client.base_url == "http://localhost:9000"
 
     def test_default_agent_url(self):
         """Without AGENT_URL, should fall back to localhost:8000."""
@@ -944,10 +944,11 @@ class TestModelConfiguration:
         # This tests the contract between server/__init__.py and agent-terminal-ui
         # Line 196: env["AGENT_URL"] = f"http://{host}:{port}"
         # Line 200: subprocess.run(["agent-terminal-ui"], env=env)
-        host = "0.0.0.0"
+        # The client rejects remote cleartext URLs, so the launch contract uses loopback.
+        host = "localhost"
         port = 9000
         expected_url = f"http://{host}:{port}"
-        assert expected_url == "http://0.0.0.0:9000"
+        assert expected_url == "http://localhost:9000"
 
         # And the TUI reads it:
         # Line 148 of app.py: server_url = os.getenv("AGENT_URL", "http://localhost:8000")

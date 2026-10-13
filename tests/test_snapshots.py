@@ -57,8 +57,13 @@ class StatusLineHarness(App):
 
 
 @pytest.fixture
-def svg_snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
+def svg_snapshot(
+    snapshot: SnapshotAssertion, monkeypatch: pytest.MonkeyPatch
+) -> SnapshotAssertion:
     """Compare SVG output as one committed image per test case."""
+    monkeypatch.delenv("NO_COLOR", raising=False)
+    monkeypatch.setenv("TERM", "xterm-256color")
+    monkeypatch.setenv("COLORTERM", "truecolor")
     return snapshot.with_defaults(extension_class=SVGImageSnapshotExtension)
 
 
