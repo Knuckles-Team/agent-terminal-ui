@@ -599,3 +599,6 @@ BZW
 BZX
 BZY
 BZZ
+
+# Selected Rust terminal-rendering library proper name.
+ratatui

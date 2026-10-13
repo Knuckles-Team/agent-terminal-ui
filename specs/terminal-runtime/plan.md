@@ -4,7 +4,7 @@
 
 At the current public main revision, `CommandProcessor` in `agent_terminal_ui/commands.py` owns slash-command dispatch and the `/capabilities` and `/run` commands. `AgentClient` in `agent_terminal_ui/client.py` owns HTTP transport, session events and the older `/api/capabilities/*` and `/api/runs/*` routes. `agent_terminal_ui/app.py`, `screens/main.py`, `tui/input_text_area.py`, `tui/capability_palette.py` and `tui/run_inspector.py` are presentation consumers. This is the path to extend; no parallel command router, HTTP client or local GraphOS gateway should be created.
 
-A TUI-RUNTIME-R001 implementation candidate exists on a separate Git branch, but it is not part of public main and does not establish release acceptance. It prototypes `/op`, `/confirm`, a lazy generated-client import and fail-closed approval behavior. Review and compose its exact changes rather than rebuilding the same transport from scratch. The current main package targets Python `>=3.11,<3.15`; GraphOS generated-client compatibility must be handled without raising that base floor silently.
+At main 5ac5e3fec4d590f167d2c6bd694683dbd8950c26, the TUI-RUNTIME-R001 client implementation is present. Its unit tests do not establish served acceptance. It implements `/op`, `/confirm`, a lazy generated-client import and fail-closed approval behavior. Review and compose its exact changes rather than rebuilding the same transport from scratch. The current main package targets Python `>=3.11,<3.15`; GraphOS generated-client compatibility must be handled without raising that base floor silently.
 
 ```text
 keyboard / slash command
@@ -137,3 +137,90 @@ The TUI defines consumer interfaces here. It does not claim existing exports. Ex
 AU:116 SHA-256 08a22602bd677e4fc39260d058503fa73a2216ad40bbe817c17d3bef256722ef. Map the remaining TUI obligation to R002.2, .3, .5 and .6.
 AU:117 SHA-256 fddbc1b35588be4427396a7aa827414d9d7bba01a8837f905a8b1c9b1eac4694. Map its remaining mode and unified-view obligation to R002.2 through .6, especially .4. R002.1 preserves the parent acceptance. These are definition mappings only.
 <!-- /spec-definition-patch -->
+
+## Amendments
+
+### 2026-10-13: Rust thin-client migration (R002, R001, R008, R010)
+
+Decision: use Rust with Ratatui for native terminal rendering and Tokio for asynchronous execution. Keep GraphOS as
+runtime, policy, authentication, task and operation authority. EG owns graph
+storage and reasoning. The terminal must not embed a graph replica, planner,
+model runtime, tool executor or second MCP authority. Existing Python stays
+available until a release candidate passes the same served journeys.
+
+Source baseline: TUI `5ac5e3fec4d590f167d2c6bd694683dbd8950c26` uses A2A
+chat plus REST, not ACP. The reviewed GraphOS `660412bf` dispatcher lacks served
+`message/stream` and refuses `tasks/resubscribe` and `graphos.plan/confirm`.
+These are producer prerequisites, not working features. Client mocks and
+Agent Card claims cannot close them. Record producer head and served receipts
+before enabling each feature. No downgrade to an untyped or local effect path.
+
+```text
+terminal input -> command intent -> bounded asynchronous transport queue
+    -> authenticated GraphOS A2A / versioned operations
+    -> bounded normalized events -> view-state reducer -> terminal frame
+GraphOS -> runtime / policy -> EG graph and reasoning
+```
+
+Use one transport adapter per frontend process. Port the existing AgentClient
+normalization and CommandProcessor semantics; share public wire fixtures with
+Python instead of building a second protocol. The renderer draws presentation state
+only. The asynchronous runtime owns transport, cancellation, deadlines and bounded queues. UI
+input and resize must remain responsive while a request or reconnect is pending.
+The operator selected Ratatui. Acceptance measures rendering behavior, not the library brand.
+Preserve keyboard navigation, dynamic theme tokens, no-color and reduced-motion
+behavior, selection and scroll position. Approval uses a distinct modal.
+
+Keep server task ID, context ID and run ID as separate opaque values. A local
+view ID is never a substitute. Store server correlation explicitly; do not infer
+run identity from a task string. Reconnect retains these bindings. Duplicate
+events are idempotent by stream generation and sequence. A gap or cursor expiry
+invalidates the affected view and requires an authorized snapshot plus a new
+cursor. Never replay a submission, confirmation or cancellation as a new task.
+Unknown submission outcome requires reconciliation or explicit user action.
+
+Cancellation requests the existing server task cancellation and waits for its
+acknowledged state. A local canceled future is not proof of remote cancellation.
+A disconnect displays unknown/pending state, retains identity and offers recovery.
+Approval fails closed during disconnect, missing capability or missing signed
+pending-call identity. PLAN confirmation retains exact reference, subject,
+parameters digest, registry digest and expiry; only GraphOS authorizes effects.
+Revocation clears protected views and pending plans before further rendering.
+
+Start with direct remote service access. A local UDS or Windows named-pipe broker
+is optional only after the benchmark below proves a net benefit. It may cache
+only authorized views scoped by principal, tenant, workspace, endpoint and
+policy epoch. Peer credentials and restrictive socket/pipe ACLs are required;
+a local connection never grants GraphOS authority. No public listener or shared
+cross-principal cache. Bound bytes and events per subscriber. Disconnect slow subscribers with an
+explicit gap. Recover through retained replay or an authorized resnapshot. Revocation, logout and expiry invalidate cached data and cursors.
+The broker must not interpret graph state or call MCP tools independently.
+
+### Spec-delivery record
+
+This amendment defines the migration under existing R002, preserves all R001
+approval and R010 run-observation obligations, and extends R008 presentation
+acceptance. Definitions are proposed for review; no Rust runtime is delivered
+or verified. Existing generated VERIFIED labels describe source/test bindings,
+not served deployment proof. The missing producer methods remain blockers.
+Keep pipeline callers and shared hooks at `@main` / `rev: main`. Parent reviews
+and merges the non-draft PR. No version or dependency change is needed here.
+
+### OpenCode coexistence and cutover
+
+The goal is a native terminal connected directly to GraphOS that replaces
+OpenCode. First establish working OpenCode access to the terminal development
+skill and GraphOS. Keep OpenCode installed and usable throughout implementation
+and validation. A Rust build or mock test cannot authorize its removal.
+
+Before cutover, demonstrate skill discovery and invocation in both clients.
+Prove parallel GraphOS agents, streaming, cancellation, approval refusal and session recovery. GraphOS owns parallel task admission and
+lifecycle; the TUI only presents and controls authorized tasks. Preserve each
+agent's task/context/run bindings. Do not spawn a second local orchestrator.
+Record exact client and producer heads, served receipts and parity gaps. Require
+operator approval after parity evidence and the performance gates pass. Keep a
+working OpenCode rollback path until the operator accepts the replacement.
+
+Canonical skill: `agent_terminal_ui/skills/agent-terminal-ui-development/SKILL.md`.
+OpenCode provisioning must expose that maintained file, rather than a forked
+copy of its instructions. Provisioning itself is not delivered by this spec.

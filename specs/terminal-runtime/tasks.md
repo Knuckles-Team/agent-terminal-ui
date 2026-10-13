@@ -51,3 +51,23 @@
 
 GraphOS producer contracts R009.2 through R009.6 and R010.7 are prerequisites. Mock-only tests do not establish them.
 <!-- /spec-definition-patch -->
+
+## 2026-10-13 Rust migration work order
+
+1. Review these definitions under R002/R008 and record the spec-delivery PR.
+2. Smallest implementation: extend existing client tests with shared wire
+   fixtures for unsupported methods, task/context/run identity and disconnect.
+   Keep this source-only slice independent of a Rust dependency build.
+3. GraphOS must serve message/stream, tasks/resubscribe and graphos.plan/confirm
+   and provide identity-bound positive and refusal receipts. This is producer
+   work; terminal tests cannot claim it complete.
+4. After a validation slot is assigned, add the Rust view reducer and terminal
+   shell, then the asynchronous transport using those fixtures. Port one production
+   entry point at a time; keep Python usable until served parity passes.
+5. Qualify direct access against the benchmark contract. Propose a local broker
+   only with a measured benefit and principal-isolation proof. Release only
+   after all existing approval, host handoff and run-surface gates pass.
+
+Two shared validation slots are occupied by GraphOS and Immich at delegation.
+Do not start a broad Rust build or full-suite push hook without coordination.
+Record deferred validation as deferred, never passed.

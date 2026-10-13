@@ -8,13 +8,13 @@
 | TUI-RUNTIME-R001.4 | Mock error envelope, timeout, disconnect and malformed JSON | Typed success renders and chat remains functional | Every failure renders an error, leaves session usable and never reports success |
 | TUI-RUNTIME-R001.5 | Pending A2A task with `input-required` and approval metadata | Pending request is displayed. No effect is asserted | `approvals.*`, fleet grant, missing signed exchange and wrong pending-call binding are refused. Enabling approval requires separate served receipt |
 | TUI-RUNTIME-R001.6 | Clean Python 3.11 base environment and supported optional-client environment | Base chat works. Compatible optional install enables `/op` | No compatible client yields clear `CLIENT_UNAVAILABLE` and no untyped fallback |
-| TUI-RUNTIME-R001.7 | Route/import inventory plus Textual pilot tests | Legacy screens still render or use served replacement | No `agent_utilities.knowledge_graph` import, duplicate transport or invisible command fallback |
+| TUI-RUNTIME-R001.7 | Route and pilot tests | Legacy screens still render or use served replacement | No `agent_utilities.knowledge_graph` import, duplicate transport or invisible command fallback |
 
 ## Integration and acceptance receipts
 
 1. Build and install wheels from pinned public revisions of this TUI and GraphOS. Verify the generated operation registry is packaged, not only importable from a source checkout.
 2. Use a reproducible local GraphOS service fixture to prove discovery, authenticated invocation, PLAN confirmation, error envelope and read-only chat continuity. A contributor must be able to run this without an organization network.
-3. Run the TUI's command, client and component tests, type/lint checks, package metadata check, and the repo's CI matrix on supported Python versions. Capture exact public commit/check links in `status.json`.
+3. Run command, client and component tests, type/lint checks and package metadata checks. Run the CI matrix on supported Python versions. Capture exact public commit/check links in `status.json`.
 4. Separately prove the served human-to-WorkItem approval binding before enabling approval routes. A pending task display is not an approval receipt.
 5. Run configured CCCC, `jscpd` and Dupehound ecosystem checks if installed. They are currently absent from this repository's tracked configuration. Record that as an acceptance gap until thresholds and commands are published. Review KISS against the reuse table in `plan.md`.
 
@@ -63,3 +63,52 @@ The served acceptance uses the normal mode selector, public adapter, authenticat
 
 Limits: one read in flight and 128 records per batch. Cap each record at 16 KiB. Cap pending data at 128 records or 2 MiB. Keep the view to 1000 lines. Use a one-second read timeout and five-second cancellation timeout. Replay compares IDs, order and gaps. Ignore wall-clock values.
 <!-- /spec-definition-patch -->
+
+## Rust migration acceptance (R002, R008; preserves R001 and R010)
+
+Run Python baseline and release-mode Rust candidate on the same host, terminal,
+120x40 viewport, credentials scope and deterministic redacted fixture. Record
+both exact heads, OS, CPU, memory, terminal, compiler, build flags and dependency
+lock. Network readiness is measured separately from first usable local frame.
+No benchmark has run for this definition.
+
+| Metric | Procedure | Candidate acceptance target |
+|---|---|---|
+| Cold process | Start 30 fresh processes per candidate. Report p50/p95 exec-to-first usable frame. Record page-cache conditions separately. | p95 <= 200 ms and no worse than Python |
+| RSS | Record process-tree peak and steady RSS after 60 seconds for identical 1000-line view | steady <= 40 MiB, peak <= 64 MiB and <= Python |
+| Idle CPU | After 30-second settling, measure CPU-time/wall-time over 60 seconds without events | <= 0.5% of one core per client |
+| p95 render | 10,000 events at 100/s; timestamp adapter receipt through frame flush; include resize and key input | p95 <= 50 ms, p99 <= 100 ms; no hidden drops |
+| Multiple clients | Repeat with 1, 4 and 16 clients. Use shared and distinct principals. Include a slow reader and a disconnect. | Latency targets hold. No protected data crosses scope. Memory and queue limits hold. |
+
+These are acceptance targets, not measured claims. If hardware cannot meet a
+target, revise it with baseline evidence before acceptance. Report raw samples,
+percentile method and failures; do not average away a slow client. Broker trials
+must include broker RSS/CPU in totals and demonstrate at least 20% lower total RSS or
+upstream request count at 16 clients, with no latency regression. Otherwise keep
+direct access. Limit each transport subscriber to 128 events and 2 MiB; exceeding
+either produces explicit backpressure/gap handling rather than silent loss.
+
+Protocol cases cover unavailable message/stream and refused resubscribe and
+plan/confirm. Test duplicate/out-of-order events, cursor expiry and interrupted
+submit. Test authentication expiry, revocation after success, cancellation
+before/after acknowledgement and reconnect during approval. Assert exact task/context/run bindings and zero
+automatic effect retries. A stale or denied snapshot clears protected values.
+Test Python and Rust against the same wire fixtures, then repeat through the
+served GraphOS entry point. A fake server pass is not served acceptance.
+
+Broker qualification also checks socket/pipe permissions, impersonated
+principal, mixed tenants, changed policy epoch, bounded retention and a slow
+subscriber. Every rejected scope yields zero protected records. Record replay
+sequences and resnapshot generation; no independent graph or MCP path is allowed.
+
+## OpenCode cutover evidence
+
+Start from working OpenCode skill access and GraphOS connectivity. Keep that
+installation available while testing the native terminal. In each client,
+discover and invoke the maintained development skill. Run two GraphOS-managed
+agents concurrently and stream both tasks. Cancel one without affecting the other.
+Disconnect and recover the surviving task with unchanged task/context/run IDs.
+Exercise approval denial, expired confirmation and identity mismatch. No client
+may grant an effect locally. Compare served results and refusal behavior at
+recorded client and GraphOS heads. Cutover requires operator acceptance after
+parity and performance evidence. Verify OpenCode remains a working rollback path.
