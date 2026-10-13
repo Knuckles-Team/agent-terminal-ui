@@ -63,3 +63,13 @@ GraphOS producer contracts R009.2 through R009.6 and R010.7 are prerequisites. R
 AU:116 source SHA-256 08a22602bd677e4fc39260d058503fa73a2216ad40bbe817c17d3bef256722ef. Map its remaining consumer obligation to R002.2, .3, .5 and .6 after the producer clauses.
 AU:117 source SHA-256 fddbc1b35588be4427396a7aa827414d9d7bba01a8837f905a8b1c9b1eac4694. Map its remaining mode and unified-view obligation to R002.2 through .6, especially .4. Child .1 preserves the original chat transport acceptance. These mappings claim no runtime delivery.
 <!-- /spec-definition-patch -->
+
+## Rust migration scope
+
+The dated migration amendment in plan.md extends R002 transport ownership and
+R008 presentation to Rust with asynchronous execution. It preserves R001 authorization
+and R010 run identity. The terminal remains a thin client; GraphOS owns runtime
+and policy, and EG owns graph and reasoning. A broker requires measured benefit
+and may retain only principal-scoped authorized views. Success requires the
+served protocol, failure and performance acceptance in test-spec.md. Definitions
+and local tests alone do not establish runtime verification.
