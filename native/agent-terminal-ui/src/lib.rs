@@ -5,6 +5,31 @@ use reqwest::{Client, Url, header};
 use std::time::Duration;
 
 const MAX_RESPONSE_BYTES: usize = 1024 * 1024;
+pub const SUBMISSION_UNKNOWN: &str = "Submission outcome unknown. It will not be resubmitted. No task identifier is available to refresh.";
+
+pub struct TaskSubmission {
+    prompt: String,
+    message_id: String,
+}
+
+impl TaskSubmission {
+    pub fn new(prompt: &str) -> Result<Self, &'static str> {
+        if prompt.trim().is_empty() || prompt.len() > 65_536 {
+            return Err("Prompt must contain text and be at most 65536 bytes");
+        }
+        let mut identity = [0_u8; 16];
+        getrandom::getrandom(&mut identity).map_err(|_| "Cannot generate submission identity")?;
+        let message_id = identity.iter().map(|byte| format!("{byte:02x}")).collect();
+        Ok(Self {
+            prompt: prompt.to_owned(),
+            message_id,
+        })
+    }
+
+    pub fn message_id(&self) -> &str {
+        &self.message_id
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TaskSnapshot {
@@ -15,6 +40,7 @@ pub struct TaskSnapshot {
 pub struct GraphOsClient {
     http: Client,
     card_url: Url,
+    authenticated: bool,
 }
 
 impl GraphOsClient {
@@ -65,7 +91,43 @@ impl GraphOsClient {
         Ok(Self {
             http,
             card_url: url,
+            authenticated: token.is_some(),
         })
+    }
+
+    pub async fn submit_task(
+        &self,
+        submission: &TaskSubmission,
+    ) -> Result<TaskSnapshot, &'static str> {
+        if !self.authenticated {
+            return Err("Submission requires a caller credential");
+        }
+        let mut url = self.card_url.clone();
+        url.set_path("/a2a");
+        let response = self
+            .http
+            .post(url)
+            .header("Idempotency-Key", submission.message_id())
+            .json(&serde_json::json!({
+                "jsonrpc": "2.0",
+                "id": submission.message_id(),
+                "method": "message/send",
+                "params": {"message": {
+                    "kind": "message", "role": "user",
+                    "messageId": submission.message_id(),
+                    "parts": [{"kind": "text", "text": submission.prompt}],
+                }},
+            }))
+            .send()
+            .await
+            .map_err(|_| SUBMISSION_UNKNOWN)?;
+        if !response.status().is_success() {
+            return Err(SUBMISSION_UNKNOWN);
+        }
+        let bytes = read_task_response(response)
+            .await
+            .map_err(|_| SUBMISSION_UNKNOWN)?;
+        parse_returned_task(submission.message_id(), &bytes).map_err(|_| SUBMISSION_UNKNOWN)
     }
 
     pub async fn get_task(&self, task_id: &str) -> Result<TaskSnapshot, &'static str> {
@@ -184,6 +246,14 @@ fn parse_task_snapshot(
     request_id: &str,
     bytes: &[u8],
 ) -> Result<TaskSnapshot, &'static str> {
+    let snapshot = parse_returned_task(request_id, bytes)?;
+    if snapshot.correlation.task_id() != task_id {
+        return Err("Task correlation mismatch");
+    }
+    Ok(snapshot)
+}
+
+fn parse_returned_task(request_id: &str, bytes: &[u8]) -> Result<TaskSnapshot, &'static str> {
     let envelope: serde_json::Value =
         serde_json::from_slice(bytes).map_err(|_| "Invalid GraphOS task response")?;
     if envelope.get("jsonrpc").and_then(|v| v.as_str()) != Some("2.0")
@@ -196,9 +266,6 @@ fn parse_task_snapshot(
         .get("result")
         .ok_or("Missing GraphOS task snapshot")?;
     let correlation = TaskCorrelation::from_task(task)?;
-    if correlation.task_id() != task_id {
-        return Err("Task correlation mismatch");
-    }
     let TaskEvent::Status { state, .. } = correlation.validate(task)? else {
         return Err("Invalid GraphOS task snapshot");
     };

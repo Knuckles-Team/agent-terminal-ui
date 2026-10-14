@@ -83,6 +83,8 @@ Record deferred validation as deferred, never passed.
 
 - [ ] **TUI-RUNTIME-R002.1.2:** Validate read-only snapshots through the authenticated native client.
 - [ ] **TUI-RUNTIME-R002.1.3:** Complete the original served chat, recovery and cutover acceptance.
+- [x] **TUI-RUNTIME-R002.1.3.1:** Verify one native text submission through the existing GraphOS request and AU enqueue path.
+- [ ] **TUI-RUNTIME-R002.1.3.2:** Complete every original served session, streaming, cancellation and recovery criterion before cutover.
 
 - [x] **TUI-RUNTIME-R002.1.5:** Prove the original remote-cancellation criterion through the native consumer and existing producer.
 

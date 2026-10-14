@@ -26,6 +26,17 @@ existing task ID to read its acknowledged state and separate task, context and
 run IDs. A missing run ID is shown as unavailable. An empty task ID fails before
 any request. A failed refresh clears the previously displayed task values.
 
+Use --prompt to submit one ordinary text task with a caller credential:
+
+```bash
+CARGO_BUILD_JOBS=2 cargo run --locked --manifest-path native/agent-terminal-ui/Cargo.toml -- --prompt "Describe the current task"
+```
+
+Do not combine --prompt with AGENT_TASK_ID. A valid acknowledgement selects the
+returned task for refresh and cancellation. The client sends once. An interrupted
+submission has an unknown outcome and cannot be refreshed without its task ID.
+Refresh never submits the prompt again.
+
 Press r to refresh, c to stop waiting, or q or Ctrl+C to exit.
 After a successful read of an active task, press x, then y to confirm
 remote cancellation. Press n or Escape to dismiss the confirmation. Cancellation
@@ -34,5 +45,5 @@ succeeds only after GraphOS returns the same bound task in the canceled state.
 An interrupted or failed cancellation has an unknown outcome. Press r to read
 the task state before trying again. Stopping the local wait cannot undo a remote
 cancellation. The client never retries cancellation automatically. This preview
-does not submit tasks, stream responses or approve actions. Keep Python and
+does not stream responses or approve actions. Keep Python and
 OpenCode for existing workflows.

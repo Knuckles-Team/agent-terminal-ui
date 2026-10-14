@@ -23,7 +23,7 @@ keyboard / slash command
 | Generated operation client | Resolve `schema_for(op)` and `invoke(transport, op, params)` lazily. The installed registry digest must match the server. Missing package data or incompatible runtime yields `CLIENT_UNAVAILABLE`, not a fallback to an untyped endpoint. |
 | HTTP operation | Use GraphOS's public versioned operation endpoint, caller-scoped authorization header, structured result and stable error envelope. No direct import of graph-os server internals or AU knowledge-graph internals. |
 | A2A conversation | Reuse the GraphOS Agent Card and authenticated JSON-RPC task flow. Keep session/task identity on streaming and resumed turns; network errors must leave the UI responsive. |
-| PLAN | Store only the short-lived server binding necessary for display and one confirmation. Bind to exact plan reference, op, input digest, caller/session, registry digest and expiry; let server make the final authoritative check. Clear after use or failure. |
+| PLAN | Store only the short-lived server binding necessary for display and one confirmation. Bind to exact plan reference, op, input digest, caller/session, registry digest and expiry. The server makes the final authoritative check. Clear after use or failure. |
 | Approval | An `input-required` task is a pending request. Signed approval must be bound to the pending call and human authority in GraphOS. Until that public contract and served proof are present, refuse `approvals.*` and direct fleet-grant shortcuts. |
 | Security | Require TLS and a verified credential for remote GraphOS. Do not emit bearer values to logs, widgets, saved sessions, test snapshots or exception strings. Local development endpoint rules must be explicit and bounded to loopback. |
 
@@ -269,6 +269,27 @@ The executable was also checked through the real GraphOS HTTP handlers and
 A2AService with upstream test authority and authentication fixtures. That
 check covers the handler boundary, not production identity, tenant isolation,
 TLS or WorkItem authority. It requires no native EG build.
+
+### 2026-10-14: Native unary submission increment (R002.1.3.1)
+
+GraphOS main 0120e1f serves ordinary text tasks through message/send with
+request-bound authentication, WorkItem admission and the existing AU dispatch
+queue. Add one native --prompt submission, then retain the acknowledged task
+binding in the existing refresh and cancellation view. Generate the request
+identity once. Do not retry an effect or replay it on refresh. An interrupted
+submission has an unknown outcome. Reject a prompt combined with AGENT_TASK_ID.
+
+Verify the native executable against the actual GraphOS request handler,
+WorkItem submission and AU enqueue functions. Control the final storage and
+queue boundaries. Check the authenticated carrier and zero admission for
+denied requests. This proves the submission adapter, not durable engine or
+worker completion. Preserve production-profile refusal when its configured
+dispatch authority is absent. Streaming, session recovery, the six original
+requirements and OpenCode cutover remain pending.
+
+R002.1.3 now rolls up this bounded adapter in R002.1.3.1 and the preserved
+original served integration acceptance in R002.1.3.2. Retain every parent criterion. A fixture-only positive response cannot close
+the parent.
 
 ### 2026-10-13: Original cancellation criterion
 
