@@ -143,6 +143,18 @@ TUI-RUNTIME-R002.1.4 tests select an existing task with AGENT_TASK_ID. Display s
 
 TUI-RUNTIME-R002.1.2 runs loopback HTTP tests for tasks/get. Check the exact JSON-RPC request, credential and matching response. Reject HTTP errors, redirects, malformed or mismatched envelopes, invalid task shapes and oversized responses. TUI-RUNTIME-R002.1.3 remains pending until the original served chat and recovery matrix passes.
 
+## Native unary submission
+
+TUI-RUNTIME-R002.1.3.1 runs one native --prompt through message/send. Check
+credential, fixed random request identity, returned task/context/run binding,
+refresh and cancellation. Invalid arguments cause zero requests. Denied
+credentials cause zero WorkItem admission. Lost acknowledgement or local abort
+must display an unknown outcome; refresh cannot submit again. A controlled
+storage port and the existing queue exercise the actual GraphOS admission and
+AU enqueue functions, including carrier verification. This does not prove
+native engine durability or worker completion. TUI-RUNTIME-R002.1.3.2 retains
+all original served chat, streaming, continuity and recovery acceptance.
+
 ## Original cancellation acceptance slice
 
 TUI-RUNTIME-R002.1.5 uses the existing tasks/cancel producer. Check one confirmed

@@ -1,5 +1,5 @@
 use agent_terminal_ui_native::{
-    GraphOsClient, TaskSnapshot,
+    GraphOsClient, SUBMISSION_UNKNOWN, TaskSnapshot, TaskSubmission,
     correlation::{TaskCorrelation, TaskState},
 };
 use crossterm::event::{Event, EventStream, KeyCode, KeyEventKind, KeyModifiers};
@@ -9,7 +9,7 @@ use ratatui::{
     style::{Color, Style},
     widgets::{Block, Paragraph, Wrap},
 };
-use std::{env, process::ExitCode, sync::Arc};
+use std::{env, ffi::OsString, process::ExitCode, sync::Arc};
 
 fn presentation_style(theme: &str, no_color: &str) -> Style {
     if !no_color.is_empty() {
@@ -45,6 +45,26 @@ fn selected_task(value: Result<String, env::VarError>) -> Result<Option<String>,
         Err(env::VarError::NotPresent) => Ok(None),
         Err(env::VarError::NotUnicode(_)) => Err("AGENT_TASK_ID must be valid Unicode"),
     }
+}
+
+fn selected_prompt(args: &[OsString], task_selected: bool) -> Result<Option<String>, &'static str> {
+    if args.is_empty() {
+        return Ok(None);
+    }
+    let [flag, prompt] = args else {
+        return Err("Expected exactly --prompt TEXT, or no arguments");
+    };
+    if flag != "--prompt" {
+        return Err("Unknown argument; expected --prompt TEXT");
+    }
+    if task_selected {
+        return Err("--prompt cannot be combined with AGENT_TASK_ID");
+    }
+    let prompt = prompt.to_str().ok_or("Prompt must be valid Unicode")?;
+    if prompt.trim().is_empty() || prompt.len() > 65_536 {
+        return Err("Prompt must contain text and be at most 65536 bytes");
+    }
+    Ok(Some(prompt.to_owned()))
 }
 
 fn snapshot_status(snapshot: &TaskSnapshot) -> String {
@@ -183,11 +203,37 @@ fn request_completed(
     completed_status(result, binding)
 }
 
-async fn run(client: Arc<GraphOsClient>, task_id: Option<String>) -> Result<(), &'static str> {
+fn submission_completed(
+    result: Result<Result<ReadStatus, &'static str>, tokio::task::JoinError>,
+    binding: &mut Option<TaskCorrelation>,
+    cancellation: &mut Cancellation,
+) -> String {
+    match result {
+        Ok(Ok(ReadStatus::Task(snapshot))) => request_completed(
+            Ok(Ok(ReadStatus::Task(snapshot))),
+            binding,
+            cancellation,
+            false,
+        ),
+        _ => {
+            *cancellation = Cancellation::Unavailable;
+            SUBMISSION_UNKNOWN.to_owned()
+        }
+    }
+}
+
+async fn run(
+    client: Arc<GraphOsClient>,
+    mut task_id: Option<String>,
+    submission: Option<TaskSubmission>,
+) -> Result<(), &'static str> {
     let theme = env::var("AGENT_THEME").unwrap_or_else(|_| "tokyo-night".to_owned());
     let no_color = env::var("NO_COLOR").unwrap_or_default();
     let style = presentation_style(&theme, &no_color);
-    let loading = if task_id.is_some() {
+    let mut submitting = submission.is_some();
+    let loading = if submitting {
+        "Submitting GraphOS task..."
+    } else if task_id.is_some() {
         "Reading GraphOS task..."
     } else {
         "Discovering GraphOS..."
@@ -197,13 +243,19 @@ async fn run(client: Arc<GraphOsClient>, task_id: Option<String>) -> Result<(), 
     let mut request = tokio::spawn({
         let client = client.clone();
         let task_id = task_id.clone();
-        async move { read_status(&client, task_id.as_deref()).await }
+        async move {
+            match submission {
+                Some(submission) => client.submit_task(&submission).await.map(ReadStatus::Task),
+                None => read_status(&client, task_id.as_deref()).await,
+            }
+        }
     });
     let mut pending = true;
     let mut status = loading.to_owned();
     let mut binding = None;
     let mut cancellation = Cancellation::default();
     let mut remote_cancel = false;
+    let mut submission_unknown = false;
     let result = async {
         loop {
             let visible = if cancellation == Cancellation::Confirming {
@@ -215,7 +267,14 @@ async fn run(client: Arc<GraphOsClient>, task_id: Option<String>) -> Result<(), 
             tokio::select! {
                 result = &mut request, if pending => {
                     pending = false;
-                    status = request_completed(result, &mut binding, &mut cancellation, remote_cancel);
+                    if submitting {
+                        status = submission_completed(result, &mut binding, &mut cancellation);
+                        task_id = binding.as_ref().map(|bound| bound.task_id().to_owned());
+                        submission_unknown = binding.is_none();
+                        submitting = false;
+                    } else {
+                        status = request_completed(result, &mut binding, &mut cancellation, remote_cancel);
+                    }
                 }
                 event = events.next() => {
                     let Some(Ok(event)) = event else { return Err("Terminal input unavailable"); };
@@ -229,21 +288,26 @@ async fn run(client: Arc<GraphOsClient>, task_id: Option<String>) -> Result<(), 
                                 request.abort();
                                 pending = false;
                                 let result = (&mut request).await;
-                                if remote_cancel {
+                                if submitting {
+                                    status = submission_completed(result, &mut binding, &mut cancellation);
+                                    task_id = binding.as_ref().map(|bound| bound.task_id().to_owned());
+                                    submission_unknown = binding.is_none();
+                                    submitting = false;
+                                } else if remote_cancel {
                                     cancellation = Cancellation::Unknown;
                                     status = CANCELLATION_UNKNOWN.to_owned();
                                 } else {
                                     status = request_completed(result, &mut binding, &mut cancellation, false);
                                 }
                             }
-                            KeyCode::Char('r') if !pending => {
+                            KeyCode::Char('r') if !pending && !submission_unknown => {
+                                status = if task_id.is_some() { "Reading GraphOS task..." } else { "Discovering GraphOS..." }.to_owned();
                                 let client = client.clone();
                                 let task_id = task_id.clone();
                                 request = tokio::spawn(async move { read_status(&client, task_id.as_deref()).await });
                                 pending = true;
                                 remote_cancel = false;
                                 cancellation.read_started();
-                                status = loading.to_owned();
                             }
                             KeyCode::Char('x') if !pending => cancellation.arm(),
                             KeyCode::Char('n') | KeyCode::Esc => cancellation.dismiss(),
@@ -267,6 +331,12 @@ async fn run(client: Arc<GraphOsClient>, task_id: Option<String>) -> Result<(), 
     }.await;
     request.abort();
     ratatui::restore();
+    if submitting {
+        status = submission_completed((&mut request).await, &mut binding, &mut cancellation);
+        eprintln!("{status}");
+    } else if submission_unknown {
+        eprintln!("{SUBMISSION_UNKNOWN}");
+    }
     result
 }
 
@@ -274,13 +344,18 @@ async fn run(client: Arc<GraphOsClient>, task_id: Option<String>) -> Result<(), 
 async fn main() -> ExitCode {
     let endpoint = env::var("AGENT_URL").unwrap_or_else(|_| "http://localhost:8000".to_owned());
     let token = env::var("AGENT_BEARER_TOKEN").ok();
-    let result = match selected_task(env::var("AGENT_TASK_ID")) {
-        Ok(task_id) => match GraphOsClient::new(&endpoint, token.as_deref()) {
-            Ok(client) => run(Arc::new(client), task_id).await,
-            Err(error) => Err(error),
-        },
-        Err(error) => Err(error),
-    };
+    let result = async {
+        let task_id = selected_task(env::var("AGENT_TASK_ID"))?;
+        let args: Vec<_> = env::args_os().skip(1).collect();
+        let prompt = selected_prompt(&args, task_id.is_some())?;
+        if prompt.is_some() && token.is_none() {
+            return Err("Submission requires a caller credential");
+        }
+        let submission = prompt.as_deref().map(TaskSubmission::new).transpose()?;
+        let client = GraphOsClient::new(&endpoint, token.as_deref())?;
+        run(Arc::new(client), task_id, submission).await
+    }
+    .await;
     match result {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
@@ -293,8 +368,9 @@ async fn main() -> ExitCode {
 #[cfg(test)]
 mod tests {
     use super::{
-        CANCELLATION_UNKNOWN, Cancellation, ReadStatus, completed_status, draw, presentation_style,
-        request_completed, selected_task, snapshot_status,
+        CANCELLATION_UNKNOWN, Cancellation, ReadStatus, SUBMISSION_UNKNOWN, completed_status, draw,
+        presentation_style, request_completed, selected_prompt, selected_task, snapshot_status,
+        submission_completed,
     };
     use agent_terminal_ui_native::{
         TaskSnapshot,
@@ -303,6 +379,104 @@ mod tests {
     use ratatui::style::{Color, Style};
     use ratatui::{Terminal, backend::TestBackend};
     use std::env::VarError;
+    use std::ffi::OsString;
+
+    // spec: TUI-RUNTIME-R002.1.3.1
+    #[test]
+    fn prompt_arguments_allow_only_one_text_submission() {
+        let arguments = |values: &[&str]| values.iter().map(OsString::from).collect::<Vec<_>>();
+        assert_eq!(selected_prompt(&[], false), Ok(None));
+        assert_eq!(selected_prompt(&[], true), Ok(None));
+        assert_eq!(
+            selected_prompt(&arguments(&["--prompt", "ordinary text"]), false),
+            Ok(Some("ordinary text".to_owned()))
+        );
+        for invalid in [
+            vec!["--prompt"],
+            vec!["ordinary text"],
+            vec!["--override", "text"],
+            vec!["--prompt", "text", "--prompt", "again"],
+            vec!["--prompt", "text", "extra"],
+            vec!["--prompt", "  "],
+            vec!["--prompt=other"],
+        ] {
+            assert!(selected_prompt(&arguments(&invalid), false).is_err());
+        }
+        assert!(selected_prompt(&arguments(&["--prompt", "text"]), true).is_err());
+        assert!(selected_prompt(&arguments(&["--prompt", &"x".repeat(65_537)]), false).is_err());
+    }
+
+    // spec: TUI-RUNTIME-R002.1.3.1
+    #[test]
+    fn accepted_submission_binds_returned_task_and_enables_cancellation() {
+        let mut binding = None;
+        let mut cancellation = Cancellation::Unavailable;
+        let status = submission_completed(
+            Ok(Ok(task_read(
+                "returned-task",
+                "returned-context",
+                Some("returned-run"),
+            ))),
+            &mut binding,
+            &mut cancellation,
+        );
+        assert!(status.contains("Task ID: returned-task"));
+        assert_eq!(binding.unwrap().context_id(), "returned-context");
+        assert_eq!(cancellation, Cancellation::Ready);
+    }
+
+    // spec: TUI-RUNTIME-R002.1.3.1
+    #[tokio::test]
+    async fn uncertain_submission_never_supplies_task_authority() {
+        let mut binding = None;
+        let mut cancellation = Cancellation::Unavailable;
+        for result in [
+            Ok(Err("protected response detail")),
+            Ok(Ok(ReadStatus::Discovery("unexpected".to_owned()))),
+        ] {
+            assert_eq!(
+                submission_completed(result, &mut binding, &mut cancellation),
+                SUBMISSION_UNKNOWN
+            );
+            assert!(binding.is_none());
+            assert_eq!(cancellation, Cancellation::Unavailable);
+        }
+        let request = tokio::spawn(async {
+            std::future::pending::<Result<ReadStatus, &'static str>>().await
+        });
+        request.abort();
+        assert_eq!(
+            submission_completed(request.await, &mut binding, &mut cancellation),
+            SUBMISSION_UNKNOWN
+        );
+        assert!(binding.is_none());
+    }
+
+    // spec: TUI-RUNTIME-R002.1.3.1
+    #[tokio::test]
+    async fn abort_after_submission_completes_retains_known_binding() {
+        let request = tokio::spawn(async {
+            Ok(task_read(
+                "accepted-task",
+                "accepted-context",
+                Some("accepted-run"),
+            ))
+        });
+        while !request.is_finished() {
+            tokio::task::yield_now().await;
+        }
+        request.abort();
+        let mut binding = None;
+        let mut cancellation = Cancellation::Unavailable;
+        let status = submission_completed(request.await, &mut binding, &mut cancellation);
+        let binding = binding.unwrap();
+        assert_eq!(binding.task_id(), "accepted-task");
+        assert_eq!(binding.context_id(), "accepted-context");
+        assert_eq!(binding.run_id(), Some("accepted-run"));
+        assert!(status.contains("Task ID: accepted-task"));
+        assert!(!status.contains("outcome unknown"));
+        assert_eq!(cancellation, Cancellation::Ready);
+    }
 
     fn task_read(task_id: &str, context_id: &str, run_id: Option<&str>) -> ReadStatus {
         let mut task = serde_json::json!({
