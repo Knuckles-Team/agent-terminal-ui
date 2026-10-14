@@ -270,6 +270,29 @@ A2AService with upstream test authority and authentication fixtures. That
 check covers the handler boundary, not production identity, tenant isolation,
 TLS or WorkItem authority. It requires no native EG build.
 
+### 2026-10-13: Original cancellation criterion
+
+The nearest available R002.1 producer is tasks/cancel. GraphOS main 331044ed
+already routes this method to WorkItemA2AAuthority. The native consumer
+requires explicit confirmation and a matching canceled response. An interrupted
+request has an unknown outcome until a read reconciles it. The client never retries an effect automatically.
+
+Missing producer contracts remain with GraphOS. GRAPHOS-A2A-R001 and
+GRAPHOS-A2A-R010 own durable streaming and resubscribe. Their spec names the
+AU-CONTROL-001 event port; a current AU owner row was not found.
+GRAPHOS-HOST-R009.2 through GRAPHOS-HOST-R009.6 and GRAPHOS-HOST-R010.7 own the host/log journey.
+GRAPHOS-A2A-R005.2 and GRAPHOS-A2A-R006.2 retain approval and verified-caller prerequisites.
+Coordinate those changes with the parent before touching active producer work.
+
+The native suite passed 32 tests, including the configured ten-second timeout.
+Formatting and strict Clippy checks passed. Six pseudo-terminal cases passed
+through GraphOS handlers, A2AService, WorkItemA2AAuthority and the AU cancellation adapter.
+They cover confirmation, dismissal, refusal, response loss after commit, local interruption and read reconciliation.
+Each case checked wire counts and terminal restoration. The fixture uses a
+synthetic session and scripted storage. Native EG storage, worker interruption,
+production authentication and TLS remain unqualified. The original six migration
+rows remain pending. Keep OpenCode until served parity and cutover acceptance pass.
+
 ## One-shot tool-task consumer
 
 Component: Terminal task view

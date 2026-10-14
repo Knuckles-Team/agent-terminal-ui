@@ -25,7 +25,7 @@ fn presentation_style(theme: &str, no_color: &str) -> Style {
 
 fn draw(frame: &mut Frame, status: &str, style: Style) {
     let text = format!(
-        "{status}\n\nRead-only preview. Task streaming and approvals remain unavailable.\n\nr: refresh read | c: cancel local request | q / Ctrl+C: quit"
+        "{status}\n\nTask streaming and approvals remain unavailable.\n\nr: refresh read | x: cancel remote task | c: cancel local request | q / Ctrl+C: quit"
     );
     frame.render_widget(
         Paragraph::new(text)
@@ -106,6 +106,83 @@ fn completed_status(
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+enum Cancellation {
+    #[default]
+    Unavailable,
+    Ready,
+    Confirming,
+    Pending,
+    Unknown,
+}
+
+impl Cancellation {
+    fn arm(&mut self) {
+        if *self == Self::Ready {
+            *self = Self::Confirming;
+        }
+    }
+
+    fn confirm(&mut self) -> bool {
+        if *self != Self::Confirming {
+            return false;
+        }
+        *self = Self::Pending;
+        true
+    }
+
+    fn dismiss(&mut self) {
+        if *self == Self::Confirming {
+            *self = Self::Ready;
+        }
+    }
+
+    fn read_started(&mut self) {
+        if *self != Self::Unknown {
+            *self = Self::Unavailable;
+        }
+    }
+}
+
+const CANCELLATION_UNKNOWN: &str =
+    "Cancellation outcome unknown. Press r to read task state before trying again.";
+
+fn request_completed(
+    result: Result<Result<ReadStatus, &'static str>, tokio::task::JoinError>,
+    binding: &mut Option<TaskCorrelation>,
+    cancellation: &mut Cancellation,
+    remote_cancel: bool,
+) -> String {
+    let accepted_state = match &result {
+        Ok(Ok(ReadStatus::Task(snapshot)))
+            if binding
+                .as_ref()
+                .is_none_or(|initial| initial.validate_binding(&snapshot.correlation).is_ok()) =>
+        {
+            Some(snapshot.state)
+        }
+        _ => None,
+    };
+    if remote_cancel {
+        if binding.is_none() || accepted_state != Some(TaskState::Canceled) {
+            *cancellation = Cancellation::Unknown;
+            return CANCELLATION_UNKNOWN.to_owned();
+        }
+    } else if *cancellation == Cancellation::Unknown && accepted_state.is_none() {
+        return CANCELLATION_UNKNOWN.to_owned();
+    }
+    *cancellation = match accepted_state {
+        Some(
+            TaskState::Submitted
+            | TaskState::Working
+            | TaskState::InputRequired
+            | TaskState::AuthRequired,
+        ) => Cancellation::Ready,
+        _ => Cancellation::Unavailable,
+    };
+    completed_status(result, binding)
+}
+
 async fn run(client: Arc<GraphOsClient>, task_id: Option<String>) -> Result<(), &'static str> {
     let theme = env::var("AGENT_THEME").unwrap_or_else(|_| "tokyo-night".to_owned());
     let no_color = env::var("NO_COLOR").unwrap_or_default();
@@ -125,13 +202,20 @@ async fn run(client: Arc<GraphOsClient>, task_id: Option<String>) -> Result<(), 
     let mut pending = true;
     let mut status = loading.to_owned();
     let mut binding = None;
+    let mut cancellation = Cancellation::default();
+    let mut remote_cancel = false;
     let result = async {
         loop {
-            terminal.draw(|frame| draw(frame, &status, style)).map_err(|_| "Cannot draw terminal")?;
+            let visible = if cancellation == Cancellation::Confirming {
+                format!("{status}\n\nCancel selected remote task? y: confirm | n / Escape: dismiss")
+            } else {
+                status.clone()
+            };
+            terminal.draw(|frame| draw(frame, &visible, style)).map_err(|_| "Cannot draw terminal")?;
             tokio::select! {
                 result = &mut request, if pending => {
                     pending = false;
-                    status = completed_status(result, &mut binding);
+                    status = request_completed(result, &mut binding, &mut cancellation, remote_cancel);
                 }
                 event = events.next() => {
                     let Some(Ok(event)) = event else { return Err("Terminal input unavailable"); };
@@ -144,14 +228,35 @@ async fn run(client: Arc<GraphOsClient>, task_id: Option<String>) -> Result<(), 
                             KeyCode::Char('c') if pending => {
                                 request.abort();
                                 pending = false;
-                                status = completed_status((&mut request).await, &mut binding);
+                                let result = (&mut request).await;
+                                if remote_cancel {
+                                    cancellation = Cancellation::Unknown;
+                                    status = CANCELLATION_UNKNOWN.to_owned();
+                                } else {
+                                    status = request_completed(result, &mut binding, &mut cancellation, false);
+                                }
                             }
                             KeyCode::Char('r') if !pending => {
                                 let client = client.clone();
                                 let task_id = task_id.clone();
                                 request = tokio::spawn(async move { read_status(&client, task_id.as_deref()).await });
                                 pending = true;
+                                remote_cancel = false;
+                                cancellation.read_started();
                                 status = loading.to_owned();
+                            }
+                            KeyCode::Char('x') if !pending => cancellation.arm(),
+                            KeyCode::Char('n') | KeyCode::Esc => cancellation.dismiss(),
+                            KeyCode::Char('y') if !pending && cancellation.confirm() => {
+                                if let Some(binding) = binding.clone() {
+                                    let client = client.clone();
+                                    request = tokio::spawn(async move {
+                                        client.cancel_task(&binding).await.map(ReadStatus::Task)
+                                    });
+                                    pending = true;
+                                    remote_cancel = true;
+                                    status = "Canceling remote task...".to_owned();
+                                }
                             }
                             _ => {}
                         }
@@ -188,7 +293,8 @@ async fn main() -> ExitCode {
 #[cfg(test)]
 mod tests {
     use super::{
-        ReadStatus, completed_status, draw, presentation_style, selected_task, snapshot_status,
+        CANCELLATION_UNKNOWN, Cancellation, ReadStatus, completed_status, draw, presentation_style,
+        request_completed, selected_task, snapshot_status,
     };
     use agent_terminal_ui_native::{
         TaskSnapshot,
@@ -451,6 +557,165 @@ mod tests {
         );
         for invalid in ["", " ", "task\nsecret", "task\u{1b}"] {
             assert!(selected_task(Ok(invalid.to_owned())).is_err());
+        }
+    }
+
+    // spec: TUI-RUNTIME-R002.1.5
+    #[test]
+    fn cancellation_requires_confirmation_and_consumes_it_once() {
+        let mut cancellation = Cancellation::Unavailable;
+        cancellation.arm();
+        assert!(!cancellation.confirm());
+        cancellation = Cancellation::Ready;
+        cancellation.arm();
+        cancellation.dismiss();
+        assert!(!cancellation.confirm());
+        cancellation.arm();
+        assert!(cancellation.confirm());
+        cancellation.arm();
+        assert!(!cancellation.confirm());
+        assert_eq!(cancellation, Cancellation::Pending);
+    }
+
+    // spec: TUI-RUNTIME-R002.1.5
+    #[tokio::test]
+    async fn uncertain_cancellation_requires_successful_read_and_hides_snapshot() {
+        let mut binding = None;
+        let mut cancellation = Cancellation::Unavailable;
+        request_completed(
+            Ok(Ok(task_read("task-one", "context-two", Some("run-three")))),
+            &mut binding,
+            &mut cancellation,
+            false,
+        );
+        let initial = binding.clone();
+        let request = tokio::spawn(std::future::pending::<Result<ReadStatus, &'static str>>());
+        request.abort();
+        let status = request_completed(request.await, &mut binding, &mut cancellation, true);
+        assert_eq!(status, CANCELLATION_UNKNOWN);
+        assert!(!status.contains("No remote task was canceled"));
+        for protected in ["task-one", "context-two", "run-three"] {
+            assert!(!status.contains(protected));
+        }
+        cancellation.arm();
+        assert!(!cancellation.confirm());
+        cancellation.read_started();
+        assert_eq!(
+            request_completed(Ok(Err("refused")), &mut binding, &mut cancellation, false),
+            CANCELLATION_UNKNOWN
+        );
+        assert_eq!(binding, initial);
+        assert_eq!(cancellation, Cancellation::Unknown);
+        request_completed(
+            Ok(Ok(task_read("task-one", "context-two", None))),
+            &mut binding,
+            &mut cancellation,
+            false,
+        );
+        assert_eq!(cancellation, Cancellation::Ready);
+        assert_eq!(binding, initial);
+    }
+
+    // spec: TUI-RUNTIME-R002.1.5
+    #[test]
+    fn only_bound_canceled_response_confirms_remote_cancellation() {
+        let mut binding = None;
+        let mut cancellation = Cancellation::Unavailable;
+        request_completed(
+            Ok(Ok(task_read("task-one", "context-two", None))),
+            &mut binding,
+            &mut cancellation,
+            false,
+        );
+        assert_eq!(
+            request_completed(
+                Ok(Ok(task_read("task-one", "context-two", None))),
+                &mut binding,
+                &mut cancellation,
+                true
+            ),
+            CANCELLATION_UNKNOWN
+        );
+        let ReadStatus::Task(mut canceled) = task_read("task-one", "context-two", None) else {
+            panic!("expected task")
+        };
+        canceled.state = TaskState::Canceled;
+        let mut unbound = None;
+        assert_eq!(
+            request_completed(
+                Ok(Ok(ReadStatus::Task(canceled.clone()))),
+                &mut unbound,
+                &mut cancellation,
+                true
+            ),
+            CANCELLATION_UNKNOWN
+        );
+        assert!(unbound.is_none());
+        let ReadStatus::Task(mut mismatch) = task_read("other-task", "context-two", None) else {
+            panic!("expected task")
+        };
+        mismatch.state = TaskState::Canceled;
+        assert_eq!(
+            request_completed(
+                Ok(Ok(ReadStatus::Task(mismatch))),
+                &mut binding,
+                &mut cancellation,
+                true
+            ),
+            CANCELLATION_UNKNOWN
+        );
+        let status = request_completed(
+            Ok(Ok(ReadStatus::Task(canceled))),
+            &mut binding,
+            &mut cancellation,
+            true,
+        );
+        assert!(status.contains("State: canceled"));
+        assert_eq!(cancellation, Cancellation::Unavailable);
+        cancellation.arm();
+        assert!(!cancellation.confirm());
+    }
+
+    // spec: TUI-RUNTIME-R002.1.5
+    #[test]
+    fn discovery_failed_reads_and_terminal_tasks_do_not_arm_cancellation() {
+        let mut binding = None;
+        let mut cancellation = Cancellation::Unavailable;
+        request_completed(
+            Ok(Ok(ReadStatus::Discovery("Agent".to_owned()))),
+            &mut binding,
+            &mut cancellation,
+            false,
+        );
+        cancellation.arm();
+        assert!(!cancellation.confirm());
+        request_completed(
+            Ok(Ok(task_read("task-one", "context-two", None))),
+            &mut binding,
+            &mut cancellation,
+            false,
+        );
+        request_completed(Ok(Err("refused")), &mut binding, &mut cancellation, false);
+        cancellation.arm();
+        assert!(!cancellation.confirm());
+        for state in [
+            TaskState::Completed,
+            TaskState::Canceled,
+            TaskState::Failed,
+            TaskState::Rejected,
+        ] {
+            let ReadStatus::Task(mut snapshot) = task_read("task-one", "context-two", None) else {
+                panic!("expected task")
+            };
+            snapshot.state = state;
+            request_completed(
+                Ok(Ok(ReadStatus::Task(snapshot))),
+                &mut binding,
+                &mut cancellation,
+                false,
+            );
+            cancellation.arm();
+            assert!(!cancellation.confirm());
         }
     }
 }

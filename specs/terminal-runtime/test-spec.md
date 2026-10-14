@@ -143,6 +143,17 @@ TUI-RUNTIME-R002.1.4 tests select an existing task with AGENT_TASK_ID. Display s
 
 TUI-RUNTIME-R002.1.2 runs loopback HTTP tests for tasks/get. Check the exact JSON-RPC request, credential and matching response. Reject HTTP errors, redirects, malformed or mismatched envelopes, invalid task shapes and oversized responses. TUI-RUNTIME-R002.1.3 remains pending until the original served chat and recovery matrix passes.
 
+## Original cancellation acceptance slice
+
+TUI-RUNTIME-R002.1.5 uses the existing tasks/cancel producer. Check one confirmed
+request, matching task/context/run identity and the server canceled state. Deny
+a request and interrupt another after admission. Neither may report success.
+Local interruption must label the remote outcome unknown. A later r action may
+read state; it must not replay cancellation. Test confirmation dismissal and
+discovery mode with zero effect requests. Enter the real GraphOS HTTP handlers
+and cancellation authority with a scripted work port. Record that boundary and
+its exclusions. This slice does not close session, streaming or cutover checks.
+
 ## One-shot tool-task acceptance
 
 | Requirement | Planned test | Required observation |
