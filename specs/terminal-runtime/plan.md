@@ -292,3 +292,77 @@ Each case checked wire counts and terminal restoration. The fixture uses a
 synthetic session and scripted storage. Native EG storage, worker interruption,
 production authentication and TLS remain unqualified. The original six migration
 rows remain pending. Keep OpenCode until served parity and cutover acceptance pass.
+
+## One-shot tool-task consumer
+
+Component: Terminal task view
+Depends-on: TUI-RUNTIME-R001.2, TUI-RUNTIME-R001.3, TUI-RUNTIME-R001.5, [GraphOS A2A](https://github.com/Knuckles-Team/graph-os/blob/331044ed7daec51a3633e0a7ea712293b2063bf3/specs/a2a/spec.md)
+
+Code: ../../agent_terminal_ui/terminal_ui.py:10
+
+Code: ../../agent_terminal_ui/client.py:520
+
+Code: ../../agent_terminal_ui/client.py:587
+
+Code: ../../agent_terminal_ui/client.py:597
+
+Code: ../../agent_terminal_ui/headless.py:163
+
+Existing code: terminal_ui dispatches CLI options; AgentClient owns task transport and the headless path owns streamed rendering.
+Reachable today: no exact one-shot tool-task command or matching-scope preapproval projection is present.
+The native model and read-only snapshot slices remain separate from the required served one-shot transport.
+
+The CLI must add --one-shot as one explicit mode, exclusive with --prompt and --headless.
+Read exactly one UTF-8 JSON object from standard input without echoing or logging its bytes.
+Never accept request parameters or preapproval_ref through command arguments.
+The input object must contain operation_id, object parameters and idempotency_key; preapproval_ref is optional.
+Reject unknown fields, duplicate JSON keys, malformed objects and inputs above 64 KiB before any network call.
+The client must validate the operation and schema through the existing generated registry under R001.
+The client must create one request binding before submission and retain it across reconnect.
+AgentClient must add a typed message/send method beside its existing text-only stream method.
+The terminal must send the typed payload through that method, never reinterpret it as an unstructured prompt.
+
+Producer dependency: GraphOS must publish the exact message/send tool-task payload schema and preapproval projection under GRAPHOS-A2A-R005 and GRAPHOS-A2A-R006.
+The existing public A2A contract defines task methods and pending-call approval; it does not define that tool-task payload.
+The initial scope receipt must bind caller, tenant, workspace, operation, parameter digest, policy revision, registry digest and expiry.
+After admission, GraphOS must bind that receipt to the task and exact pending call before attesting prompt suppression.
+The final pending-call binding must come from the server after task admission, never from caller-supplied identity fields.
+The one-shot request authorizes one connector operation invocation, without expanding its granted scope.
+GraphOS must consume the final pending-call grant atomically and dispatch that operation at most once.
+Progress and task events do not authorize additional connector invocations.
+A valid preapproval may suppress presentation of a prompt; it must not bypass server admission or console step-up.
+The complete GRAPHOS-A2A-R005.2 signed chain and GRAPHOS-A2A-R006.2 caller bridge remain prerequisites.
+Missing binding or served authority proof must keep prompt bypass disabled.
+This consumer definition must not invent a producer export or claim the original cross-owner obligation is complete.
+
+Observation must use tasks/get and tasks/resubscribe with the original opaque task identity.
+Use the existing bounded transport queue and renderer, preserving output order and explicit gaps.
+An explicit cancel must call tasks/cancel and wait for acknowledgement before displaying cancelled.
+Detach must stop only the owned observer and print its opaque task identifier without credentials.
+A later --observe-task TASK_ID invocation must authenticate and use tasks/get followed by tasks/resubscribe.
+That mode must never submit an operation, accept preapproval or invoke confirmation.
+It must refuse --one-shot, --prompt and --headless combinations.
+A denied or unknown task must reveal no output.
+Terminal loss must not imply remote cancellation or successful completion.
+The terminal must clear protected output when authorization expires or the caller changes.
+
+```mermaid
+sequenceDiagram
+  participant C as Terminal CLI
+  participant T as Existing AgentClient
+  participant G as GraphOS A2A authority
+  participant B as Governed tool backend
+  C->>T: Validated one-shot request
+  T->>G: message/send with fixed idempotency key
+  G->>G: Bind task and validate authority
+  G->>B: Admitted tool effect
+  G-->>T: Task identity and ordered events
+  T-->>C: Lifecycle, output and termination
+  C->>T: Cancel selected task
+  T->>G: tasks/cancel
+  G-->>C: Cancellation acknowledgement through client
+```
+
+Decision: reuse the existing task transport and renderer; reject local task execution and unconditional approval flags.
+Implement the producer binding first, then the typed input, observation, refusal, evidence and served proof children.
+The planned tests must cover both frontend implementations before native cutover, using identical task and scope fixtures.

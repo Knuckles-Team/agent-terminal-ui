@@ -82,3 +82,12 @@ R002.1.1 adds the native task correlation model. Server task and context IDs are
 required; the server run ID is optional and never inferred. The model validates
 subsequent events against the initial binding. This child enables no transport
 actions and does not close served streaming or cutover acceptance.
+
+## One-shot tool task
+
+TUI-RUNTIME-R002.8 and its children define one governed background tool-task command.
+An operator must see task identity, lifecycle, output, approval requests and termination through one terminal invocation.
+The terminal must preserve GraphOS authority and must not run the tool locally.
+A server-attested matching preapproval may suppress a permission prompt; a local flag supplies no authority.
+Unavailable producer contracts must leave this mode unavailable without removing existing chat or discovery behavior.
+Success requires the served CLI acceptance and exact producer bindings in plan.md.
