@@ -450,8 +450,10 @@
     {
       "id": "TUI-RUNTIME-R002.1.5",
       "title": "Acknowledge native remote cancellation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "b05266d66c30"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/main.rs:563",
         "native/agent-terminal-ui/src/main.rs:580",
