@@ -1,0 +1,25 @@
+name: Release
+
+# Publishes only from a v* tag or a manual dispatch; an ordinary push to main
+# never publishes.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish-pypi:
+    uses: Knuckles-Team/pipelines/.github/workflows/python_pipeline.yml@main
+    permissions:
+      contents: write
+    with:
+      require-tag: ${{ github.event_name == 'push' }}
+    secrets:
+      PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}

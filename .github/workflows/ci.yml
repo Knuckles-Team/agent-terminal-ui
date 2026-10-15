@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths-ignore: &docs
+      - specs/**
+      - docs/**
+      - '**/*.md'
+      - plans/**
+      - LICENSE
+  push:
+    branches: [main]
+    paths-ignore: *docs
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('pr-{0}-{1}', github.workflow, github.event.pull_request.number) || format('main-{0}', github.workflow) }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    uses: Knuckles-Team/pipelines/.github/workflows/gates_pipeline.yml@main
+    with:
+      config: .pre-commit-config.yaml
+      rust: true
+      # sibling-checkout hooks are unavailable on a hosted runner; pytest is replaced by the shared affected-tests step
+      skip-hooks: okf-no-legacy-concepts,lane-guard,dependency-readiness,pytest
+      all-files: ${{ github.event_name == 'push' }}
+      timeout-minutes: ${{ github.event_name == 'push' && 60 || 15 }}
+
+  native-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ github.event_name == 'pull_request' && 10 || 60 }}
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: native/agent-terminal-ui
+      - name: Rust toolchain
+        run: rustup toolchain install 1.96.0 --profile minimal --component rustfmt --component clippy
+      - name: Native format
+        run: cargo +1.96.0 fmt --manifest-path native/agent-terminal-ui/Cargo.toml --check
+      - name: Native tests
+        run: cargo +1.96.0 test --locked --manifest-path native/agent-terminal-ui/Cargo.toml
+      - name: Native Clippy
+        run: cargo +1.96.0 clippy --locked --manifest-path native/agent-terminal-ui/Cargo.toml --all-targets -- -D warnings
