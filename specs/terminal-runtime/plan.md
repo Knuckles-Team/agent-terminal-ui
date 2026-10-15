@@ -387,3 +387,7 @@ sequenceDiagram
 Decision: reuse the existing task transport and renderer; reject local task execution and unconditional approval flags.
 Implement the producer binding first, then the typed input, observation, refusal, evidence and served proof children.
 The planned tests must cover both frontend implementations before native cutover, using identical task and scope fixtures.
+
+## TUI-RUNTIME-R001.8
+
+`TUI-RUNTIME-R001.8`: Extend command/client contract for one-shot background tool-task submission with GraphOS preapproval binding gate.

@@ -12,6 +12,7 @@
     "TUI-RUNTIME-R001.5",
     "TUI-RUNTIME-R001.6",
     "TUI-RUNTIME-R001.7",
+    "TUI-RUNTIME-R001.8",
     "TUI-RUNTIME-R002",
     "TUI-RUNTIME-R003",
     "TUI-RUNTIME-R004",
@@ -55,7 +56,7 @@
     {
       "id": "TUI-RUNTIME-R001",
       "title": "Terminal operation client issues typed commands with pending approvals",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "SPECIFIED",
       "landed_in": [
         "d2b5cea055c8"
       ],
@@ -67,7 +68,8 @@
         "TUI-RUNTIME-R001.4",
         "TUI-RUNTIME-R001.5",
         "TUI-RUNTIME-R001.6",
-        "TUI-RUNTIME-R001.7"
+        "TUI-RUNTIME-R001.7",
+        "TUI-RUNTIME-R001.8"
       ]
     },
     {
@@ -170,6 +172,13 @@
         "tests/test_import_guard.py:53",
         "tests/test_import_guard.py:63"
       ]
+    },
+    {
+      "id": "TUI-RUNTIME-R001.8",
+      "title": "One-shot background tool-task command extends command/client contract with GraphOS preapproval binding",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R002",

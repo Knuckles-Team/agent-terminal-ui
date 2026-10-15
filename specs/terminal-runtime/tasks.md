@@ -21,6 +21,7 @@
 - [ ] **TUI-RUNTIME-R001.5:** Pending request is displayed; no effect is asserted
 - [ ] **TUI-RUNTIME-R001.6:** Base chat works; compatible optional install enables /op
 - [ ] **TUI-RUNTIME-R001.7:** Legacy screens still render or use served replacement
+- [ ] **TUI-RUNTIME-R001.8:** One-shot background tool-task command extends command/client contract with GraphOS preapproval binding gate
 
 ## Structure parity with agent-webui (tracked)
 
