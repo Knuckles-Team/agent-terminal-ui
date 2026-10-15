@@ -26,6 +26,8 @@ jobs:
     with:
       config: .pre-commit-config.yaml
       rust: true
+      # sibling agent-utilities scripts are not present on a hosted runner
+      skip-hooks: okf-no-legacy-concepts,lane-guard
       all-files: ${{ github.event_name == 'push' }}
       timeout-minutes: ${{ github.event_name == 'push' && 60 || 15 }}
 
