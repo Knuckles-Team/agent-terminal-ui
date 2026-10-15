@@ -27,6 +27,7 @@ def _refusal(result: Any) -> CapabilityRefusal:
     return result
 
 
+@pytest.mark.spec("TUI-RUNTIME-R011.1")
 async def test_session_model_closed_capability_set(tmp_path: Path) -> None:
     assert {c.value for c in ClientCapability} == {
         "fs/read_text_file",
@@ -47,6 +48,7 @@ async def test_session_model_closed_capability_set(tmp_path: Path) -> None:
     assert ungranted.reason is RefusalReason.NOT_GRANTED
 
 
+@pytest.mark.spec("TUI-RUNTIME-R011.2")
 async def test_capability_handlers_serve_local_host(tmp_path: Path) -> None:
     (tmp_path / "a.txt").write_text("one\ntwo\nthree\n")
     view = _view(tmp_path)
@@ -97,6 +99,7 @@ async def test_capability_handlers_serve_local_host(tmp_path: Path) -> None:
     assert bad.reason is RefusalReason.INVALID_PARAMS
 
 
+@pytest.mark.spec("TUI-RUNTIME-R011.3")
 @pytest.mark.parametrize("trust", [False, True])
 async def test_path_containment_refuses_escape(tmp_path: Path, trust: bool) -> None:
     root = tmp_path / "root"
