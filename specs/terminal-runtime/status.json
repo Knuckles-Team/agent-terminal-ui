@@ -50,7 +50,20 @@
     "TUI-RUNTIME-R002.8.3",
     "TUI-RUNTIME-R002.8.4",
     "TUI-RUNTIME-R002.8.5",
-    "TUI-RUNTIME-R002.8.6"
+    "TUI-RUNTIME-R002.8.6",
+    "TUI-RUNTIME-R011",
+    "TUI-RUNTIME-R011.1",
+    "TUI-RUNTIME-R011.2",
+    "TUI-RUNTIME-R011.3",
+    "TUI-RUNTIME-R011.4",
+    "TUI-RUNTIME-R011.5",
+    "TUI-RUNTIME-R011.6",
+    "TUI-RUNTIME-R011.7",
+    "TUI-RUNTIME-R011.8",
+    "TUI-RUNTIME-R011.9",
+    "TUI-RUNTIME-R011.10",
+    "TUI-RUNTIME-R011.11",
+    "TUI-RUNTIME-R011.12"
   ],
   "requirements": [
     {
@@ -559,6 +572,111 @@
     },
     {
       "id": "TUI-RUNTIME-R002.8.6",
+      "title": "Hot-path proof",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R011",
+      "title": "Coding session in the local workspace",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R011.1",
+        "TUI-RUNTIME-R011.2",
+        "TUI-RUNTIME-R011.3",
+        "TUI-RUNTIME-R011.4",
+        "TUI-RUNTIME-R011.5",
+        "TUI-RUNTIME-R011.6",
+        "TUI-RUNTIME-R011.7",
+        "TUI-RUNTIME-R011.8",
+        "TUI-RUNTIME-R011.9",
+        "TUI-RUNTIME-R011.10",
+        "TUI-RUNTIME-R011.11",
+        "TUI-RUNTIME-R011.12"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R011.1",
+      "title": "Model",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R011.2",
+      "title": "Behavior",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R011.3",
+      "title": "Behavior",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R011.4",
+      "title": "Behavior",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R011.5",
+      "title": "Behavior",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R011.6",
+      "title": "Behavior",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R011.7",
+      "title": "Behavior",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R011.8",
+      "title": "Wiring",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R011.9",
+      "title": "Wiring",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R011.10",
+      "title": "Refusal",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R011.11",
+      "title": "Evidence",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R011.12",
       "title": "Hot-path proof",
       "delivery_state": "SPECIFIED",
       "landed_in": [],

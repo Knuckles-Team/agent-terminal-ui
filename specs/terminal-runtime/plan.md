@@ -391,3 +391,41 @@ The planned tests must cover both frontend implementations before native cutover
 ## TUI-RUNTIME-R001.8
 
 `TUI-RUNTIME-R001.8`: Extend command/client contract for one-shot background tool-task submission with GraphOS preapproval binding gate.
+
+## Coding session (TUI-RUNTIME-R011)
+
+Extended or new: new rollup; no existing rollup owns the coding session (search terms: coding, workspace root, diff, resume).
+
+Data flow, in order:
+- `terminal_ui` (`agent_terminal_ui/terminal_ui.py:10`) opens the session with the workspace root.
+- `AgentClient._rpc_stream` (`agent_terminal_ui/client.py:353`) delivers an agent request.
+- The new `CodingSessionView` handler (`agent_terminal_ui/coding_session.py`) receives it.
+- `WorkspacePolicy.check_operation` (`agent_terminal_ui/workspace_policy.py:177`) checks containment.
+- The view displays the diff or command, and the person approves.
+- The host performs the local read, write or process, and the result returns to the gateway.
+
+Existing code:
+- `agent_terminal_ui/client.py:338` and `:353`: JSON-RPC over HTTP for agent tasks only; no `fs/` or `terminal/` method.
+- `agent_terminal_ui/app.py:7`: docstring only.
+- `agent_terminal_ui/app.py:572` and `agent_terminal_ui/tui/tool_approval_screen.py:35`: tool approval modal.
+- `agent_terminal_ui/screens/permissions.py:164`: PermissionsScreen, exported at `agent_terminal_ui/screens/__init__.py:13`, never pushed.
+- `agent_terminal_ui/danger.py:229`: command danger level.
+- `agent_terminal_ui/workspace_policy.py:63`, `:177`, `:214`, trust mode `:104`, and `agent_terminal_ui/settings.py:197`.
+- `agent_terminal_ui/workspace_snapshots.py:50`, `:158`, `:229`, `:357`, and `agent_terminal_ui/settings.py:176`.
+- `agent_terminal_ui/session_manager.py:161` and `:303`.
+- `agent_terminal_ui/app.py:695`: resume of a stored chat, reached from `agent_terminal_ui/commands.py:260`.
+- `agent_terminal_ui/headless.py:163` and `opencode.json:1`.
+
+Reachable today: no for the coding session. Only `ToolApprovalScreen` (`app.py:608`) and chat resume (`commands.py:260`) are reached by a production caller, and neither serves a file or terminal request. `WorkspacePolicy`, `WorkspaceSnapshotManager`, `SessionManager` and `PermissionsScreen` have no production caller; the grep `git grep -n -E "WorkspacePolicy\(|WorkspaceSnapshotManager\(|SessionManager\(|PermissionsScreen\("` finds none outside their own modules. The search for `fs/`, `terminal/` and `request_permission` finds no handler.
+
+Types and fields: `CodingSessionView(root, capabilities, session_id, pending)`; capability set closed to six methods; refusal enum of five reasons.
+
+Attach point and caller: the handler attaches to the stream loop at `agent_terminal_ui/app.py:484`; its production caller is the running `terminal_ui` application.
+
+Failure behavior: a gateway loss keeps the pending request, answers nothing, and resumes without granting.
+
+Decision: the client performs file and terminal actions on the host as protocol client capabilities. `GRAPHOS-ACP` owns admission and permission rules. `AU-CONTROL` exposes the tools. Rejected: a cluster service that mounts or syncs the host checkout. It copies data and needs host credentials on the cluster.
+
+Cross-repository rows: `GRAPHOS-ACP` contract `CodingSessionAdmission`; `AU-CONTROL` contract `ClientCapabilityToolset`; `EG-DECISION-ENGINE` `HarnessConfig` supplies the tool selection. This repository states only `CodingSessionView`.
+
+References: none; no paper is cited.

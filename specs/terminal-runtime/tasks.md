@@ -98,3 +98,19 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R002.8.4:** Refusal; implement the planned test_one_shot_preapproval_refusal acceptance.
 - [ ] **TUI-RUNTIME-R002.8.5:** Evidence; implement the planned test_one_shot_evidence_and_reconnect acceptance.
 - [ ] **TUI-RUNTIME-R002.8.6:** Hot-path proof; implement the planned test_served_one_shot_scope_and_lifecycle acceptance.
+
+## Coding session work order
+
+- [ ] **TUI-RUNTIME-R011:** Complete the twelve children in order.
+- [ ] **TUI-RUNTIME-R011.1:** Model; implement the planned `test_session_model_closed_capability_set` acceptance.
+- [ ] **TUI-RUNTIME-R011.2:** Behavior; implement the planned `test_capability_handlers_serve_local_host` acceptance.
+- [ ] **TUI-RUNTIME-R011.3:** Behavior; implement the planned `test_path_containment_refuses_escape` acceptance.
+- [ ] **TUI-RUNTIME-R011.4:** Behavior; implement the planned `test_write_shows_diff_then_applies_on_approval` acceptance.
+- [ ] **TUI-RUNTIME-R011.5:** Behavior; implement the planned `test_command_displayed_before_run` acceptance.
+- [ ] **TUI-RUNTIME-R011.6:** Behavior; implement the planned `test_terminal_output_streams_in_order` acceptance.
+- [ ] **TUI-RUNTIME-R011.7:** Behavior; implement the planned `test_resume_reattaches_without_granting` acceptance.
+- [ ] **TUI-RUNTIME-R011.8:** Wiring; implement the planned `test_requests_reach_view_from_client_stream` acceptance.
+- [ ] **TUI-RUNTIME-R011.9:** Wiring; implement the planned `test_entry_point_opens_session_at_cwd` acceptance.
+- [ ] **TUI-RUNTIME-R011.10:** Refusal; implement the planned `test_typed_refusals_reach_gateway` acceptance.
+- [ ] **TUI-RUNTIME-R011.11:** Evidence; implement the planned `test_evidence_record_has_no_secrets` acceptance.
+- [ ] **TUI-RUNTIME-R011.12:** Hot-path proof; implement the planned `test_headless_coding_session_write_and_containment` acceptance.
