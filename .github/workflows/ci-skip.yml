@@ -1,0 +1,28 @@
+name: CI skip
+
+# Companion of ci.yml (paths-ignore): reports the required `gates / gates`
+# check as a success for docs/spec-only changes. `paths:` is the exact inverse.
+
+on:
+  pull_request:
+    paths:
+      - specs/**
+      - docs/**
+      - '**/*.md'
+      - plans/**
+      - LICENSE
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-gates-skip-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    name: gates / gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: echo "docs/spec-only change; the code gates do not apply"
