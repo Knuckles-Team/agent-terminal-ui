@@ -601,23 +601,38 @@
     {
       "id": "TUI-RUNTIME-R011.1",
       "title": "Model",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "67d3e70a93f3",
+        "a8fdef3ecd2c"
+      ],
+      "verified_by": [
+        "tests/test_coding_session.py:30"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R011.2",
       "title": "Behavior",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "67d3e70a93f3",
+        "a8fdef3ecd2c"
+      ],
+      "verified_by": [
+        "tests/test_coding_session.py:51"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R011.3",
       "title": "Behavior",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "67d3e70a93f3",
+        "a8fdef3ecd2c"
+      ],
+      "verified_by": [
+        "tests/test_coding_session.py:102"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R011.4",
