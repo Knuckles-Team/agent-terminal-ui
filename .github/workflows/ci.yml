@@ -26,8 +26,8 @@ jobs:
     with:
       config: .pre-commit-config.yaml
       rust: true
-      # sibling agent-utilities scripts are not present on a hosted runner
-      skip-hooks: okf-no-legacy-concepts,lane-guard
+      # sibling-checkout hooks are unavailable on a hosted runner; pytest is replaced by the shared affected-tests step
+      skip-hooks: okf-no-legacy-concepts,lane-guard,dependency-readiness,pytest
       all-files: ${{ github.event_name == 'push' }}
       timeout-minutes: ${{ github.event_name == 'push' && 60 || 15 }}
 
