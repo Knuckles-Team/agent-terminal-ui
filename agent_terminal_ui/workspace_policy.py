@@ -175,13 +175,16 @@ class WorkspacePolicy:
         return None
 
     def check_operation(
-        self, operation: FileOperation, path: str | Path
+        self, operation: FileOperation, path: str | Path, *, contained: bool = False
     ) -> PolicyViolation | None:
         """Check if a file operation is allowed.
 
         Args:
             operation: The type of file operation.
             path: The target file path.
+            contained: Refuse every operation, reads included, on a path whose
+                symlink-resolved location is outside the workspace root. The
+                allow list and trust mode do not widen a contained check.
 
         Returns:
             A PolicyViolation if the operation is blocked, else None.
@@ -192,6 +195,11 @@ class WorkspacePolicy:
         if violation is not None:
             return violation
 
+        if contained and not self.is_within_workspace(resolved):
+            return self._deny(
+                operation, resolved, f"Path is outside workspace: {self._workspace}"
+            )
+
         if self._is_in_allow_list(resolved):
             return None
 
@@ -200,7 +208,7 @@ class WorkspacePolicy:
             return None
 
         # Trust mode bypasses workspace boundary for reads
-        if self._trust_mode and operation == FileOperation.READ:
+        if self._trust_mode and not contained and operation == FileOperation.READ:
             return None
 
         if self._sandbox_mode == SandboxMode.READ_ONLY:
