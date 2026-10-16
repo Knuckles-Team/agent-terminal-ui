@@ -110,7 +110,8 @@ Unknown terminal reasons must display unavailable; the client must never infer s
 ### Evidence and implementation order
 
 Implement the GraphOS producer before the consumer wiring, then field rendering and served acceptance.
-The six existing children remain the only client requirement family for this surface.
+The six existing children retain their served acceptance requirements.
+R010.7 adds only the native state boundary.
 The tests in test-spec.md are planned acceptance paths, not proof of implementation.
 Each row requires its own positive and negative served case through the production UI path above.
 
@@ -430,6 +431,30 @@ Cross-repository rows: `GRAPHOS-ACP` contract `CodingSessionAdmission`; `AU-CONT
 
 References: none; no paper is cited.
 
+### 2026-10-16: Native run inspector boundary (R010.7)
+
+`native/agent-terminal-ui/src/run_inspector.rs` owns normalized display state.
+The Rust attachment point replaces the Python-named view for this slice only.
+It preserves unavailable values, measured zero, recorded configuration and
+terminal reasons. Run switches and failed reads clear protected display values.
+An injected plan validator must use the future AU revision and expiry contract.
+No validator means no plan items. The view checks run identity and clears expired
+plans before rendering. It never orders opaque revisions or invents a wire schema.
+
+`native/agent-terminal-ui/tests/run_inspector.rs` exercises this boundary through
+Ratatui. These are focused consumer tests, not served acceptance. R010.1 and
+R010.6 remain open: GraphOS registration, generated projections, AU snapshot
+exports and production transport attachment are prerequisites. The presentation
+lane must attach the module to its view; the transport lane must supply authorized
+projections and the producer-defined validator. No backend route or local read is
+added. All six existing requirement rows and their served tests remain required.
+
+The library exports `run_inspector` through its public API. Focused tests import
+that API, so normal crate compilation includes the module. Production view/key
+attachment and authorized producer adapters remain deferred.
+
+Boundary tests bind only to `TUI-RUNTIME-R010.7`. The earlier served requirements
+and their checkboxes stay pending. This child requires no production activation.
 ### 2026-10-16: Native approval state boundary (R011.13)
 
 `native/agent-terminal-ui/src/coding_approval.rs` is the Rust presentation

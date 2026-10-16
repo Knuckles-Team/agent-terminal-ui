@@ -49,7 +49,7 @@ Current delivery and acceptance state for each requirement ID above is recorded 
 
 ## Run observation
 
-`TUI-RUNTIME-R010` and its six children define the read-only run surface.
+`TUI-RUNTIME-R010` and its seven children define the read-only run surface.
 The owning requirements, plan and test specification define its producer dependencies and acceptance.
 The surface must distinguish unavailable values from measured zero and aggregate values from per-run values.
 

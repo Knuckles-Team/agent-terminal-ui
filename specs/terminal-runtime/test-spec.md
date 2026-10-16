@@ -215,6 +215,11 @@ The suite is `tests/test_coding_session.py`. It uses a fake gateway and a tempor
 
 The fake gateway sends requests only; the test asserts file bytes and process counts on the host.
 
+## TUI-RUNTIME-R010.7: Native inspector boundary
+
+`native/agent-terminal-ui/tests/run_inspector.rs` imports the public library.
+Six tests cover rendering, zero, configuration, distinct reasons, plan admission
+and protected-value clearing. These fixtures do not prove served operations.
 ## TUI-RUNTIME-R011.13: Native approval boundary
 
 `native/agent-terminal-ui/tests/coding_approval.rs` imports the public library.
