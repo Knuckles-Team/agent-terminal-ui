@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+import yaml
 
 ROOT = Path(__file__).parents[1]
 PAGES = ["start.md", "status.md", "deployment.md", "design-system.md"]
@@ -17,5 +18,18 @@ def test_docs_pages_in_nav():
 @pytest.mark.spec("TUI-RUNTIME-R009")
 def test_agents_md_headings():
     text = (ROOT / "AGENTS.md").read_text()
-    for heading in ["Commands", "Quality gates", "Branching & isolation", "Documentation"]:
+    for heading in [
+        "Commands",
+        "Quality gates",
+        "Branching & isolation",
+        "Documentation",
+    ]:
         assert f"## {heading}" in text
+
+
+@pytest.mark.spec("TUI-RUNTIME-R007")
+def test_release_workflow_calls_pipelines() -> None:
+    workflow = yaml.safe_load((ROOT / ".github/workflows/release.yml").read_text())
+    assert workflow["jobs"]["publish-pypi"]["uses"] == (
+        "Knuckles-Team/pipelines/.github/workflows/python_pipeline.yml@main"
+    )
