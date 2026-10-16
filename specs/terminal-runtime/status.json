@@ -64,7 +64,9 @@
     "TUI-RUNTIME-R011.10",
     "TUI-RUNTIME-R011.11",
     "TUI-RUNTIME-R011.12",
-    "TUI-RUNTIME-R011.13"
+    "TUI-RUNTIME-R011.13",
+    "TUI-RUNTIME-R002.1.3.2.1",
+    "TUI-RUNTIME-R002.1.3.2.2"
   ],
   "requirements": [
     {
@@ -289,8 +291,8 @@
         "99b67585d433"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:598",
-        "native/agent-terminal-ui/src/main.rs:635"
+        "native/agent-terminal-ui/src/main.rs:603",
+        "native/agent-terminal-ui/src/main.rs:640"
       ]
     },
     {
@@ -425,7 +427,7 @@
         "e8711e7f49bf"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:574",
+        "native/agent-terminal-ui/src/main.rs:579",
         "native/agent-terminal-ui/tests/discovery.rs:110",
         "native/agent-terminal-ui/tests/discovery.rs:29",
         "native/agent-terminal-ui/tests/discovery.rs:50",
@@ -481,10 +483,10 @@
         "9b0dcc67e610"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:384",
-        "native/agent-terminal-ui/src/main.rs:409",
-        "native/agent-terminal-ui/src/main.rs:428",
-        "native/agent-terminal-ui/src/main.rs:455",
+        "native/agent-terminal-ui/src/main.rs:389",
+        "native/agent-terminal-ui/src/main.rs:414",
+        "native/agent-terminal-ui/src/main.rs:433",
+        "native/agent-terminal-ui/src/main.rs:460",
         "native/agent-terminal-ui/tests/submission.rs:100"
       ]
     },
@@ -493,7 +495,11 @@
       "title": "Complete original served chat and recovery acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R002.1.3.2.1",
+        "TUI-RUNTIME-R002.1.3.2.2"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R002.1.4",
@@ -503,11 +509,11 @@
         "3c592ffc6075"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:495",
-        "native/agent-terminal-ui/src/main.rs:521",
-        "native/agent-terminal-ui/src/main.rs:537",
-        "native/agent-terminal-ui/src/main.rs:673",
-        "native/agent-terminal-ui/src/main.rs:724"
+        "native/agent-terminal-ui/src/main.rs:500",
+        "native/agent-terminal-ui/src/main.rs:526",
+        "native/agent-terminal-ui/src/main.rs:542",
+        "native/agent-terminal-ui/src/main.rs:678",
+        "native/agent-terminal-ui/src/main.rs:729"
       ]
     },
     {
@@ -518,10 +524,10 @@
         "b05266d66c30"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:737",
-        "native/agent-terminal-ui/src/main.rs:754",
-        "native/agent-terminal-ui/src/main.rs:793",
-        "native/agent-terminal-ui/src/main.rs:853",
+        "native/agent-terminal-ui/src/main.rs:742",
+        "native/agent-terminal-ui/src/main.rs:759",
+        "native/agent-terminal-ui/src/main.rs:798",
+        "native/agent-terminal-ui/src/main.rs:858",
         "native/agent-terminal-ui/tests/cancellation.rs:119"
       ]
     },
@@ -709,6 +715,29 @@
         "native/agent-terminal-ui/tests/coding_approval.rs:208",
         "native/agent-terminal-ui/tests/coding_approval.rs:256"
       ]
+    },
+    {
+      "id": "TUI-RUNTIME-R002.1.3.2.1",
+      "title": "Bounded native read recovery",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "0015be4d2c8d",
+        "bcf0af1e64f3"
+      ],
+      "verified_by": [
+        "native/agent-terminal-ui/src/recovery_view_tests.rs:8",
+        "native/agent-terminal-ui/tests/recovery.rs:114",
+        "native/agent-terminal-ui/tests/recovery.rs:132",
+        "native/agent-terminal-ui/tests/recovery.rs:156",
+        "native/agent-terminal-ui/tests/recovery.rs:190"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R002.1.3.2.2",
+      "title": "Remaining served chat and recovery acceptance",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
     }
   ]
 }
