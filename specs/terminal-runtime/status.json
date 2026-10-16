@@ -693,9 +693,17 @@
     {
       "id": "TUI-RUNTIME-R011.13",
       "title": "Native approval state boundary",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "2888e02e301b"
+      ],
+      "verified_by": [
+        "native/agent-terminal-ui/tests/coding_approval.rs:127",
+        "native/agent-terminal-ui/tests/coding_approval.rs:151",
+        "native/agent-terminal-ui/tests/coding_approval.rs:187",
+        "native/agent-terminal-ui/tests/coding_approval.rs:208",
+        "native/agent-terminal-ui/tests/coding_approval.rs:27"
+      ]
     }
   ]
 }
