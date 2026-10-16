@@ -455,6 +455,41 @@ attachment and authorized producer adapters remain deferred.
 
 Boundary tests bind only to `TUI-RUNTIME-R010.7`. The earlier served requirements
 and their checkboxes stay pending. This child requires no production activation.
+### 2026-10-16: Native approval state boundary (R011.13)
+
+`native/agent-terminal-ui/src/coding_approval.rs` is the Rust presentation
+attachment for this slice of `CodingSessionView`. It holds exact pending request
+content, previews the full diff or command, and records an explicit choice bound
+to that preview. Changed, foreign and completed request IDs cannot reuse a choice.
+Gateway loss retains unanswered requests. Reattachment does not approve them.
+Records contain request/session identity, method, resolved path or adapter-supplied
+command digest, choice and actor. Preview bodies never enter records.
+
+The module has no file, process, persistence or transport effects. Its choice is
+not a GraphOS permission grant. The future admitted-session adapter must verify
+scope, capabilities, resolved paths, content/digest bindings and permissions before
+calling it. It must recheck these before any effect. Diff inputs are authorized old/new text;
+command digest comes from that adapter. No digest algorithm or wire field is added.
+
+`native/agent-terminal-ui/tests/coding_approval.rs` covers the state boundary and
+Ratatui preview. The native application and client must attach it after
+`CodingSessionAdmission` and `ClientCapabilityToolset` are implemented. Existing
+Python attachment references remain historical and are replaced by Rust only for
+this view slice. Durable resume, host effects, containment and served entry-point
+proof remain open. The existing twelve rows are not promoted by these unit tests.
+
+The library exports `coding_approval` through its public API. Focused tests import
+that API, so normal crate compilation includes the module. Production view/key
+attachment and authorized producer adapters remain deferred.
+
+Boundary tests bind only to `TUI-RUNTIME-R011.13`. The earlier served requirements
+and their checkboxes stay pending. This child requires no production activation.
+
+### 2026-10-16: Unambiguous approval previews
+
+R011.13 escapes literal backslashes as well as control characters. Command,
+path and file previews must distinguish a control character from typed escape
+text. The change grants no authority and performs no host action.
 ### 2026-10-16: Bounded native read recovery (R002.1.3.2)
 
 Implement only unary tasks/get recovery in the existing native client and refresh
