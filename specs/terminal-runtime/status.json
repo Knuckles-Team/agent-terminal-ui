@@ -291,8 +291,8 @@
         "99b67585d433"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:599",
-        "native/agent-terminal-ui/src/main.rs:636"
+        "native/agent-terminal-ui/src/main.rs:628",
+        "native/agent-terminal-ui/src/main.rs:665"
       ]
     },
     {
@@ -432,7 +432,7 @@
         "e8711e7f49bf"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:575",
+        "native/agent-terminal-ui/src/main.rs:604",
         "native/agent-terminal-ui/tests/discovery.rs:110",
         "native/agent-terminal-ui/tests/discovery.rs:29",
         "native/agent-terminal-ui/tests/discovery.rs:50",
@@ -488,10 +488,10 @@
         "9b0dcc67e610"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:385",
-        "native/agent-terminal-ui/src/main.rs:410",
-        "native/agent-terminal-ui/src/main.rs:429",
-        "native/agent-terminal-ui/src/main.rs:456",
+        "native/agent-terminal-ui/src/main.rs:414",
+        "native/agent-terminal-ui/src/main.rs:439",
+        "native/agent-terminal-ui/src/main.rs:458",
+        "native/agent-terminal-ui/src/main.rs:485",
         "native/agent-terminal-ui/tests/submission.rs:100"
       ]
     },
@@ -510,11 +510,11 @@
         "3c592ffc6075"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:496",
-        "native/agent-terminal-ui/src/main.rs:522",
-        "native/agent-terminal-ui/src/main.rs:538",
-        "native/agent-terminal-ui/src/main.rs:674",
-        "native/agent-terminal-ui/src/main.rs:725"
+        "native/agent-terminal-ui/src/main.rs:525",
+        "native/agent-terminal-ui/src/main.rs:551",
+        "native/agent-terminal-ui/src/main.rs:567",
+        "native/agent-terminal-ui/src/main.rs:703",
+        "native/agent-terminal-ui/src/main.rs:754"
       ]
     },
     {
@@ -525,10 +525,10 @@
         "b05266d66c30"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:738",
-        "native/agent-terminal-ui/src/main.rs:755",
-        "native/agent-terminal-ui/src/main.rs:794",
-        "native/agent-terminal-ui/src/main.rs:854",
+        "native/agent-terminal-ui/src/main.rs:767",
+        "native/agent-terminal-ui/src/main.rs:784",
+        "native/agent-terminal-ui/src/main.rs:823",
+        "native/agent-terminal-ui/src/main.rs:883",
         "native/agent-terminal-ui/tests/cancellation.rs:119"
       ]
     },
@@ -716,9 +716,11 @@
       "title": "Native viewport navigation",
       "delivery_state": "VERIFIED",
       "landed_in": [
+        "4214ab26f7e8",
         "608e9e9d122b"
       ],
       "verified_by": [
+        "native/agent-terminal-ui/src/main.rs:932",
         "native/agent-terminal-ui/src/presentation.rs:138",
         "native/agent-terminal-ui/src/presentation.rs:187",
         "native/agent-terminal-ui/src/presentation.rs:212"
