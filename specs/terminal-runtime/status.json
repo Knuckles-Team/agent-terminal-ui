@@ -166,6 +166,7 @@
       "title": "Base chat works. Compatible optional install enables /op",
       "delivery_state": "VERIFIED",
       "landed_in": [
+        "28c8ecf1657c",
         "d309979d133f"
       ],
       "verified_by": [
