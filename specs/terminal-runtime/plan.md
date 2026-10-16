@@ -274,7 +274,7 @@ TLS or WorkItem authority. It requires no native EG build.
 
 GraphOS main 0120e1f serves ordinary text tasks through message/send with
 request-bound authentication, WorkItem admission and the existing AU dispatch
-queue. Add one native --prompt submission, then retain the acknowledged task
+queue. Add one native --prompt submission. Retain the acknowledged task
 binding in the existing refresh and cancellation view. Generate the request
 identity once. Do not retry an effect or replay it on refresh. An interrupted
 submission has an unknown outcome. Reject a prompt combined with AGENT_TASK_ID.
@@ -451,3 +451,6 @@ added. All six existing requirement rows and their served tests remain required.
 The library exports `run_inspector` through its public API. Focused tests import
 that API, so normal crate compilation includes the module. Production view/key
 attachment and authorized producer adapters remain deferred.
+
+Boundary tests do not bind as full requirement acceptance. Generated status may
+record source as LANDED; served acceptance and requirement checkboxes stay pending.
