@@ -437,3 +437,9 @@ References: none; no paper is cited.
 Add the prescribed YAML-level test for the shared release workflow at `main`.
 Keep the current tag and manual triggers. A commit pin must fail this test.
 This adds regression evidence only; it does not qualify a release.
+
+### 2026-10-16: R007 regression environment
+
+The shared CI job must install the declared test extra before it runs the
+release regression. Use its setup-command input with frozen dependencies.
+The shared test step then retains that environment with --no-sync.
