@@ -114,3 +114,8 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R011.10:** Refusal; implement the planned `test_typed_refusals_reach_gateway` acceptance.
 - [ ] **TUI-RUNTIME-R011.11:** Evidence; implement the planned `test_evidence_record_has_no_secrets` acceptance.
 - [ ] **TUI-RUNTIME-R011.12:** Hot-path proof; implement the planned `test_headless_coding_session_write_and_containment` acceptance.
+
+## Scoped acceptance work
+
+- [ ] `TUI-RUNTIME-R002.1.3.2.1`: Bounded native read recovery.
+- [ ] `TUI-RUNTIME-R002.1.3.2.2`: Remaining served chat and recovery acceptance.
