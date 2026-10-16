@@ -1,3 +1,4 @@
+pub mod coding_approval;
 pub mod correlation;
 pub mod recovery;
 

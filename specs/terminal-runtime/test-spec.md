@@ -215,6 +215,11 @@ The suite is `tests/test_coding_session.py`. It uses a fake gateway and a tempor
 
 The fake gateway sends requests only; the test asserts file bytes and process counts on the host.
 
+## TUI-RUNTIME-R011.13: Native approval boundary
+
+`native/agent-terminal-ui/tests/coding_approval.rs` imports the public library.
+Seven tests cover the closed capability set, previews, exact choices, metadata
+and unanswered reconnect state. These fixtures do not prove admission or host effects.
 ## Scoped acceptance proof
 
 - `TUI-RUNTIME-R002.1.3.2.1`: Native recovery tests check retry limits, binding, refusal and zero effect replay.
