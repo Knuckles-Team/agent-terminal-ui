@@ -444,3 +444,9 @@ requested row through refresh and resize; clamp the displayed row to current
 content. Check Unicode wrapping, short viewports and position retention with
 terminal buffers. These increments do not close full R008.2 parity, runtime
 theme switching, selection, native cutover or performance qualification.
+
+### 2026-10-16: Keep cancellation confirmation visible
+
+R008.2.2 keeps the cancellation question outside the scroll viewport.
+Navigation cannot hide it. A terminal below 34 columns or five rows must
+resize before confirmation is allowed; dismiss and quit remain available.
