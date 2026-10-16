@@ -429,3 +429,26 @@ Decision: the client performs file and terminal actions on the host as protocol 
 Cross-repository rows: `GRAPHOS-ACP` contract `CodingSessionAdmission`; `AU-CONTROL` contract `ClientCapabilityToolset`; `EG-DECISION-ENGINE` `HarnessConfig` supplies the tool selection. This repository states only `CodingSessionView`.
 
 References: none; no paper is cited.
+
+### 2026-10-16: Native approval state boundary (R011.1, .4, .5, .7, .11)
+
+`native/agent-terminal-ui/src/coding_approval.rs` is the Rust presentation
+attachment for this slice of `CodingSessionView`. It holds exact pending request
+content, previews the full diff or command, and records an explicit choice bound
+to that preview. Changed, foreign and completed request IDs cannot reuse a choice.
+Gateway loss retains unanswered requests. Reattachment does not approve them.
+Records contain request/session identity, method, resolved path or adapter-supplied
+command digest, choice and actor. Preview bodies never enter records.
+
+The module has no file, process, persistence or transport effects. Its choice is
+not a GraphOS permission grant. The future admitted-session adapter must verify
+scope, capabilities, resolved paths, content/digest bindings and permissions before
+calling it, and recheck before any effect. Diff inputs are authorized old/new text;
+command digest comes from that adapter. No digest algorithm or wire field is added.
+
+`native/agent-terminal-ui/tests/coding_approval.rs` covers the state boundary and
+Ratatui preview. The native application and client must attach it after
+`CodingSessionAdmission` and `ClientCapabilityToolset` are implemented. Existing
+Python attachment references remain historical and are replaced by Rust only for
+this view slice. Durable resume, host effects, containment and served entry-point
+proof remain open. The existing twelve rows are not promoted by these unit tests.
