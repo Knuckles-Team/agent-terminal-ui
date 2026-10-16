@@ -63,7 +63,8 @@
     "TUI-RUNTIME-R011.9",
     "TUI-RUNTIME-R011.10",
     "TUI-RUNTIME-R011.11",
-    "TUI-RUNTIME-R011.12"
+    "TUI-RUNTIME-R011.12",
+    "TUI-RUNTIME-R011.13"
   ],
   "requirements": [
     {
@@ -595,7 +596,8 @@
         "TUI-RUNTIME-R011.9",
         "TUI-RUNTIME-R011.10",
         "TUI-RUNTIME-R011.11",
-        "TUI-RUNTIME-R011.12"
+        "TUI-RUNTIME-R011.12",
+        "TUI-RUNTIME-R011.13"
       ]
     },
     {
@@ -684,6 +686,13 @@
     {
       "id": "TUI-RUNTIME-R011.12",
       "title": "Hot-path proof",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R011.13",
+      "title": "Native approval state boundary",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []

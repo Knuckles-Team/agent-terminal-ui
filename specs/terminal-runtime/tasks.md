@@ -101,7 +101,7 @@ Record deferred validation as deferred, never passed.
 
 ## Coding session work order
 
-- [ ] **TUI-RUNTIME-R011:** Complete the twelve children in order.
+- [ ] **TUI-RUNTIME-R011:** Complete the thirteen children; retain the original served acceptance order.
 - [ ] **TUI-RUNTIME-R011.1:** Model; implement the planned `test_session_model_closed_capability_set` acceptance.
 - [ ] **TUI-RUNTIME-R011.2:** Behavior; implement the planned `test_capability_handlers_serve_local_host` acceptance.
 - [ ] **TUI-RUNTIME-R011.3:** Behavior; implement the planned `test_path_containment_refuses_escape` acceptance.
@@ -114,3 +114,5 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R011.10:** Refusal; implement the planned `test_typed_refusals_reach_gateway` acceptance.
 - [ ] **TUI-RUNTIME-R011.11:** Evidence; implement the planned `test_evidence_record_has_no_secrets` acceptance.
 - [ ] **TUI-RUNTIME-R011.12:** Hot-path proof; implement the planned `test_headless_coding_session_write_and_containment` acceptance.
+
+- [x] **TUI-RUNTIME-R011.13:** Export and test the native approval state boundary. Earlier served requirements remain pending.
