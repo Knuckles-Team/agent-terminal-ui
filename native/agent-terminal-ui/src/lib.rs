@@ -1,4 +1,5 @@
 pub mod correlation;
+pub mod recovery;
 
 use correlation::{TaskCorrelation, TaskEvent, TaskState};
 use reqwest::{Client, Url, header};
@@ -131,31 +132,18 @@ impl GraphOsClient {
     }
 
     pub async fn get_task(&self, task_id: &str) -> Result<TaskSnapshot, &'static str> {
-        if task_id.trim().is_empty()
-            || task_id.chars().count() > 80
-            || task_id.chars().any(char::is_control)
-        {
-            return Err("Invalid task identifier");
-        }
-        let mut url = self.card_url.clone();
-        url.set_path("/a2a");
-        let response = self
-            .http
-            .post(url)
-            .json(&serde_json::json!({
-                "jsonrpc": "2.0",
-                "id": "task-snapshot",
-                "method": "tasks/get",
-                "params": {"id": task_id},
-            }))
-            .send()
+        self.read_task(task_id, None)
             .await
-            .map_err(|_| "GraphOS task read failed or timed out")?;
-        if !response.status().is_success() {
-            return Err("GraphOS task read refused or unavailable");
-        }
-        let bytes = read_task_response(response).await?;
-        parse_task_snapshot(task_id, "task-snapshot", &bytes)
+            .map_err(|error| error.message())
+    }
+
+    pub async fn refresh_task(
+        &self,
+        binding: &TaskCorrelation,
+    ) -> Result<TaskSnapshot, &'static str> {
+        self.read_task(binding.task_id(), Some(binding))
+            .await
+            .map_err(|error| error.message())
     }
 
     pub async fn cancel_task(
