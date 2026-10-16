@@ -114,3 +114,5 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R011.10:** Refusal; implement the planned `test_typed_refusals_reach_gateway` acceptance.
 - [ ] **TUI-RUNTIME-R011.11:** Evidence; implement the planned `test_evidence_record_has_no_secrets` acceptance.
 - [ ] **TUI-RUNTIME-R011.12:** Hot-path proof; implement the planned `test_headless_coding_session_write_and_containment` acceptance.
+
+- [x] **TUI-RUNTIME-R010.7:** Export and test the native inspector state boundary. Served acceptance remains pending in earlier children.

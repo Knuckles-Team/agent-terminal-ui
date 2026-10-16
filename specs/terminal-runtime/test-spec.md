@@ -214,3 +214,9 @@ The suite is `tests/test_coding_session.py`. It uses a fake gateway and a tempor
 - TUI-RUNTIME-R011.12: Planned `tests/test_coding_session.py::test_headless_coding_session_write_and_containment`. The test must observe the diff, the approved write and the refusal.
 
 The fake gateway sends requests only; the test asserts file bytes and process counts on the host.
+
+## TUI-RUNTIME-R010.7: Native inspector boundary
+
+`native/agent-terminal-ui/tests/run_inspector.rs` imports the public library.
+Six tests cover rendering, zero, configuration, distinct reasons, plan admission
+and protected-value clearing. These fixtures do not prove served operations.
