@@ -1,7 +1,5 @@
-#[path = "../src/run_inspector.rs"]
-mod run_inspector;
+use agent_terminal_ui_native::run_inspector::*;
 use ratatui::{Terminal, backend::TestBackend};
-use run_inspector::*;
 use std::time::{Duration, Instant};
 
 fn projection() -> RunProjection {

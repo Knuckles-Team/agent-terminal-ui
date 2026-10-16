@@ -447,3 +447,7 @@ exports and production transport attachment are prerequisites. The presentation
 lane must attach the module to its view; the transport lane must supply authorized
 projections and the producer-defined validator. No backend route or local read is
 added. All six existing requirement rows and their served tests remain required.
+
+The library exports `run_inspector` through its public API. Focused tests import
+that API, so normal crate compilation includes the module. Production view/key
+attachment and authorized producer adapters remain deferred.
