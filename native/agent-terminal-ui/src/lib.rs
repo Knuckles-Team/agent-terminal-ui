@@ -1,6 +1,7 @@
 pub mod coding_approval;
 pub mod correlation;
 pub mod recovery;
+pub mod run_inspector;
 
 use correlation::{TaskCorrelation, TaskEvent, TaskState};
 use reqwest::{Client, Url, header};

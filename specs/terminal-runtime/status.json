@@ -64,6 +64,7 @@
     "TUI-RUNTIME-R011.10",
     "TUI-RUNTIME-R011.11",
     "TUI-RUNTIME-R011.12",
+    "TUI-RUNTIME-R010.7",
     "TUI-RUNTIME-R011.13",
     "TUI-RUNTIME-R002.1.3.2.1",
     "TUI-RUNTIME-R002.1.3.2.2"
@@ -325,7 +326,8 @@
         "TUI-RUNTIME-R010.3",
         "TUI-RUNTIME-R010.4",
         "TUI-RUNTIME-R010.5",
-        "TUI-RUNTIME-R010.6"
+        "TUI-RUNTIME-R010.6",
+        "TUI-RUNTIME-R010.7"
       ]
     },
     {
@@ -699,6 +701,21 @@
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R010.7",
+      "title": "Native inspector state boundary",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "a1266fbea3b7"
+      ],
+      "verified_by": [
+        "native/agent-terminal-ui/tests/run_inspector.rs:100",
+        "native/agent-terminal-ui/tests/run_inspector.rs:113",
+        "native/agent-terminal-ui/tests/run_inspector.rs:133",
+        "native/agent-terminal-ui/tests/run_inspector.rs:159",
+        "native/agent-terminal-ui/tests/run_inspector.rs:177"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R011.13",
