@@ -693,9 +693,17 @@
     {
       "id": "TUI-RUNTIME-R010.7",
       "title": "Native inspector state boundary",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "a1266fbea3b7"
+      ],
+      "verified_by": [
+        "native/agent-terminal-ui/tests/run_inspector.rs:100",
+        "native/agent-terminal-ui/tests/run_inspector.rs:113",
+        "native/agent-terminal-ui/tests/run_inspector.rs:133",
+        "native/agent-terminal-ui/tests/run_inspector.rs:159",
+        "native/agent-terminal-ui/tests/run_inspector.rs:177"
+      ]
     }
   ]
 }
