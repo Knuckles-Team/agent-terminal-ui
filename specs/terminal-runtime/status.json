@@ -697,8 +697,10 @@
     {
       "id": "TUI-RUNTIME-R002.1.3.2.1",
       "title": "Bounded native read recovery",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "LANDED",
+      "landed_in": [
+        "bcf0af1e64f3"
+      ],
       "verified_by": []
     },
     {
