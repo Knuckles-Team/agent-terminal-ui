@@ -214,3 +214,9 @@ The suite is `tests/test_coding_session.py`. It uses a fake gateway and a tempor
 - TUI-RUNTIME-R011.12: Planned `tests/test_coding_session.py::test_headless_coding_session_write_and_containment`. The test must observe the diff, the approved write and the refusal.
 
 The fake gateway sends requests only; the test asserts file bytes and process counts on the host.
+
+## Scoped acceptance proof
+
+- `TUI-RUNTIME-R008.2.1`: Native buffer tests check palette tokens, contrast, reset colors and stable frames.
+- `TUI-RUNTIME-R008.2.2`: Native buffer tests check paging, resize, Unicode, short results and small viewports.
+- `TUI-RUNTIME-R008.2.3`: Served parity and performance receipts remain required. Buffer tests alone cannot close this row.

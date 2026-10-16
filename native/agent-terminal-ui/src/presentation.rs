@@ -38,7 +38,7 @@ mod tests {
         0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b)
     }
 
-    // spec: TUI-RUNTIME-R008.2
+    // spec: TUI-RUNTIME-R008.2.1
     #[test]
     fn baseline_themes_render_readable_static_text() {
         for (theme, foreground, background) in [
@@ -135,7 +135,7 @@ mod viewport_tests {
             .collect()
     }
 
-    // spec: TUI-RUNTIME-R008.2
+    // spec: TUI-RUNTIME-R008.2.2
     #[test]
     fn paging_refresh_and_resize_preserve_requested_position() {
         let status = (0..40)
@@ -184,7 +184,7 @@ mod viewport_tests {
         assert!(!viewport.handle(KeyCode::Char('x')));
     }
 
-    // spec: TUI-RUNTIME-R008.2
+    // spec: TUI-RUNTIME-R008.2.2
     #[test]
     fn wrapping_keeps_wide_and_combining_graphemes_intact() {
         let mut terminal = Terminal::new(TestBackend::new(12, 8)).unwrap();
@@ -209,7 +209,7 @@ mod viewport_tests {
         assert!(contents(&terminal).contains("klmnop"));
     }
 
-    // spec: TUI-RUNTIME-R008.2
+    // spec: TUI-RUNTIME-R008.2.2
     #[test]
     fn tiny_viewports_and_shorter_results_clamp_without_losing_place() {
         let mut viewport = Viewport::default();

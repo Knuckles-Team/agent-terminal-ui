@@ -63,7 +63,10 @@
     "TUI-RUNTIME-R011.9",
     "TUI-RUNTIME-R011.10",
     "TUI-RUNTIME-R011.11",
-    "TUI-RUNTIME-R011.12"
+    "TUI-RUNTIME-R011.12",
+    "TUI-RUNTIME-R008.2.1",
+    "TUI-RUNTIME-R008.2.2",
+    "TUI-RUNTIME-R008.2.3"
   ],
   "requirements": [
     {
@@ -284,16 +287,24 @@
         "99b67585d433"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:598",
-        "native/agent-terminal-ui/src/main.rs:635"
+        "native/agent-terminal-ui/src/main.rs:599",
+        "native/agent-terminal-ui/src/main.rs:636"
       ]
     },
     {
       "id": "TUI-RUNTIME-R008.2",
       "title": "Complete native presentation parity",
       "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "landed_in": [
+        "09a52cfbed1b",
+        "8e012fdc171f"
+      ],
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R008.2.1",
+        "TUI-RUNTIME-R008.2.2",
+        "TUI-RUNTIME-R008.2.3"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R009",
@@ -420,7 +431,7 @@
         "e8711e7f49bf"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:574",
+        "native/agent-terminal-ui/src/main.rs:575",
         "native/agent-terminal-ui/tests/discovery.rs:110",
         "native/agent-terminal-ui/tests/discovery.rs:29",
         "native/agent-terminal-ui/tests/discovery.rs:50",
@@ -476,10 +487,10 @@
         "9b0dcc67e610"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:384",
-        "native/agent-terminal-ui/src/main.rs:409",
-        "native/agent-terminal-ui/src/main.rs:428",
-        "native/agent-terminal-ui/src/main.rs:455",
+        "native/agent-terminal-ui/src/main.rs:385",
+        "native/agent-terminal-ui/src/main.rs:410",
+        "native/agent-terminal-ui/src/main.rs:429",
+        "native/agent-terminal-ui/src/main.rs:456",
         "native/agent-terminal-ui/tests/submission.rs:100"
       ]
     },
@@ -498,11 +509,11 @@
         "3c592ffc6075"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:495",
-        "native/agent-terminal-ui/src/main.rs:521",
-        "native/agent-terminal-ui/src/main.rs:537",
-        "native/agent-terminal-ui/src/main.rs:673",
-        "native/agent-terminal-ui/src/main.rs:724"
+        "native/agent-terminal-ui/src/main.rs:496",
+        "native/agent-terminal-ui/src/main.rs:522",
+        "native/agent-terminal-ui/src/main.rs:538",
+        "native/agent-terminal-ui/src/main.rs:674",
+        "native/agent-terminal-ui/src/main.rs:725"
       ]
     },
     {
@@ -513,10 +524,10 @@
         "b05266d66c30"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:737",
-        "native/agent-terminal-ui/src/main.rs:754",
-        "native/agent-terminal-ui/src/main.rs:793",
-        "native/agent-terminal-ui/src/main.rs:853",
+        "native/agent-terminal-ui/src/main.rs:738",
+        "native/agent-terminal-ui/src/main.rs:755",
+        "native/agent-terminal-ui/src/main.rs:794",
+        "native/agent-terminal-ui/src/main.rs:854",
         "native/agent-terminal-ui/tests/cancellation.rs:119"
       ]
     },
@@ -684,6 +695,33 @@
     {
       "id": "TUI-RUNTIME-R011.12",
       "title": "Hot-path proof",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R008.2.1",
+      "title": "Native baseline palettes",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [
+        "native/agent-terminal-ui/src/presentation.rs:41"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R008.2.2",
+      "title": "Native viewport navigation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [
+        "native/agent-terminal-ui/src/presentation.rs:138",
+        "native/agent-terminal-ui/src/presentation.rs:187",
+        "native/agent-terminal-ui/src/presentation.rs:212"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R008.2.3",
+      "title": "Remaining full presentation acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
