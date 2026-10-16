@@ -214,3 +214,8 @@ The suite is `tests/test_coding_session.py`. It uses a fake gateway and a tempor
 - TUI-RUNTIME-R011.12: Planned `tests/test_coding_session.py::test_headless_coding_session_write_and_containment`. The test must observe the diff, the approved write and the refusal.
 
 The fake gateway sends requests only; the test asserts file bytes and process counts on the host.
+
+## Scoped acceptance proof
+
+- `TUI-RUNTIME-R002.1.3.2.1`: Native recovery tests check retry limits, binding, refusal and zero effect replay.
+- `TUI-RUNTIME-R002.1.3.2.2`: Full served receipts remain required. Local HTTP fixtures alone cannot close this row.

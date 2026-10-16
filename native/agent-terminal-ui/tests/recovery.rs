@@ -82,7 +82,7 @@ async fn serve(responses: Vec<String>) -> (GraphOsClient, tokio::task::JoinHandl
     (client, server)
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2
+// spec: TUI-RUNTIME-R002.1.3.2.1
 #[tokio::test]
 async fn disconnect_and_interrupted_body_recover_only_the_bound_read() {
     let original = snapshot();
@@ -111,7 +111,7 @@ async fn disconnect_and_interrupted_body_recover_only_the_bound_read() {
     server.await.unwrap();
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2
+// spec: TUI-RUNTIME-R002.1.3.2.1
 #[tokio::test]
 async fn retries_stop_at_three_and_manual_read_can_recover() {
     let (client, server) = serve(vec![
@@ -129,7 +129,7 @@ async fn retries_stop_at_three_and_manual_read_can_recover() {
     server.await.unwrap();
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2
+// spec: TUI-RUNTIME-R002.1.3.2.1
 #[tokio::test]
 async fn denial_after_disconnect_stops_without_replay_and_can_be_refreshed() {
     for status in [401, 403, 404] {
@@ -153,7 +153,7 @@ async fn denial_after_disconnect_stops_without_replay_and_can_be_refreshed() {
     }
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2
+// spec: TUI-RUNTIME-R002.1.3.2.1
 #[tokio::test]
 async fn rejects_changed_identity_and_never_acquires_a_later_run() {
     for path in [
@@ -187,7 +187,7 @@ async fn rejects_changed_identity_and_never_acquires_a_later_run() {
     server.await.unwrap();
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2
+// spec: TUI-RUNTIME-R002.1.3.2.1
 #[tokio::test]
 async fn rpc_refusal_does_not_retry_or_expose_server_detail() {
     let (client, server) = serve(vec![response(
@@ -201,7 +201,7 @@ async fn rpc_refusal_does_not_retry_or_expose_server_detail() {
     server.await.unwrap();
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2
+// spec: TUI-RUNTIME-R002.1.3.2.1
 #[tokio::test]
 async fn aborting_a_read_during_backoff_stops_owned_recovery() {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -226,7 +226,7 @@ async fn aborting_a_read_during_backoff_stops_owned_recovery() {
     );
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2
+// spec: TUI-RUNTIME-R002.1.3.2.1
 #[tokio::test]
 async fn total_deadline_bounds_unresponsive_reads() {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
