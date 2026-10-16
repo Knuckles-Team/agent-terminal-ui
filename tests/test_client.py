@@ -348,7 +348,7 @@ async def test_versioned_operation_preserves_refusal_details():
         )
     )
     with pytest.raises(GraphOSOperationError) as caught:
-        await client.invoke_op("query.uql", {"query": "MATCH ()"})
+        await client.invoke_op("query.uql", {"text": "RETURN 1", "params": {}})
     assert caught.value.code == "STEP_UP_REQUIRED"
     assert caught.value.details["console_url"] == "/console/confirm/plan"
     assert recorder.requests[0].url.path == "/api/v1/ops/query.uql"
@@ -368,7 +368,7 @@ async def test_versioned_operation_uses_generated_digest_contract() -> None:
             },
         )
     )
-    assert await client.invoke_op("query.uql", {"query": "MATCH ()"}) == {"rows": [1]}
+    assert await client.invoke_op("query.uql", {"text": "RETURN 1", "params": {}}) == {"rows": [1]}
     assert recorder.requests[0].url.path == "/api/v1/ops/query.uql"
     await client.close()
 
@@ -499,7 +499,7 @@ async def test_versioned_operation_refuses_malformed_success_envelope(
     )
     client, _recorder = _client(lambda _request: response)
     with pytest.raises(GraphOSOperationError) as caught:
-        await client.invoke_op("query.uql", {"query": "MATCH ()"})
+        await client.invoke_op("query.uql", {"text": "RETURN 1", "params": {}})
     assert caught.value.code == "INVALID_ENVELOPE"
     await client.close()
 

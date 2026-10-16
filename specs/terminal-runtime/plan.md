@@ -497,3 +497,12 @@ This adds regression evidence only; it does not qualify a release.
 The shared CI job must install the declared test extra before it runs the
 release regression. Use its setup-command input with frozen dependencies.
 The shared test step then retains that environment with --no-sync.
+
+### Generated GraphOS client acceptance
+
+R001.6 keeps Python 3.11 base chat support. Its optional operation client requires
+Python 3.12 or later and a compatible generated GraphOS wheel. CI installs that
+client from an immutable GraphOS source revision without server dependencies,
+then runs the existing operation and refusal tests. Deterministic UQL examples
+use the provider's `text` and `params` fields. This proves the wheel consumer
+boundary, not a running GraphOS server or native query delivery.
