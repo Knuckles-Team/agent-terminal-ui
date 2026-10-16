@@ -1,3 +1,4 @@
+pub mod coding_approval;
 pub mod correlation;
 
 use correlation::{TaskCorrelation, TaskEvent, TaskState};

@@ -452,3 +452,7 @@ Ratatui preview. The native application and client must attach it after
 Python attachment references remain historical and are replaced by Rust only for
 this view slice. Durable resume, host effects, containment and served entry-point
 proof remain open. The existing twelve rows are not promoted by these unit tests.
+
+The library exports `coding_approval` through its public API. Focused tests import
+that API, so normal crate compilation includes the module. Production view/key
+attachment and authorized producer adapters remain deferred.

@@ -1,6 +1,4 @@
-#[path = "../src/coding_approval.rs"]
-mod coding_approval;
-use coding_approval::*;
+use agent_terminal_ui_native::coding_approval::*;
 use ratatui::{Terminal, backend::TestBackend};
 
 fn request() -> ApprovalRequest {
