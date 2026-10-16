@@ -120,7 +120,11 @@ enum ReadStatus {
 async fn read_status(
     client: &GraphOsClient,
     task_id: Option<&str>,
+    binding: Option<&TaskCorrelation>,
 ) -> Result<ReadStatus, &'static str> {
+    if let Some(binding) = binding {
+        return client.refresh_task(binding).await.map(ReadStatus::Task);
+    }
     match task_id {
         Some(task_id) => client.get_task(task_id).await.map(ReadStatus::Task),
         None => client.discover().await.map(ReadStatus::Discovery),
@@ -272,7 +276,7 @@ async fn run(
         async move {
             match submission {
                 Some(submission) => client.submit_task(&submission).await.map(ReadStatus::Task),
-                None => read_status(&client, task_id.as_deref()).await,
+                None => read_status(&client, task_id.as_deref(), None).await,
             }
         }
     });
@@ -334,7 +338,8 @@ async fn run(
                                 status = if task_id.is_some() { "Reading GraphOS task..." } else { "Discovering GraphOS..." }.to_owned();
                                 let client = client.clone();
                                 let task_id = task_id.clone();
-                                request = tokio::spawn(async move { read_status(&client, task_id.as_deref()).await });
+                                let read_binding = binding.clone();
+                                request = tokio::spawn(async move { read_status(&client, task_id.as_deref(), read_binding.as_ref()).await });
                                 pending = true;
                                 remote_cancel = false;
                                 cancellation.read_started();
@@ -982,3 +987,5 @@ mod confirmation_view_tests {
         }
     }
 }
+#[cfg(test)]
+mod recovery_view_tests;
