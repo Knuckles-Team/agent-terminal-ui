@@ -272,9 +272,9 @@ TLS or WorkItem authority. It requires no native EG build.
 
 ### 2026-10-14: Native unary submission increment (R002.1.3.1)
 
-GraphOS main 0120e1f serves ordinary text tasks through message/send with
-request-bound authentication, WorkItem admission and the existing AU dispatch
-queue. Add one native --prompt submission, then retain the acknowledged task
+GraphOS main 0120e1f serves ordinary text tasks through message/send.
+It uses request-bound authentication, WorkItem admission and the existing AU dispatch
+queue. Add one native --prompt submission. Retain the acknowledged task
 binding in the existing refresh and cancellation view. Generate the request
 identity once. Do not retry an effect or replay it on refresh. An interrupted
 submission has an unknown outcome. Reject a prompt combined with AGENT_TASK_ID.
@@ -430,6 +430,41 @@ Cross-repository rows: `GRAPHOS-ACP` contract `CodingSessionAdmission`; `AU-CONT
 
 References: none; no paper is cited.
 
+### 2026-10-16: Native approval state boundary (R011.13)
+
+`native/agent-terminal-ui/src/coding_approval.rs` is the Rust presentation
+attachment for this slice of `CodingSessionView`. It holds exact pending request
+content, previews the full diff or command, and records an explicit choice bound
+to that preview. Changed, foreign and completed request IDs cannot reuse a choice.
+Gateway loss retains unanswered requests. Reattachment does not approve them.
+Records contain request/session identity, method, resolved path or adapter-supplied
+command digest, choice and actor. Preview bodies never enter records.
+
+The module has no file, process, persistence or transport effects. Its choice is
+not a GraphOS permission grant. The future admitted-session adapter must verify
+scope, capabilities, resolved paths, content/digest bindings and permissions before
+calling it. It must recheck these before any effect. Diff inputs are authorized old/new text;
+command digest comes from that adapter. No digest algorithm or wire field is added.
+
+`native/agent-terminal-ui/tests/coding_approval.rs` covers the state boundary and
+Ratatui preview. The native application and client must attach it after
+`CodingSessionAdmission` and `ClientCapabilityToolset` are implemented. Existing
+Python attachment references remain historical and are replaced by Rust only for
+this view slice. Durable resume, host effects, containment and served entry-point
+proof remain open. The existing twelve rows are not promoted by these unit tests.
+
+The library exports `coding_approval` through its public API. Focused tests import
+that API, so normal crate compilation includes the module. Production view/key
+attachment and authorized producer adapters remain deferred.
+
+Boundary tests bind only to `TUI-RUNTIME-R011.13`. The earlier served requirements
+and their checkboxes stay pending. This child requires no production activation.
+
+### 2026-10-16: Unambiguous approval previews
+
+R011.13 escapes literal backslashes as well as control characters. Command,
+path and file previews must distinguish a control character from typed escape
+text. The change grants no authority and performs no host action.
 ### 2026-10-16: Bounded native read recovery (R002.1.3.2)
 
 Implement only unary tasks/get recovery in the existing native client and refresh
