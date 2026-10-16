@@ -6,32 +6,31 @@ use crossterm::event::{Event, EventStream, KeyCode, KeyEventKind, KeyModifiers};
 use futures_util::StreamExt;
 use ratatui::{
     Frame,
-    style::{Color, Style},
+    style::Style,
     widgets::{Block, Paragraph, Wrap},
 };
 use std::{env, ffi::OsString, process::ExitCode, sync::Arc};
 
-fn presentation_style(theme: &str, no_color: &str) -> Style {
-    if !no_color.is_empty() {
-        return Style::reset();
-    }
-    match theme {
-        "tokyo-night" => Style::new()
-            .fg(Color::Rgb(169, 177, 214))
-            .bg(Color::Rgb(26, 27, 38)),
-        _ => presentation_style("tokyo-night", no_color),
-    }
+mod presentation;
+use presentation::{Viewport, presentation_style};
+
+#[cfg(test)]
+fn draw(frame: &mut Frame, status: &str, style: Style) {
+    draw_viewport(frame, status, style, &mut Viewport::default());
 }
 
-fn draw(frame: &mut Frame, status: &str, style: Style) {
+fn draw_viewport(frame: &mut Frame, status: &str, style: Style, viewport: &mut Viewport) {
     let text = format!(
         "{status}\n\nTask streaming and approvals remain unavailable.\n\nr: refresh read | x: cancel remote task | c: cancel local request | q / Ctrl+C: quit"
     );
+    let block = Block::bordered()
+        .title("GraphOS")
+        .title_bottom("PgUp/PgDn Home/End");
+    let inner = block.inner(frame.area());
+    let paragraph = Paragraph::new(text).style(style).wrap(Wrap { trim: false });
+    viewport.measure(paragraph.line_count(inner.width), inner.height);
     frame.render_widget(
-        Paragraph::new(text)
-            .style(style)
-            .wrap(Wrap { trim: false })
-            .block(Block::bordered().title("GraphOS")),
+        paragraph.scroll((viewport.offset(), 0)).block(block),
         frame.area(),
     );
 }
@@ -256,6 +255,7 @@ async fn run(
     let mut cancellation = Cancellation::default();
     let mut remote_cancel = false;
     let mut submission_unknown = false;
+    let mut viewport = Viewport::default();
     let result = async {
         loop {
             let visible = if cancellation == Cancellation::Confirming {
@@ -263,7 +263,7 @@ async fn run(
             } else {
                 status.clone()
             };
-            terminal.draw(|frame| draw(frame, &visible, style)).map_err(|_| "Cannot draw terminal")?;
+            terminal.draw(|frame| draw_viewport(frame, &visible, style, &mut viewport)).map_err(|_| "Cannot draw terminal")?;
             tokio::select! {
                 result = &mut request, if pending => {
                     pending = false;
@@ -283,6 +283,7 @@ async fn run(
                         if key.code == KeyCode::Char('q') || (key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL)) {
                             return Ok(());
                         }
+                        if viewport.handle(key.code) { continue; }
                         match key.code {
                             KeyCode::Char('c') if pending => {
                                 request.abort();

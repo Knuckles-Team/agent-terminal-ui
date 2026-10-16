@@ -429,3 +429,18 @@ Decision: the client performs file and terminal actions on the host as protocol 
 Cross-repository rows: `GRAPHOS-ACP` contract `CodingSessionAdmission`; `AU-CONTROL` contract `ClientCapabilityToolset`; `EG-DECISION-ENGINE` `HarnessConfig` supplies the tool selection. This repository states only `CodingSessionView`.
 
 References: none; no paper is cited.
+
+## Amendments
+
+### 2026-10-16: R008.2 native presentation increments
+
+Add Tokyo Night, Nord, Gruvbox and Textual Light foreground/background tokens
+from the existing Textual baseline. Keep the Tokyo Night fallback and nonempty
+NO_COLOR terminal colors. Check a 4.5:1 foreground contrast floor. The renderer
+remains static, including reduced-motion use; no animation is introduced.
+
+Add a bounded wrapped viewport with PageUp, PageDown, Home and End. Keep the
+requested row through refresh and resize; clamp the displayed row to current
+content. Check Unicode wrapping, short viewports and position retention with
+terminal buffers. These increments do not close full R008.2 parity, runtime
+theme switching, selection, native cutover or performance qualification.
