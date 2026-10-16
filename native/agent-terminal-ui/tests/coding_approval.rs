@@ -252,3 +252,34 @@ fn command_choice_binds_every_preview_field() {
     assert!(state.records().is_empty());
     assert!(state.preview().unwrap().text().contains("echo original"));
 }
+
+// spec: TUI-RUNTIME-R011.13
+#[test]
+fn previews_distinguish_control_characters_from_literal_escapes() {
+    for (control, escaped) in [("\n", r"\n"), ("\t", r"\t"), ("\u{1b}", r"\u{1b}")] {
+        let preview = |value: &str, command: bool| {
+            let mut input = request();
+            input.content = if command {
+                RequestContent::Command {
+                    command: format!("echo {value}"),
+                    working_directory: format!("/workspace/{value}"),
+                    danger: "low".into(),
+                    command_digest: "digest".into(),
+                }
+            } else {
+                RequestContent::Write {
+                    resolved_path: format!("/workspace/{value}"),
+                    old_text: value.into(),
+                    new_text: value.into(),
+                }
+            };
+            let mut state = state();
+            state.receive(input).unwrap();
+            state.preview().unwrap().text()
+        };
+        for command in [false, true] {
+            assert_ne!(preview(control, command), preview(escaped, command));
+            assert!(preview(escaped, command).contains("\\\\"));
+        }
+    }
+}

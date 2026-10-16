@@ -459,3 +459,9 @@ attachment and authorized producer adapters remain deferred.
 
 Boundary tests bind only to `TUI-RUNTIME-R011.13`. The earlier served requirements
 and their checkboxes stay pending. This child requires no production activation.
+
+### 2026-10-16: Unambiguous approval previews
+
+R011.13 escapes literal backslashes as well as control characters. Command,
+path and file previews must distinguish a control character from typed escape
+text. The change grants no authority and performs no host action.

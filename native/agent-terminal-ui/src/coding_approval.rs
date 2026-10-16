@@ -274,7 +274,7 @@ fn literal(value: &str) -> String {
     value
         .chars()
         .flat_map(|c| {
-            if c.is_control() {
+            if c.is_control() || c == '\\' {
                 c.escape_default().collect::<Vec<_>>()
             } else {
                 vec![c]
