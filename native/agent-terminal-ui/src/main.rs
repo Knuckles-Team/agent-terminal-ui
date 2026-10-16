@@ -6,34 +6,60 @@ use crossterm::event::{Event, EventStream, KeyCode, KeyEventKind, KeyModifiers};
 use futures_util::StreamExt;
 use ratatui::{
     Frame,
-    style::{Color, Style},
+    style::Style,
     widgets::{Block, Paragraph, Wrap},
 };
 use std::{env, ffi::OsString, process::ExitCode, sync::Arc};
 
-fn presentation_style(theme: &str, no_color: &str) -> Style {
-    if !no_color.is_empty() {
-        return Style::reset();
-    }
-    match theme {
-        "tokyo-night" => Style::new()
-            .fg(Color::Rgb(169, 177, 214))
-            .bg(Color::Rgb(26, 27, 38)),
-        _ => presentation_style("tokyo-night", no_color),
-    }
+mod presentation;
+use presentation::{Viewport, presentation_style};
+
+#[cfg(test)]
+fn draw(frame: &mut Frame, status: &str, style: Style) {
+    draw_viewport(frame, status, style, &mut Viewport::default());
 }
 
-fn draw(frame: &mut Frame, status: &str, style: Style) {
+fn draw_viewport(frame: &mut Frame, status: &str, style: Style, viewport: &mut Viewport) {
     let text = format!(
         "{status}\n\nTask streaming and approvals remain unavailable.\n\nr: refresh read | x: cancel remote task | c: cancel local request | q / Ctrl+C: quit"
     );
+    let block = Block::bordered()
+        .title("GraphOS")
+        .title_bottom("PgUp/PgDn Home/End");
+    let inner = block.inner(frame.area());
+    let paragraph = Paragraph::new(text).style(style).wrap(Wrap { trim: false });
+    viewport.measure(paragraph.line_count(inner.width), inner.height);
+    frame.render_widget(
+        paragraph.scroll((viewport.offset(), 0)).block(block),
+        frame.area(),
+    );
+}
+
+fn draw_confirmation(frame: &mut Frame, status: &str, style: Style) -> bool {
+    let fits = frame.area().width >= 34 && frame.area().height >= 5;
+    let text = if fits {
+        format!("Cancel selected remote task?\ny: confirm | n / Escape: dismiss\n\n{status}")
+    } else {
+        "Resize to confirm. n / Escape: dismiss".to_owned()
+    };
     frame.render_widget(
         Paragraph::new(text)
             .style(style)
             .wrap(Wrap { trim: false })
-            .block(Block::bordered().title("GraphOS")),
+            .block(Block::bordered().title("Confirm cancellation")),
         frame.area(),
     );
+    fits
+}
+
+fn confirm_visible(
+    cancellation: &mut Cancellation,
+    visible: bool,
+    size: std::io::Result<(u16, u16)>,
+) -> bool {
+    visible
+        && matches!(size, Ok((width, height)) if width >= 34 && height >= 5)
+        && cancellation.confirm()
 }
 
 fn selected_task(value: Result<String, env::VarError>) -> Result<Option<String>, &'static str> {
@@ -260,14 +286,17 @@ async fn run(
     let mut cancellation = Cancellation::default();
     let mut remote_cancel = false;
     let mut submission_unknown = false;
+    let mut viewport = Viewport::default();
     let result = async {
         loop {
-            let visible = if cancellation == Cancellation::Confirming {
-                format!("{status}\n\nCancel selected remote task? y: confirm | n / Escape: dismiss")
-            } else {
-                status.clone()
-            };
-            terminal.draw(|frame| draw(frame, &visible, style)).map_err(|_| "Cannot draw terminal")?;
+            let mut confirmation_visible = false;
+            terminal.draw(|frame| {
+                if cancellation == Cancellation::Confirming {
+                    confirmation_visible = draw_confirmation(frame, &status, style);
+                } else {
+                    draw_viewport(frame, &status, style, &mut viewport);
+                }
+            }).map_err(|_| "Cannot draw terminal")?;
             tokio::select! {
                 result = &mut request, if pending => {
                     pending = false;
@@ -287,6 +316,7 @@ async fn run(
                         if key.code == KeyCode::Char('q') || (key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL)) {
                             return Ok(());
                         }
+                        if cancellation != Cancellation::Confirming && viewport.handle(key.code) { continue; }
                         match key.code {
                             KeyCode::Char('c') if pending => {
                                 request.abort();
@@ -316,7 +346,7 @@ async fn run(
                             }
                             KeyCode::Char('x') if !pending => cancellation.arm(),
                             KeyCode::Char('n') | KeyCode::Esc => cancellation.dismiss(),
-                            KeyCode::Char('y') if !pending && cancellation.confirm() => {
+                            KeyCode::Char('y') if !pending && confirm_visible(&mut cancellation, confirmation_visible, crossterm::terminal::size()) => {
                                 if let Some(binding) = binding.clone() {
                                     let client = client.clone();
                                     request = tokio::spawn(async move {
@@ -899,5 +929,63 @@ mod tests {
     }
 }
 
+#[cfg(test)]
+mod confirmation_view_tests {
+    use super::*;
+    use ratatui::{Terminal, backend::TestBackend};
+
+    // spec: TUI-RUNTIME-R008.2.2
+    #[test]
+    fn confirmation_is_pinned_and_small_terminals_cannot_confirm() {
+        let status =
+            "Task ID: task-one\nContext ID: context-two\nRun ID: run-three\nState: working";
+        let mut terminal = Terminal::new(TestBackend::new(40, 10)).unwrap();
+        let mut viewport = Viewport::default();
+        terminal
+            .draw(|frame| draw_viewport(frame, status, Style::default(), &mut viewport))
+            .unwrap();
+        viewport.handle(KeyCode::End);
+        for (width, height, allowed) in [
+            (40, 10, true),
+            (34, 5, true),
+            (33, 5, false),
+            (34, 4, false),
+        ] {
+            terminal.backend_mut().resize(width, height);
+            terminal.autoresize().unwrap();
+            let mut visible = false;
+            terminal
+                .draw(|frame| visible = draw_confirmation(frame, status, Style::default()))
+                .unwrap();
+            assert_eq!(visible, allowed);
+            if allowed {
+                let buffer = terminal.backend().buffer();
+                let first: String = (1..width - 1).map(|x| buffer[(x, 1)].symbol()).collect();
+                let second: String = (1..width - 1).map(|x| buffer[(x, 2)].symbol()).collect();
+                assert!(first.contains("Cancel selected remote task?"));
+                assert!(second.contains("y: confirm | n / Escape: dismiss"));
+            }
+            let mut cancellation = Cancellation::Confirming;
+            assert!(!confirm_visible(&mut cancellation, true, Ok((10, 2))));
+            assert!(!confirm_visible(
+                &mut cancellation,
+                true,
+                Err(std::io::Error::other("size unavailable"))
+            ));
+            assert_eq!(
+                confirm_visible(&mut cancellation, visible, Ok((width, height))),
+                allowed
+            );
+            assert_eq!(
+                cancellation,
+                if allowed {
+                    Cancellation::Pending
+                } else {
+                    Cancellation::Confirming
+                }
+            );
+        }
+    }
+}
 #[cfg(test)]
 mod recovery_view_tests;

@@ -511,6 +511,24 @@ streaming, cursor replay or session continuity. R002.1.3.2 remains pending,
 as do its full served acceptance and cutover.
 ## Amendments
 
+### 2026-10-16: R008.2 native presentation increments
+
+Add Tokyo Night, Nord, Gruvbox and Textual Light foreground/background tokens
+from the existing Textual baseline. Keep the Tokyo Night fallback and nonempty
+NO_COLOR terminal colors. Check a 4.5:1 foreground contrast floor. The renderer
+remains static, including reduced-motion use; no animation is introduced.
+
+Add a bounded wrapped viewport with PageUp, PageDown, Home and End. Keep the
+requested row through refresh and resize; clamp the displayed row to current
+content. Check Unicode wrapping, short viewports and position retention with
+terminal buffers. These increments do not close full R008.2 parity, runtime
+theme switching, selection, native cutover or performance qualification.
+
+### 2026-10-16: Keep cancellation confirmation visible
+
+R008.2.2 keeps the cancellation question outside the scroll viewport.
+Navigation cannot hide it. A terminal below 34 columns or five rows must
+resize before confirmation is allowed; dismiss and quit remain available.
 ### 2026-10-16: R007 release caller regression
 
 Add the prescribed YAML-level test for the shared release workflow at `main`.

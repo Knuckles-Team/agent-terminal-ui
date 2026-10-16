@@ -66,6 +66,9 @@
     "TUI-RUNTIME-R011.12",
     "TUI-RUNTIME-R010.7",
     "TUI-RUNTIME-R011.13",
+    "TUI-RUNTIME-R008.2.1",
+    "TUI-RUNTIME-R008.2.2",
+    "TUI-RUNTIME-R008.2.3",
     "TUI-RUNTIME-R002.1.3.2.1",
     "TUI-RUNTIME-R002.1.3.2.2"
   ],
@@ -292,8 +295,8 @@
         "99b67585d433"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:603",
-        "native/agent-terminal-ui/src/main.rs:640"
+        "native/agent-terminal-ui/src/main.rs:633",
+        "native/agent-terminal-ui/src/main.rs:670"
       ]
     },
     {
@@ -301,7 +304,12 @@
       "title": "Complete native presentation parity",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R008.2.1",
+        "TUI-RUNTIME-R008.2.2",
+        "TUI-RUNTIME-R008.2.3"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R009",
@@ -429,7 +437,7 @@
         "e8711e7f49bf"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:579",
+        "native/agent-terminal-ui/src/main.rs:609",
         "native/agent-terminal-ui/tests/discovery.rs:110",
         "native/agent-terminal-ui/tests/discovery.rs:29",
         "native/agent-terminal-ui/tests/discovery.rs:50",
@@ -485,10 +493,10 @@
         "9b0dcc67e610"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:389",
-        "native/agent-terminal-ui/src/main.rs:414",
-        "native/agent-terminal-ui/src/main.rs:433",
-        "native/agent-terminal-ui/src/main.rs:460",
+        "native/agent-terminal-ui/src/main.rs:419",
+        "native/agent-terminal-ui/src/main.rs:444",
+        "native/agent-terminal-ui/src/main.rs:463",
+        "native/agent-terminal-ui/src/main.rs:490",
         "native/agent-terminal-ui/tests/submission.rs:100"
       ]
     },
@@ -511,11 +519,11 @@
         "3c592ffc6075"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:500",
-        "native/agent-terminal-ui/src/main.rs:526",
-        "native/agent-terminal-ui/src/main.rs:542",
-        "native/agent-terminal-ui/src/main.rs:678",
-        "native/agent-terminal-ui/src/main.rs:729"
+        "native/agent-terminal-ui/src/main.rs:530",
+        "native/agent-terminal-ui/src/main.rs:556",
+        "native/agent-terminal-ui/src/main.rs:572",
+        "native/agent-terminal-ui/src/main.rs:708",
+        "native/agent-terminal-ui/src/main.rs:759"
       ]
     },
     {
@@ -526,10 +534,10 @@
         "b05266d66c30"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:742",
-        "native/agent-terminal-ui/src/main.rs:759",
-        "native/agent-terminal-ui/src/main.rs:798",
-        "native/agent-terminal-ui/src/main.rs:858",
+        "native/agent-terminal-ui/src/main.rs:772",
+        "native/agent-terminal-ui/src/main.rs:789",
+        "native/agent-terminal-ui/src/main.rs:828",
+        "native/agent-terminal-ui/src/main.rs:888",
         "native/agent-terminal-ui/tests/cancellation.rs:119"
       ]
     },
@@ -732,6 +740,39 @@
         "native/agent-terminal-ui/tests/coding_approval.rs:208",
         "native/agent-terminal-ui/tests/coding_approval.rs:256"
       ]
+    },
+    {
+      "id": "TUI-RUNTIME-R008.2.1",
+      "title": "Native baseline palettes",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "608e9e9d122b"
+      ],
+      "verified_by": [
+        "native/agent-terminal-ui/src/presentation.rs:41"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R008.2.2",
+      "title": "Native viewport navigation",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "4214ab26f7e8",
+        "608e9e9d122b"
+      ],
+      "verified_by": [
+        "native/agent-terminal-ui/src/main.rs:937",
+        "native/agent-terminal-ui/src/presentation.rs:138",
+        "native/agent-terminal-ui/src/presentation.rs:187",
+        "native/agent-terminal-ui/src/presentation.rs:212"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R008.2.3",
+      "title": "Remaining full presentation acceptance",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R002.1.3.2.1",
