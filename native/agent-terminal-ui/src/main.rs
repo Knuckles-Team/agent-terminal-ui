@@ -6,22 +6,13 @@ use crossterm::event::{Event, EventStream, KeyCode, KeyEventKind, KeyModifiers};
 use futures_util::StreamExt;
 use ratatui::{
     Frame,
-    style::{Color, Style},
+    style::Style,
     widgets::{Block, Paragraph, Wrap},
 };
 use std::{env, ffi::OsString, process::ExitCode, sync::Arc};
 
-fn presentation_style(theme: &str, no_color: &str) -> Style {
-    if !no_color.is_empty() {
-        return Style::reset();
-    }
-    match theme {
-        "tokyo-night" => Style::new()
-            .fg(Color::Rgb(169, 177, 214))
-            .bg(Color::Rgb(26, 27, 38)),
-        _ => presentation_style("tokyo-night", no_color),
-    }
-}
+mod presentation;
+use presentation::presentation_style;
 
 fn draw(frame: &mut Frame, status: &str, style: Style) {
     let text = format!(
