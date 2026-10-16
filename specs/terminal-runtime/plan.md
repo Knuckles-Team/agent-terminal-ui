@@ -445,7 +445,7 @@ plans before rendering. It never orders opaque revisions or invents a wire schem
 Ratatui. These are focused consumer tests, not served acceptance. R010.1 and
 R010.6 remain open: GraphOS registration, generated projections, AU snapshot
 exports and production transport attachment are prerequisites. The presentation
-lane must attach the module to its view; the transport lane must supply authorized
+lane must attach the module to its view. The transport lane must supply authorized
 projections and the producer-defined validator. No backend route or local read is
 added. All six existing requirement rows and their served tests remain required.
 
