@@ -310,7 +310,9 @@
       "id": "TUI-RUNTIME-R010",
       "title": "Run harness surface is read-only and honest",
       "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "landed_in": [
+        "a9eb9ff2aa6c"
+      ],
       "verified_by": [],
       "rollup_of": [
         "TUI-RUNTIME-R010.1",
@@ -331,36 +333,51 @@
     {
       "id": "TUI-RUNTIME-R010.2",
       "title": "Applied configuration",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "LANDED",
+      "landed_in": [
+        "00c6c3ac3699",
+        "d0468e23e8de"
+      ],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R010.3",
       "title": "Context and cost",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "LANDED",
+      "landed_in": [
+        "00c6c3ac3699",
+        "d0468e23e8de"
+      ],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R010.4",
       "title": "Read-only current plan",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "LANDED",
+      "landed_in": [
+        "00c6c3ac3699",
+        "d0468e23e8de"
+      ],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R010.5",
       "title": "Distinct terminal reasons",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "LANDED",
+      "landed_in": [
+        "00c6c3ac3699",
+        "d0468e23e8de"
+      ],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R010.6",
       "title": "Served surface proof",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "LANDED",
+      "landed_in": [
+        "00c6c3ac3699",
+        "d0468e23e8de"
+      ],
       "verified_by": []
     },
     {
