@@ -455,6 +455,25 @@ attachment and authorized producer adapters remain deferred.
 
 Boundary tests bind only to `TUI-RUNTIME-R010.7`. The earlier served requirements
 and their checkboxes stay pending. This child requires no production activation.
+### 2026-10-16: Bounded native read recovery (R002.1.3.2)
+
+Implement only unary tasks/get recovery in the existing native client and refresh
+path. Use at most three reads, 100 ms then 200 ms backoff, and a 12-second
+overall deadline. Retry transport loss, interrupted bodies and HTTP 502, 503 or
+504. Refusals, malformed responses and correlation mismatches stop immediately.
+Keep the original opaque task/context/run binding; omitted run metadata cannot
+replace it or acquire a later run. Hide the protected snapshot on failure and
+disable cancellation until a matching authorized read succeeds. Recovery can
+never submit, cancel, confirm or resubscribe.
+
+Producer source refreshed at GraphOS 16d01372b70634850d056a7b667e78270c0c3edd:
+graph_os/a2a/application.py serves tasks/get and returns HTTP 401/403 for
+authority denial. Task absence returns 404. tasks/resubscribe still refuses;
+message/stream is absent. Use these existing fields and refusal boundaries.
+Local HTTP fixtures prove bounded read attempts, exact correlation, denial,
+refresh and zero effect replay. They do not prove production authentication,
+streaming, cursor replay or session continuity. R002.1.3.2 remains pending,
+as do its full served acceptance and cutover.
 ## Amendments
 
 ### 2026-10-16: R007 release caller regression

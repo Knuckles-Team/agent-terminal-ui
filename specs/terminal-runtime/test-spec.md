@@ -220,3 +220,7 @@ The fake gateway sends requests only; the test asserts file bytes and process co
 `native/agent-terminal-ui/tests/run_inspector.rs` imports the public library.
 Six tests cover rendering, zero, configuration, distinct reasons, plan admission
 and protected-value clearing. These fixtures do not prove served operations.
+## Scoped acceptance proof
+
+- `TUI-RUNTIME-R002.1.3.2.1`: Native recovery tests check retry limits, binding, refusal and zero effect replay.
+- `TUI-RUNTIME-R002.1.3.2.2`: Full served receipts remain required. Local HTTP fixtures alone cannot close this row.

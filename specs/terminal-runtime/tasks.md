@@ -116,3 +116,7 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R011.12:** Hot-path proof; implement the planned `test_headless_coding_session_write_and_containment` acceptance.
 
 - [x] **TUI-RUNTIME-R010.7:** Export and test the native inspector state boundary. Served acceptance remains pending in earlier children.
+## Scoped acceptance work
+
+- [ ] `TUI-RUNTIME-R002.1.3.2.1`: Bounded native read recovery.
+- [ ] `TUI-RUNTIME-R002.1.3.2.2`: Remaining served chat and recovery acceptance.
