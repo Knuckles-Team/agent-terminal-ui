@@ -702,8 +702,10 @@
     {
       "id": "TUI-RUNTIME-R008.2.1",
       "title": "Native baseline palettes",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "3cf5c20d022c"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/presentation.rs:41"
       ]
@@ -711,8 +713,10 @@
     {
       "id": "TUI-RUNTIME-R008.2.2",
       "title": "Native viewport navigation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "3cf5c20d022c"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/presentation.rs:138",
         "native/agent-terminal-ui/src/presentation.rs:187",
