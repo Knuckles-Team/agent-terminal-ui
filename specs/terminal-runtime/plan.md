@@ -272,8 +272,8 @@ TLS or WorkItem authority. It requires no native EG build.
 
 ### 2026-10-14: Native unary submission increment (R002.1.3.1)
 
-GraphOS main 0120e1f serves ordinary text tasks through message/send with
-request-bound authentication, WorkItem admission and the existing AU dispatch
+GraphOS main 0120e1f serves ordinary text tasks through message/send.
+It uses request-bound authentication, WorkItem admission and the existing AU dispatch
 queue. Add one native --prompt submission. Retain the acknowledged task
 binding in the existing refresh and cancellation view. Generate the request
 identity once. Do not retry an effect or replay it on refresh. An interrupted
