@@ -25,6 +25,7 @@ jobs:
     uses: Knuckles-Team/pipelines/.github/workflows/gates_pipeline.yml@main
     with:
       config: .pre-commit-config.yaml
+      setup-command: uv sync --frozen --extra test
       rust: true
       # sibling-checkout hooks are unavailable on a hosted runner; pytest is replaced by the shared affected-tests step
       skip-hooks: okf-no-legacy-concepts,lane-guard,dependency-readiness,pytest
