@@ -274,7 +274,7 @@ TLS or WorkItem authority. It requires no native EG build.
 
 GraphOS main 0120e1f serves ordinary text tasks through message/send with
 request-bound authentication, WorkItem admission and the existing AU dispatch
-queue. Add one native --prompt submission, then retain the acknowledged task
+queue. Add one native --prompt submission. Retain the acknowledged task
 binding in the existing refresh and cancellation view. Generate the request
 identity once. Do not retry an effect or replay it on refresh. An interrupted
 submission has an unknown outcome. Reject a prompt combined with AGENT_TASK_ID.
@@ -443,7 +443,7 @@ command digest, choice and actor. Preview bodies never enter records.
 The module has no file, process, persistence or transport effects. Its choice is
 not a GraphOS permission grant. The future admitted-session adapter must verify
 scope, capabilities, resolved paths, content/digest bindings and permissions before
-calling it, and recheck before any effect. Diff inputs are authorized old/new text;
+calling it. It must recheck these before any effect. Diff inputs are authorized old/new text;
 command digest comes from that adapter. No digest algorithm or wire field is added.
 
 `native/agent-terminal-ui/tests/coding_approval.rs` covers the state boundary and
@@ -456,3 +456,6 @@ proof remain open. The existing twelve rows are not promoted by these unit tests
 The library exports `coding_approval` through its public API. Focused tests import
 that API, so normal crate compilation includes the module. Production view/key
 attachment and authorized producer adapters remain deferred.
+
+Boundary tests do not bind as full requirement acceptance. Generated status may
+record source as LANDED; served acceptance and requirement checkboxes stay pending.

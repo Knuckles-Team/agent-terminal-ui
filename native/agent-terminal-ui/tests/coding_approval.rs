@@ -24,7 +24,7 @@ fn state() -> CodingApprovalState {
     state.set_connected(true);
     state
 }
-// spec: TUI-RUNTIME-R011.1
+// Partial boundary coverage; served acceptance remains pending: TUI-RUNTIME-R011.1
 #[test]
 fn capability_set_is_closed() {
     for method in [
@@ -49,7 +49,7 @@ fn capability_set_is_closed() {
         Err(ApprovalError::CapabilityNotGranted)
     );
 }
-// spec: TUI-RUNTIME-R011.4
+// Partial boundary coverage; served acceptance remains pending: TUI-RUNTIME-R011.4
 #[test]
 fn diff_precedes_explicit_choice_and_preserves_missing_newline() {
     let mut state = state();
@@ -88,7 +88,7 @@ fn diff_precedes_explicit_choice_and_preserves_missing_newline() {
         Err(ApprovalError::AlreadyAnswered)
     );
 }
-// spec: TUI-RUNTIME-R011.4, TUI-RUNTIME-R011.5, TUI-RUNTIME-R011.11
+// Partial boundary coverage; served acceptance remains pending: TUI-RUNTIME-R011.4, TUI-RUNTIME-R011.5, TUI-RUNTIME-R011.11
 #[test]
 fn denied_write_and_command_produce_only_metadata() {
     let mut command = request();
@@ -124,7 +124,7 @@ fn denied_write_and_command_produce_only_metadata() {
         assert!(state.preview().is_none());
     }
 }
-// spec: TUI-RUNTIME-R011.7
+// Partial boundary coverage; served acceptance remains pending: TUI-RUNTIME-R011.7
 #[test]
 fn disconnect_and_reattach_retain_unanswered_request() {
     let mut state = state();
@@ -148,7 +148,7 @@ fn disconnect_and_reattach_retain_unanswered_request() {
         .decide(&state.preview().unwrap(), Choice::Deny, "operator")
         .unwrap();
 }
-// spec: TUI-RUNTIME-R011.4, TUI-RUNTIME-R011.5
+// Partial boundary coverage; served acceptance remains pending: TUI-RUNTIME-R011.4, TUI-RUNTIME-R011.5
 #[test]
 fn changed_foreign_and_other_pending_requests_cannot_reuse_preview() {
     let mut state = state();
@@ -184,7 +184,7 @@ fn changed_foreign_and_other_pending_requests_cannot_reuse_preview() {
     }
     assert!(state.records().is_empty());
 }
-// spec: TUI-RUNTIME-R011.4, TUI-RUNTIME-R011.11
+// Partial boundary coverage; served acceptance remains pending: TUI-RUNTIME-R011.4, TUI-RUNTIME-R011.11
 #[test]
 fn preview_escapes_terminal_controls_and_rejects_missing_actor() {
     let mut state = state();
@@ -205,7 +205,7 @@ fn preview_escapes_terminal_controls_and_rejects_missing_actor() {
     assert!(state.preview().is_some());
 }
 
-// spec: TUI-RUNTIME-R011.5
+// Partial boundary coverage; served acceptance remains pending: TUI-RUNTIME-R011.5
 #[test]
 fn command_choice_binds_every_preview_field() {
     let mut original = request();
