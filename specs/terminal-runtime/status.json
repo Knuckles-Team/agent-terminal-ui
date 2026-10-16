@@ -246,7 +246,7 @@
         "1f9a26a46229"
       ],
       "verified_by": [
-        "tests/test_docs_layout.py:9"
+        "tests/test_docs_layout.py:10"
       ]
     },
     {
@@ -263,9 +263,13 @@
     {
       "id": "TUI-RUNTIME-R007",
       "title": "Release workflow caller matches agent-webui",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "4ba2da4eafce"
+      ],
+      "verified_by": [
+        "tests/test_docs_layout.py:30"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R008",
@@ -305,7 +309,7 @@
         "1f9a26a46229"
       ],
       "verified_by": [
-        "tests/test_docs_layout.py:17"
+        "tests/test_docs_layout.py:18"
       ]
     },
     {
