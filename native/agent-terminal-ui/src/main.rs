@@ -11,7 +11,9 @@ use ratatui::{
 };
 use std::{env, ffi::OsString, process::ExitCode, sync::Arc};
 
+mod host_log_view;
 mod inspector_view;
+use host_log_view::HostLogView;
 mod presentation;
 use inspector_view::InspectorView;
 use presentation::{Viewport, presentation_style};
@@ -23,7 +25,7 @@ fn draw(frame: &mut Frame, status: &str, style: Style) {
 
 fn draw_viewport(frame: &mut Frame, status: &str, style: Style, viewport: &mut Viewport) {
     let text = format!(
-        "{status}\n\nTask streaming and approvals remain unavailable.\n\ni: run inspector | r: refresh read | x: cancel remote task | c: cancel local request | q / Ctrl+C: quit"
+        "{status}\n\nTask streaming and approvals remain unavailable.\n\nl: host logs | i: run inspector | r: refresh read | x: cancel remote task | c: cancel local request | q / Ctrl+C: quit"
     );
     let block = Block::bordered()
         .title("GraphOS")
@@ -107,10 +109,11 @@ fn snapshot_status(snapshot: &TaskSnapshot) -> String {
         TaskState::Rejected => "rejected",
     };
     format!(
-        "Task ID: {}\nContext ID: {}\nRun ID: {}\nState: {state}",
+        "Task ID: {}\nContext ID: {}\nRun ID: {}\nState: {state}\n{}",
         snapshot.correlation.task_id(),
         snapshot.correlation.context_id(),
         snapshot.correlation.run_id().unwrap_or("unavailable"),
+        snapshot.terminal_event.text(),
     )
 }
 
@@ -142,6 +145,9 @@ fn completed_status(
         Ok(Ok(ReadStatus::Task(mut snapshot))) => {
             if let Some(initial) = binding {
                 if let Err(error) = initial.validate_binding(&snapshot.correlation) {
+                    return error.to_owned();
+                }
+                if let Err(error) = snapshot.terminal_event.validate_binding(initial) {
                     return error.to_owned();
                 }
                 snapshot.correlation = initial.clone();
@@ -290,6 +296,7 @@ async fn run(
     let mut submission_unknown = false;
     let mut viewport = Viewport::default();
     let mut inspector = InspectorView::default();
+    let mut logs = HostLogView::default();
     let mut redraw = tokio::time::interval(std::time::Duration::from_millis(250));
     redraw.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
     let result = async {
@@ -298,6 +305,8 @@ async fn run(
             terminal.draw(|frame| {
                 if cancellation == Cancellation::Confirming {
                     confirmation_visible = draw_confirmation(frame, &status, style);
+                } else if logs.is_open() {
+                    logs.draw(frame, style);
                 } else if inspector.is_open() {
                     inspector.draw(frame, style, std::time::Instant::now());
                 } else {
@@ -320,7 +329,8 @@ async fn run(
                     inspector.task_updated(if accepted { binding.as_ref() } else { None });
                 }
                 _ = inspector.complete(), if inspector.pending() => {}
-                _ = redraw.tick(), if inspector.is_open() => {}
+                _ = logs.complete(), if logs.pending() => {}
+                _ = redraw.tick(), if inspector.is_open() || logs.is_open() => { logs.tick(); }
                 event = events.next() => {
                     let Some(Ok(event)) = event else { return Err("Terminal input unavailable"); };
                     if let Event::Key(key) = event {
@@ -329,6 +339,11 @@ async fn run(
                             return Ok(());
                         }
                         if cancellation != Cancellation::Confirming {
+                            if logs.key(key.code) { continue; }
+                            if (key.code == KeyCode::Char('l') || (key.code == KeyCode::Char('v') && key.modifiers.contains(KeyModifiers::CONTROL))) && !inspector.is_open() {
+                                logs.open(client.clone());
+                                continue;
+                            }
                             if inspector.key(key.code, client.clone()) { continue; }
                             if key.code == KeyCode::Char('i') && !pending {
                                 inspector.open(client.clone());
@@ -386,6 +401,7 @@ async fn run(
     }.await;
     request.abort();
     inspector.close();
+    logs.close();
     ratatui::restore();
     if submitting {
         status = submission_completed((&mut request).await, &mut binding, &mut cancellation);
@@ -543,6 +559,7 @@ mod tests {
             task["metadata"] = serde_json::json!({"graphOs": {"runId": run_id}});
         }
         ReadStatus::Task(TaskSnapshot {
+            terminal_event: Default::default(),
             correlation: TaskCorrelation::from_task(&task).unwrap(),
             state: TaskState::Working,
         })
@@ -739,6 +756,7 @@ mod tests {
                 task["metadata"] = serde_json::json!({"graphOs": {"runId": run_id}});
             }
             let snapshot = TaskSnapshot {
+                terminal_event: Default::default(),
                 correlation: TaskCorrelation::from_task(&task).unwrap(),
                 state: TaskState::Working,
             };
@@ -1010,3 +1028,56 @@ mod confirmation_view_tests {
 }
 #[cfg(test)]
 mod recovery_view_tests;
+
+#[cfg(test)]
+mod terminal_point_view_tests {
+    use super::*;
+    use agent_terminal_ui_native::terminal_event::TerminalEvent;
+    use ratatui::{Terminal, backend::TestBackend};
+    use serde_json::json;
+
+    // spec: TUI-RUNTIME-R002.1.3.2.2.3
+    #[test]
+    fn committed_identity_renders_literally_and_failed_read_clears_it() {
+        let task = json!({"kind":"task","id":"task","contextId":"ctx","status":{"state":"completed"},
+        "metadata":{"graphOs":{"runId":"run","terminalEvent":{
+            "status":"available","tenant":"tenant","scope":{"tenant":"tenant","scope":{"kind":"graph","graph":"graph"},"incarnation_id":"inc","identity_digest":vec![170;32]},
+            "batch_id":"[bold]actual-batch","commit_sequence":7,"ordinal":0,"run_id":"run","kind":"outcome","outcome":"succeeded","result_ref":null,"payload_digest":"b".repeat(64)
+        }}}});
+        let correlation = TaskCorrelation::from_task(&task).unwrap();
+        let snapshot = TaskSnapshot {
+            terminal_event: TerminalEvent::from_task(&task, &correlation, TaskState::Completed)
+                .unwrap(),
+            correlation,
+            state: TaskState::Completed,
+        };
+        let mut binding = None;
+        let status = completed_status(Ok(Ok(ReadStatus::Task(snapshot))), &mut binding);
+        let mut terminal = Terminal::new(TestBackend::new(120, 30)).unwrap();
+        terminal
+            .draw(|frame| draw(frame, &status, Style::default()))
+            .unwrap();
+        let text: String = terminal
+            .backend()
+            .buffer()
+            .content()
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect();
+        assert!(text.contains("[bold]actual-batch"));
+        assert!(text.contains("Commit sequence: 7"));
+        let failed = completed_status(Ok(Err("read refused")), &mut binding);
+        terminal
+            .draw(|frame| draw(frame, &failed, Style::default()))
+            .unwrap();
+        let text: String = terminal
+            .backend()
+            .buffer()
+            .content()
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect();
+        assert!(!text.contains("actual-batch"));
+        assert!(!text.contains("Commit sequence: 7"));
+    }
+}

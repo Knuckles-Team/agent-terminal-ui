@@ -250,3 +250,11 @@ application with AGENT_LOG_FILE set. Observe zero pathname opens. Exercise
 /logs and Ctrl+V with focused input. Require the same refusal and cleared
 old content. An absent source adds no client calls. These tests do not prove
 an authenticated host-log reader or served tenant isolation.
+
+- `TUI-RUNTIME-R002.10`: Test bounded HTTP receipts and mounted log rendering, denial clearing, cancellation and borrowed resources. Separate controlled transport tests from a real GraphOS sink fixture.
+
+- `TUI-RUNTIME-R002.11`: Use loopback HTTP for authenticated reference/read, denial, expiry and response limits. Test view cancellation, literal rendering and bounded retention.
+
+R002.1.3.2.2.3 tests cover exact opt-in requests, legacy omission and both unavailable reasons.
+They reject malformed, oversized, unsafe and foreign projections before display. Retained run bindings cannot change or appear later.
+Renderer tests display literal commit identity and clear it after failed reads. These fixtures do not prove served recovery.

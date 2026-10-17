@@ -77,7 +77,10 @@ class MainScreen(Screen):
     def compose(self) -> ComposeResult:
         """Construct the main screen layout."""
         # Server log (hidden by default)
-        yield RichLog(id="server-log", wrap=False, markup=False)
+        self._server_log = RichLog(
+            id="server-log", wrap=False, markup=False, max_lines=1000
+        )
+        yield self._server_log
 
         # Main content: conversation + sidebar
         with Horizontal(id="main-content"):
@@ -142,7 +145,9 @@ class MainScreen(Screen):
         # Limit RichLog max lines
         with contextlib.suppress(Exception):
             max_log_lines = self.agent_app.settings.get("max_log_lines", 1000)
-            self.query_one("#server-log", RichLog).max_lines = max_log_lines
+            self.query_one("#server-log", RichLog).max_lines = min(
+                1000, max(1, int(max_log_lines))
+            )
 
         # Hide progress bar initially
         pb = self.query_one("#mcp-progress", ProgressBar)
@@ -368,15 +373,58 @@ class MainScreen(Screen):
         await conversation.clear_conversation()
         self.notify("Conversation cleared", severity="information")
 
-    def action_toggle_logs(self) -> None:
+    async def action_toggle_logs(self) -> None:
         """Toggle server log visibility."""
         log = self.query_one("#server-log", RichLog)
         log.display = not log.display
         log.clear()
-        if log.display:
-            log.write(
-                "Host logs unavailable: an authenticated host reader is required."
+        subscription = self.agent_app.host_log_subscription
+        if not log.display:
+            if subscription is not None:
+                await subscription.stop()
+            return
+        reader, receipt = self.agent_app.log_reader, self.agent_app.host_receipt
+        if reader is None or receipt is None or not reader.accepts(receipt):
+            self._host_logs_refused()
+            return
+        if subscription is None:
+            from agent_terminal_ui.host_logs import HostLogSubscription
+
+            subscription = HostLogSubscription(
+                reader, receipt, self._host_logs_display, self._host_logs_refused
             )
+            self.agent_app.host_log_subscription = subscription
+        subscription.start()
+
+    async def on_screen_suspend(self) -> None:
+        subscription = self.agent_app.host_log_subscription
+        if subscription is not None:
+            await subscription.stop()
+        self._server_log.clear()
+
+    def on_screen_resume(self) -> None:
+        subscription = self.agent_app.host_log_subscription
+        if subscription is not None and self._server_log.display:
+            subscription.start()
+
+    async def on_unmount(self) -> None:
+        subscription = self.agent_app.host_log_subscription
+        if subscription is not None:
+            await subscription.stop()
+            self.agent_app.host_log_subscription = None
+        self._server_log.clear()
+
+    def _host_logs_refused(self) -> None:
+        log = self._server_log
+        log.clear()
+        log.write("Host logs unavailable: an authenticated host reader is required.")
+
+    def _host_logs_display(self, batch) -> None:
+        log = self._server_log
+        if batch.gap:
+            log.write("Host log history gap.")
+        for message in batch.records:
+            log.write(message)
 
     def on_capability_sidebar_capability_selected(
         self, event: CapabilitySidebar.CapabilitySelected

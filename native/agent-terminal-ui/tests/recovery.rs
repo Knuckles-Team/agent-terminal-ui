@@ -64,7 +64,7 @@ async fn serve(responses: Vec<String>) -> (GraphOsClient, tokio::task::JoinHandl
                     assert_eq!(
                         serde_json::from_str::<Value>(body).unwrap(),
                         json!({
-                            "jsonrpc":"2.0", "id":"task-snapshot", "method":"tasks/get", "params":{"id":"task-one"}
+                            "jsonrpc":"2.0", "id":"task-snapshot", "method":"tasks/get", "params":{"id":"task-one","includeCommittedEvent":true}
                         })
                     );
                     break;

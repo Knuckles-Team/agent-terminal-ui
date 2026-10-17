@@ -597,3 +597,30 @@ A caller bearer token does not supply the missing pending-call signature.
 Refuse this helper before transport, including when caller credentials exist.
 Keep the pending request available after refusal. This repair does not qualify
 signed confirmation, coding request admission or served approval execution.
+
+### 2026-10-17: Authenticated HTTP log subscription (R002.10)
+
+The injected HTTP reader obtains binding metadata from GraphOS's authenticated reference endpoint.
+It retains the exact immutable receipt and rejects copied or changed receipts.
+No receipt constructor or client field grants log authority. GraphOS reauthorizes each bounded read.
+AgentApp and MainScreen use the existing log panel and commands.
+Start one subscription only for terminal/both mode with an authenticated true preference.
+Limit reads to one second, 128 records and two MiB; render at most 1000 literal lines.
+Strip terminal controls. Clear content and cursor after denial, expiry or invalid data.
+Cancel subscription on hide and unmount; never close borrowed clients or readers.
+The public run_host_terminal adapter preserves ordinary agent interaction.
+Controlled and producer-backed fixtures remain distinct from deployed grant or native parity acceptance.
+
+### Native host logs
+
+Implement TUI-RUNTIME-R002.11 through the existing GraphOS client and native event loop. Reuse authenticated producer endpoints without filesystem reads or credential storage.
+
+### R002.1.3.2.2.3 committed terminal point-read
+
+The native tasks/get request opts into includeCommittedEvent. A bounded decoder reads only the optional terminalEvent projection.
+It checks the returned task and retained run binding before display. The view labels the actual commit identity as a point-read.
+Absent or refused data stays unavailable. No cursor, event stream or recovery guarantee follows from this read.
+
+The projection retains the actual producer kind and physical scope tenant. These values do not grant authority.
+The scope digest remains 32 bytes; the display labels its hexadecimal conversion. Payload digests remain lowercase hexadecimal text.
+Presentation identifiers have a 512-byte bound. Result references allow 4096 bytes; the complete projection allows 16384 bytes.
