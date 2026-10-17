@@ -811,8 +811,10 @@
     {
       "id": "TUI-RUNTIME-R002.1.3.2.2.1",
       "title": "Bounded local task stream decoder",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "7a284332950d"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/tests/task_stream.rs:112",
         "native/agent-terminal-ui/tests/task_stream.rs:136",
