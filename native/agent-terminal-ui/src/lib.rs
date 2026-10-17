@@ -1,5 +1,6 @@
 pub mod coding_approval;
 pub mod correlation;
+pub mod host_logs;
 pub mod recovery;
 pub mod run_inspector;
 pub mod run_inspector_client;
