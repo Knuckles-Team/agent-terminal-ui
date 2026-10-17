@@ -152,7 +152,12 @@ mod tests {
     async fn close_aborts_pending_read_and_clears_protected_lines() {
         let mut view = HostLogView {
             open: true,
-            ..Default::default()
+            request: None,
+            reader: None,
+            lines: VecDeque::new(),
+            status: "Reading",
+            expires: 0,
+            viewport: Viewport::default(),
         };
         view.lines.push_back("protected".to_owned());
         let task = tokio::spawn(async { std::future::pending().await });
@@ -171,7 +176,12 @@ mod tests {
     async fn denial_and_idle_expiry_clear_display_without_task_actions() {
         let mut view = HostLogView {
             open: true,
-            ..Default::default()
+            request: None,
+            reader: None,
+            lines: VecDeque::new(),
+            status: "Reading",
+            expires: 0,
+            viewport: Viewport::default(),
         };
         view.lines.push_back("protected".to_owned());
         view.request = Some(tokio::spawn(async { Err(REFUSED) }));
