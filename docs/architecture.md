@@ -214,3 +214,17 @@ A slim, runtime-only `Dockerfile` (python:3.13-slim) ships the frontend and its
 direct dependencies — no test/shell extras, no `agent_utilities`. Point it at a
 shared backend with `AGENT_URL`. Because the backend is the heavy component, run
 **one** backend service and many lightweight frontends against it.
+
+## Native inspector transport
+
+The native client reads `runs.get` only when the caller's registry advertises it.
+The response must match that registry digest and the selected run.
+The adapter preserves unknown measurements and validates AU plan revisions and UTC expiry.
+Failed reads clear protected inspector values. Main-loop attachment and served producer acceptance remain pending.
+
+```mermaid
+flowchart LR
+    Registry[Caller registry] --> Read[runs.get]
+    Read --> Validate[Run and snapshot validation]
+    Validate --> Inspector[Native inspector state]
+```

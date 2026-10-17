@@ -232,3 +232,7 @@ and unanswered reconnect state. These fixtures do not prove admission or host ef
 - `TUI-RUNTIME-R008.2.3`: Served parity and performance receipts remain required. Buffer tests alone cannot close this row.
 - `TUI-RUNTIME-R002.1.3.2.1`: Native recovery tests check retry limits, binding, refusal and zero effect replay.
 - `TUI-RUNTIME-R002.1.3.2.2`: Full served receipts remain required. Local HTTP fixtures alone cannot close this row.
+
+R010.8: Native decoder tests preserve measured zero and empty available plans.
+They reject wrong-run, malformed, regressing and expired snapshots. Transport tests require registry membership and matching digests.
+These local tests do not prove a served AU producer or production UI attachment.

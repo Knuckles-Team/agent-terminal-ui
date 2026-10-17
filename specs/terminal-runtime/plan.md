@@ -549,3 +549,9 @@ client from an immutable GraphOS revision without server dependencies. The job
 runs operation and refusal tests. Deterministic UQL examples
 use the provider's `text` and `params` fields. This proves the wheel consumer
 boundary, not a running GraphOS server or native query delivery.
+
+### R010.8 native run reads
+
+The native inspector adapter uses the authenticated registry and registered `runs.get` route.
+It checks the response digest before projecting fields. Plan deadlines use validated UTC expiry and a monotonic clock.
+The coordinator owns main-loop attachment. AU execution admission and GraphOS trace-reader composition remain required for served acceptance.
