@@ -235,3 +235,11 @@ and unanswered reconnect state. These fixtures do not prove admission or host ef
 
 - `TUI-RUNTIME-R002.1.3.2.2.1`: Native task_stream tests prove bounded parsing and validation before cursor acknowledgement.
 - `TUI-RUNTIME-R002.1.3.2.2.2`: Served streaming and recovery receipts remain required; local decoder tests are insufficient.
+
+## Unbound host-log refusal
+
+TUI-RUNTIME-R002.9 binds to tests/test_host_log_refusal.py. Mount the actual
+application with AGENT_LOG_FILE set. Observe zero pathname opens. Exercise
+/logs and Ctrl+V with focused input. Require the same refusal and cleared
+old content. An absent source adds no client calls. These tests do not prove
+an authenticated host-log reader or served tenant isolation.
