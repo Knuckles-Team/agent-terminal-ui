@@ -108,11 +108,11 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:359",
-        "tests/test_client.py:377",
-        "tests/test_client.py:396",
-        "tests/test_client.py:439",
-        "tests/test_client.py:472"
+        "tests/test_client.py:363",
+        "tests/test_client.py:381",
+        "tests/test_client.py:400",
+        "tests/test_client.py:443",
+        "tests/test_client.py:476"
       ]
     },
     {
@@ -123,10 +123,10 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:107",
-        "tests/test_client.py:113",
-        "tests/test_client.py:120",
-        "tests/test_client.py:98"
+        "tests/test_client.py:102",
+        "tests/test_client.py:111",
+        "tests/test_client.py:117",
+        "tests/test_client.py:124"
       ]
     },
     {
@@ -137,9 +137,9 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:508",
-        "tests/test_client.py:523",
-        "tests/test_client.py:559",
+        "tests/test_client.py:512",
+        "tests/test_client.py:527",
+        "tests/test_client.py:563",
         "tests/test_commands.py:732",
         "tests/test_commands.py:784"
       ]
@@ -153,9 +153,9 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:196",
-        "tests/test_client.py:208",
-        "tests/test_client.py:232"
+        "tests/test_client.py:200",
+        "tests/test_client.py:212",
+        "tests/test_client.py:236"
       ]
     },
     {
@@ -166,11 +166,11 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:536",
-        "tests/test_client.py:572",
-        "tests/test_client.py:595",
-        "tests/test_client.py:609",
-        "tests/test_client.py:632"
+        "tests/test_client.py:540",
+        "tests/test_client.py:576",
+        "tests/test_client.py:599",
+        "tests/test_client.py:613",
+        "tests/test_client.py:636"
       ]
     },
     {
@@ -182,8 +182,8 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:407",
-        "tests/test_client.py:423",
+        "tests/test_client.py:411",
+        "tests/test_client.py:427",
         "tests/test_commands.py:768"
       ]
     },
@@ -195,7 +195,7 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:691",
+        "tests/test_client.py:695",
         "tests/test_commands.py:800",
         "tests/test_import_guard.py:46",
         "tests/test_import_guard.py:53",
@@ -218,10 +218,11 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:136",
-        "tests/test_client.py:261",
-        "tests/test_client.py:285",
-        "tests/test_client.py:313"
+        "tests/test_client.py:140",
+        "tests/test_client.py:265",
+        "tests/test_client.py:289",
+        "tests/test_client.py:317",
+        "tests/test_client.py:761"
       ],
       "rollup_of": [
         "TUI-RUNTIME-R002.1",
