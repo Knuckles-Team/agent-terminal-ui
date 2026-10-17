@@ -136,3 +136,5 @@ Record deferred validation as deferred, never passed.
 - [ ] `TUI-RUNTIME-R002.10`: Integrate authenticated host logs into the existing Python terminal.
 
 - [ ] `TUI-RUNTIME-R002.11`: Attach authenticated logs to the native event loop.
+
+- [ ] **TUI-RUNTIME-R002.1.3.2.2.3:** Attach the bounded committed terminal point-read without claiming served recovery.

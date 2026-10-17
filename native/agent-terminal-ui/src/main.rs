@@ -109,10 +109,11 @@ fn snapshot_status(snapshot: &TaskSnapshot) -> String {
         TaskState::Rejected => "rejected",
     };
     format!(
-        "Task ID: {}\nContext ID: {}\nRun ID: {}\nState: {state}",
+        "Task ID: {}\nContext ID: {}\nRun ID: {}\nState: {state}\n{}",
         snapshot.correlation.task_id(),
         snapshot.correlation.context_id(),
         snapshot.correlation.run_id().unwrap_or("unavailable"),
+        snapshot.terminal_event.text(),
     )
 }
 
@@ -144,6 +145,9 @@ fn completed_status(
         Ok(Ok(ReadStatus::Task(mut snapshot))) => {
             if let Some(initial) = binding {
                 if let Err(error) = initial.validate_binding(&snapshot.correlation) {
+                    return error.to_owned();
+                }
+                if let Err(error) = snapshot.terminal_event.validate_binding(initial) {
                     return error.to_owned();
                 }
                 snapshot.correlation = initial.clone();
@@ -555,6 +559,7 @@ mod tests {
             task["metadata"] = serde_json::json!({"graphOs": {"runId": run_id}});
         }
         ReadStatus::Task(TaskSnapshot {
+            terminal_event: Default::default(),
             correlation: TaskCorrelation::from_task(&task).unwrap(),
             state: TaskState::Working,
         })
@@ -751,6 +756,7 @@ mod tests {
                 task["metadata"] = serde_json::json!({"graphOs": {"runId": run_id}});
             }
             let snapshot = TaskSnapshot {
+                terminal_event: Default::default(),
                 correlation: TaskCorrelation::from_task(&task).unwrap(),
                 state: TaskState::Working,
             };
@@ -1022,3 +1028,56 @@ mod confirmation_view_tests {
 }
 #[cfg(test)]
 mod recovery_view_tests;
+
+#[cfg(test)]
+mod terminal_point_view_tests {
+    use super::*;
+    use agent_terminal_ui_native::terminal_event::TerminalEvent;
+    use ratatui::{Terminal, backend::TestBackend};
+    use serde_json::json;
+
+    // spec: TUI-RUNTIME-R002.1.3.2.2.3
+    #[test]
+    fn committed_identity_renders_literally_and_failed_read_clears_it() {
+        let task = json!({"kind":"task","id":"task","contextId":"ctx","status":{"state":"completed"},
+        "metadata":{"graphOs":{"runId":"run","terminalEvent":{
+            "status":"available","tenant":"tenant","scope":{"tenant":"tenant","scope":{"kind":"graph","graph":"graph"},"incarnation_id":"inc","identity_digest":vec![170;32]},
+            "batch_id":"[bold]actual-batch","commit_sequence":7,"ordinal":0,"run_id":"run","kind":"outcome","outcome":"succeeded","result_ref":null,"payload_digest":"b".repeat(64)
+        }}}});
+        let correlation = TaskCorrelation::from_task(&task).unwrap();
+        let snapshot = TaskSnapshot {
+            terminal_event: TerminalEvent::from_task(&task, &correlation, TaskState::Completed)
+                .unwrap(),
+            correlation,
+            state: TaskState::Completed,
+        };
+        let mut binding = None;
+        let status = completed_status(Ok(Ok(ReadStatus::Task(snapshot))), &mut binding);
+        let mut terminal = Terminal::new(TestBackend::new(120, 30)).unwrap();
+        terminal
+            .draw(|frame| draw(frame, &status, Style::default()))
+            .unwrap();
+        let text: String = terminal
+            .backend()
+            .buffer()
+            .content()
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect();
+        assert!(text.contains("[bold]actual-batch"));
+        assert!(text.contains("Commit sequence: 7"));
+        let failed = completed_status(Ok(Err("read refused")), &mut binding);
+        terminal
+            .draw(|frame| draw(frame, &failed, Style::default()))
+            .unwrap();
+        let text: String = terminal
+            .backend()
+            .buffer()
+            .content()
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect();
+        assert!(!text.contains("actual-batch"));
+        assert!(!text.contains("Commit sequence: 7"));
+    }
+}
