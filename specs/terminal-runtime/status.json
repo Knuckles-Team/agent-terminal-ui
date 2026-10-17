@@ -893,11 +893,12 @@
       "title": "Native authenticated host logs",
       "delivery_state": "VERIFIED",
       "landed_in": [
+        "6ad28a56b1c5",
         "8d06ef716fc4"
       ],
       "verified_by": [
         "native/agent-terminal-ui/src/host_log_view.rs:150",
-        "native/agent-terminal-ui/src/host_log_view.rs:169",
+        "native/agent-terminal-ui/src/host_log_view.rs:174",
         "native/agent-terminal-ui/tests/host_logs.rs:110",
         "native/agent-terminal-ui/tests/host_logs.rs:128",
         "native/agent-terminal-ui/tests/host_logs.rs:88"
