@@ -78,8 +78,8 @@ It must not add another HTTP stack or call the engine directly.
 ### Model and wire-to-view mapping
 
 [Arbora run reads](https://github.com/Knuckles-Team/arbora/tree/main/specs/hosted-api-operations) own the served projection.
-`GRAPHOS-OPS-R021.4.5` serves per-run fields; `.3` and `.4` define aggregate models and operations.
-`GRAPHOS-OPS-R021.4.6` supplies registration and generated artifacts.
+`ARBORA-OPS-R021.4.5` serves per-run fields; `.3` and `.4` define aggregate models and operations.
+`ARBORA-OPS-R021.4.6` supplies registration and generated artifacts.
 
 | Arbora wire field | View label and behavior |
 |---|---|
@@ -100,7 +100,7 @@ Pair-level rates and configuration-level costs must retain separate group labels
 
 `AU-HARNESS-R014.1` through `.5` own mutable `PlanState` outside stored message history.
 Those rows supply no public snapshot read contract today.
-`GRAPHOS-OPS-R021.4.5` defines the required cross-boundary snapshot and blocks availability until the AU producer exists.
+`ARBORA-OPS-R021.4.5` defines the required cross-boundary snapshot and blocks availability until the AU producer exists.
 The client must not derive a plan from messages, reconstruct state, or add a plan writer.
 An available empty plan must differ from unavailable state.
 Run switches, denied refreshes and expired snapshots must clear protected values from the previous display.
@@ -299,11 +299,11 @@ already routes this method to WorkItemA2AAuthority. The native consumer
 requires explicit confirmation and a matching canceled response. An interrupted
 request has an unknown outcome until a read reconciles it. The client never retries an effect automatically.
 
-Missing producer contracts remain with Arbora. GRAPHOS-A2A-R001 and
-GRAPHOS-A2A-R010 own durable streaming and resubscribe. Their spec names the
+Missing producer contracts remain with Arbora. ARBORA-A2A-R001 and
+ARBORA-A2A-R010 own durable streaming and resubscribe. Their spec names the
 AU-CONTROL-001 event port; a current AU owner row was not found.
-GRAPHOS-HOST-R009.2 through GRAPHOS-HOST-R009.6 and GRAPHOS-HOST-R010.7 own the host/log journey.
-GRAPHOS-A2A-R005.2 and GRAPHOS-A2A-R006.2 retain approval and verified-caller prerequisites.
+ARBORA-HOST-R009.2 through ARBORA-HOST-R009.6 and ARBORA-HOST-R010.7 own the host/log journey.
+ARBORA-A2A-R005.2 and ARBORA-A2A-R006.2 retain approval and verified-caller prerequisites.
 Coordinate those changes with the parent before touching active producer work.
 
 The native suite passed 32 tests, including the configured ten-second timeout.
@@ -344,7 +344,7 @@ The client must create one request binding before submission and retain it acros
 AgentClient must add a typed message/send method beside its existing text-only stream method.
 The terminal must send the typed payload through that method, never reinterpret it as an unstructured prompt.
 
-Producer dependency: Arbora must publish the exact message/send tool-task payload schema and preapproval projection under GRAPHOS-A2A-R005 and GRAPHOS-A2A-R006.
+Producer dependency: Arbora must publish the exact message/send tool-task payload schema and preapproval projection under ARBORA-A2A-R005 and ARBORA-A2A-R006.
 The existing public A2A contract defines task methods and pending-call approval; it does not define that tool-task payload.
 The initial scope receipt must bind caller, tenant, workspace, operation, parameter digest, policy revision, registry digest and expiry.
 After admission, Arbora must bind that receipt to the task and exact pending call before attesting prompt suppression.
@@ -353,7 +353,7 @@ The one-shot request authorizes one connector operation invocation, without expa
 Arbora must consume the final pending-call grant atomically and dispatch that operation at most once.
 Progress and task events do not authorize additional connector invocations.
 A valid preapproval may suppress presentation of a prompt; it must not bypass server admission or console step-up.
-The complete GRAPHOS-A2A-R005.2 signed chain and GRAPHOS-A2A-R006.2 caller bridge remain prerequisites.
+The complete ARBORA-A2A-R005.2 signed chain and ARBORA-A2A-R006.2 caller bridge remain prerequisites.
 Missing binding or served authority proof must keep prompt bypass disabled.
 This consumer definition must not invent a producer export or claim the original cross-owner obligation is complete.
 
@@ -425,9 +425,9 @@ Attach point and caller: the handler attaches to the stream loop at `agent_termi
 
 Failure behavior: a gateway loss keeps the pending request, answers nothing, and resumes without granting.
 
-Decision: the client performs file and terminal actions on the host as protocol client capabilities. `GRAPHOS-ACP` owns admission and permission rules. `AU-CONTROL` exposes the tools. Rejected: a cluster service that mounts or syncs the host checkout. It copies data and needs host credentials on the cluster.
+Decision: the client performs file and terminal actions on the host as protocol client capabilities. `ARBORA-ACP` owns admission and permission rules. `AU-CONTROL` exposes the tools. Rejected: a cluster service that mounts or syncs the host checkout. It copies data and needs host credentials on the cluster.
 
-Cross-repository rows: `GRAPHOS-ACP` contract `CodingSessionAdmission`; `AU-CONTROL` contract `ClientCapabilityToolset`; `EG-DECISION-ENGINE` `HarnessConfig` supplies the tool selection. This repository states only `CodingSessionView`.
+Cross-repository rows: `ARBORA-ACP` contract `CodingSessionAdmission`; `AU-CONTROL` contract `ClientCapabilityToolset`; `EG-DECISION-ENGINE` `HarnessConfig` supplies the tool selection. This repository states only `CodingSessionView`.
 
 References: none; no paper is cited.
 

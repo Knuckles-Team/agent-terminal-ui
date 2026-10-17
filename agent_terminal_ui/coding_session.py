@@ -3,7 +3,7 @@
 A coding session is rooted in a workspace directory. The agent asks the
 terminal to act on the person's host through ACP client capabilities
 (``fs/*`` and ``terminal/*``); this module types those requests and serves them
-locally. Admission and permission decisions come from ``GRAPHOS-ACP``; the view
+locally. Admission and permission decisions come from ``ARBORA-ACP``; the view
 holds no policy of its own beyond path containment in the workspace root.
 
 Concept: TUI-RUNTIME-R011 (Coding session in the local workspace)
