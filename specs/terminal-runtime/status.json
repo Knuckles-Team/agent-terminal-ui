@@ -70,7 +70,9 @@
     "TUI-RUNTIME-R008.2.2",
     "TUI-RUNTIME-R008.2.3",
     "TUI-RUNTIME-R002.1.3.2.1",
-    "TUI-RUNTIME-R002.1.3.2.2"
+    "TUI-RUNTIME-R002.1.3.2.2",
+    "TUI-RUNTIME-R002.1.3.2.2.1",
+    "TUI-RUNTIME-R002.1.3.2.2.2"
   ],
   "requirements": [
     {
@@ -794,6 +796,30 @@
     {
       "id": "TUI-RUNTIME-R002.1.3.2.2",
       "title": "Remaining served chat and recovery acceptance",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R002.1.3.2.2.1",
+        "TUI-RUNTIME-R002.1.3.2.2.2"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R002.1.3.2.2.1",
+      "title": "Bounded local task stream decoder",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [
+        "native/agent-terminal-ui/tests/task_stream.rs:112",
+        "native/agent-terminal-ui/tests/task_stream.rs:136",
+        "native/agent-terminal-ui/tests/task_stream.rs:160",
+        "native/agent-terminal-ui/tests/task_stream.rs:25",
+        "native/agent-terminal-ui/tests/task_stream.rs:52"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R002.1.3.2.2.2",
+      "title": "Remaining served stream recovery acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
