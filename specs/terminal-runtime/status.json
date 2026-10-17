@@ -848,8 +848,10 @@
     {
       "id": "TUI-RUNTIME-R002.9",
       "title": "Refuse unbound filesystem logs",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "be5559a633f6"
+      ],
       "verified_by": [
         "tests/test_host_log_refusal.py:3"
       ]
