@@ -500,22 +500,14 @@ class AgentClient:
         params: dict[str, Any],
         idempotency_key: str | None = None,
     ) -> dict[str, Any]:
-        """Resume a PLAN confirmation through the A2A authority pipeline."""
+        """Refuse confirmation until the signed pending-call exchange is available."""
         if not plan_ref or not op or not isinstance(params, dict):
             raise ValueError("complete plan binding is required")
         if _is_approval_operation(op):
             raise GraphOSOperationError("APPROVAL_UNAVAILABLE")
         if not self._has_caller_credential:
             raise GraphOSOperationError("CALLER_CREDENTIAL_REQUIRED")
-        return await self._rpc(
-            "graphos.plan/confirm",
-            {
-                "plan_ref": plan_ref,
-                "op": op,
-                "params": params,
-                "idempotency_key": idempotency_key or uuid.uuid4().hex,
-            },
-        )
+        raise GraphOSOperationError("APPROVAL_UNAVAILABLE")
 
     async def stream(
         self,
