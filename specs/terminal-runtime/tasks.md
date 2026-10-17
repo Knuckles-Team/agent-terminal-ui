@@ -124,3 +124,5 @@ Record deferred validation as deferred, never passed.
 - [ ] `TUI-RUNTIME-R008.2.3`: Remaining full presentation acceptance.
 - [ ] `TUI-RUNTIME-R002.1.3.2.1`: Bounded native read recovery.
 - [ ] `TUI-RUNTIME-R002.1.3.2.2`: Remaining served chat and recovery acceptance.
+
+- [x] **TUI-RUNTIME-R002.9:** Remove the unbound file tail and unify the log refusal controls.

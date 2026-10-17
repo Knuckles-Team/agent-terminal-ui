@@ -549,3 +549,18 @@ client from an immutable GraphOS revision without server dependencies. The job
 runs operation and refusal tests. Deterministic UQL examples
 use the provider's `text` and `params` fields. This proves the wheel consumer
 boundary, not a running GraphOS server or native query delivery.
+
+### 2026-10-17: Refuse unbound local host logs (R002.2 through R002.6)
+
+Current GraphOS a32d160a has no checked workspace/session host start port,
+HostLaunchReceipt, or authenticated tenant-filtered HostLogReader. Generic
+caller scopes and WebUI AccessContext do not grant workspace log access.
+The positive host-log journey remains blocked on that producer authority.
+
+Remove MainScreen's AGENT_LOG_FILE filesystem tail. Neither mounting the
+screen nor opening /logs or Ctrl+V may read a local path as a fallback.
+Route both controls through the same screen action and display that authenticated
+host logs are unavailable. Clear any old panel content before that notice.
+Keep normal agent interaction available. This is a zero-read refusal repair,
+not a receipt, reader, reconnect, rotation, tenant-isolation or served-host
+acceptance claim. R002.2 through R002.6 remain pending.
