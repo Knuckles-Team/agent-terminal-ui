@@ -803,8 +803,10 @@
     {
       "id": "TUI-RUNTIME-R010.8",
       "title": "Native inspector transport boundary",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "14a4f6e68157"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/run_inspector_client.rs:294",
         "native/agent-terminal-ui/src/run_inspector_client.rs:332",
