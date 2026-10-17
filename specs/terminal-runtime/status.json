@@ -882,8 +882,10 @@
     {
       "id": "TUI-RUNTIME-R002.10",
       "title": "Authenticated host log subscription",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "fdee44da708a"
+      ],
       "verified_by": [
         "tests/test_host_log_subscription.py:2"
       ]
@@ -891,8 +893,11 @@
     {
       "id": "TUI-RUNTIME-R002.11",
       "title": "Native authenticated host logs",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "6ad28a56b1c5",
+        "8d06ef716fc4"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/host_log_view.rs:150",
         "native/agent-terminal-ui/src/host_log_view.rs:174",
