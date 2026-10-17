@@ -10,6 +10,7 @@ import contextlib
 import json
 import logging
 from collections.abc import Awaitable, Callable
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -879,40 +880,27 @@ class CommandProcessor:
         await self._submit_prompt(prompt)
 
     async def cmd_theme(self, args: str) -> None:
-        """Switch between UI themes.
+        """Switch between the registered Textual themes.
 
         Usage: /theme [theme_name] or /theme to list available themes.
         """
-        from agent_terminal_ui.tui.theme import list_themes
-
-        if not args:
-            # List available themes
-            available = list_themes()
-            current = getattr(self.app, "_current_theme", None)
-            current_name = current.name if current else "unknown"
-
-            help_text = (
-                f"[bold blue]Theme System:[/bold blue]\n"
-                f"- Current theme: {current_name}\n"
-                f"\n"
-                f"[bold]Available themes:[/bold]\n"
-            )
-            for theme in available:
-                marker = "👉 " if theme == current_name else "   "
-                help_text += f"{marker}[cyan]{theme}[/cyan]\n"
-
-            help_text += (
-                "\n[bold]Usage:[/bold] /theme <theme_name>\n"
-                "[dim]Example: /theme dracula[/dim]\n"
-                "[dim]Example: /theme tokyo_night[/dim]\n"
-            )
-
-            await self.app.query_one("Conversation").add_info(help_text)
-            return
-
-        # Switch to the specified theme
+        themes = sorted(self.app.available_themes)
         theme_name = args.strip().lower()
-        self.app.switch_theme(theme_name)
+        if not theme_name:
+            listing = "\n".join(
+                f"{'* ' if name == self.app.theme else '  '}[cyan]{name}[/cyan]"
+                for name in themes
+            )
+            await self.app.query_one("Conversation").add_info(
+                f"[bold blue]Theme System:[/bold blue] current {self.app.theme}\n"
+                f"[bold]Available themes:[/bold]\n{listing}\n"
+                "[dim]Usage: /theme <theme_name>[/dim]"
+            )
+            return
+        if theme_name not in themes:
+            self.app.notify(f"Unknown theme: {theme_name}", severity="warning")
+            return
+        self.app.theme = theme_name
 
     async def cmd_queue(self, args: str) -> None:
         """Show the current message queue status. Usage: /queue"""
@@ -980,38 +968,24 @@ class CommandProcessor:
         await self._submit_prompt("Summarize our session so far.")
 
     async def cmd_export(self, args: str) -> None:
-        """Export the current conversation history. Usage: /export [filename]"""
-        if not self.app.current_session_id:
-            self.app.notify("No active session to export", severity="warning")
+        """Export the shown conversation as Markdown. Usage: /export [filename]"""
+        transcript = self.app.query_one("Conversation").transcript
+        if not transcript:
+            self.app.notify("Nothing to export yet", severity="warning")
             return
-
-        filename = args.strip() or f"session_{self.app.current_session_id[:8]}.md"
-        if not filename.endswith(".md"):
-            filename += ".md"
-
+        session_id = self.app._current_session_id or "unsaved"
+        path = Path(args.strip() or f"session_{session_id[:13]}.md")
+        if path.suffix != ".md":
+            path = path.with_name(f"{path.name}.md")
         try:
-            self.app.notify(
-                f"Exporting session {self.app.current_session_id}...",
-                severity="information",
-            )
-            chat_data = await self.app._client.get_chat(self.app.current_session_id)
-
-            if not chat_data or "messages" not in chat_data:
-                self.app.notify(
-                    "Failed to retrieve chat history from backend", severity="error"
-                )
-                return
-
-            with open(filename, "w", encoding="utf-8") as f:
-                f.write(f"# Agent Session Export: {self.app.current_session_id}\n\n")
-                for msg in chat_data["messages"]:
-                    role = msg.get("role", "unknown").upper()
-                    content = msg.get("content", "")
-                    f.write(f"### {role}\n{content}\n\n---\n\n")
-
-            self.app.notify(f"Session exported to {filename}", severity="information")
-        except Exception as e:
+            with path.open("w", encoding="utf-8") as handle:
+                handle.write(f"# Agent Session Export: {session_id}\n\n")
+                for role, content in transcript:
+                    handle.write(f"### {role.upper()}\n{content}\n\n---\n\n")
+        except OSError as e:
             self.app.notify(f"Export failed: {e}", severity="error")
+            return
+        self.app.notify(f"Session exported to {path}", severity="information")
 
     async def cmd_focus(self) -> None:
         """Toggle focus view (fullscreen mode)."""

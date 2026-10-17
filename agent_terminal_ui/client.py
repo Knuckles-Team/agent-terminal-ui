@@ -608,6 +608,7 @@ class AgentClient:
             return
         texts = [query, *((part or {}).get("text", "") for part in parts or [])]
         message = {
+            "kind": "message",
             "role": "user",
             "parts": [{"kind": "text", "text": text} for text in texts if text],
             "messageId": uuid.uuid4().hex,

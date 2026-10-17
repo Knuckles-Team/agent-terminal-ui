@@ -776,6 +776,7 @@ async def test_stream_polls_a_unary_task_when_the_card_refuses_streaming():
     ]
     assert calls == ["message/send", "tasks/get", "tasks/get"]
     sent = json.loads(recorder.requests[1].content)["params"]["message"]
+    assert sent["kind"] == "message"
     assert sent["contextId"] == "ctx-1"
     assert recorder.requests[1].headers["Idempotency-Key"]
     assert [e["type"] for e in events] == [

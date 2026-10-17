@@ -599,37 +599,12 @@ async def test_cmd_queue_clear_and_toggle(processor, mock_app):
 
 
 @pytest.mark.asyncio
-async def test_cmd_export_no_session(processor, mock_app, tmp_path, monkeypatch):
+async def test_cmd_export_with_nothing_shown(processor, mock_app, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    mock_app.current_session_id = None
-    mock_app._current_session_id = None
+    mock_app.query_one.return_value.transcript = []
     await processor.cmd_export("")
-    mock_app.notify.assert_called()
-
-
-@pytest.mark.asyncio
-async def test_cmd_export_empty_chat(processor, mock_app, tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-    mock_app.current_session_id = "sess123456"
-    mock_app._client = AsyncMock()
-    mock_app._client.get_chat = AsyncMock(return_value={})
-    await processor.cmd_export("")
-    assert any(
-        "Failed to retrieve" in c.args[0] for c in mock_app.notify.call_args_list
-    )
-
-
-@pytest.mark.asyncio
-async def test_cmd_export_happy_path(processor, mock_app, tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-    mock_app.current_session_id = "sess123456"
-    mock_app._client = AsyncMock()
-    mock_app._client.get_chat = AsyncMock(
-        return_value={"messages": [{"role": "user", "content": "hi"}]}
-    )
-    await processor.cmd_export("my-export")
-    # Verify file written
-    assert (tmp_path / "my-export.md").exists()
+    assert "Nothing to export" in mock_app.notify.call_args.args[0]
+    assert not list(tmp_path.iterdir())
 
 
 @pytest.mark.asyncio

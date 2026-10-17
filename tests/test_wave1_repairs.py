@@ -66,28 +66,29 @@ async def test_bg_uses_public_current_session_identity() -> None:
 
 
 @pytest.mark.asyncio
-async def test_propagated_session_identity_drives_export(
+async def test_export_writes_the_shown_exchange_under_the_session(
     app, tmp_path, monkeypatch
 ) -> None:
-    """An identity received from the stream should be the exported chat id."""
+    """Export writes what the person saw, named by the streamed session."""
     from agent_terminal_ui.app import AgentEventReceived
 
     monkeypatch.chdir(tmp_path)
-    app._client.get_chat = AsyncMock(
-        return_value={"messages": [{"role": "assistant", "content": "done"}]}
-    )
-
     async with app.run_test() as pilot:
         await pilot.pause()
-        await app.on_agent_event_received(
-            AgentEventReceived(
-                {"type": "session_started", "session_id": "session-export"}
-            )
-        )
+        screen = app._get_main_screen()
+        await screen.add_user_message("list the zones")
+        for event in (
+            {"type": "session_started", "session_id": "session-export"},
+            {"type": "text_delta", "content": "arpa, "},
+            {"type": "text_delta", "content": "home"},
+        ):
+            await app.on_agent_event_received(AgentEventReceived(event))
         await app._cmd_processor.cmd_export("wave1")
 
-    app._client.get_chat.assert_awaited_once_with("session-export")
-    assert (tmp_path / "wave1.md").exists()
+    text = (tmp_path / "wave1.md").read_text()
+    assert "session-export" in text
+    assert "### USER\nlist the zones" in text
+    assert "### AGENT\narpa, home" in text
 
 
 @pytest.mark.asyncio
