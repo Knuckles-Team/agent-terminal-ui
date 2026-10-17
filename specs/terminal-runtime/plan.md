@@ -564,3 +564,18 @@ Cursors remain opaque. The decoder assigns no sequence or generation meaning.
 Line and event limits bound retained input. Invalid input stops that decoder.
 Tests cover fragmented UTF-8, line endings, multiline data, limits and mismatched identities.
 This component does not establish producer streaming, HTTP wiring or served recovery acceptance.
+
+### 2026-10-17: Refuse unbound local host logs (R002.2 through R002.6)
+
+Current GraphOS a32d160a has no checked workspace/session host start port,
+HostLaunchReceipt, or authenticated tenant-filtered HostLogReader. Generic
+caller scopes and WebUI AccessContext do not grant workspace log access.
+The positive host-log journey remains blocked on that producer authority.
+
+Remove MainScreen's AGENT_LOG_FILE filesystem tail. Neither mounting the
+screen nor opening /logs or Ctrl+V may read a local path as a fallback.
+Route both controls through the same screen action and display that authenticated
+host logs are unavailable. Clear any old panel content before that notice.
+Keep normal agent interaction available. This is a zero-read refusal repair,
+not a receipt, reader, reconnect, rotation, tenant-isolation or served-host
+acceptance claim. R002.2 through R002.6 remain pending.

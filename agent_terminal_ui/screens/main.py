@@ -11,12 +11,10 @@ from __future__ import annotations
 
 import contextlib
 import logging
-import os
 from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any, ClassVar
 
-from textual import work
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
@@ -58,7 +56,7 @@ class MainScreen(Screen):
     BINDINGS = [
         Binding("ctrl+b", "toggle_sidebar", "Sidebar", show=True),
         Binding("ctrl+l", "clear_conversation", "Clear", show=True),
-        Binding("ctrl+v", "toggle_logs", "Logs", show=False),
+        Binding("ctrl+v", "toggle_logs", "Logs", show=False, priority=True),
     ]
 
     def __init__(
@@ -79,7 +77,7 @@ class MainScreen(Screen):
     def compose(self) -> ComposeResult:
         """Construct the main screen layout."""
         # Server log (hidden by default)
-        yield RichLog(id="server-log", wrap=False, markup=True)
+        yield RichLog(id="server-log", wrap=False, markup=False)
 
         # Main content: conversation + sidebar
         with Horizontal(id="main-content"):
@@ -149,10 +147,6 @@ class MainScreen(Screen):
         # Hide progress bar initially
         pb = self.query_one("#mcp-progress", ProgressBar)
         pb.display = False
-
-        # Start log tailing if log file is provided
-        if log_file := os.getenv("AGENT_LOG_FILE"):
-            self._tail_server_logs(log_file)
 
         # Register dynamic skill commands
         if hasattr(self.agent_app, "_cmd_processor"):
@@ -378,6 +372,11 @@ class MainScreen(Screen):
         """Toggle server log visibility."""
         log = self.query_one("#server-log", RichLog)
         log.display = not log.display
+        log.clear()
+        if log.display:
+            log.write(
+                "Host logs unavailable: an authenticated host reader is required."
+            )
 
     def on_capability_sidebar_capability_selected(
         self, event: CapabilitySidebar.CapabilitySelected
@@ -386,51 +385,3 @@ class MainScreen(Screen):
         opener = getattr(self.agent_app, "open_capability_palette", None)
         if callable(opener):
             opener(capability_id=event.capability_id)
-
-    # ── Log Tailing ──
-
-    @work(exclusive=True)
-    async def _tail_server_logs(self, log_file: str) -> None:
-        """Background worker to tail the server log file."""
-        import asyncio
-
-        try:
-            with open(log_file) as f:
-                f.seek(0, 2)
-                while True:
-                    line = f.readline()
-                    if not line:
-                        await asyncio.sleep(0.1)
-                        continue
-                    self._write_server_log(line.strip())
-        except asyncio.CancelledError:
-            pass
-        except Exception as e:
-            self._write_server_log(f"Log error: {e}")
-
-    def _write_server_log(self, text: str) -> None:
-        """Write a line to the server log widget."""
-        import re
-
-        with contextlib.suppress(Exception):
-            self.query_one("#server-log", RichLog).write(text)
-
-            # Check for MCP initialization progress
-            # Example log: INFO -   [10/32] gitlab-api: 15 tools (7.1s)
-            match = re.search(r"\[(\d+)/(\d+)\]", text)
-            if match:
-                current = int(match.group(1))
-                total = int(match.group(2))
-                try:
-                    pb = self.query_one("#mcp-progress", ProgressBar)
-                    pb.update(total=total, progress=current)
-                    if not pb.display and current < total:
-                        pb.display = True
-                    if current >= total:
-                        # Hide after a brief delay
-                        def hide_pb():
-                            pb.display = False
-
-                        self.set_timer(1.0, hide_pb)
-                except Exception:
-                    pass  # nosec B110
