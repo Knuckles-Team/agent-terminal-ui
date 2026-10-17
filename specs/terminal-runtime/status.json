@@ -400,10 +400,8 @@
     {
       "id": "TUI-RUNTIME-R002.2",
       "title": "Validate the host receipt and scope",
-      "delivery_state": "LANDED",
-      "landed_in": [
-        "36d526b67894"
-      ],
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
       "verified_by": []
     },
     {
@@ -416,19 +414,15 @@
     {
       "id": "TUI-RUNTIME-R002.4",
       "title": "Honor producer-selected modes and unify the log view",
-      "delivery_state": "LANDED",
-      "landed_in": [
-        "36d526b67894"
-      ],
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R002.5",
       "title": "Enforce tenant scope and bound log lifecycle",
-      "delivery_state": "LANDED",
-      "landed_in": [
-        "36d526b67894"
-      ],
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
       "verified_by": []
     },
     {
@@ -809,8 +803,10 @@
     {
       "id": "TUI-RUNTIME-R002.9",
       "title": "Refuse unbound filesystem logs",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "be5559a633f6"
+      ],
       "verified_by": [
         "tests/test_host_log_refusal.py:3"
       ]
