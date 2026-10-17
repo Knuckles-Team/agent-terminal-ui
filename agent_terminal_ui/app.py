@@ -217,6 +217,12 @@ class AgentApp(App):
             pass
         return None
 
+    def action_toggle_logs(self) -> None:
+        """Route /logs to the same view as the screen's Ctrl+V binding."""
+        screen = self._get_main_screen()
+        if screen is not None:
+            screen.action_toggle_logs()
+
     def on_mount(self) -> None:
         """Handle application startup."""
         self._scan_workspace_files()

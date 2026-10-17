@@ -74,7 +74,8 @@
     "TUI-RUNTIME-R002.1.3.2.2.1",
     "TUI-RUNTIME-R002.1.3.2.2.2",
     "TUI-RUNTIME-R010.8",
-    "TUI-RUNTIME-R010.9"
+    "TUI-RUNTIME-R010.9",
+    "TUI-RUNTIME-R002.9"
   ],
   "requirements": [
     {
@@ -227,7 +228,8 @@
         "TUI-RUNTIME-R002.5",
         "TUI-RUNTIME-R002.6",
         "TUI-RUNTIME-R002.7",
-        "TUI-RUNTIME-R002.8"
+        "TUI-RUNTIME-R002.8",
+        "TUI-RUNTIME-R002.9"
       ]
     },
     {
@@ -858,6 +860,15 @@
         "native/agent-terminal-ui/src/inspector_view.rs:245",
         "native/agent-terminal-ui/src/inspector_view.rs:288",
         "native/agent-terminal-ui/src/inspector_view.rs:302"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R002.9",
+      "title": "Refuse unbound filesystem logs",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [
+        "tests/test_host_log_refusal.py:3"
       ]
     }
   ]
