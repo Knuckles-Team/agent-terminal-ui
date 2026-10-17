@@ -798,10 +798,10 @@
       ],
       "verified_by": [
         "native/agent-terminal-ui/src/recovery_view_tests.rs:8",
-        "native/agent-terminal-ui/tests/recovery.rs:114",
-        "native/agent-terminal-ui/tests/recovery.rs:132",
-        "native/agent-terminal-ui/tests/recovery.rs:156",
-        "native/agent-terminal-ui/tests/recovery.rs:190"
+        "native/agent-terminal-ui/tests/recovery.rs:112",
+        "native/agent-terminal-ui/tests/recovery.rs:130",
+        "native/agent-terminal-ui/tests/recovery.rs:154",
+        "native/agent-terminal-ui/tests/recovery.rs:188"
       ]
     },
     {
