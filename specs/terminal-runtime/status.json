@@ -120,13 +120,15 @@
       "title": "Verified caller header reaches remote Arbora only over TLS",
       "delivery_state": "VERIFIED",
       "landed_in": [
-        "d309979d133f"
+        "d309979d133f",
+        "e90084eba29c"
       ],
       "verified_by": [
         "tests/test_client.py:102",
         "tests/test_client.py:111",
         "tests/test_client.py:117",
-        "tests/test_client.py:124"
+        "tests/test_client.py:124",
+        "tests/test_headless.py:119"
       ]
     },
     {
