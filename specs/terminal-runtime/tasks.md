@@ -124,6 +124,7 @@ Record deferred validation as deferred, never passed.
 - [ ] `TUI-RUNTIME-R008.2.3`: Remaining full presentation acceptance.
 - [ ] `TUI-RUNTIME-R002.1.3.2.1`: Bounded native read recovery.
 - [ ] `TUI-RUNTIME-R002.1.3.2.2`: Remaining served chat and recovery acceptance.
+- [ ] R010.8: Validate native inspector transport and integrate the production loop; retain R010.6 served acceptance separately.
 
 - [ ] `TUI-RUNTIME-R002.1.3.2.2.1`: Bounded local task stream decoder.
 - [ ] `TUI-RUNTIME-R002.1.3.2.2.2`: Remaining served stream recovery acceptance.
