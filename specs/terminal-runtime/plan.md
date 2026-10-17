@@ -563,3 +563,13 @@ The inspector owns one asynchronous read. `r` refreshes, `c` aborts locally, and
 Task read failure and run changes clear protected values and abort pending inspector reads.
 Quit also aborts the read. A periodic redraw expires plans while input is idle.
 Local interaction tests cover this attachment. R010.6 still requires served acceptance through the published producer contracts.
+
+### 2026-10-17: Bounded task stream decoder
+
+R002.1.3.2.2.1 adds a local SSE consumer in `task_stream.rs`.
+It accepts a request identity and an existing task binding.
+Each event must pass JSON-RPC and correlation checks before its cursor becomes visible.
+Cursors remain opaque. The decoder assigns no sequence or generation meaning.
+Line and event limits bound retained input. Invalid input stops that decoder.
+Tests cover fragmented UTF-8, line endings, multiline data, limits and mismatched identities.
+This component does not establish producer streaming, HTTP wiring or served recovery acceptance.

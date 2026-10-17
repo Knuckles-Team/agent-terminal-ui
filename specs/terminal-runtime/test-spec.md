@@ -239,3 +239,6 @@ These local tests do not prove a served AU producer or production UI attachment.
 
 R010.9 loop tests cover validated run selection, local cancellation, close, read refusal and idle plan expiry.
 These local tests do not close the served R010.6 acceptance requirement.
+
+- `TUI-RUNTIME-R002.1.3.2.2.1`: Native task_stream tests prove bounded parsing and validation before cursor acknowledgement.
+- `TUI-RUNTIME-R002.1.3.2.2.2`: Served streaming and recovery receipts remain required; local decoder tests are insufficient.
