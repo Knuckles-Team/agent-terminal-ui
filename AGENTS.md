@@ -21,6 +21,14 @@
 - The current code in the package should be treated as an example of high quality code. Make sure to follow its style and tackle issues in similar ways where appropriate.
 - Anything is possible. Do not blame external factors after something doesn't work on the first try. Instead, investigate and test assumptions through debugging through first principles.
 
+## Boundaries
+
+- **Owns:** what a person sees in the terminal.
+- **Never builds:** data access other than through graph-os, or a decision (route decisions to epistemic-graph). Served operations go to graph-os.
+- **Allowed dependencies:** `graph_os.client` and agent-connector-sdk. It imports no EG or graph-os internals in-process.
+
+Route every feature with the [ecosystem boundaries standard](https://github.com/Knuckles-Team/pipelines/blob/main/reference/ecosystem-boundaries.md) before any code. A part this repository does not own goes to its owner's specs.
+
 # Python Development Instructions
 - `ty` by Astral is used for type checking. Always add appropriate type hints such that the code would pass ty's type check.
 - Follow the Google Python Style Guide.

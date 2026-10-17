@@ -19,6 +19,15 @@ metadata:
 Engineering contract for the agent-terminal-ui repository. The package
 `agent_terminal_ui` is the terminal presentation layer for Graph OS.
 
+## Step 0: route the feature
+
+Route the feature before any code.
+
+1. Read the [ecosystem boundaries standard](https://github.com/Knuckles-Team/pipelines/blob/main/reference/ecosystem-boundaries.md).
+2. Split the feature into parts with its routing procedure.
+3. If a part is not owned by agent-terminal-ui, stop work on that part. Write its row in the owner's `specs/`, then link it by ID.
+4. Continue here only with the parts that agent-terminal-ui owns.
+
 ## Rapid delivery: the 5-minute contract
 
 Specs are already designed. The work is implementation, delivered in very small, continuously landed slices.
