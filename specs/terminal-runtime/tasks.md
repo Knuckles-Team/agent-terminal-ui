@@ -130,3 +130,5 @@ Record deferred validation as deferred, never passed.
 - [ ] `TUI-RUNTIME-R002.1.3.2.2.2`: Remaining served stream recovery acceptance.
 
 - [x] **TUI-RUNTIME-R002.9:** Remove the unbound file tail and unify the log refusal controls.
+
+- [ ] `TUI-RUNTIME-R002.10`: Integrate authenticated host logs into the existing Python terminal.
