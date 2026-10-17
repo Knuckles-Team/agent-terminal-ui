@@ -1,6 +1,6 @@
 """Dashboard screen for the Agent Terminal UI.
 
-Provides a Homepage-style service dashboard using agent_utilities.gateway
+Provides a Homepage-style service dashboard. The backend gateway serves
 as the data backend. Fetches widget data via the Aggregator streaming API
 and renders each service as a styled panel within categorized groups.
 
@@ -196,7 +196,7 @@ class DashboardScreen(Screen):
     """Homepage-style service dashboard screen.
 
     Displays all configured service widgets in categorized groups,
-    with auto-refresh streaming from agent_utilities.gateway Aggregator.
+    with auto-refresh streaming from the backend gateway over HTTP.
     """
 
     CSS = """

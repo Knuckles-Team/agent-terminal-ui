@@ -184,20 +184,9 @@ class CommandProcessor:
 
     async def cmd_help(self, args: str) -> None:
         """Show available commands and their descriptions."""
-        # CONCEPT:AU-ECO.messaging.shared-by-every-messaging
-        # Cross-surface descriptions come from the one agent-utilities command
-        # registry; TUI-only commands fall back to their handler docstring.
-        try:
-            from agent_utilities.messaging.commands import command_specs
-
-            registry = {
-                c["command"]: c["description"] for c in command_specs("terminal")
-            }
-        except Exception:  # noqa: BLE001 — registry optional; never break /help
-            registry = {}
         help_text = "[bold blue]Available Commands:[/bold blue]\n"
         for cmd in sorted(self.commands.keys()):
-            doc = registry.get(cmd) or self.commands[cmd].__doc__ or "No description"
+            doc = self.commands[cmd].__doc__ or "No description"
             help_text += f"- [bold]/{cmd}[/bold]: {doc}\n"
 
         await self.app.query_one("Conversation").add_info(help_text)
