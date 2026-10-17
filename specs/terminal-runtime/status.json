@@ -820,8 +820,10 @@
     {
       "id": "TUI-RUNTIME-R010.9",
       "title": "Bounded native inspector loop attachment",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "9c80ba88dbb9"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/inspector_view.rs:209",
         "native/agent-terminal-ui/src/inspector_view.rs:227",
