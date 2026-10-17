@@ -601,3 +601,7 @@ Strip terminal controls. Clear content and cursor after denial, expiry or invali
 Cancel subscription on hide and unmount; never close borrowed clients or readers.
 The public run_host_terminal adapter preserves ordinary agent interaction.
 Controlled and producer-backed fixtures remain distinct from deployed grant or native parity acceptance.
+
+### Native host logs
+
+Implement TUI-RUNTIME-R002.11 through the existing GraphOS client and native event loop. Reuse authenticated producer endpoints without filesystem reads or credential storage.

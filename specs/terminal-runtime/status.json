@@ -76,7 +76,8 @@
     "TUI-RUNTIME-R010.8",
     "TUI-RUNTIME-R010.9",
     "TUI-RUNTIME-R002.9",
-    "TUI-RUNTIME-R002.10"
+    "TUI-RUNTIME-R002.10",
+    "TUI-RUNTIME-R002.11"
   ],
   "requirements": [
     {
@@ -231,7 +232,8 @@
         "TUI-RUNTIME-R002.7",
         "TUI-RUNTIME-R002.8",
         "TUI-RUNTIME-R002.9",
-        "TUI-RUNTIME-R002.10"
+        "TUI-RUNTIME-R002.10",
+        "TUI-RUNTIME-R002.11"
       ]
     },
     {
@@ -304,8 +306,8 @@
         "99b67585d433"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:654",
-        "native/agent-terminal-ui/src/main.rs:691"
+        "native/agent-terminal-ui/src/main.rs:666",
+        "native/agent-terminal-ui/src/main.rs:703"
       ]
     },
     {
@@ -448,7 +450,7 @@
         "e8711e7f49bf"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:630",
+        "native/agent-terminal-ui/src/main.rs:642",
         "native/agent-terminal-ui/tests/discovery.rs:110",
         "native/agent-terminal-ui/tests/discovery.rs:29",
         "native/agent-terminal-ui/tests/discovery.rs:50",
@@ -504,10 +506,10 @@
         "9b0dcc67e610"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:440",
-        "native/agent-terminal-ui/src/main.rs:465",
-        "native/agent-terminal-ui/src/main.rs:484",
-        "native/agent-terminal-ui/src/main.rs:511",
+        "native/agent-terminal-ui/src/main.rs:452",
+        "native/agent-terminal-ui/src/main.rs:477",
+        "native/agent-terminal-ui/src/main.rs:496",
+        "native/agent-terminal-ui/src/main.rs:523",
         "native/agent-terminal-ui/tests/submission.rs:100"
       ]
     },
@@ -530,11 +532,11 @@
         "3c592ffc6075"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:551",
-        "native/agent-terminal-ui/src/main.rs:577",
-        "native/agent-terminal-ui/src/main.rs:593",
-        "native/agent-terminal-ui/src/main.rs:729",
-        "native/agent-terminal-ui/src/main.rs:780"
+        "native/agent-terminal-ui/src/main.rs:563",
+        "native/agent-terminal-ui/src/main.rs:589",
+        "native/agent-terminal-ui/src/main.rs:605",
+        "native/agent-terminal-ui/src/main.rs:741",
+        "native/agent-terminal-ui/src/main.rs:792"
       ]
     },
     {
@@ -545,10 +547,10 @@
         "b05266d66c30"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:793",
-        "native/agent-terminal-ui/src/main.rs:810",
-        "native/agent-terminal-ui/src/main.rs:849",
-        "native/agent-terminal-ui/src/main.rs:909",
+        "native/agent-terminal-ui/src/main.rs:805",
+        "native/agent-terminal-ui/src/main.rs:822",
+        "native/agent-terminal-ui/src/main.rs:861",
+        "native/agent-terminal-ui/src/main.rs:921",
         "native/agent-terminal-ui/tests/cancellation.rs:119"
       ]
     },
@@ -772,7 +774,7 @@
         "608e9e9d122b"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:958",
+        "native/agent-terminal-ui/src/main.rs:970",
         "native/agent-terminal-ui/src/presentation.rs:138",
         "native/agent-terminal-ui/src/presentation.rs:187",
         "native/agent-terminal-ui/src/presentation.rs:212"
@@ -884,6 +886,22 @@
       ],
       "verified_by": [
         "tests/test_host_log_subscription.py:2"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R002.11",
+      "title": "Native authenticated host logs",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "6ad28a56b1c5",
+        "8d06ef716fc4"
+      ],
+      "verified_by": [
+        "native/agent-terminal-ui/src/host_log_view.rs:150",
+        "native/agent-terminal-ui/src/host_log_view.rs:174",
+        "native/agent-terminal-ui/tests/host_logs.rs:110",
+        "native/agent-terminal-ui/tests/host_logs.rs:128",
+        "native/agent-terminal-ui/tests/host_logs.rs:88"
       ]
     }
   ]

@@ -11,7 +11,9 @@ use ratatui::{
 };
 use std::{env, ffi::OsString, process::ExitCode, sync::Arc};
 
+mod host_log_view;
 mod inspector_view;
+use host_log_view::HostLogView;
 mod presentation;
 use inspector_view::InspectorView;
 use presentation::{Viewport, presentation_style};
@@ -23,7 +25,7 @@ fn draw(frame: &mut Frame, status: &str, style: Style) {
 
 fn draw_viewport(frame: &mut Frame, status: &str, style: Style, viewport: &mut Viewport) {
     let text = format!(
-        "{status}\n\nTask streaming and approvals remain unavailable.\n\ni: run inspector | r: refresh read | x: cancel remote task | c: cancel local request | q / Ctrl+C: quit"
+        "{status}\n\nTask streaming and approvals remain unavailable.\n\nl: host logs | i: run inspector | r: refresh read | x: cancel remote task | c: cancel local request | q / Ctrl+C: quit"
     );
     let block = Block::bordered()
         .title("GraphOS")
@@ -290,6 +292,7 @@ async fn run(
     let mut submission_unknown = false;
     let mut viewport = Viewport::default();
     let mut inspector = InspectorView::default();
+    let mut logs = HostLogView::default();
     let mut redraw = tokio::time::interval(std::time::Duration::from_millis(250));
     redraw.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
     let result = async {
@@ -298,6 +301,8 @@ async fn run(
             terminal.draw(|frame| {
                 if cancellation == Cancellation::Confirming {
                     confirmation_visible = draw_confirmation(frame, &status, style);
+                } else if logs.is_open() {
+                    logs.draw(frame, style);
                 } else if inspector.is_open() {
                     inspector.draw(frame, style, std::time::Instant::now());
                 } else {
@@ -320,7 +325,8 @@ async fn run(
                     inspector.task_updated(if accepted { binding.as_ref() } else { None });
                 }
                 _ = inspector.complete(), if inspector.pending() => {}
-                _ = redraw.tick(), if inspector.is_open() => {}
+                _ = logs.complete(), if logs.pending() => {}
+                _ = redraw.tick(), if inspector.is_open() || logs.is_open() => { logs.tick(); }
                 event = events.next() => {
                     let Some(Ok(event)) = event else { return Err("Terminal input unavailable"); };
                     if let Event::Key(key) = event {
@@ -329,6 +335,11 @@ async fn run(
                             return Ok(());
                         }
                         if cancellation != Cancellation::Confirming {
+                            if logs.key(key.code) { continue; }
+                            if (key.code == KeyCode::Char('l') || (key.code == KeyCode::Char('v') && key.modifiers.contains(KeyModifiers::CONTROL))) && !inspector.is_open() {
+                                logs.open(client.clone());
+                                continue;
+                            }
                             if inspector.key(key.code, client.clone()) { continue; }
                             if key.code == KeyCode::Char('i') && !pending {
                                 inspector.open(client.clone());
@@ -386,6 +397,7 @@ async fn run(
     }.await;
     request.abort();
     inspector.close();
+    logs.close();
     ratatui::restore();
     if submitting {
         status = submission_completed((&mut request).await, &mut binding, &mut cancellation);

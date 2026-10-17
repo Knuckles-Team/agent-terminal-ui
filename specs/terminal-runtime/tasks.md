@@ -134,3 +134,5 @@ Record deferred validation as deferred, never passed.
 - [x] **TUI-RUNTIME-R002.9:** Remove the unbound file tail and unify the log refusal controls.
 
 - [ ] `TUI-RUNTIME-R002.10`: Integrate authenticated host logs into the existing Python terminal.
+
+- [ ] `TUI-RUNTIME-R002.11`: Attach authenticated logs to the native event loop.
