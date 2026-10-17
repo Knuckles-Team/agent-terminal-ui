@@ -12,11 +12,10 @@ widget and this headless ``StreamSink`` present the same event vocabulary.
 
 from __future__ import annotations
 
-import os
 import sys
 from typing import Any, Protocol, TextIO, runtime_checkable
 
-from agent_terminal_ui.client import AgentClient
+from agent_terminal_ui.client import AgentClient, client_from_environment
 
 # Events that end a turn (mirrors screens/main.py handling).
 _DONE_MARKER = "[DONE]"
@@ -99,6 +98,7 @@ class HeadlessRunner:
     def __init__(self, client: AgentClient, sink: RenderSink | None = None) -> None:
         self._client = client
         self._sink = sink if sink is not None else StreamSink()
+        self.failed = False
 
     async def run_prompt(
         self,
@@ -145,6 +145,7 @@ class HeadlessRunner:
                 str(data.get("error") or _summarize(data.get("output"))),
             )
         elif event_type == "error":
+            self.failed = True
             self._sink.error(event.get("message", "unknown error"))
         elif event_type == "turn_end":
             self._sink.turn_end()
@@ -165,15 +166,25 @@ async def run_headless(
     *,
     mode_id: str = "ask",
     model: str | None = None,
-) -> None:
+    session_id: str | None = None,
+) -> bool:
     """Run a single headless agent turn for ``prompt`` against the backend.
 
-    Builds an :class:`AgentClient` bound to ``AGENT_URL`` (default
-    ``http://localhost:8000``), streams the turn to stdout, and closes the
-    client. No Textual application is created.
+    Builds the :class:`AgentClient` for ``AGENT_URL`` and ``AGENT_BEARER_TOKEN``,
+    streams the turn to stdout, prints the session to resume on stderr, and
+    closes the client. No Textual application is created.
+
+    Returns:
+        False when the turn reported an error.
     """
-    client = AgentClient(base_url=os.getenv("AGENT_URL", "http://localhost:8000"))
+    client = client_from_environment()
+    runner = HeadlessRunner(client)
     try:
-        await HeadlessRunner(client).run_prompt(prompt, mode_id=mode_id, model=model)
+        await runner.run_prompt(
+            prompt, session_id=session_id, mode_id=mode_id, model=model
+        )
     finally:
         await client.aclose()
+    if client.current_session_id:
+        sys.stderr.write(f"session: {client.current_session_id}\n")
+    return not runner.failed

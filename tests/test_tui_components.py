@@ -842,6 +842,7 @@ def test_terminal_ui_headless_runs_without_tui(monkeypatch):
 
     async def fake_run_headless(prompt, **kwargs):
         captured["prompt"] = prompt
+        return True
 
     monkeypatch.setattr(headless_module, "run_headless", fake_run_headless)
     ui_module.terminal_ui()

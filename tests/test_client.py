@@ -55,11 +55,15 @@ def _status(state: str, *, final: bool) -> dict[str, Any]:
 
 
 class _Recorder:
-    def __init__(self, responder: Any) -> None:
+    def __init__(self, responder: Any, *, serves_card: bool = False) -> None:
         self.requests: list[httpx.Request] = []
         self._responder = responder
+        self._serves_card = serves_card
 
     def __call__(self, request: httpx.Request) -> httpx.Response:
+        card_path = "/a2a/.well-known/agent-card.json"
+        if request.url.path == card_path and not self._serves_card:
+            return httpx.Response(404)
         self.requests.append(request)
         return self._responder(request)
 
@@ -731,3 +735,70 @@ async def test_legacy_fleet_grant_is_refused_before_network():
 def test_remote_cleartext_endpoint_requires_tls() -> None:
     with pytest.raises(ValueError, match="remote Arbora endpoint requires TLS"):
         AgentClient("http://agent.test")
+
+
+def _unary_server(states: list[str], *, card: dict[str, Any] | None = None) -> Any:
+    """An A2A server without ``message/stream``, like Arbora's served agent."""
+    pending = list(states)
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        if request.method == "GET":
+            return httpx.Response(
+                200, json=card or {"capabilities": {"streaming": False}}
+            )
+        method = json.loads(request.content)["method"]
+        if method == "message/stream":
+            return httpx.Response(500, text="Internal Server Error")
+        task = _task(pending.pop(0))
+        if task["status"]["state"] == "completed":
+            task["artifacts"] = [{"parts": [{"kind": "text", "text": "the answer"}]}]
+        return httpx.Response(200, json=_result(task))
+
+    return respond
+
+
+@pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R002")
+async def test_stream_polls_a_unary_task_when_the_card_refuses_streaming():
+    recorder = _Recorder(
+        _unary_server(["submitted", "working", "completed"]), serves_card=True
+    )
+    client = AgentClient(base_url="http://localhost:8000", bearer_token="tok")
+    client.poll_interval = 0
+    client._http_client = httpx.AsyncClient(
+        transport=httpx.MockTransport(recorder), headers=client._http_client.headers
+    )
+
+    events = [event async for event in client.stream("hello", session_id="ctx-1")]
+
+    calls = [
+        json.loads(r.content)["method"] for r in recorder.requests if r.method == "POST"
+    ]
+    assert calls == ["message/send", "tasks/get", "tasks/get"]
+    sent = json.loads(recorder.requests[1].content)["params"]["message"]
+    assert sent["contextId"] == "ctx-1"
+    assert recorder.requests[1].headers["Idempotency-Key"]
+    assert [e["type"] for e in events] == [
+        "session_started",
+        "sideband",
+        "sideband",
+        "text",
+        "sideband",
+        "turn_end",
+    ]
+    assert events[3]["content"] == "the answer"
+    assert client.current_task_id == _TASK
+
+
+@pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R002")
+async def test_unary_task_failure_reports_an_error_and_ends_the_turn():
+    recorder = _Recorder(_unary_server(["submitted", "failed"]), serves_card=True)
+    client = AgentClient(base_url="http://localhost:8000")
+    client.poll_interval = 0
+    client._http_client = httpx.AsyncClient(transport=httpx.MockTransport(recorder))
+
+    events = [event async for event in client.stream("hello")]
+
+    assert [e["type"] for e in events][-2:] == ["error", "turn_end"]
+    assert not any(e["type"] == "text" for e in events)

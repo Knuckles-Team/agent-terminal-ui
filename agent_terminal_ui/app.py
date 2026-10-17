@@ -976,15 +976,18 @@ def main(
     initial_prompt: str | None = None,
     auto_approve: bool = False,
     start_bg: bool = False,
+    session_id: str | None = None,
 ) -> None:
     """The application entry point."""
     theme_name = os.getenv("AGENT_THEME", "tokyo-night")
-    AgentApp(
+    app = AgentApp(
         theme_name=theme_name,
         initial_prompt=initial_prompt,
         auto_approve=auto_approve,
         start_bg=start_bg,
-    ).run()
+    )
+    app._current_session_id = session_id
+    app.run()
 
 
 if __name__ == "__main__":

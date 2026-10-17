@@ -93,3 +93,23 @@ def test_summarize(value, expected) -> None:
     from agent_terminal_ui.headless import _summarize
 
     assert _summarize(value) == expected
+
+
+@pytest.mark.parametrize("fails", [False, True])
+async def test_run_headless_authenticates_and_reports_failure(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], fails: bool
+) -> None:
+    from agent_terminal_ui import headless
+
+    events = [{"type": "session_started", "session_id": "ctx-9"}]
+    events += [{"type": "error", "message": "denied"}] if fails else []
+    events += [{"type": "text", "content": "ok"}, {"type": "turn_end"}]
+    client = _client_yielding(events)
+    client.current_session_id = "ctx-9"
+    monkeypatch.setattr(headless, "client_from_environment", lambda: client)
+
+    ok = await headless.run_headless("hi", session_id="ctx-9")
+
+    assert ok is not fails
+    assert "session: ctx-9" in capsys.readouterr().err
+    client.aclose.assert_awaited_once()

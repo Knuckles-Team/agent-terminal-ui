@@ -4,13 +4,16 @@
 Conversation turns use Arbora's authenticated A2A JSON-RPC boundary at
 ``{base}/a2a``: ``message/stream`` admits one durable task and streams its
 state transitions as Server-Sent Events, ``tasks/resubscribe`` re-attaches to
-a task after a disconnect, and ``tasks/cancel`` cancels it. The conversation
+a task after a disconnect, and ``tasks/cancel`` cancels it. When the served
+Agent Card advertises ``streaming: false``, a turn is ``message/send``
+followed by ``tasks/get`` polling instead. The conversation
 (session) identity is the A2A ``contextId`` this client mints; the server owns
 every task. Graph and operator capabilities use the Arbora REST gateway.
 """
 
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import json
 import logging
@@ -52,6 +55,7 @@ MODE_TASK_IRIS = {
     "ask": "eg:task/communicate",
     "plan": "eg:task/research",
     "build": "eg:task/implement",
+    "code": "eg:task/implement",
 }
 
 #: A2A task states that end a stream.
@@ -324,6 +328,8 @@ class AgentClient:
         self._current_session_id: str | None = None
         self._current_task_id: str | None = None
         self._pending_plans: dict[str, dict[str, Any]] = {}
+        self._streaming: bool | None = None
+        self.poll_interval = 0.5
 
     @property
     def current_session_id(self) -> str | None:
@@ -335,11 +341,17 @@ class AgentClient:
         """Return the A2A task of the most recent turn, if any."""
         return self._current_task_id
 
-    async def _rpc(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
+    async def _rpc(
+        self,
+        method: str,
+        params: dict[str, Any],
+        headers: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
         """One unary JSON-RPC call; a JSON-RPC error raises."""
         response = await self._http_client.post(
             self.a2a_url,
             json={"jsonrpc": "2.0", "id": method, "method": method, "params": params},
+            headers=headers,
         )
         frame = response.json()
         if not isinstance(frame, dict):
@@ -378,10 +390,66 @@ class AgentClient:
             for frame in _sse_frames(pending):
                 yield _frame_result(frame)
 
+    async def streaming_supported(self) -> bool:
+        """Whether the served Agent Card allows ``message/stream``.
+
+        An unreadable card keeps streaming, so a server that serves no card
+        sees the original transport.
+        """
+        if self._streaming is None:
+            try:
+                response = await self._http_client.get(
+                    f"{self.a2a_url}{AGENT_CARD_PATH}"
+                )
+                card = response.json() if response.status_code == 200 else {}
+            except (httpx.HTTPError, ValueError):
+                card = {}
+            capabilities = card.get("capabilities") if isinstance(card, dict) else None
+            self._streaming = not (
+                isinstance(capabilities, dict)
+                and capabilities.get("streaming") is False
+            )
+        return self._streaming
+
+    async def _poll_results(
+        self, message: dict[str, Any], headers: dict[str, str]
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        """Yield a unary task as stream results: state changes, then its answer."""
+        task = await self._rpc("message/send", {"message": message}, headers=headers)
+        task_id = task.get("id")
+        last_state = None
+        while True:
+            state = (task.get("status") or {}).get("state")
+            if state in _FINAL_STATES or state == "input-required" or not task_id:
+                break
+            if state != last_state:
+                yield task
+                last_state = state
+            await asyncio.sleep(self.poll_interval)
+            task = await self._rpc("tasks/get", {"id": task_id})
+        if state == "completed":
+            replies = [m for m in task.get("history") or () if m.get("role") == "agent"]
+            answers = task.get("artifacts") or replies[-1:]
+            for artifact in answers:
+                yield {
+                    "kind": "artifact-update",
+                    "taskId": task_id,
+                    "artifact": artifact,
+                }
+        yield task
+
     async def _follow(
         self, method: str, params: dict[str, Any], session_id: str, headers: Any = None
     ) -> AsyncGenerator[dict[str, Any], None]:
-        async for result in self._rpc_stream(method, params, headers=headers):
+        async for event in self._follow_results(
+            self._rpc_stream(method, params, headers=headers), session_id
+        ):
+            yield event
+
+    async def _follow_results(
+        self, results: AsyncGenerator[dict[str, Any], None], session_id: str
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        async for result in results:
             task_id = result.get("id") or result.get("taskId")
             if task_id:
                 self._current_task_id = str(task_id)
@@ -550,13 +618,17 @@ class AgentClient:
                 ]
             },
         }
+        headers = {"Idempotency-Key": uuid.uuid4().hex}
         try:
-            async for event in self._follow(
-                "message/stream",
-                {"message": message},
-                session_id,
-                headers={"Idempotency-Key": uuid.uuid4().hex},
-            ):
+            if await self.streaming_supported():
+                events = self._follow(
+                    "message/stream", {"message": message}, session_id, headers
+                )
+            else:
+                events = self._follow_results(
+                    self._poll_results(message, headers), session_id
+                )
+            async for event in events:
                 yield event
         except (A2ATransportError, httpx.HTTPError, ValueError) as exc:
             logger.warning("A2A stream failed: %s", exc)
