@@ -5,6 +5,9 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 pub const REFUSED: &str = "Host logs unavailable. Authenticated host access is required.";
 
+pub const RETENTION_GAP: &str =
+    "Host log history gap: the resume position is no longer retained. Fresh admission is required.";
+
 pub struct HostLogs {
     reference: String,
     expires: u64,
@@ -13,8 +16,32 @@ pub struct HostLogs {
 }
 
 pub struct LogBatch {
-    pub messages: Vec<String>,
+    pub records: Vec<LogRecord>,
     pub gap: bool,
+}
+
+#[derive(Debug)]
+pub struct LogRecord {
+    pub host_instance: String,
+    pub sequence: u64,
+    pub request: String,
+    pub timestamp: f64,
+    pub severity: String,
+    pub message: String,
+}
+
+impl LogRecord {
+    pub fn display(&self) -> String {
+        format!(
+            "[{} {} host={} seq={} request={}] {}",
+            self.timestamp,
+            self.severity,
+            self.host_instance,
+            self.sequence,
+            self.request,
+            self.message
+        )
+    }
 }
 
 fn now_ms() -> u64 {
@@ -71,9 +98,7 @@ async fn post(client: &GraphOsClient, path: &str, body: Value) -> Result<Value, 
             .send()
             .await
             .map_err(|_| REFUSED)?;
-        if !response.status().is_success() {
-            return Err(REFUSED);
-        }
+        let status = response.status();
         let mut bytes = Vec::new();
         while let Some(chunk) = response.chunk().await.map_err(|_| REFUSED)? {
             if bytes.len() + chunk.len() > 2 * 1024 * 1024 {
@@ -81,7 +106,14 @@ async fn post(client: &GraphOsClient, path: &str, body: Value) -> Result<Value, 
             }
             bytes.extend_from_slice(&chunk);
         }
-        serde_json::from_slice(&bytes).map_err(|_| REFUSED)
+        let value: Value = serde_json::from_slice(&bytes).map_err(|_| REFUSED)?;
+        if status.as_u16() == 409 && value == json!({"detail":"retention_gap"}) {
+            return Err(RETENTION_GAP);
+        }
+        if !status.is_success() {
+            return Err(REFUSED);
+        }
+        Ok(value)
     })
     .await
     .map_err(|_| REFUSED)?
@@ -127,7 +159,7 @@ impl HostLogs {
         let value = post(
             &self.client,
             "/host/logs/read",
-            json!({"log_ref":self.reference,"cursor":self.cursor,"limit":128}),
+            json!({"version":2,"log_ref":self.reference,"cursor":self.cursor,"limit":128}),
         )
         .await?;
         if !self.valid() {
@@ -142,8 +174,11 @@ impl HostLogs {
 fn batch(value: &Value) -> Result<(LogBatch, Option<String>), &'static str> {
     if value
         .as_object()
-        .is_none_or(|v| v.len() != 3 || !v.contains_key("cursor"))
+        .is_none_or(|v| v.len() != 4 || !v.contains_key("cursor"))
     {
+        return Err(REFUSED);
+    }
+    if value["version"].as_u64() != Some(2) {
         return Err(REFUSED);
     }
     let rows = value["records"].as_array().ok_or(REFUSED)?;
@@ -156,20 +191,42 @@ fn batch(value: &Value) -> Result<(LogBatch, Option<String>), &'static str> {
     if rows.len() > 128 {
         return Err(REFUSED);
     }
-    let mut messages = Vec::new();
+    let mut records = Vec::new();
     for row in rows {
-        if row.as_object().is_none_or(|o| o.len() != 1) {
+        if row.as_object().is_none_or(|o| o.len() != 6) {
             return Err(REFUSED);
         }
-        let text = row["message"].as_str().ok_or(REFUSED)?;
-        if text.len() > 16384 {
+        let text = |key: &str, max: usize, multiline: bool| -> Result<String, &'static str> {
+            let value = row[key].as_str().ok_or(REFUSED)?;
+            if value.len() > max {
+                return Err(REFUSED);
+            }
+            Ok(value
+                .chars()
+                .filter(|c| !c.is_control() || (multiline && matches!(c, '\n' | '\t')))
+                .collect())
+        };
+        let host_instance = text("host_instance", 128, false)?;
+        let severity = text("severity", 32, false)?;
+        let sequence = row["sequence"]
+            .as_u64()
+            .filter(|n| *n > 0 && *n <= i64::MAX as u64)
+            .ok_or(REFUSED)?;
+        let timestamp = row["timestamp"]
+            .as_f64()
+            .filter(|n| n.is_finite() && *n >= 0.0)
+            .ok_or(REFUSED)?;
+        if host_instance.is_empty() || severity.is_empty() {
             return Err(REFUSED);
         }
-        messages.push(
-            text.chars()
-                .filter(|c| !c.is_control() || matches!(c, '\n' | '\t'))
-                .collect(),
-        );
+        records.push(LogRecord {
+            host_instance,
+            sequence,
+            request: text("request", 1024, false)?,
+            timestamp,
+            severity,
+            message: text("message", 16384, true)?,
+        });
     }
-    Ok((LogBatch { messages, gap }, cursor))
+    Ok((LogBatch { records, gap }, cursor))
 }

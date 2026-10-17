@@ -51,7 +51,8 @@ async def test_mounted_display_denial_clear_and_borrowed_clients(
         return httpx.Response(
             200,
             json={
-                "records": [{"message": "[red]literal\x1b control"}],
+                "version": 2,
+                "records": [{"host_instance":"original-host", "sequence":7, "request":"original-request", "timestamp":123.5, "severity":"WARN", "message": "[red]literal\x1b control"}],
                 "cursor": "next",
                 "gap": False,
             },
@@ -70,6 +71,8 @@ async def test_mounted_display_denial_clear_and_borrowed_clients(
             log = app.screen.query_one("#server-log", RichLog)
             text = "".join(line.text for line in log.lines)
             assert "[red]literal" in text and "\x1b" not in text
+            assert "original-host" in text and "seq=7" in text
+            assert "original-request" in text and "123.5 WARN" in text
             assert log.max_lines == 1000
             assert cursors[0] is None
             denied = True

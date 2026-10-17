@@ -624,3 +624,12 @@ Absent or refused data stays unavailable. No cursor, event stream or recovery gu
 The projection retains the actual producer kind and physical scope tenant. These values do not grant authority.
 The scope digest remains 32 bytes; the display labels its hexadecimal conversion. Payload digests remain lowercase hexadecimal text.
 Presentation identifiers have a 512-byte bound. Result references allow 4096 bytes; the complete projection allows 16384 bytes.
+
+### 2026-10-17: Retained host-log metadata and gap display
+
+TUI-RUNTIME-R002.11 consumes GraphOS HOST-R009.8.2.2 read version two in both
+clients. Preserve original source generation, sequence, request, timestamp and
+severity in literal bounded display. Reject malformed metadata and unsupported
+versions. Exact HTTP 409 retention_gap stops polling and clears retained lines
+with a visible gap status. No silent cursor reset, authority inference or task
+action replay is permitted. Live host admission remains separately qualified.

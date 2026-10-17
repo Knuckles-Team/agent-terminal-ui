@@ -258,3 +258,7 @@ an authenticated host-log reader or served tenant isolation.
 R002.1.3.2.2.3 tests cover exact opt-in requests, legacy omission and both unavailable reasons.
 They reject malformed, oversized, unsafe and foreign projections before display. Retained run bindings cannot change or appear later.
 Renderer tests display literal commit identity and clear it after failed reads. These fixtures do not prove served recovery.
+
+- `TUI-RUNTIME-R002.11`: Version-two loopback responses preserve original log
+  metadata in literal Python and native displays. A retained-history gap clears
+  content and stops reads. Unknown conflicts and malformed metadata refuse.

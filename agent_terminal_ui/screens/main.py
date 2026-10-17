@@ -21,6 +21,7 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import Footer, ProgressBar, RichLog, TabbedContent, TabPane
 
+from agent_terminal_ui.host_logs import RETENTION_GAP
 from agent_terminal_ui.tui.input_text_area import InputTextArea
 from agent_terminal_ui.tui.status_line import StatusLine
 from agent_terminal_ui.widgets.capability_sidebar import CapabilitySidebar
@@ -391,7 +392,11 @@ class MainScreen(Screen):
             from agent_terminal_ui.host_logs import HostLogSubscription
 
             subscription = HostLogSubscription(
-                reader, receipt, self._host_logs_display, self._host_logs_refused
+                reader,
+                receipt,
+                self._host_logs_display,
+                self._host_logs_refused,
+                self._host_logs_gap,
             )
             self.agent_app.host_log_subscription = subscription
         subscription.start()
@@ -419,12 +424,16 @@ class MainScreen(Screen):
         log.clear()
         log.write("Host logs unavailable: an authenticated host reader is required.")
 
+    def _host_logs_gap(self) -> None:
+        self._server_log.clear()
+        self._server_log.write(RETENTION_GAP)
+
     def _host_logs_display(self, batch) -> None:
         log = self._server_log
         if batch.gap:
             log.write("Host log history gap.")
         for message in batch.records:
-            log.write(message)
+            log.write(message.display())
 
     def on_capability_sidebar_capability_selected(
         self, event: CapabilitySidebar.CapabilitySelected
