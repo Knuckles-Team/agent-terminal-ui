@@ -26,14 +26,16 @@ Keep local refusals fail-closed and prove they make no request.
 
 from __future__ import annotations
 
+import ast
 import inspect
 import re
+import textwrap
 from collections.abc import Callable
 from typing import Any
 
 import pytest
 
-from agent_terminal_ui.client import A2A_PATH, AgentClient, _OperationTransport
+from agent_terminal_ui.client import AgentClient, _OperationTransport
 from agent_terminal_ui.commands import CommandProcessor
 
 pytestmark = pytest.mark.integration
@@ -212,14 +214,20 @@ def _method_references_backend_route(name: str, public: set[str]) -> bool | None
             and bool(_PATH_IN_SOURCE_PATTERN.search(adapter))
         )
     if name == "confirm_plan":
-        rpc_source = inspect.getsource(AgentClient._rpc)
-        init_source = inspect.getsource(AgentClient.__init__)
+        tree = ast.parse(textwrap.dedent(source))
+        function = tree.body[0]
+        if not isinstance(function, ast.AsyncFunctionDef):
+            return False
+        refusal = function.body[-1]
         return (
-            bool(re.search(r"self\._rpc\(\s*['\"]graphos\.plan/confirm", source))
-            and "self._http_client.post(" in rpc_source
-            and "self.a2a_url" in rpc_source
-            and 'self.a2a_url = f"{self.base_url}{A2A_PATH}"' in init_source
-            and A2A_PATH == "/a2a"
+            isinstance(refusal, ast.Raise)
+            and isinstance(refusal.exc, ast.Call)
+            and isinstance(refusal.exc.func, ast.Name)
+            and refusal.exc.func.id == "GraphOSOperationError"
+            and len(refusal.exc.args) == 1
+            and isinstance(refusal.exc.args[0], ast.Constant)
+            and refusal.exc.args[0].value == "APPROVAL_UNAVAILABLE"
+            and not any(isinstance(node, ast.Await) for node in ast.walk(tree))
         )
     if name == "grant_fleet_approval":
         return None

@@ -380,7 +380,7 @@ async def test_send_decision_without_plan_binding_refuses():
 
 
 @pytest.mark.asyncio
-async def test_send_decision_confirms_bound_plan_with_caller_credential():
+async def test_send_decision_refuses_unsigned_plan_with_caller_credential():
     c = AgentClient(bearer_token="caller-token")
     c._pending_plans["t1"] = {
         "plan_ref": "p1",
@@ -398,25 +398,26 @@ async def test_send_decision_confirms_bound_plan_with_caller_credential():
         events = [
             event async for event in c.send_decision({"t1": "accept"}, session_id="s1")
         ]
-    assert events[-1]["content"] == "answer"
-    rpc.assert_awaited_once()
-    assert rpc.call_args.args[0] == "graphos.plan/confirm"
-    assert "t1" not in c._pending_plans
+    assert events[-1]["type"] == "error"
+    assert events[-1]["message"] == "APPROVAL_UNAVAILABLE"
+    rpc.assert_not_awaited()
+    assert "t1" in c._pending_plans
     await c.close()
 
 
 @pytest.mark.asyncio
-async def test_send_decision_surfaces_signed_plan_refusal():
+async def test_send_decision_keeps_pending_plan_when_cancel_fails():
     c = AgentClient(bearer_token="caller-token")
     c._pending_plans["t1"] = {"plan_ref": "p1", "op": "query.uql", "params": {}}
     with patch.object(
         c, "_rpc", AsyncMock(side_effect=A2ATransportError({"message": "bad"}))
     ):
         events = [
-            event async for event in c.send_decision({"t1": "accept"}, session_id="s1")
+            event async for event in c.send_decision({"t1": "reject"}, session_id="s1")
         ]
     assert events[-1]["type"] == "error"
     assert events[-1]["message"] == "bad"
+    assert "t1" in c._pending_plans
     await c.close()
 
 
