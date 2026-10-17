@@ -280,7 +280,7 @@ async def test_stream_selects_typed_a2a_task(mode, task_iri):
     assert sent["method"] == "message/stream"
     message = sent["params"]["message"]
     assert message["parts"] == [{"kind": "text", "text": "hello"}]
-    assert message["metadata"]["graphOsTaskIris"] == [task_iri]
+    assert message["metadata"]["arboraTaskIris"] == [task_iri]
     await c.close()
 
 

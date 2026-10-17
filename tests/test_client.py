@@ -1,4 +1,4 @@
-"""GraphOS A2A conversation transport of the terminal UI client."""
+"""Arbora A2A conversation transport of the terminal UI client."""
 
 import ast
 import json
@@ -14,7 +14,7 @@ import pytest
 from agent_terminal_ui.client import (
     A2ATransportError,
     AgentClient,
-    GraphOSOperationError,
+    ArboraOperationError,
     client_from_environment,
 )
 
@@ -39,7 +39,7 @@ def _task(state: str) -> dict[str, Any]:
         "contextId": _CONTEXT,
         "kind": "task",
         "status": {"state": state},
-        "metadata": {"graphOs": {"runId": _TASK}},
+        "metadata": {"arbora": {"runId": _TASK}},
     }
 
 
@@ -50,7 +50,7 @@ def _status(state: str, *, final: bool) -> dict[str, Any]:
         "kind": "status-update",
         "status": {"state": state},
         "final": final,
-        "metadata": {"graphOs": {"runId": _TASK}},
+        "metadata": {"arbora": {"runId": _TASK}},
     }
 
 
@@ -75,7 +75,7 @@ def _client(responder: Any, **kwargs: Any) -> tuple[AgentClient, _Recorder]:
 
 
 def _registry_digest() -> str:
-    from graph_os.client._generated_models import REGISTRY_DIGEST
+    from arbora.client._generated_models import REGISTRY_DIGEST
 
     return REGISTRY_DIGEST
 
@@ -96,7 +96,7 @@ def _registry_digest() -> str:
     ],
 )
 @pytest.mark.spec("TUI-RUNTIME-R001.2")
-def test_graphos_endpoint_refuses_unsafe_urls(url: str) -> None:
+def test_arbora_endpoint_refuses_unsafe_urls(url: str) -> None:
     with pytest.raises(ValueError):
         AgentClient(base_url=url, bearer_token="caller-token")
 
@@ -105,20 +105,20 @@ def test_graphos_endpoint_refuses_unsafe_urls(url: str) -> None:
     "token", ["", " ", "token\nvalue", "token\tvalue", "tok\u00e9n"]
 )
 @pytest.mark.spec("TUI-RUNTIME-R001.2")
-def test_graphos_client_rejects_invalid_caller_credential(token: str) -> None:
+def test_arbora_client_rejects_invalid_caller_credential(token: str) -> None:
     with pytest.raises(ValueError, match="invalid caller credential"):
         AgentClient(base_url="https://remote.example", bearer_token=token)
 
 
 @pytest.mark.spec("TUI-RUNTIME-R001.2")
-def test_remote_graphos_endpoint_requires_explicit_caller_credential() -> None:
+def test_remote_arbora_endpoint_requires_explicit_caller_credential() -> None:
     with pytest.raises(ValueError, match="requires caller credential"):
         AgentClient(base_url="https://remote.example")
 
 
 @pytest.mark.asyncio
 @pytest.mark.spec("TUI-RUNTIME-R001.2")
-async def test_remote_graphos_environment_requires_operator_credential(
+async def test_remote_arbora_environment_requires_operator_credential(
     monkeypatch,
 ) -> None:
     monkeypatch.setenv("AGENT_URL", "https://remote.example")
@@ -170,7 +170,7 @@ async def test_stream_runs_one_authenticated_a2a_task_to_its_final_state():
     assert sent["params"]["message"]["contextId"] == "ctx-1"
     assert sent["params"]["message"]["parts"] == [{"kind": "text", "text": "hello"}]
     assert sent["params"]["message"]["metadata"] == {
-        "graphOsTaskIris": ["eg:task/communicate"]
+        "arboraTaskIris": ["eg:task/communicate"]
     }
     assert [event["type"] for event in events] == [
         "session_started",
@@ -347,7 +347,7 @@ async def test_versioned_operation_preserves_refusal_details():
             },
         )
     )
-    with pytest.raises(GraphOSOperationError) as caught:
+    with pytest.raises(ArboraOperationError) as caught:
         await client.invoke_op("query.uql", {"text": "RETURN 1", "params": {}})
     assert caught.value.code == "STEP_UP_REQUIRED"
     assert caught.value.details["console_url"] == "/console/confirm/plan"
@@ -386,7 +386,7 @@ async def test_versioned_operation_rejects_stale_registry() -> None:
             },
         )
     )
-    with pytest.raises(GraphOSOperationError) as caught:
+    with pytest.raises(ArboraOperationError) as caught:
         await client.invoke_op("query.uql", {})
     assert caught.value.code == "REGISTRY_MISMATCH"
     await client.close()
@@ -396,7 +396,7 @@ async def test_versioned_operation_rejects_stale_registry() -> None:
 @pytest.mark.spec("TUI-RUNTIME-R001.1")
 async def test_versioned_operation_rejects_unregistered_op_before_network() -> None:
     client, recorder = _client(lambda _request: httpx.Response(500))
-    with pytest.raises(GraphOSOperationError) as caught:
+    with pytest.raises(ArboraOperationError) as caught:
         await client.invoke_op("unregistered.action", {})
     assert caught.value.code == "UNKNOWN_OP"
     assert recorder.requests == []
@@ -412,7 +412,7 @@ async def test_versioned_operation_refuses_python_311_without_network(
 
     monkeypatch.setattr(client_module, "sys", SimpleNamespace(version_info=(3, 11)))
     client, recorder = _client(lambda _request: httpx.Response(500))
-    with pytest.raises(GraphOSOperationError) as caught:
+    with pytest.raises(ArboraOperationError) as caught:
         await client.invoke_op("query.uql", {})
     assert caught.value.code == "CLIENT_UNAVAILABLE"
     assert recorder.requests == []
@@ -440,14 +440,14 @@ async def test_python_311_keeps_a2a_chat_when_ops_client_is_unavailable(
 async def test_versioned_operation_refuses_incomplete_client_wheel(
     monkeypatch,
 ) -> None:
-    import graph_os.client._generated_models as models
+    import arbora.client._generated_models as models
 
     def missing_registry(_op: str) -> None:
         raise FileNotFoundError("registry.json")
 
     monkeypatch.setattr(models, "schema_for", missing_registry)
     client, recorder = _client(lambda _request: httpx.Response(500))
-    with pytest.raises(GraphOSOperationError) as caught:
+    with pytest.raises(ArboraOperationError) as caught:
         await client.invoke_op("query.uql", {})
     assert caught.value.code == "CLIENT_UNAVAILABLE"
     assert recorder.requests == []
@@ -458,7 +458,7 @@ async def test_versioned_operation_refuses_incomplete_client_wheel(
 @pytest.mark.parametrize("op", ["approvals.grant", "Approvals.Deny"])
 async def test_approval_operation_is_refused_before_network(op: str):
     client, recorder = _client(lambda _request: httpx.Response(500))
-    with pytest.raises(GraphOSOperationError) as caught:
+    with pytest.raises(ArboraOperationError) as caught:
         await client.invoke_op(op, {"approval_id": "a1"})
     assert caught.value.code == "APPROVAL_UNAVAILABLE"
     assert recorder.requests == []
@@ -498,7 +498,7 @@ async def test_versioned_operation_refuses_malformed_success_envelope(
         )
     )
     client, _recorder = _client(lambda _request: response)
-    with pytest.raises(GraphOSOperationError) as caught:
+    with pytest.raises(ArboraOperationError) as caught:
         await client.invoke_op("query.uql", {"text": "RETURN 1", "params": {}})
     assert caught.value.code == "INVALID_ENVELOPE"
     await client.close()
@@ -510,7 +510,7 @@ async def test_bearer_credential_cannot_replace_signed_plan_binding():
     client, recorder = _client(
         lambda _request: httpx.Response(500), bearer_token="caller-token"
     )
-    with pytest.raises(GraphOSOperationError) as caught:
+    with pytest.raises(ArboraOperationError) as caught:
         await client.confirm_plan(
             plan_ref="p1", op="query.uql", params={"query": "MATCH ()"}
         )
@@ -523,7 +523,7 @@ async def test_bearer_credential_cannot_replace_signed_plan_binding():
 @pytest.mark.spec("TUI-RUNTIME-R001.3")
 async def test_unsigned_plan_confirmation_refuses_before_network():
     client, recorder = _client(lambda _request: httpx.Response(500))
-    with pytest.raises(GraphOSOperationError) as caught:
+    with pytest.raises(ArboraOperationError) as caught:
         await client.confirm_plan(
             plan_ref="p1", op="query.uql", params={"query": "MATCH ()"}
         )
@@ -559,7 +559,7 @@ async def test_unsigned_input_required_decision_cannot_resume_a2a_task(token, re
 @pytest.mark.spec("TUI-RUNTIME-R001.3")
 async def test_confirm_plan_refuses_approval_operation_without_network():
     client, recorder = _client(lambda _request: httpx.Response(500))
-    with pytest.raises(GraphOSOperationError) as caught:
+    with pytest.raises(ArboraOperationError) as caught:
         await client.confirm_plan(
             plan_ref="p1", op="approvals.grant", params={"approval_id": "a1"}
         )
@@ -574,7 +574,7 @@ async def test_task_input_required_exposes_only_bound_approval():
     bound = _status("input-required", final=False)
     bound["status"]["message"] = {
         "metadata": {
-            "graphOsPlan": {
+            "arboraPlan": {
                 "plan_ref": "p1",
                 "op": "query.uql",
                 "params": {"query": "MATCH ()"},
@@ -611,7 +611,7 @@ async def test_console_input_required_cannot_offer_tui_approval():
     console = _status("input-required", final=False)
     console["status"]["message"] = {
         "metadata": {
-            "graphOsPlan": {
+            "arboraPlan": {
                 "plan_ref": "p1",
                 "op": "approvals.grant",
                 "params": {"approval_id": "a1"},
@@ -634,7 +634,7 @@ async def test_forged_plan_binding_cannot_offer_approval_operation():
     forged = _status("input-required", final=False)
     forged["status"]["message"] = {
         "metadata": {
-            "graphOsPlan": {
+            "arboraPlan": {
                 "plan_ref": "p1",
                 "op": "approvals.grant",
                 "params": {"approval_id": "a1"},
@@ -653,7 +653,7 @@ async def test_forged_plan_binding_cannot_offer_approval_operation():
 
 @pytest.mark.asyncio
 async def test_metadata_reads_the_agent_card():
-    card = {"name": "GraphOS", "capabilities": {"streaming": True}}
+    card = {"name": "Arbora", "capabilities": {"streaming": True}}
     client, recorder = _client(lambda request: httpx.Response(200, json=card))
 
     assert await client.get_metadata() == card
@@ -691,7 +691,7 @@ def _assert_no_agent_client_protocol_import(py_file: Path) -> None:
 @pytest.mark.spec("TUI-RUNTIME-R001.7")
 def test_agent_client_protocol_module_is_not_imported_by_this_package():
     """``agent_client_protocol`` (the real Zed ACP SDK) must not be a runtime
-    dependency of this client — conversation turns use GraphOS's A2A
+    dependency of this client — conversation turns use Arbora's A2A
     JSON-RPC/SSE boundary, not that SDK's wire format."""
     import agent_terminal_ui
 
@@ -721,7 +721,7 @@ assert client.a2a_url == 'http://localhost:8000/a2a'
 @pytest.mark.asyncio
 async def test_legacy_fleet_grant_is_refused_before_network():
     client, recorder = _client(lambda _request: httpx.Response(500))
-    with pytest.raises(GraphOSOperationError) as caught:
+    with pytest.raises(ArboraOperationError) as caught:
         await client.grant_fleet_approval("job-1")
     assert caught.value.code == "APPROVAL_UNAVAILABLE"
     assert recorder.requests == []
@@ -729,5 +729,5 @@ async def test_legacy_fleet_grant_is_refused_before_network():
 
 
 def test_remote_cleartext_endpoint_requires_tls() -> None:
-    with pytest.raises(ValueError, match="remote GraphOS endpoint requires TLS"):
+    with pytest.raises(ValueError, match="remote Arbora endpoint requires TLS"):
         AgentClient("http://agent.test")

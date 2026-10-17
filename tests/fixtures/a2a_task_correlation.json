@@ -1,6 +1,6 @@
 [
-  {"kind":"task","id":"server-task-1","contextId":"server-context-2","status":{"state":"submitted"},"metadata":{"graphOs":{"runId":"server-run-3"}}},
-  {"kind":"status-update","taskId":"server-task-1","contextId":"server-context-2","status":{"state":"working"},"final":false,"metadata":{"graphOs":{"runId":"server-run-3"}}},
+  {"kind":"task","id":"server-task-1","contextId":"server-context-2","status":{"state":"submitted"},"metadata":{"arbora":{"runId":"server-run-3"}}},
+  {"kind":"status-update","taskId":"server-task-1","contextId":"server-context-2","status":{"state":"working"},"final":false,"metadata":{"arbora":{"runId":"server-run-3"}}},
   {"kind":"artifact-update","taskId":"server-task-1","contextId":"server-context-2","artifact":{"artifactId":"answer-1","parts":[{"kind":"text","text":"the answer"}]},"lastChunk":true},
-  {"kind":"status-update","taskId":"server-task-1","contextId":"server-context-2","status":{"state":"completed"},"final":true,"metadata":{"graphOs":{"runId":"server-run-3"}}}
+  {"kind":"status-update","taskId":"server-task-1","contextId":"server-context-2","status":{"state":"completed"},"final":true,"metadata":{"arbora":{"runId":"server-run-3"}}}
 ]

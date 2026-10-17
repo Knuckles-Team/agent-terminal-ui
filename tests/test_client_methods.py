@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
-from agent_terminal_ui.client import AgentClient, GraphOSOperationError
+from agent_terminal_ui.client import AgentClient, ArboraOperationError
 
 
 @pytest.fixture
@@ -438,7 +438,7 @@ async def test_grant_fleet_approval_refuses_without_network(
 ) -> None:
     """The legacy grant route stays closed until durable authority is served."""
     with patch.object(client._http_client, "post", new_callable=AsyncMock) as mock_post:
-        with pytest.raises(GraphOSOperationError) as caught:
+        with pytest.raises(ArboraOperationError) as caught:
             await client.grant_fleet_approval("job-1", decision="denied")
         assert caught.value.code == "APPROVAL_UNAVAILABLE"
         mock_post.assert_not_awaited()

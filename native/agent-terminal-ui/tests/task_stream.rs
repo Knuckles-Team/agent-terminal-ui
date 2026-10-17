@@ -6,7 +6,7 @@ use serde_json::{Value, json};
 
 fn task() -> Value {
     json!({"kind":"task", "id":"task-1", "contextId":"ctx-1",
-        "metadata":{"graphOs":{"runId":"run-1"}}, "status":{"state":"working"}})
+        "metadata":{"arbora":{"runId":"run-1"}}, "status":{"state":"working"}})
 }
 fn make_decoder() -> TaskStreamDecoder {
     TaskStreamDecoder::new(
@@ -82,7 +82,7 @@ fn malformed_envelopes_and_foreign_bindings_never_advance_cursor() {
     let mut foreign = task();
     foreign["contextId"] = json!("foreign");
     let mut foreign_run = task();
-    foreign_run["metadata"]["graphOs"]["runId"] = json!("foreign");
+    foreign_run["metadata"]["arbora"]["runId"] = json!("foreign");
     for bad in [
         json!({"jsonrpc":"1.0","id":"request-1","result":task()}),
         json!({"jsonrpc":"2.0","id":"other","result":task()}),

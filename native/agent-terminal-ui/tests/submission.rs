@@ -1,7 +1,7 @@
 mod support;
 
 use agent_terminal_ui_native::{
-    GraphOsClient, SUBMISSION_UNKNOWN, TaskSubmission, correlation::TaskState,
+    ArboraClient, SUBMISSION_UNKNOWN, TaskSubmission, correlation::TaskState,
 };
 use serde_json::{Value, json};
 use std::time::Duration;
@@ -16,7 +16,7 @@ fn accepted(request_id: &str) -> Value {
             "kind": "task",
             "id": "task-1",
             "contextId": "context-2",
-            "metadata": {"graphOs": {"runId": "run-3"}},
+            "metadata": {"arbora": {"runId": "run-3"}},
             "status": {"state": "submitted"}
         }
     })
@@ -42,7 +42,7 @@ async fn submits_exact_authenticated_text_with_one_stable_identity() {
                 .remove("metadata");
         }
         let (url, server) = serve("200 OK", &response.to_string()).await;
-        let task = GraphOsClient::new(&url, Some("fixture-token"))
+        let task = ArboraClient::new(&url, Some("fixture-token"))
             .unwrap()
             .submit_task(&submission)
             .await
@@ -78,7 +78,7 @@ async fn submits_exact_authenticated_text_with_one_stable_identity() {
 async fn invalid_prompt_cannot_create_a_submission_or_send_a_request() {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let client =
-        GraphOsClient::new(&format!("http://{}", listener.local_addr().unwrap()), None).unwrap();
+        ArboraClient::new(&format!("http://{}", listener.local_addr().unwrap()), None).unwrap();
     for prompt in ["", " \n\t", &"x".repeat(65_537), &"é".repeat(32_769)] {
         assert!(TaskSubmission::new(prompt).is_err());
     }
@@ -110,7 +110,7 @@ async fn malformed_or_refused_submission_never_invents_a_task() {
         ("/result/contextId", json!("")),
         ("/result/kind", json!("message")),
         ("/result/status/state", json!("unknown")),
-        ("/result/metadata/graphOs/runId", json!(null)),
+        ("/result/metadata/arbora/runId", json!(null)),
     ] {
         let mut response = accepted(submission.message_id());
         *response.pointer_mut(path).unwrap() = value;
@@ -125,7 +125,7 @@ async fn malformed_or_refused_submission_never_invents_a_task() {
     for response in responses {
         let (url, server) = serve("200 OK", &response.to_string()).await;
         assert_eq!(
-            GraphOsClient::new(&url, Some("fixture-token"))
+            ArboraClient::new(&url, Some("fixture-token"))
                 .unwrap()
                 .submit_task(&submission)
                 .await
@@ -153,7 +153,7 @@ async fn refusal_redirect_invalid_json_and_oversize_remain_unknown_without_retry
     ] {
         let (url, server) = serve(status, &body).await;
         assert_eq!(
-            GraphOsClient::new(&url, Some("fixture-token"))
+            ArboraClient::new(&url, Some("fixture-token"))
                 .unwrap()
                 .submit_task(&submission)
                 .await
@@ -171,7 +171,7 @@ async fn lost_or_interrupted_submission_response_has_no_automatic_resend() {
     for response in ["", "HTTP/1.1 200 OK\r\nContent-Length: 1000\r\n\r\n{"] {
         let (url, server) = serve_raw(response.to_owned()).await;
         assert_eq!(
-            GraphOsClient::new(&url, Some("fixture-token"))
+            ArboraClient::new(&url, Some("fixture-token"))
                 .unwrap()
                 .submit_task(&submission)
                 .await

@@ -17,7 +17,7 @@ import pytest
 
 @pytest.fixture
 def agent_app(monkeypatch):
-    """Return a fresh AgentApp instance with a local GraphOS endpoint."""
+    """Return a fresh AgentApp instance with a local Arbora endpoint."""
     monkeypatch.setenv("AGENT_URL", "http://localhost:8000")
     monkeypatch.delenv("AGENT_BEARER_TOKEN", raising=False)
     from agent_terminal_ui.app import AgentApp
@@ -186,8 +186,8 @@ async def test_handle_tool_approval_result_with_decisions(agent_app):
 
 
 @pytest.mark.asyncio
-async def test_app_uses_graphos_endpoint_and_caller_token(monkeypatch):
-    """The app uses the same authenticated GraphOS client as headless mode."""
+async def test_app_uses_arbora_endpoint_and_caller_token(monkeypatch):
+    """The app uses the same authenticated Arbora client as headless mode."""
     monkeypatch.setenv("AGENT_BEARER_TOKEN", "caller-token")
     monkeypatch.setenv("AGENT_URL", "http://localhost:8000")
     from agent_terminal_ui.app import AgentApp

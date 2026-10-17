@@ -1,6 +1,4 @@
-use agent_terminal_ui_native::{
-    GraphOsClient, correlation::TaskCorrelation, recovery::ReadFailure,
-};
+use agent_terminal_ui_native::{ArboraClient, correlation::TaskCorrelation, recovery::ReadFailure};
 use serde_json::{Value, json};
 use std::time::Duration;
 use tokio::{
@@ -11,7 +9,7 @@ use tokio::{
 fn snapshot() -> Value {
     json!({"jsonrpc":"2.0", "id":"task-snapshot", "result": {
         "kind":"task", "id":"task-one", "contextId":"context-two",
-        "metadata":{"graphOs":{"runId":"run-three"}}, "status":{"state":"working"}
+        "metadata":{"arbora":{"runId":"run-three"}}, "status":{"state":"working"}
     }})
 }
 
@@ -23,9 +21,9 @@ fn response(status: u16, body: Value) -> String {
     )
 }
 
-async fn serve(responses: Vec<String>) -> (GraphOsClient, tokio::task::JoinHandle<()>) {
+async fn serve(responses: Vec<String>) -> (ArboraClient, tokio::task::JoinHandle<()>) {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
-    let client = GraphOsClient::new(
+    let client = ArboraClient::new(
         &format!("http://{}", listener.local_addr().unwrap()),
         Some("fixture-token"),
     )
@@ -159,7 +157,7 @@ async fn rejects_changed_identity_and_never_acquires_a_later_run() {
     for path in [
         "/result/id",
         "/result/contextId",
-        "/result/metadata/graphOs/runId",
+        "/result/metadata/arbora/runId",
         "/id",
     ] {
         let original = snapshot();
@@ -206,7 +204,7 @@ async fn rpc_refusal_does_not_retry_or_expose_server_detail() {
 async fn aborting_a_read_during_backoff_stops_owned_recovery() {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let client =
-        GraphOsClient::new(&format!("http://{}", listener.local_addr().unwrap()), None).unwrap();
+        ArboraClient::new(&format!("http://{}", listener.local_addr().unwrap()), None).unwrap();
     let request = tokio::spawn(async move { client.get_task("task-one").await });
     let (mut socket, _) = listener.accept().await.unwrap();
     let mut bytes = [0; 4096];
@@ -231,7 +229,7 @@ async fn aborting_a_read_during_backoff_stops_owned_recovery() {
 async fn total_deadline_bounds_unresponsive_reads() {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let client =
-        GraphOsClient::new(&format!("http://{}", listener.local_addr().unwrap()), None).unwrap();
+        ArboraClient::new(&format!("http://{}", listener.local_addr().unwrap()), None).unwrap();
     let start = tokio::time::Instant::now();
     let request = tokio::spawn(async move { client.read_task("task-one", None).await });
     let (_first, _) = listener.accept().await.unwrap();

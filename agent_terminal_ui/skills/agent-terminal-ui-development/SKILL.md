@@ -7,7 +7,7 @@ description: >-
   and the five-minute delivery contract. Use this when you are changing
   agent-terminal-ui's own code or preparing a commit or PR in this repository.
 license: MIT
-tags: [graph-os, terminal-ui, development, test, gates]
+tags: [arbora, terminal-ui, development, test, gates]
 tier: repository
 metadata:
   author: Genius
@@ -17,7 +17,7 @@ metadata:
 # agent-terminal-ui-development (repository)
 
 Engineering contract for the agent-terminal-ui repository. The package
-`agent_terminal_ui` is the terminal presentation layer for Graph OS.
+`agent_terminal_ui` is the terminal presentation layer for Arbora.
 
 ## Step 0: route the feature
 
@@ -88,8 +88,8 @@ Specs are already designed. The work is implementation, delivered in very small,
 
 ## What this repository owns
 
-The Textual terminal app `agent_terminal_ui` and its client for the Graph OS
-gateway. Graph OS owns auth and routing. This repository must reuse the
+The Textual terminal app `agent_terminal_ui` and its client for the Arbora
+gateway. Arbora owns auth and routing. This repository must reuse the
 gateway client and never add a second route implementation.
 
 ## Commands

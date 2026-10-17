@@ -66,7 +66,7 @@ fn missing_invalid_and_conflicting_identifiers_are_refused() {
         initial.as_object_mut().unwrap().remove(key);
         assert!(TaskCorrelation::from_task(&initial).is_err());
     }
-    for pointer in ["/taskId", "/contextId", "/metadata/graphOs/runId"] {
+    for pointer in ["/taskId", "/contextId", "/metadata/arbora/runId"] {
         for invalid in [Value::Null, json!(""), json!(false), json!("foreign-id")] {
             let mut event = fixture[1].clone();
             *event.pointer_mut(pointer).unwrap() = invalid;
@@ -97,7 +97,7 @@ fn malformed_and_unsupported_events_are_refused_without_mutation() {
         ("status", json!([])),
         ("final", json!("true")),
         ("metadata", json!([])),
-        ("metadata", json!({"graphOs":false})),
+        ("metadata", json!({"arbora":false})),
     ] {
         let mut event = fixture[1].clone();
         event[key] = invalid;
