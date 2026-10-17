@@ -121,7 +121,7 @@ async fn bounds_card_bytes_and_removes_terminal_control_characters() {
         "Arbora Agent Card exceeds size limit"
     );
     server.await.unwrap();
-    let (url, server) = serve("200 OK", r#"{"name":"Graph\u001bOS\n"}"#).await;
+    let (url, server) = serve("200 OK", r#"{"name":"Arb\u001bora\n"}"#).await;
     assert_eq!(
         ArboraClient::new(&url, None)
             .unwrap()
