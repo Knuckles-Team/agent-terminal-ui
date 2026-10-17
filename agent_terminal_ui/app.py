@@ -44,6 +44,11 @@ from textual.message import Message
 from agent_terminal_ui.capability_provider import CapabilityCommandProvider
 from agent_terminal_ui.client import AgentClient, client_from_environment
 from agent_terminal_ui.commands import CommandProcessor
+from agent_terminal_ui.host_logs import (
+    HostLaunchReceipt,
+    HostLogReader,
+    HostLogSubscription,
+)
 
 # Screen imports
 from agent_terminal_ui.screens.agent_view import AgentViewScreen
@@ -151,6 +156,8 @@ class AgentApp(App):
         auto_approve: bool = False,
         start_bg: bool = False,
         client: AgentClient | None = None,
+        host_receipt: HostLaunchReceipt | None = None,
+        log_reader: HostLogReader | None = None,
     ) -> None:
         """Initialize the Agent application and its internal state.
 
@@ -185,7 +192,11 @@ class AgentApp(App):
         self.theme = theme_name
 
         # Initialize client
+        self._owns_client = client is None
         self._client = client or client_from_environment()
+        self.host_receipt = host_receipt
+        self.log_reader = log_reader
+        self.host_log_subscription: HostLogSubscription | None = None
         client_protocol = getattr(self._client, "protocol", "a2a")
         self._protocol = client_protocol if isinstance(client_protocol, str) else "a2a"
 
@@ -221,7 +232,9 @@ class AgentApp(App):
         """Route /logs to the same view as the screen's Ctrl+V binding."""
         screen = self._get_main_screen()
         if screen is not None:
-            screen.action_toggle_logs()
+            self.run_worker(
+                screen.action_toggle_logs(), group="host-log-toggle", exclusive=True
+            )
 
     def on_mount(self) -> None:
         """Handle application startup."""
@@ -234,7 +247,9 @@ class AgentApp(App):
 
     async def on_unmount(self) -> None:
         """Clean up resources on unmount."""
-        if hasattr(self, "_client") and self._client is not None:
+        if self.host_log_subscription is not None:
+            await self.host_log_subscription.stop()
+        if self._owns_client and self._client is not None:
             try:
                 await self._client.close()
             except Exception as e:
@@ -974,3 +989,10 @@ def main(
 
 if __name__ == "__main__":
     main()
+
+
+def run_host_terminal(
+    receipt: HostLaunchReceipt, *, client: AgentClient, log_reader: HostLogReader | None
+) -> None:
+    """Run the existing terminal with borrowed authenticated host resources."""
+    AgentApp(client=client, host_receipt=receipt, log_reader=log_reader).run()

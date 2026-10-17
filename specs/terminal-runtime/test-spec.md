@@ -250,3 +250,5 @@ application with AGENT_LOG_FILE set. Observe zero pathname opens. Exercise
 /logs and Ctrl+V with focused input. Require the same refusal and cleared
 old content. An absent source adds no client calls. These tests do not prove
 an authenticated host-log reader or served tenant isolation.
+
+- `TUI-RUNTIME-R002.10`: Test bounded HTTP receipts and mounted log rendering, denial clearing, cancellation and borrowed resources. Separate controlled transport tests from a real GraphOS sink fixture.

@@ -75,7 +75,8 @@
     "TUI-RUNTIME-R002.1.3.2.2.2",
     "TUI-RUNTIME-R010.8",
     "TUI-RUNTIME-R010.9",
-    "TUI-RUNTIME-R002.9"
+    "TUI-RUNTIME-R002.9",
+    "TUI-RUNTIME-R002.10"
   ],
   "requirements": [
     {
@@ -229,7 +230,8 @@
         "TUI-RUNTIME-R002.6",
         "TUI-RUNTIME-R002.7",
         "TUI-RUNTIME-R002.8",
-        "TUI-RUNTIME-R002.9"
+        "TUI-RUNTIME-R002.9",
+        "TUI-RUNTIME-R002.10"
       ]
     },
     {
@@ -871,6 +873,17 @@
       ],
       "verified_by": [
         "tests/test_host_log_refusal.py:3"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R002.10",
+      "title": "Authenticated host log subscription",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "fdee44da708a"
+      ],
+      "verified_by": [
+        "tests/test_host_log_subscription.py:2"
       ]
     }
   ]

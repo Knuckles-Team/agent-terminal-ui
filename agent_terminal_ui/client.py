@@ -34,6 +34,7 @@ from agent_terminal_ui.capabilities import (
     RunEventPage,
     RunSummary,
 )
+from agent_terminal_ui.host_logs import HostLogReader as HostLogReader
 
 logger = logging.getLogger(__name__)
 

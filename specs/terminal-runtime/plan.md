@@ -588,3 +588,16 @@ host logs are unavailable. Clear any old panel content before that notice.
 Keep normal agent interaction available. This is a zero-read refusal repair,
 not a receipt, reader, reconnect, rotation, tenant-isolation or served-host
 acceptance claim. R002.2 through R002.6 remain pending.
+
+### 2026-10-17: Authenticated HTTP log subscription (R002.10)
+
+The injected HTTP reader obtains binding metadata from GraphOS's authenticated reference endpoint.
+It retains the exact immutable receipt and rejects copied or changed receipts.
+No receipt constructor or client field grants log authority. GraphOS reauthorizes each bounded read.
+AgentApp and MainScreen use the existing log panel and commands.
+Start one subscription only for terminal/both mode with an authenticated true preference.
+Limit reads to one second, 128 records and two MiB; render at most 1000 literal lines.
+Strip terminal controls. Clear content and cursor after denial, expiry or invalid data.
+Cancel subscription on hide and unmount; never close borrowed clients or readers.
+The public run_host_terminal adapter preserves ordinary agent interaction.
+Controlled and producer-backed fixtures remain distinct from deployed grant or native parity acceptance.
