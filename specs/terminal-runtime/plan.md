@@ -555,3 +555,12 @@ boundary, not a running GraphOS server or native query delivery.
 The native inspector adapter uses the authenticated registry and registered `runs.get` route.
 It checks the response digest before projecting fields. Plan deadlines use validated UTC expiry and a monotonic clock.
 The coordinator owns main-loop attachment. AU execution admission and GraphOS trace-reader composition remain required for served acceptance.
+### 2026-10-17: Bounded task stream decoder
+
+R002.1.3.2.2.1 adds a local SSE consumer in `task_stream.rs`.
+It accepts a request identity and an existing task binding.
+Each event must pass JSON-RPC and correlation checks before its cursor becomes visible.
+Cursors remain opaque. The decoder assigns no sequence or generation meaning.
+Line and event limits bound retained input. Invalid input stops that decoder.
+Tests cover fragmented UTF-8, line endings, multiline data, limits and mismatched identities.
+This component does not establish producer streaming, HTTP wiring or served recovery acceptance.
