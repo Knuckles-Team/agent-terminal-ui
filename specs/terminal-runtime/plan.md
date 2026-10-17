@@ -555,6 +555,15 @@ boundary, not a running GraphOS server or native query delivery.
 The native inspector adapter uses the authenticated registry and registered `runs.get` route.
 It checks the response digest before projecting fields. Plan deadlines use validated UTC expiry and a monotonic clock.
 The coordinator owns main-loop attachment. AU execution admission and GraphOS trace-reader composition remain required for served acceptance.
+
+### R010.9 native inspector loop attachment
+
+The native loop opens the inspector with `i` from the validated task run binding.
+The inspector owns one asynchronous read. `r` refreshes, `c` aborts locally, and Escape closes it.
+Task read failure and run changes clear protected values and abort pending inspector reads.
+Quit also aborts the read. A periodic redraw expires plans while input is idle.
+Local interaction tests cover this attachment. R010.6 still requires served acceptance through the published producer contracts.
+
 ### 2026-10-17: Bounded task stream decoder
 
 R002.1.3.2.2.1 adds a local SSE consumer in `task_stream.rs`.
