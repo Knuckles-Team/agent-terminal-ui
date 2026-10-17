@@ -1,4 +1,4 @@
-use agent_terminal_ui_native::{GraphOsClient, host_logs::HostLogs};
+use agent_terminal_ui_native::{ArboraClient, host_logs::HostLogs};
 use serde_json::{Value, json};
 use std::{
     sync::Arc,
@@ -26,9 +26,9 @@ fn response(status: u16, body: Value) -> String {
     )
 }
 
-async fn serve(responses: Vec<String>) -> (GraphOsClient, tokio::task::JoinHandle<()>) {
+async fn serve(responses: Vec<String>) -> (ArboraClient, tokio::task::JoinHandle<()>) {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
-    let client = GraphOsClient::new(
+    let client = ArboraClient::new(
         &format!("http://{}", listener.local_addr().unwrap()),
         Some("fixture-token"),
     )

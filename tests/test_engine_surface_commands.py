@@ -56,7 +56,7 @@ def mock_app() -> MagicMock:
                 "traces": [
                     {
                         "trace_id": "abc",
-                        "service": "graph-os",
+                        "service": "arbora",
                         "operation": "query",
                         "duration_ms": 12,
                     }
@@ -146,8 +146,8 @@ class TestObsCommand:
     async def test_traces_search(
         self, processor: CommandProcessor, mock_app: MagicMock
     ) -> None:
-        await processor.cmd_obs("traces graph-os")
-        mock_app._client.graph_traces.assert_awaited_once_with(service="graph-os")
+        await processor.cmd_obs("traces arbora")
+        mock_app._client.graph_traces.assert_awaited_once_with(service="arbora")
 
 
 class TestBrokerAndKvcacheCommands:

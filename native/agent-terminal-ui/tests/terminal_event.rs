@@ -6,7 +6,7 @@ use serde_json::{Value, json};
 
 fn task() -> Value {
     json!({"kind":"task","id":"task-one","contextId":"context-two", "status":{"state":"completed"},
-    "metadata":{"graphOs":{"runId":"run-three","terminalEvent":{
+    "metadata":{"arbora":{"runId":"run-three","terminalEvent":{
         "status":"available","tenant":"tenant-one",
         "scope":{"tenant":"tenant-one","scope":{"kind":"graph","graph":"graph-one"},"incarnation_id":"incarnation-one","identity_digest":vec![170;32]},
         "batch_id":"batch-one","commit_sequence":42,"ordinal":0,"run_id":"run-three", "kind":"outcome","outcome":"succeeded","result_ref":null,"payload_digest":"b".repeat(64)
@@ -25,7 +25,7 @@ fn actual_identity_and_outcome_are_preserved_without_cursor() {
         ("cancelled", TaskState::Canceled),
     ] {
         let mut task = task();
-        task["metadata"]["graphOs"]["terminalEvent"]["outcome"] = json!(outcome);
+        task["metadata"]["arbora"]["terminalEvent"]["outcome"] = json!(outcome);
         let event = decode(&task, state).unwrap();
         let text = event.text();
         for expected in [
@@ -49,7 +49,7 @@ fn actual_identity_and_outcome_are_preserved_without_cursor() {
 #[test]
 fn omission_and_known_refusals_do_not_disclose_identity() {
     let mut task = task();
-    task["metadata"]["graphOs"]
+    task["metadata"]["arbora"]
         .as_object_mut()
         .unwrap()
         .remove("terminalEvent");
@@ -58,7 +58,7 @@ fn omission_and_known_refusals_do_not_disclose_identity() {
         TerminalEvent::ProducerUnavailable
     );
     for reason in ["legacy_unbound", "producer_unavailable"] {
-        task["metadata"]["graphOs"]["terminalEvent"] =
+        task["metadata"]["arbora"]["terminalEvent"] =
             json!({"status":"unavailable","reason":reason});
         let text = decode(&task, TaskState::Completed).unwrap().text();
         assert!(text.contains("unavailable"));
@@ -90,20 +90,20 @@ fn malformed_unsafe_and_unbound_events_are_refused() {
         ("/scope/identity_digest", json!("short")),
     ] {
         let mut task = task();
-        *task["metadata"]["graphOs"]["terminalEvent"]
+        *task["metadata"]["arbora"]["terminalEvent"]
             .pointer_mut(path)
             .unwrap() = value;
         assert!(decode(&task, TaskState::Completed).is_err(), "{path}");
     }
     for key in ["runId", "terminalEvent"] {
         let mut task = task();
-        task["metadata"]["graphOs"][key] = Value::Null;
+        task["metadata"]["arbora"][key] = Value::Null;
         assert!(decode(&task, TaskState::Completed).is_err());
     }
     let mut task = task();
-    task["metadata"]["graphOs"]["terminalEvent"]["cursor"] = json!("invented");
+    task["metadata"]["arbora"]["terminalEvent"]["cursor"] = json!("invented");
     assert!(decode(&task, TaskState::Completed).is_err());
-    task["metadata"]["graphOs"]["terminalEvent"]["cursor"] = json!("x".repeat(16385));
+    task["metadata"]["arbora"]["terminalEvent"]["cursor"] = json!("x".repeat(16385));
     assert!(decode(&task, TaskState::Completed).is_err());
 }
 
@@ -113,12 +113,12 @@ fn retained_binding_cannot_acquire_or_switch_run() {
     let event = decode(&task(), TaskState::Completed).unwrap();
     for run in [None, Some("other-run")] {
         let mut retained = task();
-        retained["metadata"]["graphOs"]
+        retained["metadata"]["arbora"]
             .as_object_mut()
             .unwrap()
             .remove("runId");
         if let Some(run) = run {
-            retained["metadata"]["graphOs"]["runId"] = json!(run);
+            retained["metadata"]["arbora"]["runId"] = json!(run);
         }
         assert!(
             event
@@ -133,7 +133,7 @@ fn retained_binding_cannot_acquire_or_switch_run() {
 fn physical_scope_tenant_and_actual_producer_kind_are_preserved() {
     for kind in ["outcome", "tool_call", "degraded", "reconciled"] {
         let mut task = task();
-        let event = &mut task["metadata"]["graphOs"]["terminalEvent"];
+        let event = &mut task["metadata"]["arbora"]["terminalEvent"];
         event["scope"]["tenant"] = json!("physical-owner");
         event["kind"] = json!(kind);
         let text = decode(&task, TaskState::Completed).unwrap().text();
@@ -148,7 +148,7 @@ fn physical_scope_tenant_and_actual_producer_kind_are_preserved() {
 fn result_reference_preserves_producer_limit() {
     let mut task = task();
     let reference = "r".repeat(4096);
-    task["metadata"]["graphOs"]["terminalEvent"]["result_ref"] = json!(reference);
+    task["metadata"]["arbora"]["terminalEvent"]["result_ref"] = json!(reference);
     assert!(
         decode(&task, TaskState::Completed)
             .unwrap()
@@ -170,7 +170,7 @@ fn scope_digest_requires_exact_integer_bytes() {
         json!(vec![0.5; 32]),
     ] {
         let mut task = task();
-        task["metadata"]["graphOs"]["terminalEvent"]["scope"]["identity_digest"] = digest;
+        task["metadata"]["arbora"]["terminalEvent"]["scope"]["identity_digest"] = digest;
         assert!(decode(&task, TaskState::Completed).is_err());
     }
 }

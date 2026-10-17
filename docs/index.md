@@ -7,7 +7,7 @@ to an agent backend over dual protocols — AG-UI (SSE streaming) and ACP
 (JSON-RPC + SSE) — and renders live workflow activity, tool execution, and
 human-in-the-loop approvals in the terminal.
 
-Super Intelligence (SI) is the Graph OS project term for model-backed agents.
+Super Intelligence (SI) is the Arbora project term for model-backed agents.
 
 This site is the official documentation for the client: its architecture, configuration
 surface, durable session infrastructure, and the autonomous goal and multi-session

@@ -3,7 +3,7 @@
 | Requirement | Layer and fixture | Expected positive result | Required negative proof |
 |---|---|---|---|
 | TUI-RUNTIME-R001.1 | Unit command parser plus `httpx.MockTransport`; installed generated registry artifact | Known op and object params produce one versioned request with correct envelope | Empty ID, malformed JSON, array input, unknown op, missing registry file and digest mismatch make zero effect requests |
-| TUI-RUNTIME-R001.2 | Client transport with loopback and remote URLs, fake bearer | Verified caller header reaches remote GraphOS only over TLS | Remote HTTP, absent/invalid bearer, credential in exception/log/snapshot all fail |
+| TUI-RUNTIME-R001.2 | Client transport with loopback and remote URLs, fake bearer | Verified caller header reaches remote Arbora only over TLS | Remote HTTP, absent/invalid bearer, credential in exception/log/snapshot all fail |
 | TUI-RUNTIME-R001.3 | A2A fake server that issues a PLAN with binding and expiry | One `/confirm` resumes exactly the issued plan | Tampered op/input/digest/subject, expired plan and replay are rejected before any effect; server also rejects stale lease |
 | TUI-RUNTIME-R001.4 | Mock error envelope, timeout, disconnect and malformed JSON | Typed success renders and chat remains functional | Every failure renders an error, leaves session usable and never reports success |
 | TUI-RUNTIME-R001.5 | Pending A2A task with `input-required` and approval metadata | Pending request is displayed. No effect is asserted | `approvals.*`, fleet grant, missing signed exchange and wrong pending-call binding are refused. Enabling approval requires separate served receipt |
@@ -12,8 +12,8 @@
 
 ## Integration and acceptance receipts
 
-1. Build and install wheels from pinned public revisions of this TUI and GraphOS. Verify the generated operation registry is packaged, not only importable from a source checkout.
-2. Use a reproducible local GraphOS service fixture to prove discovery, authenticated invocation, PLAN confirmation, error envelope and read-only chat continuity. A contributor must be able to run this without an organization network.
+1. Build and install wheels from pinned public revisions of this TUI and Arbora. Verify the generated operation registry is packaged, not only importable from a source checkout.
+2. Use a reproducible local Arbora service fixture to prove discovery, authenticated invocation, PLAN confirmation, error envelope and read-only chat continuity. A contributor must be able to run this without an organization network.
 3. Run command, client and component tests, type/lint checks and package metadata checks. Run the CI matrix on supported Python versions. Capture exact public commit/check links in `status.json`.
 4. Separately prove the served human-to-WorkItem approval binding before enabling approval routes. A pending task display is not an approval receipt.
 5. Run configured CCCC, `jscpd` and Dupehound ecosystem checks if installed. They are currently absent from this repository's tracked configuration. Record that as an acceptance gap until thresholds and commands are published. Review KISS against the reuse table in `plan.md`.
@@ -36,12 +36,12 @@ No manual-only proof substitutes for the negative tests. If a live identity prov
 ## Planned run-surface acceptance
 
 These tests are planned, not execution receipts. Each test must bind its exact requirement ID.
-Each case must enter the production UI, existing client, and a served GraphOS operation fixture.
+Each case must enter the production UI, existing client, and a served Arbora operation fixture.
 A mocked widget value alone must not count as served evidence.
 
 | Requirement | Planned test | Positive served requirement | Negative served requirement |
 |---|---|---|---|
-| TUI-RUNTIME-R010.1 | `tests/test_run_inspector_contract.py::test_run_read_uses_graphos_operations` | A selected run must render through the served operation and existing client. | Absent registration, timeout or denial must display unavailable without direct engine calls. |
+| TUI-RUNTIME-R010.1 | `tests/test_run_inspector_contract.py::test_run_read_uses_arbora_operations` | A selected run must render through the served operation and existing client. | Absent registration, timeout or denial must display unavailable without direct engine calls. |
 | TUI-RUNTIME-R010.2 | `tests/test_run_inspector_contract.py::test_harness_config_shown` | A committed configuration must retain its reference and values through the client. | Missing or inaccessible configuration must not use defaults or the latest configuration. |
 | TUI-RUNTIME-R010.3 | `tests/test_run_inspector_contract.py::test_context_and_cost_shown` | Measured zero must render as zero; aggregate cost must retain its solved-task label. | Null values must display unavailable; zero-solved abstention must not render zero cost. |
 | TUI-RUNTIME-R010.4 | `tests/test_run_inspector_contract.py::test_plan_read_only` | A fresh matching snapshot must preserve item order, revision and AU statuses. | Expired, wrong-run, regressing or unavailable snapshots must reveal no items or edit controls. |
@@ -51,7 +51,7 @@ A mocked widget value alone must not count as served evidence.
 <!-- spec-definition-patch:r002-consumer-tests -->
 ## TUI-RUNTIME-R002 acceptance matrix
 
-The served acceptance uses the normal mode selector, public adapter, authenticated GraphOS reader and production TUI. Mocks may support unit tests. They cannot replace this path.
+The served acceptance uses the normal mode selector, public adapter, authenticated Arbora reader and production TUI. Mocks may support unit tests. They cannot replace this path.
 
 | ID | Positive case | Negative and boundary case | Evidence |
 |---|---|---|---|
@@ -95,7 +95,7 @@ submit. Test authentication expiry, revocation after success, cancellation
 before/after acknowledgement and reconnect during approval. Assert exact task/context/run bindings and zero
 automatic effect retries. A stale or denied snapshot clears protected values.
 Test Python and Rust against the same wire fixtures, then repeat through the
-served GraphOS entry point. A fake server pass is not served acceptance.
+served Arbora entry point. A fake server pass is not served acceptance.
 
 Broker qualification also checks socket/pipe permissions, impersonated
 principal, mixed tenants, changed policy epoch, bounded retention and a slow
@@ -104,14 +104,14 @@ sequences and resnapshot generation; no independent graph or MCP path is allowed
 
 ## OpenCode cutover evidence
 
-Start from working OpenCode skill access and GraphOS connectivity. Keep that
+Start from working OpenCode skill access and Arbora connectivity. Keep that
 installation available while testing the native terminal. In each client,
-discover and invoke the maintained development skill. Run two GraphOS-managed
+discover and invoke the maintained development skill. Run two Arbora-managed
 agents concurrently and stream both tasks. Cancel one without affecting the other.
 Disconnect and recover the surviving task with unchanged task/context/run IDs.
 Exercise approval denial, expired confirmation and identity mismatch. No client
 may grant an effect locally. Compare served results and refusal behavior at
-recorded client and GraphOS heads. Cutover requires operator acceptance after
+recorded client and Arbora heads. Cutover requires operator acceptance after
 parity and performance evidence. Verify OpenCode remains a working rollback path.
 
 ## Native discovery tests (R002.7)
@@ -122,7 +122,7 @@ the existing Agent Card route, caller header, invalid endpoint refusal,
 authentication errors, redirects, malformed cards and cancellation during a
 pending response. Renderer tests use the terminal buffer to verify refusal and
 unavailable task actions. The size-limit case checks bounded input. A Linux pseudo-terminal smoke passed discovery, refusal/retry, cancellation and
-terminal restoration. These fixtures are not a served GraphOS deployment receipt.
+terminal restoration. These fixtures are not a served Arbora deployment receipt.
 
 ## Native presentation acceptance remainder
 
@@ -133,11 +133,11 @@ TUI-RUNTIME-R008.2 remains pending. Test every supported theme, contrast, keyboa
 Native tests consume the same task, status and text artifact fixture as the
 Python normalizer. Assert three distinct IDs and preservation across valid events. Test missing task/context IDs, absent run without inference and each mismatched ID. Reject invalid status, artifact shapes and unknown kinds. Rejection must preserve the existing binding. Run the native
 correlation integration test and the Python shared-fixture test. These tests do
-not establish served GraphOS streaming or cutover acceptance.
+not establish served Arbora streaming or cutover acceptance.
 
 ## Native task view
 
-TUI-RUNTIME-R002.1.4 tests select an existing task with AGENT_TASK_ID. Display separate task, context and run IDs, with missing run labeled unavailable. A denied refresh clears prior values. Empty selection makes zero requests. Run the binary under a pseudo-terminal against the production GraphOS HTTP handlers and upstream test authority. Verify local cancellation and terminal restoration. This fixture does not qualify production identity or tenant isolation.
+TUI-RUNTIME-R002.1.4 tests select an existing task with AGENT_TASK_ID. Display separate task, context and run IDs, with missing run labeled unavailable. A denied refresh clears prior values. Empty selection makes zero requests. Run the binary under a pseudo-terminal against the production Arbora HTTP handlers and upstream test authority. Verify local cancellation and terminal restoration. This fixture does not qualify production identity or tenant isolation.
 
 ## Native snapshot transport
 
@@ -150,7 +150,7 @@ credential, fixed random request identity, returned task/context/run binding,
 refresh and cancellation. Invalid arguments cause zero requests. Denied
 credentials cause zero WorkItem admission. Lost acknowledgement or local abort
 must display an unknown outcome; refresh cannot submit again. A controlled
-storage port and the existing queue exercise the actual GraphOS admission and
+storage port and the existing queue exercise the actual Arbora admission and
 AU enqueue functions, including carrier verification. This does not prove
 native engine durability or worker completion. TUI-RUNTIME-R002.1.3.2 retains
 all original served chat, streaming, continuity and recovery acceptance.
@@ -162,7 +162,7 @@ request, matching task/context/run identity and the server canceled state. Deny
 a request and interrupt another after admission. Neither may report success.
 Local interruption must label the remote outcome unknown. A later r action may
 read state; it must not replay cancellation. Test confirmation dismissal and
-discovery mode with zero effect requests. Enter the real GraphOS HTTP handlers
+discovery mode with zero effect requests. Enter the real Arbora HTTP handlers
 and cancellation authority with a scripted work port. Record that boundary and
 its exclusions. This slice does not close session, streaming or cutover checks.
 
@@ -251,7 +251,7 @@ application with AGENT_LOG_FILE set. Observe zero pathname opens. Exercise
 old content. An absent source adds no client calls. These tests do not prove
 an authenticated host-log reader or served tenant isolation.
 
-- `TUI-RUNTIME-R002.10`: Test bounded HTTP receipts and mounted log rendering, denial clearing, cancellation and borrowed resources. Separate controlled transport tests from a real GraphOS sink fixture.
+- `TUI-RUNTIME-R002.10`: Test bounded HTTP receipts and mounted log rendering, denial clearing, cancellation and borrowed resources. Separate controlled transport tests from a real Arbora sink fixture.
 
 - `TUI-RUNTIME-R002.11`: Use loopback HTTP for authenticated reference/read, denial, expiry and response limits. Test view cancellation, literal rendering and bounded retention.
 

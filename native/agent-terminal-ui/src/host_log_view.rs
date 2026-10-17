@@ -1,6 +1,6 @@
 use crate::presentation::Viewport;
 use agent_terminal_ui_native::{
-    GraphOsClient,
+    ArboraClient,
     host_logs::{HostLogs, LogBatch, REFUSED, RETENTION_GAP},
 };
 use crossterm::event::KeyCode;
@@ -32,7 +32,7 @@ impl HostLogView {
     pub fn pending(&self) -> bool {
         self.request.is_some()
     }
-    pub fn open(&mut self, client: Arc<GraphOsClient>) {
+    pub fn open(&mut self, client: Arc<ArboraClient>) {
         self.close();
         self.open = true;
         self.status = "Reading authenticated host logs...";

@@ -1,12 +1,12 @@
 #!/usr/bin/python
 """Agent Client implementation for the terminal UI.
 
-Conversation turns use GraphOS's authenticated A2A JSON-RPC boundary at
+Conversation turns use Arbora's authenticated A2A JSON-RPC boundary at
 ``{base}/a2a``: ``message/stream`` admits one durable task and streams its
 state transitions as Server-Sent Events, ``tasks/resubscribe`` re-attaches to
 a task after a disconnect, and ``tasks/cancel`` cancels it. The conversation
 (session) identity is the A2A ``contextId`` this client mints; the server owns
-every task. Graph and operator capabilities use the GraphOS REST gateway.
+every task. Graph and operator capabilities use the Arbora REST gateway.
 """
 
 from __future__ import annotations
@@ -43,11 +43,11 @@ logger = logging.getLogger(__name__)
 #: un-prefixed routers (``/models``, ``/chats``, ``/tools``, ``/mcp/*``).
 GATEWAY_API_PREFIX = "/api"
 
-#: The GraphOS A2A JSON-RPC endpoint and its Agent Card.
+#: The Arbora A2A JSON-RPC endpoint and its Agent Card.
 A2A_PATH = "/a2a"
 AGENT_CARD_PATH = "/.well-known/agent-card.json"
 
-#: The typed Graph OS task a TUI mode asks for; Graph OS never routes free text.
+#: The typed Arbora task a TUI mode asks for; Arbora never routes free text.
 MODE_TASK_IRIS = {
     "ask": "eg:task/communicate",
     "plan": "eg:task/research",
@@ -60,15 +60,15 @@ _FAILED_STATES = frozenset({"failed", "rejected"})
 
 
 class A2ATransportError(RuntimeError):
-    """GraphOS answered a JSON-RPC request with an error object."""
+    """Arbora answered a JSON-RPC request with an error object."""
 
     def __init__(self, error: dict[str, Any]) -> None:
         super().__init__(str(error.get("message") or "A2A request failed"))
         self.code = error.get("code")
 
 
-class GraphOSOperationError(RuntimeError):
-    """An operation was refused by the versioned GraphOS API."""
+class ArboraOperationError(RuntimeError):
+    """An operation was refused by the versioned Arbora API."""
 
     def __init__(self, code: str, details: dict[str, Any] | None = None) -> None:
         super().__init__(code)
@@ -92,9 +92,9 @@ class _OperationTransport:
         try:
             payload = response.json()
         except ValueError as exc:
-            raise GraphOSOperationError("INVALID_ENVELOPE") from exc
+            raise ArboraOperationError("INVALID_ENVELOPE") from exc
         if not isinstance(payload, dict) or not isinstance(payload.get("ok"), bool):
-            raise GraphOSOperationError("INVALID_ENVELOPE")
+            raise ArboraOperationError("INVALID_ENVELOPE")
         if payload["ok"]:
             response.raise_for_status()
         return payload
@@ -119,10 +119,10 @@ def _frame_result(frame: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
-def _graph_os_metadata(result: dict[str, Any]) -> dict[str, Any]:
+def _arbora_metadata(result: dict[str, Any]) -> dict[str, Any]:
     metadata = result.get("metadata")
-    graph_os = metadata.get("graphOs") if isinstance(metadata, dict) else None
-    return graph_os if isinstance(graph_os, dict) else {}
+    arbora = metadata.get("arbora") if isinstance(metadata, dict) else None
+    return arbora if isinstance(arbora, dict) else {}
 
 
 def new_session_id() -> str:
@@ -169,7 +169,7 @@ def normalize_a2a_event(
         return _artifact_events(result, session_id)
     task_id = result.get("id") or result.get("taskId")
     state = str((result.get("status") or {}).get("state") or "")
-    run_id = _graph_os_metadata(result).get("runId")
+    run_id = _arbora_metadata(result).get("runId")
     common: dict[str, Any] = {"session_id": session_id, "task_id": task_id}
     if run_id:
         common["run_id"] = run_id
@@ -257,7 +257,7 @@ def _load_skill_entry(skill_dir: Path) -> dict[str, Any]:
 
 
 class AgentClient:
-    """The TUI's one GraphOS client: A2A for conversation, REST for the rest."""
+    """The TUI's one Arbora client: A2A for conversation, REST for the rest."""
 
     protocol = "a2a"
 
@@ -270,8 +270,8 @@ class AgentClient:
         """Initialize the client.
 
         Args:
-            base_url: The GraphOS base URL.
-            bearer_token: The caller's bearer credential. Remote GraphOS
+            base_url: The Arbora base URL.
+            bearer_token: The caller's bearer credential. Remote Arbora
                 endpoints require it for every A2A and gateway request.
         """
         if base_url != base_url.strip() or any(
@@ -281,7 +281,7 @@ class AgentClient:
             or character == "\\"
             for character in base_url
         ):
-            raise ValueError("invalid GraphOS endpoint")
+            raise ValueError("invalid Arbora endpoint")
         parsed = urlsplit(base_url)
         if (
             parsed.scheme not in {"http", "https"}
@@ -292,20 +292,20 @@ class AgentClient:
             or parsed.fragment
             or parsed.path not in {"", "/"}
         ):
-            raise ValueError("invalid GraphOS endpoint")
+            raise ValueError("invalid Arbora endpoint")
         try:
             port = parsed.port
         except ValueError as exc:
-            raise ValueError("invalid GraphOS endpoint") from exc
+            raise ValueError("invalid Arbora endpoint") from exc
         if port == 0:
-            raise ValueError("invalid GraphOS endpoint")
+            raise ValueError("invalid Arbora endpoint")
         is_loopback = parsed.hostname.lower().rstrip(".") in {
             "localhost",
             "127.0.0.1",
             "::1",
         }
         if parsed.scheme == "http" and not is_loopback:
-            raise ValueError("remote GraphOS endpoint requires TLS")
+            raise ValueError("remote Arbora endpoint requires TLS")
         if bearer_token is not None and (
             not bearer_token
             or any(
@@ -315,7 +315,7 @@ class AgentClient:
         ):
             raise ValueError("invalid caller credential")
         if not is_loopback and bearer_token is None:
-            raise ValueError("remote GraphOS endpoint requires caller credential")
+            raise ValueError("remote Arbora endpoint requires caller credential")
         self.base_url: str = base_url.rstrip("/")
         self.a2a_url = f"{self.base_url}{A2A_PATH}"
         self._has_caller_credential = bearer_token is not None
@@ -428,7 +428,7 @@ class AgentClient:
         self._pending_plans.pop(str(task_id), None)
         message = status.get("message")
         metadata = message.get("metadata") if isinstance(message, dict) else None
-        plan = metadata.get("graphOsPlan") if isinstance(metadata, dict) else None
+        plan = metadata.get("arboraPlan") if isinstance(metadata, dict) else None
         if (
             isinstance(plan, dict)
             and isinstance(plan.get("plan_ref"), str)
@@ -447,7 +447,7 @@ class AgentClient:
         plan_ref: str | None = None,
         idempotency_key: str | None = None,
     ) -> Any:
-        """Call one versioned operation using the shared GraphOS envelope."""
+        """Call one versioned operation using the shared Arbora envelope."""
         if (
             not isinstance(op, str)
             or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", op) is None
@@ -456,41 +456,41 @@ class AgentClient:
         ):
             raise ValueError("operation id and object params are required")
         if _is_approval_operation(op):
-            raise GraphOSOperationError("APPROVAL_UNAVAILABLE")
+            raise ArboraOperationError("APPROVAL_UNAVAILABLE")
         if sys.version_info < (3, 12):
-            raise GraphOSOperationError("CLIENT_UNAVAILABLE")
+            raise ArboraOperationError("CLIENT_UNAVAILABLE")
         try:
-            from graph_os.client._generated_models import schema_for
-            from graph_os.client.invoke import invoke
+            from arbora.client._generated_models import schema_for
+            from arbora.client.invoke import invoke
         except ImportError as exc:
-            raise GraphOSOperationError("CLIENT_UNAVAILABLE") from exc
+            raise ArboraOperationError("CLIENT_UNAVAILABLE") from exc
         try:
             schema_for(op)
         except KeyError as exc:
-            raise GraphOSOperationError("UNKNOWN_OP") from exc
+            raise ArboraOperationError("UNKNOWN_OP") from exc
         except FileNotFoundError as exc:
-            raise GraphOSOperationError("CLIENT_UNAVAILABLE") from exc
+            raise ArboraOperationError("CLIENT_UNAVAILABLE") from exc
         except RuntimeError as exc:
-            raise GraphOSOperationError("REGISTRY_MISMATCH") from exc
+            raise ArboraOperationError("REGISTRY_MISMATCH") from exc
         headers = {"Idempotency-Key": idempotency_key or uuid.uuid4().hex}
         if plan_ref:
-            headers["GraphOS-Plan-Ref"] = plan_ref
+            headers["Arbora-Plan-Ref"] = plan_ref
         try:
             payload = await invoke(_OperationTransport(self, headers), op, params)
         except RuntimeError as exc:
-            if str(exc) != "GraphOS registry digest mismatch":
+            if str(exc) != "Arbora registry digest mismatch":
                 raise
-            raise GraphOSOperationError("REGISTRY_MISMATCH") from exc
+            raise ArboraOperationError("REGISTRY_MISMATCH") from exc
         if not payload["ok"]:
             error = payload.get("error")
             code = error.get("code") if isinstance(error, dict) else None
             details = error.get("details") if isinstance(error, dict) else None
-            raise GraphOSOperationError(
+            raise ArboraOperationError(
                 code if isinstance(code, str) else "UNKNOWN",
                 details if isinstance(details, dict) else None,
             )
         if "result" not in payload:
-            raise GraphOSOperationError("INVALID_ENVELOPE")
+            raise ArboraOperationError("INVALID_ENVELOPE")
         return payload.get("result")
 
     async def confirm_plan(
@@ -505,10 +505,10 @@ class AgentClient:
         if not plan_ref or not op or not isinstance(params, dict):
             raise ValueError("complete plan binding is required")
         if _is_approval_operation(op):
-            raise GraphOSOperationError("APPROVAL_UNAVAILABLE")
+            raise ArboraOperationError("APPROVAL_UNAVAILABLE")
         if not self._has_caller_credential:
-            raise GraphOSOperationError("CALLER_CREDENTIAL_REQUIRED")
-        raise GraphOSOperationError("APPROVAL_UNAVAILABLE")
+            raise ArboraOperationError("CALLER_CREDENTIAL_REQUIRED")
+        raise ArboraOperationError("APPROVAL_UNAVAILABLE")
 
     async def stream(
         self,
@@ -520,7 +520,7 @@ class AgentClient:
     ) -> AsyncGenerator[dict[str, Any], None]:
         """Run one conversation turn as a streamed A2A task.
 
-        ``mode_id`` selects the typed task Graph OS routes on
+        ``mode_id`` selects the typed task Arbora routes on
         (:data:`MODE_TASK_IRIS`; unknown modes use ``ask``); routing then selects
         the authorized agent. ``model`` is not part of the A2A contract and is
         not sent. Only text parts are carried.
@@ -534,7 +534,7 @@ class AgentClient:
         if any((part or {}).get("type", "text") != "text" for part in parts or []):
             yield {
                 "type": "error",
-                "message": "only text parts are supported by the GraphOS A2A transport",
+                "message": "only text parts are supported by the Arbora A2A transport",
                 "session_id": session_id,
             }
             return
@@ -545,7 +545,7 @@ class AgentClient:
             "messageId": uuid.uuid4().hex,
             "contextId": session_id,
             "metadata": {
-                "graphOsTaskIris": [
+                "arboraTaskIris": [
                     MODE_TASK_IRIS.get(mode_id or "ask", MODE_TASK_IRIS["ask"])
                 ]
             },
@@ -631,7 +631,7 @@ class AgentClient:
                 )
             except (
                 A2ATransportError,
-                GraphOSOperationError,
+                ArboraOperationError,
                 httpx.HTTPError,
                 ValueError,
             ) as exc:
@@ -682,7 +682,7 @@ class AgentClient:
         return resp.text
 
     async def get_metadata(self) -> dict[str, Any]:
-        """Fetch the GraphOS Agent Card for the ``/a2a`` endpoint.
+        """Fetch the Arbora Agent Card for the ``/a2a`` endpoint.
 
         ``GET /.well-known/agent-card.json``.
         """
@@ -768,7 +768,7 @@ class AgentClient:
     ) -> CapabilityInvocation:
         """Execute or resume through the gateway-owned governance boundary."""
         if approval_id is not None:
-            raise GraphOSOperationError("APPROVAL_UNAVAILABLE")
+            raise ArboraOperationError("APPROVAL_UNAVAILABLE")
         encoded = quote(capability_id, safe="")
         payload: dict[str, Any] = {"action": action, "inputs": inputs}
         payload.update(
@@ -1080,7 +1080,7 @@ class AgentClient:
         if decision not in {"approved", "denied"}:
             msg = "decision must be 'approved' or 'denied'"
             raise ValueError(msg)
-        raise GraphOSOperationError("APPROVAL_UNAVAILABLE")
+        raise ArboraOperationError("APPROVAL_UNAVAILABLE")
 
     async def list_graph_nodes(
         self, node_type: str | None = None

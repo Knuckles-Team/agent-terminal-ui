@@ -18,7 +18,7 @@ from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Table
 
-from agent_terminal_ui.client import GraphOSOperationError
+from agent_terminal_ui.client import ArboraOperationError
 from agent_terminal_ui.tui.exit_confirm_screen import ExitConfirmScreen
 
 logger = logging.getLogger(__name__)
@@ -541,7 +541,7 @@ class CommandProcessor:
         )
 
     async def cmd_op(self, args: str) -> None:
-        """Invoke a GraphOS operation: /op <op.id> <JSON object>."""
+        """Invoke an Arbora operation: /op <op.id> <JSON object>."""
         op, _, raw = args.strip().partition(" ")
         try:
             params = json.loads(raw) if raw.strip() else {}
@@ -559,7 +559,7 @@ class CommandProcessor:
         conversation = self.app.query_one("Conversation")
         try:
             result = await self.app.agent_client.invoke_op(op, params)
-        except GraphOSOperationError as exc:
+        except ArboraOperationError as exc:
             if exc.code == "CONFIRMATION_REQUIRED":
                 plan_ref = exc.details.get("plan_ref")
                 if isinstance(plan_ref, str) and plan_ref:
@@ -583,7 +583,7 @@ class CommandProcessor:
             result = await self.app.agent_client.invoke_op(
                 op, params, plan_ref=plan_ref
             )
-        except GraphOSOperationError as exc:
+        except ArboraOperationError as exc:
             await conversation.add_info(f"[red]Confirmation refused: {exc.code}[/red]")
             return
         await conversation.add_info(json.dumps(result, indent=2, default=str))

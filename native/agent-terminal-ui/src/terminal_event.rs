@@ -78,7 +78,7 @@ impl TerminalEvent {
         binding: &TaskCorrelation,
         state: TaskState,
     ) -> Result<Self, &'static str> {
-        let Some(value) = task.pointer("/metadata/graphOs/terminalEvent") else {
+        let Some(value) = task.pointer("/metadata/arbora/terminalEvent") else {
             return Ok(Self::ProducerUnavailable);
         };
         if value.to_string().len() > 16_384 {

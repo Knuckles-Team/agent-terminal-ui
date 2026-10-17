@@ -1,5 +1,5 @@
 use crate::{
-    GraphOsClient, MAX_RESPONSE_BYTES, TaskSnapshot, correlation::TaskCorrelation,
+    ArboraClient, MAX_RESPONSE_BYTES, TaskSnapshot, correlation::TaskCorrelation,
     parse_task_snapshot,
 };
 use std::time::Duration;
@@ -15,15 +15,15 @@ impl ReadFailure {
     pub fn message(self) -> &'static str {
         match self {
             Self::Recoverable => {
-                "GraphOS read interrupted. Recovery exhausted; press r to retry the read."
+                "Arbora read interrupted. Recovery exhausted; press r to retry the read."
             }
-            Self::Refused => "GraphOS task read refused or unavailable",
+            Self::Refused => "Arbora task read refused or unavailable",
             Self::Invalid(message) => message,
         }
     }
 }
 
-impl GraphOsClient {
+impl ArboraClient {
     pub async fn read_task(
         &self,
         task_id: &str,
@@ -83,17 +83,17 @@ impl GraphOsClient {
         {
             if chunk.len() > MAX_RESPONSE_BYTES.saturating_sub(bytes.len()) {
                 return Err(ReadFailure::Invalid(
-                    "GraphOS task snapshot exceeds size limit",
+                    "Arbora task snapshot exceeds size limit",
                 ));
             }
             bytes.extend_from_slice(&chunk);
         }
         let envelope: serde_json::Value = serde_json::from_slice(&bytes)
-            .map_err(|_| ReadFailure::Invalid("Invalid GraphOS task response"))?;
+            .map_err(|_| ReadFailure::Invalid("Invalid Arbora task response"))?;
         if envelope.get("jsonrpc").and_then(|v| v.as_str()) != Some("2.0")
             || envelope.get("id").and_then(|v| v.as_str()) != Some("task-snapshot")
         {
-            return Err(ReadFailure::Invalid("Invalid GraphOS task response"));
+            return Err(ReadFailure::Invalid("Invalid Arbora task response"));
         }
         if envelope.get("error").is_some() {
             return Err(ReadFailure::Refused);

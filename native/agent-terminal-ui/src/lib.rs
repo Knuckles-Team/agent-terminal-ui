@@ -45,21 +45,21 @@ pub struct TaskSnapshot {
     pub terminal_event: terminal_event::TerminalEvent,
 }
 
-pub struct GraphOsClient {
+pub struct ArboraClient {
     http: Client,
     card_url: Url,
     authenticated: bool,
 }
 
-impl GraphOsClient {
+impl ArboraClient {
     pub fn new(endpoint: &str, token: Option<&str>) -> Result<Self, &'static str> {
         if endpoint
             .chars()
             .any(|c| c.is_whitespace() || c.is_control() || c == '\\')
         {
-            return Err("Invalid GraphOS endpoint");
+            return Err("Invalid Arbora endpoint");
         }
-        let mut url = Url::parse(endpoint).map_err(|_| "Invalid GraphOS endpoint")?;
+        let mut url = Url::parse(endpoint).map_err(|_| "Invalid Arbora endpoint")?;
         if !matches!(url.scheme(), "http" | "https")
             || url.host_str().is_none()
             || !url.username().is_empty()
@@ -69,14 +69,14 @@ impl GraphOsClient {
             || url.path() != "/"
             || url.port() == Some(0)
         {
-            return Err("Invalid GraphOS endpoint");
+            return Err("Invalid Arbora endpoint");
         }
         let local = matches!(url.host_str(), Some("localhost" | "127.0.0.1" | "[::1]"));
         if !local && url.scheme() != "https" {
-            return Err("Remote GraphOS requires TLS");
+            return Err("Remote Arbora requires TLS");
         }
         if !local && token.is_none() {
-            return Err("Remote GraphOS requires a caller credential");
+            return Err("Remote Arbora requires a caller credential");
         }
         let mut headers = header::HeaderMap::new();
         if let Some(token) = token {
@@ -95,7 +95,7 @@ impl GraphOsClient {
             .retry(reqwest::retry::never())
             .timeout(Duration::from_secs(10))
             .build()
-            .map_err(|_| "Cannot initialize GraphOS transport")?;
+            .map_err(|_| "Cannot initialize Arbora transport")?;
         Ok(Self {
             http,
             card_url: url,
@@ -173,15 +173,15 @@ impl GraphOsClient {
             }))
             .send()
             .await
-            .map_err(|_| "GraphOS cancellation outcome unknown")?;
+            .map_err(|_| "Arbora cancellation outcome unknown")?;
         if !response.status().is_success() {
-            return Err("GraphOS cancellation refused or unavailable");
+            return Err("Arbora cancellation refused or unavailable");
         }
         let bytes = read_task_response(response).await?;
         let task = parse_task_snapshot(binding.task_id(), "task-cancel", &bytes)?;
         binding.validate_binding(&task.correlation)?;
         if task.state != TaskState::Canceled {
-            return Err("GraphOS cancellation not acknowledged");
+            return Err("Arbora cancellation not acknowledged");
         }
         Ok(TaskSnapshot {
             correlation: binding.clone(),
@@ -196,28 +196,28 @@ impl GraphOsClient {
             .get(self.card_url.clone())
             .send()
             .await
-            .map_err(|_| "GraphOS discovery failed or timed out")?;
+            .map_err(|_| "Arbora discovery failed or timed out")?;
         if !response.status().is_success() {
-            return Err("GraphOS discovery refused or unavailable");
+            return Err("Arbora discovery refused or unavailable");
         }
         let mut bytes = Vec::new();
         while let Some(chunk) = response
             .chunk()
             .await
-            .map_err(|_| "GraphOS response interrupted")?
+            .map_err(|_| "Arbora response interrupted")?
         {
             if chunk.len() > MAX_RESPONSE_BYTES.saturating_sub(bytes.len()) {
-                return Err("GraphOS Agent Card exceeds size limit");
+                return Err("Arbora Agent Card exceeds size limit");
             }
             bytes.extend_from_slice(&chunk);
         }
         let card: serde_json::Value =
-            serde_json::from_slice(&bytes).map_err(|_| "Invalid GraphOS Agent Card")?;
+            serde_json::from_slice(&bytes).map_err(|_| "Invalid Arbora Agent Card")?;
         let name = card
             .get("name")
             .and_then(|v| v.as_str())
             .filter(|name| !name.trim().is_empty())
-            .ok_or("GraphOS Agent Card has no name")?;
+            .ok_or("Arbora Agent Card has no name")?;
         Ok(name.chars().filter(|c| !c.is_control()).take(80).collect())
     }
 }
@@ -227,10 +227,10 @@ async fn read_task_response(mut response: reqwest::Response) -> Result<Vec<u8>, 
     while let Some(chunk) = response
         .chunk()
         .await
-        .map_err(|_| "GraphOS response interrupted")?
+        .map_err(|_| "Arbora response interrupted")?
     {
         if chunk.len() > MAX_RESPONSE_BYTES.saturating_sub(bytes.len()) {
-            return Err("GraphOS task snapshot exceeds size limit");
+            return Err("Arbora task snapshot exceeds size limit");
         }
         bytes.extend_from_slice(&chunk);
     }
@@ -251,19 +251,19 @@ fn parse_task_snapshot(
 
 fn parse_returned_task(request_id: &str, bytes: &[u8]) -> Result<TaskSnapshot, &'static str> {
     let envelope: serde_json::Value =
-        serde_json::from_slice(bytes).map_err(|_| "Invalid GraphOS task response")?;
+        serde_json::from_slice(bytes).map_err(|_| "Invalid Arbora task response")?;
     if envelope.get("jsonrpc").and_then(|v| v.as_str()) != Some("2.0")
         || envelope.get("id").and_then(|v| v.as_str()) != Some(request_id)
         || envelope.get("error").is_some()
     {
-        return Err("Invalid or refused GraphOS task response");
+        return Err("Invalid or refused Arbora task response");
     }
     let task = envelope
         .get("result")
-        .ok_or("Missing GraphOS task snapshot")?;
+        .ok_or("Missing Arbora task snapshot")?;
     let correlation = TaskCorrelation::from_task(task)?;
     let TaskEvent::Status { state, .. } = correlation.validate(task)? else {
-        return Err("Invalid GraphOS task snapshot");
+        return Err("Invalid Arbora task snapshot");
     };
     let terminal_event = if request_id == "task-snapshot" {
         terminal_event::TerminalEvent::from_task(task, &correlation, state)?

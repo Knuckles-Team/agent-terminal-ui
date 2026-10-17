@@ -223,7 +223,7 @@ def _method_references_backend_route(name: str, public: set[str]) -> bool | None
             isinstance(refusal, ast.Raise)
             and isinstance(refusal.exc, ast.Call)
             and isinstance(refusal.exc.func, ast.Name)
-            and refusal.exc.func.id == "GraphOSOperationError"
+            and refusal.exc.func.id == "ArboraOperationError"
             and len(refusal.exc.args) == 1
             and isinstance(refusal.exc.args[0], ast.Constant)
             and refusal.exc.args[0].value == "APPROVAL_UNAVAILABLE"

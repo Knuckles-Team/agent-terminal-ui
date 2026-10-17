@@ -115,13 +115,13 @@ Custom pricing can be set via `tracker.set_pricing(model, input, output, cached)
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `AGENT_URL` | `http://localhost:8000` | GraphOS base URL for A2A chat and REST operations. |
-| `AGENT_BEARER_TOKEN` | unset | Caller credential for GraphOS; required for remote endpoints. |
+| `AGENT_URL` | `http://localhost:8000` | Arbora base URL for A2A chat and REST operations. |
+| `AGENT_BEARER_TOKEN` | unset | Caller credential for Arbora; required for remote endpoints. |
 | `AGENT_THEME` | `tokyo-night` | Startup theme (any Textual built-in theme name). |
 | `TEXTUAL_ANIMATIONS` | `full` | Set to `none` to disable entrance animations (reduced motion). |
 | `AGENT_UTILITIES_DATA_DIR` | platform default | Override the directory for the SQLite session store. |
 
-The `/op` command needs Python 3.12 or newer and the GraphOS distribution
+The `/op` command needs Python 3.12 or newer and the Arbora distribution
 containing the generated client. Without it, `/op` refuses with
 `CLIENT_UNAVAILABLE`; A2A chat remains available on Python 3.11.
 

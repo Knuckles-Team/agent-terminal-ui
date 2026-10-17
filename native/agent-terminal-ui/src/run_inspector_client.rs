@@ -1,9 +1,9 @@
-//! Caller-authenticated GraphOS run reads; no local run authority or counters.
+//! Caller-authenticated Arbora run reads; no local run authority or counters.
 use crate::run_inspector::{
     AppliedConfig, PlanItem, PlanRefusal, PlanSnapshot, PlanStatus, PlanValidator, ReadRefusal,
     RunInspector, RunProjection,
 };
-use crate::{GraphOsClient, read_task_response};
+use crate::{ArboraClient, read_task_response};
 use serde_json::Value;
 use std::time::{Duration, Instant};
 use time::{OffsetDateTime, UtcOffset, format_description::well_known::Rfc3339};
@@ -72,7 +72,7 @@ impl PlanValidator for SnapshotValidity {
     }
 }
 
-impl GraphOsClient {
+impl ArboraClient {
     /// Read only after this caller's registry advertises the operation.
     pub async fn get_run(&self, run_id: &str) -> Result<RunRead, ReadRefusal> {
         if !self.authenticated {
@@ -452,7 +452,7 @@ mod transport_tests {
             (200, body),
         ])
         .await;
-        let client = GraphOsClient::new(&endpoint, Some("fixture-credential")).unwrap();
+        let client = ArboraClient::new(&endpoint, Some("fixture-credential")).unwrap();
         let mut inspector = RunInspector::new("r".into());
         inspector
             .accept_read(client.get_run("r").await, Instant::now())
@@ -476,7 +476,7 @@ mod transport_tests {
     #[tokio::test]
     async fn absent_operation_does_not_dispatch_and_changed_digest_refuses() {
         let (endpoint, task) = server(vec![(200, registry(serde_json::json!([])))]).await;
-        let client = GraphOsClient::new(&endpoint, Some("fixture-credential")).unwrap();
+        let client = ArboraClient::new(&endpoint, Some("fixture-credential")).unwrap();
         assert!(matches!(
             client.get_run("r").await,
             Err(ReadRefusal::Unavailable)
@@ -488,7 +488,7 @@ mod transport_tests {
             (200, body),
         ])
         .await;
-        let client = GraphOsClient::new(&endpoint, Some("fixture-credential")).unwrap();
+        let client = ArboraClient::new(&endpoint, Some("fixture-credential")).unwrap();
         assert!(matches!(
             client.get_run("r").await,
             Err(ReadRefusal::Unavailable)

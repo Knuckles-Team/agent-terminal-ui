@@ -27,7 +27,7 @@ jobs:
       config: .pre-commit-config.yaml
       setup-command: |
         uv sync --python 3.12 --frozen --extra test
-        uv pip install --no-deps "graph-os @ git+https://github.com/Knuckles-Team/graph-os.git@5c32fc854c2275959ea4a00e2d16a082d8720fa6"
+        uv pip install --no-deps "arbora @ git+https://github.com/Knuckles-Team/arbora.git@5c32fc854c2275959ea4a00e2d16a082d8720fa6"
       rust: true
       # sibling-checkout hooks are unavailable on a hosted runner; pytest is replaced by the shared affected-tests step
       skip-hooks: okf-no-legacy-concepts,lane-guard,dependency-readiness,pytest

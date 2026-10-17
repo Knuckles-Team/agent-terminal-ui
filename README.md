@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  <b>The terminal frontend for Graph OS agent sessions.</b><br>
-  <sub>Textual-based TUI connecting to a Graph OS-served agent backend through a normalized ACP transport adapter.</sub>
+  <b>The terminal frontend for Arbora agent sessions.</b><br>
+  <sub>Textual-based TUI connecting to an Arbora-served agent backend through a normalized ACP transport adapter.</sub>
 </p>
 
 [![GitHub Repo stars](https://img.shields.io/github/stars/Knuckles-Team/agent-terminal-ui)](https://github.com/Knuckles-Team/agent-terminal-ui/stargazers)
@@ -33,8 +33,8 @@
 ## Overview
 
 Agent Terminal UI is a [Textual](https://textual.textualize.io/)-based terminal interface
-for interacting with agents served by [Graph OS](https://knuckles-team.github.io/graph-os/).
-It connects to a Graph OS-hosted `agent-utilities` backend through a normalized transport
+for interacting with agents served by [Arbora](https://knuckles-team.github.io/arbora/).
+It connects to an Arbora-hosted `agent-utilities` backend through a normalized transport
 adapter; the currently shipped adapter uses ACP (JSON-RPC + SSE).
 
 > [!NOTE]
@@ -47,7 +47,7 @@ adapter; the currently shipped adapter uses ACP (JSON-RPC + SSE).
 - Workspace snapshots and rollback, reasoning-effort tiers, and multi-tier context compaction.
 - A durable background task queue, lifecycle hooks, desktop notifications, and a governed
   tool-approval and workspace-trust model.
-- A live capability palette and run Mission Control over the Graph OS gateway catalog.
+- A live capability palette and run Mission Control over the Arbora gateway catalog.
 
 The full command, keyboard shortcut, and module reference lives in
 [Features](#features) below and in the
@@ -234,7 +234,7 @@ The full command, keyboard shortcut, and module reference lives in
 
 ## Usage
 
-Start the Graph OS-hosted `agent-utilities` backend server, then launch the TUI:
+Start the Arbora-hosted `agent-utilities` backend server, then launch the TUI:
 
 ```bash
 agent-terminal-ui
@@ -307,11 +307,11 @@ Example: If you type "fix the bug in app.py" followed by "and add a test for it"
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `AGENT_URL` | `http://localhost:8000` | GraphOS base URL for A2A chat and REST operations |
-| `AGENT_BEARER_TOKEN` | unset | Caller credential for GraphOS; required for remote endpoints |
+| `AGENT_URL` | `http://localhost:8000` | Arbora base URL for A2A chat and REST operations |
+| `AGENT_BEARER_TOKEN` | unset | Caller credential for Arbora; required for remote endpoints |
 | `AGENT_THEME` | `tokyo-night` | Startup theme (any Textual built-in theme name) |
 
-The `/op` command requires Python 3.12 or newer and an installed GraphOS
+The `/op` command requires Python 3.12 or newer and an installed Arbora
 distribution containing its generated client. Chat remains available on Python
 3.11. Without the generated client, `/op` refuses with `CLIENT_UNAVAILABLE`.
 

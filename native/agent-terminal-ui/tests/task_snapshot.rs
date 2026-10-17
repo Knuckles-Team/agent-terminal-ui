@@ -1,4 +1,4 @@
-use agent_terminal_ui_native::{GraphOsClient, correlation::TaskState};
+use agent_terminal_ui_native::{ArboraClient, correlation::TaskState};
 use serde_json::{Value, json};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
@@ -49,7 +49,7 @@ fn snapshot() -> Value {
             "kind": "task",
             "id": "task-1",
             "contextId": "context-2",
-            "metadata": {"graphOs": {"runId": "run-3"}},
+            "metadata": {"arbora": {"runId": "run-3"}},
             "status": {"state": "working"}
         }
     })
@@ -67,7 +67,7 @@ async fn reads_task_snapshot_over_authenticated_json_rpc() {
                 .remove("metadata");
         }
         let (url, server) = serve("200 OK", &response.to_string()).await;
-        let task = GraphOsClient::new(&url, Some("fixture-token"))
+        let task = ArboraClient::new(&url, Some("fixture-token"))
             .unwrap()
             .get_task("task-1")
             .await
@@ -100,7 +100,7 @@ async fn reads_task_snapshot_over_authenticated_json_rpc() {
 async fn rejects_invalid_task_ids_before_network() {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let client =
-        GraphOsClient::new(&format!("http://{}", listener.local_addr().unwrap()), None).unwrap();
+        ArboraClient::new(&format!("http://{}", listener.local_addr().unwrap()), None).unwrap();
     for task_id in ["", " ", "task\n1", &"x".repeat(81)] {
         assert_eq!(
             client.get_task(task_id).await.unwrap_err(),
@@ -126,7 +126,7 @@ async fn rejects_malformed_mismatched_and_error_envelopes() {
         ("/result/contextId", json!("")),
         ("/result/kind", json!("status-update")),
         ("/result/status/state", json!("unknown")),
-        ("/result/metadata/graphOs/runId", json!(null)),
+        ("/result/metadata/arbora/runId", json!(null)),
     ] {
         let mut response = snapshot();
         *response.pointer_mut(path).unwrap() = value;
@@ -140,7 +140,7 @@ async fn rejects_malformed_mismatched_and_error_envelopes() {
     responses.push(response);
     for response in responses {
         let (url, server) = serve("200 OK", &response.to_string()).await;
-        let error = GraphOsClient::new(&url, None)
+        let error = ArboraClient::new(&url, None)
             .unwrap()
             .get_task("task-1")
             .await
@@ -162,14 +162,14 @@ async fn rejects_http_failure_redirect_unknown_task_and_invalid_json() {
         "200 OK",
     ] {
         let (url, server) = serve(status, "secret-server-detail").await;
-        let error = GraphOsClient::new(&url, None)
+        let error = ArboraClient::new(&url, None)
             .unwrap()
             .get_task("task-1")
             .await
             .unwrap_err();
         assert!(!error.contains("secret-server-detail"));
         if status != "200 OK" {
-            assert_eq!(error, "GraphOS task read refused or unavailable");
+            assert_eq!(error, "Arbora task read refused or unavailable");
         }
         server.await.unwrap();
     }
@@ -180,12 +180,12 @@ async fn rejects_http_failure_redirect_unknown_task_and_invalid_json() {
 async fn bounds_snapshot_response_size() {
     let (url, server) = serve("200 OK", &"x".repeat(1024 * 1024 + 1)).await;
     assert_eq!(
-        GraphOsClient::new(&url, None)
+        ArboraClient::new(&url, None)
             .unwrap()
             .get_task("task-1")
             .await
             .unwrap_err(),
-        "GraphOS task snapshot exceeds size limit"
+        "Arbora task snapshot exceeds size limit"
     );
     server.await.unwrap();
 }
@@ -195,14 +195,14 @@ async fn bounds_snapshot_response_size() {
 async fn point_read_preserves_identity_and_rejects_retained_binding_mismatch() {
     let mut response = snapshot();
     response["result"]["status"]["state"] = json!("completed");
-    response["result"]["metadata"]["graphOs"]["terminalEvent"] = json!({
+    response["result"]["metadata"]["arbora"]["terminalEvent"] = json!({
         "status":"available", "tenant":"tenant", "scope":{"tenant":"tenant",
         "scope":{"kind":"graph","graph":"graph"},"incarnation_id":"incarnation","identity_digest":vec![170;32]},
         "batch_id":"batch", "commit_sequence":7,"ordinal":0,"run_id":"run-3","kind":"outcome",
         "outcome":"succeeded","result_ref":null,"payload_digest":"b".repeat(64)
     });
     let (url, server) = serve("200 OK", &response.to_string()).await;
-    let task = GraphOsClient::new(&url, Some("fixture-token"))
+    let task = ArboraClient::new(&url, Some("fixture-token"))
         .unwrap()
         .get_task("task-1")
         .await
@@ -210,7 +210,7 @@ async fn point_read_preserves_identity_and_rejects_retained_binding_mismatch() {
     assert!(task.terminal_event.text().contains("Commit sequence: 7"));
     assert!(server.await.unwrap().contains("includeCommittedEvent"));
     let mut unbound = response["result"].clone();
-    unbound["metadata"]["graphOs"]
+    unbound["metadata"]["arbora"]
         .as_object_mut()
         .unwrap()
         .remove("runId");
@@ -218,7 +218,7 @@ async fn point_read_preserves_identity_and_rejects_retained_binding_mismatch() {
         agent_terminal_ui_native::correlation::TaskCorrelation::from_task(&unbound).unwrap();
     let (url, server) = serve("200 OK", &response.to_string()).await;
     assert!(
-        GraphOsClient::new(&url, Some("fixture-token"))
+        ArboraClient::new(&url, Some("fixture-token"))
             .unwrap()
             .refresh_task(&binding)
             .await

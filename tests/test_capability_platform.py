@@ -32,7 +32,7 @@ from agent_terminal_ui.capabilities import (
 from agent_terminal_ui.capability_provider import CapabilityCommandProvider
 from agent_terminal_ui.client import (
     AgentClient,
-    GraphOSOperationError,
+    ArboraOperationError,
     normalize_a2a_event,
 )
 from agent_terminal_ui.commands import CommandProcessor
@@ -491,7 +491,7 @@ async def test_client_consumes_live_capability_and_run_contracts() -> None:
             action=path_action.id,
             session_id="session-stable-1",
         )
-        with pytest.raises(GraphOSOperationError, match="APPROVAL_UNAVAILABLE"):
+        with pytest.raises(ArboraOperationError, match="APPROVAL_UNAVAILABLE"):
             await client.invoke_capability(
                 "graph_mine",
                 path_inputs,
@@ -545,7 +545,7 @@ def test_normalized_stream_event_preserves_canonical_run_identity() -> None:
             "kind": "status-update",
             "taskId": "task-1",
             "status": {"state": "working"},
-            "metadata": {"graphOs": {"runId": "run-execution-2"}},
+            "metadata": {"arbora": {"runId": "run-execution-2"}},
         },
         "session-stable-1",
     )

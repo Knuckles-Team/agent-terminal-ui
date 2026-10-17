@@ -2,15 +2,15 @@
 
 ## Existing wiring and architecture
 
-At the current public main revision, `CommandProcessor` in `agent_terminal_ui/commands.py` owns slash-command dispatch and the `/capabilities` and `/run` commands. `AgentClient` in `agent_terminal_ui/client.py` owns HTTP transport, session events and the older `/api/capabilities/*` and `/api/runs/*` routes. `agent_terminal_ui/app.py`, `screens/main.py`, `tui/input_text_area.py`, `tui/capability_palette.py` and `tui/run_inspector.py` are presentation consumers. This is the path to extend; no parallel command router, HTTP client or local GraphOS gateway should be created.
+At the current public main revision, `CommandProcessor` in `agent_terminal_ui/commands.py` owns slash-command dispatch and the `/capabilities` and `/run` commands. `AgentClient` in `agent_terminal_ui/client.py` owns HTTP transport, session events and the older `/api/capabilities/*` and `/api/runs/*` routes. `agent_terminal_ui/app.py`, `screens/main.py`, `tui/input_text_area.py`, `tui/capability_palette.py` and `tui/run_inspector.py` are presentation consumers. This is the path to extend; no parallel command router, HTTP client or local Arbora gateway should be created.
 
-At main 5ac5e3fec4d590f167d2c6bd694683dbd8950c26, the TUI-RUNTIME-R001 client implementation is present. Its unit tests do not establish served acceptance. It implements `/op`, `/confirm`, a lazy generated-client import and fail-closed approval behavior. Review and compose its exact changes rather than rebuilding the same transport from scratch. The current main package targets Python `>=3.11,<3.15`; GraphOS generated-client compatibility must be handled without raising that base floor silently.
+At main 5ac5e3fec4d590f167d2c6bd694683dbd8950c26, the TUI-RUNTIME-R001 client implementation is present. Its unit tests do not establish served acceptance. It implements `/op`, `/confirm`, a lazy generated-client import and fail-closed approval behavior. Review and compose its exact changes rather than rebuilding the same transport from scratch. The current main package targets Python `>=3.11,<3.15`; Arbora generated-client compatibility must be handled without raising that base floor silently.
 
 ```text
 keyboard / slash command
     -> CommandProcessor
     -> AgentClient (one session, caller credential, HTTP/A2A transport)
-    -> GraphOS versioned operation API or A2A plan confirmation
+    -> Arbora versioned operation API or A2A plan confirmation
     -> server authorization, registry and effect gate
     -> typed result/error -> existing conversation and run widgets
 ```
@@ -21,19 +21,19 @@ keyboard / slash command
 |---|---|
 | Command input | `/op <registered-id> <JSON object>`; JSON is parsed once; a malformed or absent object is refused before any network call. `/confirm <opaque-plan-ref>` never accepts a caller-supplied substitute operation or parameters. |
 | Generated operation client | Resolve `schema_for(op)` and `invoke(transport, op, params)` lazily. The installed registry digest must match the server. Missing package data or incompatible runtime yields `CLIENT_UNAVAILABLE`, not a fallback to an untyped endpoint. |
-| HTTP operation | Use GraphOS's public versioned operation endpoint, caller-scoped authorization header, structured result and stable error envelope. No direct import of graph-os server internals or AU knowledge-graph internals. |
-| A2A conversation | Reuse the GraphOS Agent Card and authenticated JSON-RPC task flow. Keep session/task identity on streaming and resumed turns; network errors must leave the UI responsive. |
+| HTTP operation | Use Arbora's public versioned operation endpoint, caller-scoped authorization header, structured result and stable error envelope. No direct import of arbora server internals or AU knowledge-graph internals. |
+| A2A conversation | Reuse the Arbora Agent Card and authenticated JSON-RPC task flow. Keep session/task identity on streaming and resumed turns; network errors must leave the UI responsive. |
 | PLAN | Store only the short-lived server binding necessary for display and one confirmation. Bind to exact plan reference, op, input digest, caller/session, registry digest and expiry. The server makes the final authoritative check. Clear after use or failure. |
-| Approval | An `input-required` task is a pending request. Signed approval must be bound to the pending call and human authority in GraphOS. Until that public contract and served proof are present, refuse `approvals.*` and direct fleet-grant shortcuts. |
-| Security | Require TLS and a verified credential for remote GraphOS. Do not emit bearer values to logs, widgets, saved sessions, test snapshots or exception strings. Local development endpoint rules must be explicit and bounded to loopback. |
+| Approval | An `input-required` task is a pending request. Signed approval must be bound to the pending call and human authority in Arbora. Until that public contract and served proof are present, refuse `approvals.*` and direct fleet-grant shortcuts. |
+| Security | Require TLS and a verified credential for remote Arbora. Do not emit bearer values to logs, widgets, saved sessions, test snapshots or exception strings. Local development endpoint rules must be explicit and bounded to loopback. |
 
 ## Compatibility and migration
 
-Keep the TUI's base Python 3.11 chat install working. Put a generated GraphOS operation client behind a compatible optional extra or runtime capability check. Document the precise supported Python range in package metadata and lock. Where legacy capability/run APIs remain, inventory their callers and retire each only after a public replacement is served. The GeniusBot consumer must independently prove the same versioned envelope and identity rules. This repository only supplies its contract expectations.
+Keep the TUI's base Python 3.11 chat install working. Put a generated Arbora operation client behind a compatible optional extra or runtime capability check. Document the precise supported Python range in package metadata and lock. Where legacy capability/run APIs remain, inventory their callers and retire each only after a public replacement is served. The GeniusBot consumer must independently prove the same versioned envelope and identity rules. This repository only supplies its contract expectations.
 
 ## Quality and reuse
 
-Use the existing command registry, `AgentClient`, `httpx`, Textual widgets, and GraphOS generated models. Keep one transport normalization path and no duplicated request envelope construction. Run the repository's configured Ruff, type and pytest checks. The current repository has no configured CCCC, `jscpd` or Dupehound command or threshold. Before acceptance, either add shared ecosystem invocations with an explicit baseline or record an agreed exception. Do not claim a numerical pass without a configured tool. Apply KISS through a single client and one-use confirmation state. No unrelated `/docs` edit is required. Update README/configuration only where command or credential setup changes, and update AGENTS/constitution only if the contract itself changes.
+Use the existing command registry, `AgentClient`, `httpx`, Textual widgets, and Arbora generated models. Keep one transport normalization path and no duplicated request envelope construction. Run the repository's configured Ruff, type and pytest checks. The current repository has no configured CCCC, `jscpd` or Dupehound command or threshold. Before acceptance, either add shared ecosystem invocations with an explicit baseline or record an agreed exception. Do not claim a numerical pass without a configured tool. Apply KISS through a single client and one-use confirmation state. No unrelated `/docs` edit is required. Update README/configuration only where command or credential setup changes, and update AGENTS/constitution only if the contract itself changes.
 
 ## Structure parity with agent-webui (2026-10-11)
 
@@ -59,7 +59,7 @@ Area decisions, from the terminal code:
 | Design system | Yes: `app.py` selects a Textual theme (`tokyo-night`) | New rollup `TUI-RUNTIME-R008` in the existing spec |
 | Decision evidence | Partly: `app.py` approval decisions, covered by `R001.5` | No new row |
 | Finance asset manager | No: `git grep` for finance and asset finds nothing | No spec |
-| API consumer | Yes: `client.py` GraphOS boundary, owned by `R001` and `R002` | No new row |
+| API consumer | Yes: `client.py` Arbora boundary, owned by `R001` and `R002` | No new row |
 | App surfaces | Yes: `screens/`, owned by `R001.7` | No new row |
 | Identity and access | Yes: bearer caller identity, owned by `R001.2` | No new row |
 
@@ -72,16 +72,16 @@ Area decisions, from the terminal code:
 Current source ends at `GET /api/runs/{id}`. It does not invoke `runs.get` or `runs.metrics`.
 The implementation must migrate this existing path only when the registered replacement has served proof.
 
-The client must use the versioned GraphOS operation transport and its generated envelope.
+The client must use the versioned Arbora operation transport and its generated envelope.
 It must not add another HTTP stack or call the engine directly.
 
 ### Model and wire-to-view mapping
 
-[GraphOS run reads](https://github.com/Knuckles-Team/graph-os/tree/main/specs/hosted-api-operations) own the served projection.
+[Arbora run reads](https://github.com/Knuckles-Team/arbora/tree/main/specs/hosted-api-operations) own the served projection.
 `GRAPHOS-OPS-R021.4.5` serves per-run fields; `.3` and `.4` define aggregate models and operations.
 `GRAPHOS-OPS-R021.4.6` supplies registration and generated artifacts.
 
-| GraphOS wire field | View label and behavior |
+| Arbora wire field | View label and behavior |
 |---|---|
 | `termination_reason` | Distinct final answer, context overflow, stuck, step budget and error labels |
 | `peak_context_tokens`, `context_budget_tokens` | Peak context tokens against run budget; never current occupancy |
@@ -109,7 +109,7 @@ Unknown terminal reasons must display unavailable; the client must never infer s
 
 ### Evidence and implementation order
 
-Implement the GraphOS producer before the consumer wiring, then field rendering and served acceptance.
+Implement the Arbora producer before the consumer wiring, then field rendering and served acceptance.
 The six existing children retain their served acceptance requirements.
 R010.7 adds only the native state boundary.
 The tests in test-spec.md are planned acceptance paths, not proof of implementation.
@@ -122,7 +122,7 @@ Each row requires its own positive and negative served case through the producti
 <!-- spec-definition-patch:r002-consumer-plan -->
 ## TUI-RUNTIME-R002 consumer boundary
 
-The GraphOS owner must publish contracts R009.2 through R009.6 and R010.7. Those contracts bind a versioned HostLaunchReceipt, interface mode, workspace and opaque tenant-authorized log reference. GraphOS authorizes each read and reconnect. It supplies record order and rotation gaps. These IDs are producer prerequisites. They do not claim existing runtime exports. The terminal never grants authority or reads a local log path. R010.7 places web_logs in HostLaunchRequest, but the current HostLaunchReceipt v1 contract omits it. GraphOS must bind the effective boolean into an authenticated receipt or handoff, scoped to host, workspace, tenant and principal. Until GraphOS supplies that field, TUI log reads stay disabled. The required host redacted sink remains enabled. This is a producer prerequisite, not a claim of an existing export.
+The Arbora owner must publish contracts R009.2 through R009.6 and R010.7. Those contracts bind a versioned HostLaunchReceipt, interface mode, workspace and opaque tenant-authorized log reference. Arbora authorizes each read and reconnect. It supplies record order and rotation gaps. These IDs are producer prerequisites. They do not claim existing runtime exports. The terminal never grants authority or reads a local log path. R010.7 places web_logs in HostLaunchRequest, but the current HostLaunchReceipt v1 contract omits it. Arbora must bind the effective boolean into an authenticated receipt or handoff, scoped to host, workspace, tenant and principal. Until Arbora supplies that field, TUI log reads stay disabled. The required host redacted sink remains enabled. This is a producer prerequisite, not a claim of an existing export.
 
 Dependency order:
 1. Keep the original R002 chat transport acceptance in child .1.
@@ -130,7 +130,7 @@ Dependency order:
 3. Define the adapter signature: `agent_terminal_ui.app.run_host_terminal(receipt: HostLaunchReceipt, *, client: AgentClient, log_reader: HostLogReader | None) -> None`.
 4. Define HostLogReader in agent_terminal_ui.client. Its asynchronous method is `read(log_ref: str, *, cursor: str | None, limit: int) -> HostLogBatch`.
 5. Subscribe in terminal and both modes only when the bound web_logs preference is true. A false or absent preference and every web-mode case make zero TUI reads; chat continues. Keep the required host sink enabled. Reuse CommandProcessor.cmd_logs, MainScreen.action_toggle_logs and RichLog.
-6. Bound reads, queued bytes, lines, timeouts and cancellation as requirements.md states. On rotation, expose a tenant-local gap. On denial, clear protected state. Never stop GraphOS resources.
+6. Bound reads, queued bytes, lines, timeouts and cancellation as requirements.md states. On rotation, expose a tenant-local gap. On denial, clear protected state. Never stop Arbora resources.
 7. Exercise the full served path on a real host, client and TUI. Use the fixed seed and two tenants after producer contracts are available.
 
 The TUI defines consumer interfaces here. It does not claim existing exports. Extend AgentClient, the application, CommandProcessor.cmd_logs and MainScreen.action_toggle_logs. Do not add another router, transport, local gateway or file reader. This slice leaves the TUI-RUNTIME-R010 inspector obligations intact.
@@ -143,24 +143,24 @@ AU:117 SHA-256 fddbc1b35588be4427396a7aa827414d9d7bba01a8837f905a8b1c9b1eac4694.
 
 ### 2026-10-13: Rust thin-client migration (R002, R001, R008, R010)
 
-Decision: use Rust with Ratatui for native terminal rendering and Tokio for asynchronous execution. Keep GraphOS as
+Decision: use Rust with Ratatui for native terminal rendering and Tokio for asynchronous execution. Keep Arbora as
 runtime, policy, authentication, task and operation authority. EG owns graph
 storage and reasoning. The terminal must not embed a graph replica, planner,
 model runtime, tool executor or second MCP authority. Existing Python stays
 available until a release candidate passes the same served journeys.
 
 Source baseline: TUI `5ac5e3fec4d590f167d2c6bd694683dbd8950c26` uses A2A
-chat plus REST, not ACP. The reviewed GraphOS `660412bf` dispatcher lacks served
-`message/stream` and refuses `tasks/resubscribe` and `graphos.plan/confirm`.
+chat plus REST, not ACP. The reviewed Arbora `660412bf` dispatcher lacks served
+`message/stream` and refuses `tasks/resubscribe` and `arbora.plan/confirm`.
 These are producer prerequisites, not working features. Client mocks and
 Agent Card claims cannot close them. Record producer head and served receipts
 before enabling each feature. No downgrade to an untyped or local effect path.
 
 ```text
 terminal input -> command intent -> bounded asynchronous transport queue
-    -> authenticated GraphOS A2A / versioned operations
+    -> authenticated Arbora A2A / versioned operations
     -> bounded normalized events -> view-state reducer -> terminal frame
-GraphOS -> runtime / policy -> EG graph and reasoning
+Arbora -> runtime / policy -> EG graph and reasoning
 ```
 
 Use one transport adapter per frontend process. Port the existing AgentClient
@@ -185,14 +185,14 @@ acknowledged state. A local canceled future is not proof of remote cancellation.
 A disconnect displays unknown/pending state, retains identity and offers recovery.
 Approval fails closed during disconnect, missing capability or missing signed
 pending-call identity. PLAN confirmation retains exact reference, subject,
-parameters digest, registry digest and expiry; only GraphOS authorizes effects.
+parameters digest, registry digest and expiry; only Arbora authorizes effects.
 Revocation clears protected views and pending plans before further rendering.
 
 Start with direct remote service access. A local UDS or Windows named-pipe broker
 is optional only after the benchmark below proves a net benefit. It may cache
 only authorized views scoped by principal, tenant, workspace, endpoint and
 policy epoch. Peer credentials and restrictive socket/pipe ACLs are required;
-a local connection never grants GraphOS authority. No public listener or shared
+a local connection never grants Arbora authority. No public listener or shared
 cross-principal cache. Bound bytes and events per subscriber. Disconnect slow subscribers with an
 explicit gap. Recover through retained replay or an authorized resnapshot. Revocation, logout and expiry invalidate cached data and cursors.
 The broker must not interpret graph state or call MCP tools independently.
@@ -209,13 +209,13 @@ and merges the non-draft PR. No version or dependency change is needed here.
 
 ### OpenCode coexistence and cutover
 
-The goal is a native terminal connected directly to GraphOS that replaces
+The goal is a native terminal connected directly to Arbora that replaces
 OpenCode. First establish working OpenCode access to the terminal development
-skill and GraphOS. Keep OpenCode installed and usable throughout implementation
+skill and Arbora. Keep OpenCode installed and usable throughout implementation
 and validation. A Rust build or mock test cannot authorize its removal.
 
 Before cutover, demonstrate skill discovery and invocation in both clients.
-Prove parallel GraphOS agents, streaming, cancellation, approval refusal and session recovery. GraphOS owns parallel task admission and
+Prove parallel Arbora agents, streaming, cancellation, approval refusal and session recovery. Arbora owns parallel task admission and
 lifecycle; the TUI only presents and controls authorized tasks. Preserve each
 agent's task/context/run bindings. Do not spawn a second local orchestrator.
 Record exact client and producer heads, served receipts and parity gaps. Require
@@ -236,12 +236,12 @@ The c key cancels local discovery; r retries after completion; q exits and
 restores the terminal. There is no task, approval or engine execution path.
 
 The Python executable and OpenCode remain available. Native compilation uses a coordinated validation slot. Source and format checks
-alone do not establish delivery or served GraphOS acceptance.
+alone do not establish delivery or served Arbora acceptance.
 
 The initial Linux check passed six native tests with real loopback HTTP fixtures.
 The cold two-job build took 38 seconds. Formatting and Clippy passed with warnings
 denied. A pseudo-terminal smoke passed discovery, refusal/retry, cancellation and terminal restoration.
-This evidence covers discovery only. No configured live GraphOS endpoint
+This evidence covers discovery only. No configured live Arbora endpoint
 was available, and no served streaming or approval acceptance is claimed.
 
 ### 2026-10-13: Native task correlation model (R002.1.1)
@@ -254,33 +254,33 @@ submission and streaming still require the missing served producer proof.
 
 ### 2026-10-13: Unary snapshot delivery and remaining producer gaps
 
-Rechecked TUI main 4239e3b and GraphOS main 331044ed. The authenticated
-GraphOS A2A facade serves tasks/get and tasks/cancel. The separate agent-host
+Rechecked TUI main 4239e3b and Arbora main 331044ed. The authenticated
+Arbora A2A facade serves tasks/get and tasks/cancel. The separate agent-host
 endpoint supports message/send only. An Agent Card alone does not prove task
 read capability. The native task view uses only the unary tasks/get method.
 
-GraphOS still lacks message/stream. Its tasks/resubscribe handler returns an
+Arbora still lacks message/stream. Its tasks/resubscribe handler returns an
 explicit refusal. Host receipts, bound web_logs and log-reader exports remain
 specifications. R002.1.3 and R002.2 through R002.6 stay pending. OpenCode and
 Python remain available. No cutover, performance or complete migration claim
 is made by the model and snapshot children.
 
 Native HTTP tests cover the request, credential, response bounds and refusals.
-The executable was also checked through the real GraphOS HTTP handlers and
+The executable was also checked through the real Arbora HTTP handlers and
 A2AService with upstream test authority and authentication fixtures. That
 check covers the handler boundary, not production identity, tenant isolation,
 TLS or WorkItem authority. It requires no native EG build.
 
 ### 2026-10-14: Native unary submission increment (R002.1.3.1)
 
-GraphOS main 0120e1f serves ordinary text tasks through message/send.
+Arbora main 0120e1f serves ordinary text tasks through message/send.
 It uses request-bound authentication, WorkItem admission and the existing AU dispatch
 queue. Add one native --prompt submission. Retain the acknowledged task
 binding in the existing refresh and cancellation view. Generate the request
 identity once. Do not retry an effect or replay it on refresh. An interrupted
 submission has an unknown outcome. Reject a prompt combined with AGENT_TASK_ID.
 
-Verify the native executable against the actual GraphOS request handler,
+Verify the native executable against the actual Arbora request handler,
 WorkItem submission and AU enqueue functions. Control the final storage and
 queue boundaries. Check the authenticated carrier and zero admission for
 denied requests. This proves the submission adapter, not durable engine or
@@ -294,12 +294,12 @@ the parent.
 
 ### 2026-10-13: Original cancellation criterion
 
-The nearest available R002.1 producer is tasks/cancel. GraphOS main 331044ed
+The nearest available R002.1 producer is tasks/cancel. Arbora main 331044ed
 already routes this method to WorkItemA2AAuthority. The native consumer
 requires explicit confirmation and a matching canceled response. An interrupted
 request has an unknown outcome until a read reconciles it. The client never retries an effect automatically.
 
-Missing producer contracts remain with GraphOS. GRAPHOS-A2A-R001 and
+Missing producer contracts remain with Arbora. GRAPHOS-A2A-R001 and
 GRAPHOS-A2A-R010 own durable streaming and resubscribe. Their spec names the
 AU-CONTROL-001 event port; a current AU owner row was not found.
 GRAPHOS-HOST-R009.2 through GRAPHOS-HOST-R009.6 and GRAPHOS-HOST-R010.7 own the host/log journey.
@@ -308,7 +308,7 @@ Coordinate those changes with the parent before touching active producer work.
 
 The native suite passed 32 tests, including the configured ten-second timeout.
 Formatting and strict Clippy checks passed. Six pseudo-terminal cases passed
-through GraphOS handlers, A2AService, WorkItemA2AAuthority and the AU cancellation adapter.
+through Arbora handlers, A2AService, WorkItemA2AAuthority and the AU cancellation adapter.
 They cover confirmation, dismissal, refusal, response loss after commit, local interruption and read reconciliation.
 Each case checked wire counts and terminal restoration. The fixture uses a
 synthetic session and scripted storage. Native EG storage, worker interruption,
@@ -318,7 +318,7 @@ rows remain pending. Keep OpenCode until served parity and cutover acceptance pa
 ## One-shot tool-task consumer
 
 Component: Terminal task view
-Depends-on: TUI-RUNTIME-R001.2, TUI-RUNTIME-R001.3, TUI-RUNTIME-R001.5, [GraphOS A2A](https://github.com/Knuckles-Team/graph-os/blob/331044ed7daec51a3633e0a7ea712293b2063bf3/specs/a2a/spec.md)
+Depends-on: TUI-RUNTIME-R001.2, TUI-RUNTIME-R001.3, TUI-RUNTIME-R001.5, [Arbora A2A](https://github.com/Knuckles-Team/arbora/blob/331044ed7daec51a3633e0a7ea712293b2063bf3/specs/a2a/spec.md)
 
 Code: ../../agent_terminal_ui/terminal_ui.py:10
 
@@ -344,13 +344,13 @@ The client must create one request binding before submission and retain it acros
 AgentClient must add a typed message/send method beside its existing text-only stream method.
 The terminal must send the typed payload through that method, never reinterpret it as an unstructured prompt.
 
-Producer dependency: GraphOS must publish the exact message/send tool-task payload schema and preapproval projection under GRAPHOS-A2A-R005 and GRAPHOS-A2A-R006.
+Producer dependency: Arbora must publish the exact message/send tool-task payload schema and preapproval projection under GRAPHOS-A2A-R005 and GRAPHOS-A2A-R006.
 The existing public A2A contract defines task methods and pending-call approval; it does not define that tool-task payload.
 The initial scope receipt must bind caller, tenant, workspace, operation, parameter digest, policy revision, registry digest and expiry.
-After admission, GraphOS must bind that receipt to the task and exact pending call before attesting prompt suppression.
+After admission, Arbora must bind that receipt to the task and exact pending call before attesting prompt suppression.
 The final pending-call binding must come from the server after task admission, never from caller-supplied identity fields.
 The one-shot request authorizes one connector operation invocation, without expanding its granted scope.
-GraphOS must consume the final pending-call grant atomically and dispatch that operation at most once.
+Arbora must consume the final pending-call grant atomically and dispatch that operation at most once.
 Progress and task events do not authorize additional connector invocations.
 A valid preapproval may suppress presentation of a prompt; it must not bypass server admission or console step-up.
 The complete GRAPHOS-A2A-R005.2 signed chain and GRAPHOS-A2A-R006.2 caller bridge remain prerequisites.
@@ -372,7 +372,7 @@ The terminal must clear protected output when authorization expires or the calle
 sequenceDiagram
   participant C as Terminal CLI
   participant T as Existing AgentClient
-  participant G as GraphOS A2A authority
+  participant G as Arbora A2A authority
   participant B as Governed tool backend
   C->>T: Validated one-shot request
   T->>G: message/send with fixed idempotency key
@@ -391,7 +391,7 @@ The planned tests must cover both frontend implementations before native cutover
 
 ## TUI-RUNTIME-R001.8
 
-`TUI-RUNTIME-R001.8`: Extend command/client contract for one-shot background tool-task submission with GraphOS preapproval binding gate.
+`TUI-RUNTIME-R001.8`: Extend command/client contract for one-shot background tool-task submission with Arbora preapproval binding gate.
 
 ## Coding session (TUI-RUNTIME-R011)
 
@@ -443,7 +443,7 @@ plans before rendering. It never orders opaque revisions or invents a wire schem
 
 `native/agent-terminal-ui/tests/run_inspector.rs` exercises this boundary through
 Ratatui. These are focused consumer tests, not served acceptance. R010.1 and
-R010.6 remain open: GraphOS registration, generated projections, AU snapshot
+R010.6 remain open: Arbora registration, generated projections, AU snapshot
 exports and production transport attachment are prerequisites. The presentation
 lane must attach the module to its view. The transport lane must supply authorized
 projections and the producer-defined validator. No backend route or local read is
@@ -466,7 +466,7 @@ Records contain request/session identity, method, resolved path or adapter-suppl
 command digest, choice and actor. Preview bodies never enter records.
 
 The module has no file, process, persistence or transport effects. Its choice is
-not a GraphOS permission grant. The future admitted-session adapter must verify
+not an Arbora permission grant. The future admitted-session adapter must verify
 scope, capabilities, resolved paths, content/digest bindings and permissions before
 calling it. It must recheck these before any effect. Diff inputs are authorized old/new text;
 command digest comes from that adapter. No digest algorithm or wire field is added.
@@ -501,8 +501,8 @@ replace it or acquire a later run. Hide the protected snapshot on failure and
 disable cancellation until a matching authorized read succeeds. Recovery can
 never submit, cancel, confirm or resubscribe.
 
-Producer source refreshed at GraphOS 16d01372b70634850d056a7b667e78270c0c3edd:
-graph_os/a2a/application.py serves tasks/get and returns HTTP 401/403 for
+Producer source refreshed at Arbora 16d01372b70634850d056a7b667e78270c0c3edd:
+arbora/a2a/application.py serves tasks/get and returns HTTP 401/403 for
 authority denial. Task absence returns 404. tasks/resubscribe still refuses;
 message/stream is absent. Use these existing fields and refusal boundaries.
 Local HTTP fixtures prove bounded read attempts, exact correlation, denial,
@@ -541,20 +541,20 @@ The shared CI job must install the declared test extra before it runs the
 release regression. Use its setup-command input with frozen dependencies.
 The shared test step then retains that environment with --no-sync.
 
-### Generated GraphOS client acceptance
+### Generated Arbora client acceptance
 
 R001.6 keeps Python 3.11 base chat support. Its optional operation client requires
-Python 3.12 or later and a compatible generated GraphOS wheel. CI installs the
-client from an immutable GraphOS revision without server dependencies. The job
+Python 3.12 or later and a compatible generated Arbora wheel. CI installs the
+client from an immutable Arbora revision without server dependencies. The job
 runs operation and refusal tests. Deterministic UQL examples
 use the provider's `text` and `params` fields. This proves the wheel consumer
-boundary, not a running GraphOS server or native query delivery.
+boundary, not a running Arbora server or native query delivery.
 
 ### R010.8 native run reads
 
 The native inspector adapter uses the authenticated registry and registered `runs.get` route.
 It checks the response digest before projecting fields. Plan deadlines use validated UTC expiry and a monotonic clock.
-The coordinator owns main-loop attachment. AU execution admission and GraphOS trace-reader composition remain required for served acceptance.
+The coordinator owns main-loop attachment. AU execution admission and Arbora trace-reader composition remain required for served acceptance.
 
 ### R010.9 native inspector loop attachment
 
@@ -576,7 +576,7 @@ This component does not establish producer streaming, HTTP wiring or served reco
 
 ### 2026-10-17: Refuse unbound local host logs (R002.2 through R002.6)
 
-Current GraphOS a32d160a has no checked workspace/session host start port,
+Current Arbora a32d160a has no checked workspace/session host start port,
 HostLaunchReceipt, or authenticated tenant-filtered HostLogReader. Generic
 caller scopes and WebUI AccessContext do not grant workspace log access.
 The positive host-log journey remains blocked on that producer authority.
@@ -600,9 +600,9 @@ signed confirmation, coding request admission or served approval execution.
 
 ### 2026-10-17: Authenticated HTTP log subscription (R002.10)
 
-The injected HTTP reader obtains binding metadata from GraphOS's authenticated reference endpoint.
+The injected HTTP reader obtains binding metadata from Arbora's authenticated reference endpoint.
 It retains the exact immutable receipt and rejects copied or changed receipts.
-No receipt constructor or client field grants log authority. GraphOS reauthorizes each bounded read.
+No receipt constructor or client field grants log authority. Arbora reauthorizes each bounded read.
 AgentApp and MainScreen use the existing log panel and commands.
 Start one subscription only for terminal/both mode with an authenticated true preference.
 Limit reads to one second, 128 records and two MiB; render at most 1000 literal lines.
@@ -613,7 +613,7 @@ Controlled and producer-backed fixtures remain distinct from deployed grant or n
 
 ### Native host logs
 
-Implement TUI-RUNTIME-R002.11 through the existing GraphOS client and native event loop. Reuse authenticated producer endpoints without filesystem reads or credential storage.
+Implement TUI-RUNTIME-R002.11 through the existing Arbora client and native event loop. Reuse authenticated producer endpoints without filesystem reads or credential storage.
 
 ### R002.1.3.2.2.3 committed terminal point-read
 
@@ -627,7 +627,7 @@ Presentation identifiers have a 512-byte bound. Result references allow 4096 byt
 
 ### 2026-10-17: Retained host-log metadata and gap display
 
-TUI-RUNTIME-R002.11 consumes GraphOS HOST-R009.8.2.2 read version two in both
+TUI-RUNTIME-R002.11 consumes Arbora HOST-R009.8.2.2 read version two in both
 clients. Preserve original source generation, sequence, request, timestamp and
 severity in literal bounded display. Reject malformed metadata and unsupported
 versions. Exact HTTP 409 retention_gap stops polling and clears retained lines

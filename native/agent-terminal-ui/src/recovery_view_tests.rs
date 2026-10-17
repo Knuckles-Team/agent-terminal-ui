@@ -9,7 +9,7 @@ use tokio::{
 #[tokio::test]
 async fn http_denial_clears_rendered_snapshot_and_disarms_cancel_until_refresh() {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
-    let client = GraphOsClient::new(
+    let client = ArboraClient::new(
         &format!("http://{}", listener.local_addr().unwrap()),
         Some("fixture-token"),
     )
@@ -43,7 +43,7 @@ async fn http_denial_clears_rendered_snapshot_and_disarms_cancel_until_refresh()
             }
             let body = serde_json::json!({"jsonrpc":"2.0", "id":"task-snapshot", "result":{
                 "kind":"task", "id":"task-one", "contextId":"context-two",
-                "metadata":{"graphOs":{"runId":"run-three"}}, "status":{"state":"working"}
+                "metadata":{"arbora":{"runId":"run-three"}}, "status":{"state":"working"}
             }})
             .to_string();
             socket.write_all(format!("HTTP/1.1 {status} Fixture\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).as_bytes()).await.unwrap();
@@ -69,7 +69,7 @@ async fn http_denial_clears_rendered_snapshot_and_disarms_cancel_until_refresh()
             assert_eq!(text.contains(protected), !denied);
         }
         if denied {
-            assert!(text.contains("GraphOS task read refused or unavailable"));
+            assert!(text.contains("Arbora task read refused or unavailable"));
             cancellation.arm();
             assert!(!cancellation.confirm());
             assert_eq!(cancellation, Cancellation::Unavailable);

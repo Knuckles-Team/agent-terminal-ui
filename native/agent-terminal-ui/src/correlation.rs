@@ -38,11 +38,11 @@ fn run_id(value: &Value) -> Result<Option<&str>, &'static str> {
         return Ok(None);
     };
     let metadata = metadata.as_object().ok_or("Invalid task metadata")?;
-    let Some(graph_os) = metadata.get("graphOs") else {
+    let Some(arbora) = metadata.get("arbora") else {
         return Ok(None);
     };
-    let graph_os = graph_os.as_object().ok_or("Invalid GraphOS metadata")?;
-    match graph_os.get("runId") {
+    let arbora = arbora.as_object().ok_or("Invalid Arbora metadata")?;
+    match arbora.get("runId") {
         None => Ok(None),
         Some(value) => value
             .as_str()
