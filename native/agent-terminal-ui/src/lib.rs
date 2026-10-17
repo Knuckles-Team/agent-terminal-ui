@@ -5,6 +5,7 @@ pub mod recovery;
 pub mod run_inspector;
 pub mod run_inspector_client;
 pub mod task_stream;
+pub mod terminal_event;
 
 use correlation::{TaskCorrelation, TaskEvent, TaskState};
 use reqwest::{Client, Url, header};
@@ -41,6 +42,7 @@ impl TaskSubmission {
 pub struct TaskSnapshot {
     pub correlation: TaskCorrelation,
     pub state: TaskState,
+    pub terminal_event: terminal_event::TerminalEvent,
 }
 
 pub struct GraphOsClient {
@@ -184,6 +186,7 @@ impl GraphOsClient {
         Ok(TaskSnapshot {
             correlation: binding.clone(),
             state: task.state,
+            terminal_event: terminal_event::TerminalEvent::default(),
         })
     }
 
@@ -262,5 +265,14 @@ fn parse_returned_task(request_id: &str, bytes: &[u8]) -> Result<TaskSnapshot, &
     let TaskEvent::Status { state, .. } = correlation.validate(task)? else {
         return Err("Invalid GraphOS task snapshot");
     };
-    Ok(TaskSnapshot { correlation, state })
+    let terminal_event = if request_id == "task-snapshot" {
+        terminal_event::TerminalEvent::from_task(task, &correlation, state)?
+    } else {
+        terminal_event::TerminalEvent::default()
+    };
+    Ok(TaskSnapshot {
+        correlation,
+        state,
+        terminal_event,
+    })
 }

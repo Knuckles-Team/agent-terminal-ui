@@ -77,7 +77,8 @@
     "TUI-RUNTIME-R010.9",
     "TUI-RUNTIME-R002.9",
     "TUI-RUNTIME-R002.10",
-    "TUI-RUNTIME-R002.11"
+    "TUI-RUNTIME-R002.11",
+    "TUI-RUNTIME-R002.1.3.2.2.3"
   ],
   "requirements": [
     {
@@ -306,8 +307,8 @@
         "99b67585d433"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:666",
-        "native/agent-terminal-ui/src/main.rs:703"
+        "native/agent-terminal-ui/src/main.rs:671",
+        "native/agent-terminal-ui/src/main.rs:708"
       ]
     },
     {
@@ -450,7 +451,7 @@
         "e8711e7f49bf"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:642",
+        "native/agent-terminal-ui/src/main.rs:647",
         "native/agent-terminal-ui/tests/discovery.rs:110",
         "native/agent-terminal-ui/tests/discovery.rs:29",
         "native/agent-terminal-ui/tests/discovery.rs:50",
@@ -506,10 +507,10 @@
         "9b0dcc67e610"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:452",
-        "native/agent-terminal-ui/src/main.rs:477",
-        "native/agent-terminal-ui/src/main.rs:496",
-        "native/agent-terminal-ui/src/main.rs:523",
+        "native/agent-terminal-ui/src/main.rs:456",
+        "native/agent-terminal-ui/src/main.rs:481",
+        "native/agent-terminal-ui/src/main.rs:500",
+        "native/agent-terminal-ui/src/main.rs:527",
         "native/agent-terminal-ui/tests/submission.rs:100"
       ]
     },
@@ -532,11 +533,11 @@
         "3c592ffc6075"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:563",
-        "native/agent-terminal-ui/src/main.rs:589",
-        "native/agent-terminal-ui/src/main.rs:605",
-        "native/agent-terminal-ui/src/main.rs:741",
-        "native/agent-terminal-ui/src/main.rs:792"
+        "native/agent-terminal-ui/src/main.rs:568",
+        "native/agent-terminal-ui/src/main.rs:594",
+        "native/agent-terminal-ui/src/main.rs:610",
+        "native/agent-terminal-ui/src/main.rs:746",
+        "native/agent-terminal-ui/src/main.rs:798"
       ]
     },
     {
@@ -547,10 +548,10 @@
         "b05266d66c30"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:805",
-        "native/agent-terminal-ui/src/main.rs:822",
-        "native/agent-terminal-ui/src/main.rs:861",
-        "native/agent-terminal-ui/src/main.rs:921",
+        "native/agent-terminal-ui/src/main.rs:811",
+        "native/agent-terminal-ui/src/main.rs:828",
+        "native/agent-terminal-ui/src/main.rs:867",
+        "native/agent-terminal-ui/src/main.rs:927",
         "native/agent-terminal-ui/tests/cancellation.rs:119"
       ]
     },
@@ -774,7 +775,7 @@
         "608e9e9d122b"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:970",
+        "native/agent-terminal-ui/src/main.rs:976",
         "native/agent-terminal-ui/src/presentation.rs:138",
         "native/agent-terminal-ui/src/presentation.rs:187",
         "native/agent-terminal-ui/src/presentation.rs:212"
@@ -811,7 +812,8 @@
       "verified_by": [],
       "rollup_of": [
         "TUI-RUNTIME-R002.1.3.2.2.1",
-        "TUI-RUNTIME-R002.1.3.2.2.2"
+        "TUI-RUNTIME-R002.1.3.2.2.2",
+        "TUI-RUNTIME-R002.1.3.2.2.3"
       ]
     },
     {
@@ -902,6 +904,19 @@
         "native/agent-terminal-ui/tests/host_logs.rs:110",
         "native/agent-terminal-ui/tests/host_logs.rs:128",
         "native/agent-terminal-ui/tests/host_logs.rs:88"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R002.1.3.2.2.3",
+      "title": "Bounded committed terminal point-read",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [
+        "native/agent-terminal-ui/src/main.rs:1039",
+        "native/agent-terminal-ui/tests/task_snapshot.rs:193",
+        "native/agent-terminal-ui/tests/terminal_event.rs:110",
+        "native/agent-terminal-ui/tests/terminal_event.rs:131",
+        "native/agent-terminal-ui/tests/terminal_event.rs:146"
       ]
     }
   ]

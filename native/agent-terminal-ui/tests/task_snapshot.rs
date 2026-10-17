@@ -89,7 +89,7 @@ async fn reads_task_snapshot_over_authenticated_json_rpc() {
             serde_json::from_str::<Value>(body).unwrap(),
             json!({
                 "jsonrpc": "2.0", "id": "task-snapshot",
-                "method": "tasks/get", "params": {"id": "task-1"}
+                "method": "tasks/get", "params": {"id": "task-1", "includeCommittedEvent": true}
             })
         );
     }
@@ -186,6 +186,43 @@ async fn bounds_snapshot_response_size() {
             .await
             .unwrap_err(),
         "GraphOS task snapshot exceeds size limit"
+    );
+    server.await.unwrap();
+}
+
+// spec: TUI-RUNTIME-R002.1.3.2.2.3
+#[tokio::test]
+async fn point_read_preserves_identity_and_rejects_retained_binding_mismatch() {
+    let mut response = snapshot();
+    response["result"]["status"]["state"] = json!("completed");
+    response["result"]["metadata"]["graphOs"]["terminalEvent"] = json!({
+        "status":"available", "tenant":"tenant", "scope":{"tenant":"tenant",
+        "scope":{"kind":"graph","graph":"graph"},"incarnation_id":"incarnation","identity_digest":vec![170;32]},
+        "batch_id":"batch", "commit_sequence":7,"ordinal":0,"run_id":"run-3","kind":"outcome",
+        "outcome":"succeeded","result_ref":null,"payload_digest":"b".repeat(64)
+    });
+    let (url, server) = serve("200 OK", &response.to_string()).await;
+    let task = GraphOsClient::new(&url, Some("fixture-token"))
+        .unwrap()
+        .get_task("task-1")
+        .await
+        .unwrap();
+    assert!(task.terminal_event.text().contains("Commit sequence: 7"));
+    assert!(server.await.unwrap().contains("includeCommittedEvent"));
+    let mut unbound = response["result"].clone();
+    unbound["metadata"]["graphOs"]
+        .as_object_mut()
+        .unwrap()
+        .remove("runId");
+    let binding =
+        agent_terminal_ui_native::correlation::TaskCorrelation::from_task(&unbound).unwrap();
+    let (url, server) = serve("200 OK", &response.to_string()).await;
+    assert!(
+        GraphOsClient::new(&url, Some("fixture-token"))
+            .unwrap()
+            .refresh_task(&binding)
+            .await
+            .is_err()
     );
     server.await.unwrap();
 }

@@ -605,3 +605,13 @@ Controlled and producer-backed fixtures remain distinct from deployed grant or n
 ### Native host logs
 
 Implement TUI-RUNTIME-R002.11 through the existing GraphOS client and native event loop. Reuse authenticated producer endpoints without filesystem reads or credential storage.
+
+### R002.1.3.2.2.3 committed terminal point-read
+
+The native tasks/get request opts into includeCommittedEvent. A bounded decoder reads only the optional terminalEvent projection.
+It checks the returned task and retained run binding before display. The view labels the actual commit identity as a point-read.
+Absent or refused data stays unavailable. No cursor, event stream or recovery guarantee follows from this read.
+
+The projection retains the actual producer kind and physical scope tenant. These values do not grant authority.
+The scope digest remains 32 bytes; the display labels its hexadecimal conversion. Payload digests remain lowercase hexadecimal text.
+Presentation identifiers have a 512-byte bound. Result references allow 4096 bytes; the complete projection allows 16384 bytes.

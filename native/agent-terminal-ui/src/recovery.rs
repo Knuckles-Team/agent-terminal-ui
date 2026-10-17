@@ -64,7 +64,7 @@ impl GraphOsClient {
             .post(url)
             .json(&serde_json::json!({
                 "jsonrpc": "2.0", "id": "task-snapshot",
-                "method": "tasks/get", "params": {"id": task_id},
+                "method": "tasks/get", "params": {"id": task_id, "includeCommittedEvent": true},
             }))
             .send()
             .await
@@ -103,6 +103,10 @@ impl GraphOsClient {
         if let Some(binding) = binding {
             binding
                 .validate_binding(&snapshot.correlation)
+                .map_err(ReadFailure::Invalid)?;
+            snapshot
+                .terminal_event
+                .validate_binding(binding)
                 .map_err(ReadFailure::Invalid)?;
             snapshot.correlation = binding.clone();
         }
