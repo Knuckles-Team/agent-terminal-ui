@@ -32,6 +32,18 @@ def terminal_ui() -> None:
     parser.add_argument(
         "--model", type=str, default=None, help="Model id for headless runs"
     )
+    parser.add_argument(
+        "--session",
+        type=str,
+        default=None,
+        help="Continue the Arbora conversation with this session id",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=["ask", "plan", "build"],
+        default="ask",
+        help="Task mode for headless runs",
+    )
     args = parser.parse_args()
 
     if args.headless:
@@ -41,12 +53,26 @@ def terminal_ui() -> None:
 
         from agent_terminal_ui.headless import run_headless
 
-        asyncio.run(run_headless(args.prompt, model=args.model))
+        ok = asyncio.run(
+            run_headless(
+                args.prompt,
+                mode_id=args.mode,
+                model=args.model,
+                session_id=args.session,
+            )
+        )
+        if not ok:
+            raise SystemExit(1)
         return
 
     from agent_terminal_ui.app import main
 
-    main(initial_prompt=args.prompt, auto_approve=args.override, start_bg=args.bg)
+    main(
+        initial_prompt=args.prompt,
+        auto_approve=args.override,
+        start_bg=args.bg,
+        session_id=args.session,
+    )
 
 
 if __name__ == "__main__":

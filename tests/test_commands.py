@@ -461,6 +461,8 @@ class TestThemeCommand:
     @pytest.mark.asyncio
     async def test_cmd_theme_without_args(self, command_processor, mock_app):
         """Test theme command without args lists available themes."""
+        mock_app.available_themes = {"nord": None, "dracula": None}
+        mock_app.theme = "nord"
         await command_processor.cmd_theme("")
 
         event_log = mock_app.query_one("Conversation")
@@ -470,13 +472,17 @@ class TestThemeCommand:
         assert "Available themes" in written_text
 
     @pytest.mark.asyncio
-    async def test_cmd_theme_with_args(self, command_processor, mock_app):
-        """Test theme command with args switches theme."""
-        mock_app.switch_theme = MagicMock()
+    async def test_cmd_theme_switches_a_registered_theme(self, monkeypatch):
+        monkeypatch.setenv("AGENT_URL", "http://localhost:8000")
+        from agent_terminal_ui.app import AgentApp
 
-        await command_processor.cmd_theme("dracula")
-
-        mock_app.switch_theme.assert_called_with("dracula")
+        app = AgentApp()
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            await app._cmd_processor.process("/theme nord")
+            assert app.theme == "nord"
+            await app._cmd_processor.process("/theme no-such-theme")
+            assert app.theme == "nord"
 
 
 class TestSkillCommands:

@@ -82,6 +82,14 @@ class Conversation(VerticalScroll):
         self._current_response: AgentResponse | None = None
         self._throbber: Throbber | None = None
         self._tool_blocks: dict[str, ToolCallBlock] = {}
+        self.transcript: list[tuple[str, str]] = []
+
+    def _record(self, role: str, text: str, *, extend: bool = False) -> None:
+        """Keep the shown exchange for export; widget pruning does not drop it."""
+        if extend and self.transcript and self.transcript[-1][0] == "agent":
+            self.transcript[-1] = ("agent", self.transcript[-1][1] + text)
+        else:
+            self.transcript.append((role, text))
 
     def compose(self) -> ComposeResult:
         """Compose the conversation layout."""
@@ -109,6 +117,7 @@ class Conversation(VerticalScroll):
             content: The user's input text.
         """
         self._finalize_current_response()
+        self._record("user", content)
         widget = UserMessage(content)
         await self.window.mount(widget)
         self._prune_old_widgets()
@@ -124,6 +133,7 @@ class Conversation(VerticalScroll):
             agent_name: The agent identifier.
         """
         self._finalize_current_response()
+        self._record("agent", content)
         widget = AgentResponse(content, agent_name=agent_name)
         await self.window.mount(widget)
         self._current_response = None
@@ -137,6 +147,7 @@ class Conversation(VerticalScroll):
             agent_name: The agent identifier.
         """
         self._finalize_current_response()
+        self._record("agent", "")
         widget = AgentResponse("", agent_name=agent_name)
         await self.window.mount(widget)
         self._current_response = widget
@@ -149,14 +160,12 @@ class Conversation(VerticalScroll):
         Args:
             delta: The text chunk to append.
         """
+        if self._current_response is None:
+            await self.start_agent_response()
         if self._current_response is not None:
             await self._current_response.append_content(delta)
+            self._record("agent", delta, extend=True)
             self.scroll_end(animate=False)
-        else:
-            # No active response — start a new one
-            await self.start_agent_response()
-            if self._current_response is not None:
-                await self._current_response.append_content(delta)
 
     async def add_tool_call(
         self,
@@ -267,6 +276,7 @@ class Conversation(VerticalScroll):
         """Remove all content from the conversation."""
         self._finalize_current_response()
         self._tool_blocks.clear()
+        self.transcript.clear()
         if self._throbber is not None:
             self._throbber.stop()
             self._throbber = None

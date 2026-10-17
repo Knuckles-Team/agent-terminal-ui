@@ -93,3 +93,52 @@ def test_summarize(value, expected) -> None:
     from agent_terminal_ui.headless import _summarize
 
     assert _summarize(value) == expected
+
+
+@pytest.mark.parametrize("fails", [False, True])
+async def test_run_headless_authenticates_and_reports_failure(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], fails: bool
+) -> None:
+    from agent_terminal_ui import headless
+
+    events = [{"type": "session_started", "session_id": "ctx-9"}]
+    events += [{"type": "error", "message": "denied"}] if fails else []
+    events += [{"type": "text", "content": "ok"}, {"type": "turn_end"}]
+    client = _client_yielding(events)
+    client.current_session_id = "ctx-9"
+    monkeypatch.setattr(headless, "client_from_environment", lambda: client)
+
+    ok = await headless.run_headless("hi", session_id="ctx-9")
+
+    assert ok is not fails
+    assert "session: ctx-9" in capsys.readouterr().err
+    client.aclose.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R001.2")
+async def test_run_headless_sends_operator_bearer_to_remote_arbora(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """``--headless`` builds its client from the environment, bearer token included."""
+    from agent_terminal_ui import headless
+
+    monkeypatch.setenv("AGENT_URL", "https://remote.example")
+    monkeypatch.setenv("AGENT_BEARER_TOKEN", "operator-token")
+    seen: dict[str, str] = {}
+
+    class _Runner:
+        failed = False
+
+        def __init__(self, client) -> None:
+            seen["authorization"] = client._http_client.headers["Authorization"]
+            seen["base_url"] = client.base_url
+
+        async def run_prompt(self, *_args, **_kwargs) -> None:
+            return None
+
+    monkeypatch.setattr(headless, "HeadlessRunner", _Runner)
+
+    assert await headless.run_headless("hi") is True
+    assert seen["authorization"] == "Bearer operator-token"
+    assert seen["base_url"].startswith("https://remote.example")
