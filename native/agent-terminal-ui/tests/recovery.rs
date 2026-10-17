@@ -1,6 +1,4 @@
-use agent_terminal_ui_native::{
-    ArboraClient, correlation::TaskCorrelation, recovery::ReadFailure,
-};
+use agent_terminal_ui_native::{ArboraClient, correlation::TaskCorrelation, recovery::ReadFailure};
 use serde_json::{Value, json};
 use std::time::Duration;
 use tokio::{
