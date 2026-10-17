@@ -2,6 +2,11 @@
 
 All configuration is managed via `settings.py` and stored in the settings store. New settings introduced in the DeepSeek-TUI parity update.
 
+Shared platform defaults are read from the Graph OS `config.json` in
+`~/.config/graph-os/` (`$XDG_CONFIG_HOME/graph-os`, override `GRAPH_OS_CONFIG_DIR`).
+For one release a missing file is read from the legacy `~/.config/agent-utilities/`
+(or `AGENT_UTILITIES_CONFIG_DIR`) with one deprecation warning.
+
 ## Settings
 
 | Key | Type | Default | Description |

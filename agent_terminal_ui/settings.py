@@ -227,21 +227,56 @@ SETTINGS_SCHEMA: list[SettingDef] = [
 ]
 
 
-def get_agent_utilities_config_dir() -> Path:
-    """Resolve agent-utilities config directory."""
-    override = os.environ.get("AGENT_UTILITIES_CONFIG_DIR")
-    if override:
-        return Path(override).expanduser()
-    try:
-        import platformdirs
+_legacy_config_warned = False
 
-        return Path(platformdirs.user_config_path("agent-utilities", "knuckles-team"))
-    except ImportError:
-        return Path.home() / ".config" / "agent-utilities"
+
+def _config_home() -> Path:
+    return Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config")
+
+
+def platform_config_file(name: str) -> Path:
+    """Resolve a Graph OS platform config file (e.g. ``config.json``).
+
+    ``GRAPH_OS_CONFIG_DIR`` or ``$XDG_CONFIG_HOME/graph-os`` wins; for one
+    release a file missing there is read from the legacy
+    ``AGENT_UTILITIES_CONFIG_DIR`` / ``$XDG_CONFIG_HOME/agent-utilities``
+    location with a single deprecation warning naming both paths. Mirrors
+    ``agent_connector_sdk.paths.platform_config_file``.
+    """
+    global _legacy_config_warned
+    new_env = os.environ.get("GRAPH_OS_CONFIG_DIR")
+    legacy_env = os.environ.get("AGENT_UTILITIES_CONFIG_DIR")
+    preferred = Path(new_env).expanduser() if new_env else _config_home() / "graph-os"
+    legacy = (
+        Path(legacy_env).expanduser()
+        if legacy_env
+        else _config_home() / "agent-utilities"
+    )
+    if legacy_env and not new_env:
+        chosen = legacy / name
+    elif (preferred / name).exists() or not (legacy / name).exists():
+        return preferred / name
+    else:
+        chosen = legacy / name
+    if not _legacy_config_warned:
+        _legacy_config_warned = True
+        logger.warning(
+            "Deprecated config location %s is in use; move the platform "
+            "configuration to %s (or set GRAPH_OS_CONFIG_DIR). The "
+            "agent-utilities fallback is removed in the next release.",
+            chosen,
+            preferred,
+        )
+    return chosen
+
+
+def get_agent_utilities_config_dir() -> Path:
+    """Resolve the Graph OS platform config directory (holding ``config.json``)."""
+    return platform_config_file("config.json").parent
 
 
 def load_agent_utilities_config() -> dict[str, Any]:
-    """Load settings from the global agent-utilities config.json if it exists."""
+    """Load settings from the Graph OS platform config.json if it exists."""
     import json
 
     cfg_dir = get_agent_utilities_config_dir()

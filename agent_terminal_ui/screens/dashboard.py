@@ -302,7 +302,7 @@ class DashboardScreen(Screen):
             await container.mount(
                 Label(
                     "No services configured.\n"
-                    "Add services to $XDG_CONFIG_HOME/agent-os/services.yaml",
+                    "Add services to $XDG_CONFIG_HOME/graph-os/services.yaml",
                     id="dashboard-empty",
                 )
             )
