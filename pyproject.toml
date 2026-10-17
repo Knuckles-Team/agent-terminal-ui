@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=80.9.0", "wheel"]
+requires = ["setuptools>=84.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -30,16 +30,16 @@ shell = [
 ]
 test = [
     "pytest-xdist>=3.8.0",
-    "pytest>=9.0.2",
+    "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
-    "pytest-env>=1.7.0",
+    "pytest-env>=1.8.0",
     "pytest-cov>=7.1.0",
     "syrupy>=6.1.1",
-    "pytest-benchmark>=5.2.3",
+    "pytest-benchmark>=5.3.0",
     "pytest-timeout>=2.4.0"
 ]
 profile = [
-    "memray>=1.19.3",
+    "memray>=1.20.0",
     "py-spy>=0.4.2",
     "psutil>=7.2.2"
 ]
