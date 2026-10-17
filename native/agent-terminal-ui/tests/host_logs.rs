@@ -69,6 +69,7 @@ async fn serve(responses: Vec<String>) -> (GraphOsClient, tokio::task::JoinHandl
                     if headers.starts_with("POST /host/logs/read") {
                         assert_eq!(body["log_ref"], "opaque");
                         assert_eq!(body["limit"], 128);
+                        assert_eq!(body["version"], 2);
                     }
                     break;
                 }
@@ -92,14 +93,18 @@ async fn authenticated_reads_clear_authority_after_denial_without_effect_replay(
         response(200, receipt()),
         response(
             200,
-            json!({"records":[{"message":"[literal]\u{1b}[31m"}],"cursor":"next","gap":true}),
+            json!({"version":2,"records":[{"host_instance":"original-host","sequence":7,"request":"original-request","timestamp":123.5,"severity":"WARN","message":"[literal]\u{1b}[31m"}],"cursor":"next","gap":true}),
         ),
         response(403, json!({})),
     ])
     .await;
     let mut reader = HostLogs::bind(Arc::new(client)).await.unwrap();
     let batch = reader.read().await.unwrap();
-    assert_eq!(batch.messages, vec!["[literal][31m"]);
+    assert_eq!(batch.records[0].message, "[literal][31m");
+    assert_eq!(
+        batch.records[0].display(),
+        "[123.5 WARN host=original-host seq=7 request=original-request] [literal][31m"
+    );
     assert!(batch.gap);
     assert!(reader.read().await.is_err());
     assert!(!reader.valid());
@@ -137,6 +142,23 @@ async fn oversized_and_malformed_batches_invalidate_binding() {
         let mut reader = HostLogs::bind(Arc::new(client)).await.unwrap();
         assert!(reader.read().await.is_err());
         assert!(!reader.valid());
+        server.await.unwrap();
+    }
+}
+
+// spec: TUI-RUNTIME-R002.11
+#[tokio::test]
+async fn exact_retention_gap_stops_without_retry_and_other_conflicts_refuse() {
+    use agent_terminal_ui_native::host_logs::{REFUSED, RETENTION_GAP};
+    for (body, expected) in [
+        (json!({"detail":"retention_gap"}), RETENTION_GAP),
+        (json!({"detail":"other"}), REFUSED),
+    ] {
+        let (client, server) = serve(vec![response(200, receipt()), response(409, body)]).await;
+        let mut reader = HostLogs::bind(Arc::new(client)).await.unwrap();
+        assert_eq!(reader.read().await.err(), Some(expected));
+        assert!(!reader.valid());
+        assert_eq!(reader.read().await.err(), Some(REFUSED));
         server.await.unwrap();
     }
 }

@@ -1,7 +1,7 @@
 use crate::presentation::Viewport;
 use agent_terminal_ui_native::{
     GraphOsClient,
-    host_logs::{HostLogs, LogBatch, REFUSED},
+    host_logs::{HostLogs, LogBatch, REFUSED, RETENTION_GAP},
 };
 use crossterm::event::KeyCode;
 use ratatui::{
@@ -89,7 +89,8 @@ impl HostLogView {
                 if batch.gap {
                     self.lines.push_back("[Log history gap]".to_owned());
                 }
-                for message in batch.messages {
+                for record in batch.records {
+                    let message = record.display();
                     for line in message.lines() {
                         self.lines.push_back(line.to_owned());
                         while self.lines.len() > 1000 {
@@ -100,6 +101,10 @@ impl HostLogView {
                 while self.lines.len() > 1000 {
                     self.lines.pop_front();
                 }
+            }
+            Ok(Err(RETENTION_GAP)) => {
+                self.refuse();
+                self.status = RETENTION_GAP;
             }
             _ => self.refuse(),
         }
@@ -194,5 +199,32 @@ mod tests {
         view.tick();
         assert!(view.lines.is_empty());
         assert!(!view.pending());
+    }
+    // spec: TUI-RUNTIME-R002.11
+    #[tokio::test]
+    async fn retention_gap_clears_lines_and_renders_distinct_status() {
+        let mut view = HostLogView::default();
+        view.open = true;
+        view.lines.push_back("protected".to_owned());
+        view.request = Some(tokio::spawn(async { Err(RETENTION_GAP) }));
+        view.complete().await;
+        view.tick();
+        assert!(view.lines.is_empty());
+        assert_eq!(view.status, RETENTION_GAP);
+        assert!(!view.pending());
+        let backend = ratatui::backend::TestBackend::new(100, 8);
+        let mut terminal = ratatui::Terminal::new(backend).unwrap();
+        terminal
+            .draw(|frame| view.draw(frame, Style::default()))
+            .unwrap();
+        let text: String = terminal
+            .backend()
+            .buffer()
+            .content
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect();
+        assert!(text.contains("resume position is no longer retained"));
+        assert!(!text.contains("protected"));
     }
 }

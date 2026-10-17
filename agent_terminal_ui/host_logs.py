@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import math
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, fields
@@ -65,9 +66,35 @@ class HostLaunchReceipt:
         return receipt
 
 
+RETENTION_GAP = (
+    "Host log history gap: the resume position is no longer retained. "
+    "Fresh admission is required."
+)
+
+
+class HostLogRetentionGap(Exception):
+    """The server refused a position that is no longer retained."""
+
+
+@dataclass(frozen=True)
+class HostLogRecord:
+    host_instance: str
+    sequence: int
+    request: str
+    timestamp: float
+    severity: str
+    message: str
+
+    def display(self) -> str:
+        return (
+            f"[{self.timestamp} {self.severity} host={self.host_instance} "
+            f"seq={self.sequence} request={self.request}] {self.message}"
+        )
+
+
 @dataclass(frozen=True)
 class HostLogBatch:
-    records: tuple[str, ...]
+    records: tuple[HostLogRecord, ...]
     cursor: str | None
     gap: bool
 
@@ -95,12 +122,16 @@ class AuthenticatedHostLogReader:
             async with self._client.stream(
                 "POST", path, json=body, follow_redirects=False
             ) as response:
-                response.raise_for_status()
                 data = bytearray()
                 async for chunk in response.aiter_bytes():
                     if len(data) + len(chunk) > 2 * 1024 * 1024:
                         raise ValueError("host log response limit")
                     data.extend(chunk)
+                if response.status_code == 409 and json.loads(data) == {
+                    "detail": "retention_gap"
+                }:
+                    raise HostLogRetentionGap(RETENTION_GAP)
+                response.raise_for_status()
         return json.loads(data)
 
     async def bind(self) -> HostLaunchReceipt:
@@ -134,7 +165,8 @@ class AuthenticatedHostLogReader:
             raise ValueError("host log batch limit")
         try:
             payload = await self._post(
-                "host/logs/read", {"log_ref": log_ref, "cursor": cursor, "limit": limit}
+                "host/logs/read",
+                {"version": 2, "log_ref": log_ref, "cursor": cursor, "limit": limit},
             )
             if not self.accepts(receipt):
                 raise PermissionError("host log session expired")
@@ -145,28 +177,58 @@ class AuthenticatedHostLogReader:
 
 
 def _batch(payload: Any, limit: int) -> HostLogBatch:
-    if not isinstance(payload, dict) or set(payload) != {"records", "cursor", "gap"}:
+    if (
+        not isinstance(payload, dict)
+        or set(payload) != {"version", "records", "cursor", "gap"}
+        or type(payload["version"]) is not int
+        or payload["version"] != 2
+    ):
         raise ValueError("invalid host log batch")
     rows, cursor, gap = payload["records"], payload["cursor"], payload["gap"]
     if not isinstance(rows, list) or len(rows) > limit or type(gap) is not bool:
         raise ValueError("invalid host log bounds")
     if cursor is not None and (not isinstance(cursor, str) or len(cursor) > 1024):
         raise ValueError("invalid host log cursor")
-    messages = []
+    records = []
     for row in rows:
-        if not isinstance(row, dict) or set(row) != {"message"}:
+        if not isinstance(row, dict) or set(row) != {
+            f.name for f in fields(HostLogRecord)
+        }:
             raise ValueError("invalid host log record")
-        message = row["message"]
-        if not isinstance(message, str) or len(message.encode()) > 16384:
-            raise ValueError("invalid host log record")
-        messages.append(
-            "".join(
-                c
-                for c in message
-                if c in "\n\t" or (ord(c) >= 32 and not 127 <= ord(c) <= 159)
-            )
-        )
-    return HostLogBatch(tuple(messages), cursor, gap)
+        for key, maximum in (
+            ("host_instance", 128),
+            ("request", 1024),
+            ("severity", 32),
+            ("message", 16384),
+        ):
+            if type(row[key]) is not str or len(row[key].encode()) > maximum:
+                raise ValueError("invalid host log text")
+        if (
+            not row["host_instance"]
+            or not row["severity"]
+            or type(row["sequence"]) is not int
+            or not 1 <= row["sequence"] <= 2**63 - 1
+            or type(row["timestamp"]) not in (int, float)
+            or not math.isfinite(row["timestamp"])
+            or row["timestamp"] < 0
+        ):
+            raise ValueError("invalid host log metadata")
+        clean: dict[str, Any] = {
+            key: _literal(value, multiline=key == "message")
+            if isinstance(value, str)
+            else value
+            for key, value in row.items()
+        }
+        records.append(HostLogRecord(**clean))
+    return HostLogBatch(tuple(records), cursor, gap)
+
+
+def _literal(value: str, *, multiline: bool) -> str:
+    return "".join(
+        c
+        for c in value
+        if (multiline and c in "\n\t") or (ord(c) >= 32 and not 127 <= ord(c) <= 159)
+    )
 
 
 class HostLogSubscription:
@@ -178,9 +240,11 @@ class HostLogSubscription:
         receipt: HostLaunchReceipt,
         display: Callable[[HostLogBatch], None],
         refused: Callable[[], None],
+        retention_gap: Callable[[], None],
     ) -> None:
         self.reader, self.receipt = reader, receipt
         self._display, self._refused = display, refused
+        self._retention_gap = retention_gap
         self._task: asyncio.Task | None = None
         self._cursor: str | None = None
 
@@ -201,6 +265,9 @@ class HostLogSubscription:
             raise PermissionError("host log handoff expired")
         except asyncio.CancelledError:
             raise
+        except HostLogRetentionGap:
+            self._cursor = None
+            self._retention_gap()
         except Exception:
             self._cursor = None
             self._refused()

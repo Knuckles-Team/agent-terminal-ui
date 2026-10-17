@@ -899,11 +899,11 @@
         "8d06ef716fc4"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/host_log_view.rs:150",
-        "native/agent-terminal-ui/src/host_log_view.rs:174",
-        "native/agent-terminal-ui/tests/host_logs.rs:110",
-        "native/agent-terminal-ui/tests/host_logs.rs:128",
-        "native/agent-terminal-ui/tests/host_logs.rs:88"
+        "native/agent-terminal-ui/src/host_log_view.rs:155",
+        "native/agent-terminal-ui/src/host_log_view.rs:179",
+        "native/agent-terminal-ui/src/host_log_view.rs:203",
+        "native/agent-terminal-ui/tests/host_logs.rs:115",
+        "native/agent-terminal-ui/tests/host_logs.rs:133"
       ]
     },
     {
