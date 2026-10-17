@@ -861,8 +861,10 @@
     {
       "id": "TUI-RUNTIME-R002.10",
       "title": "Authenticated host log subscription",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "fdee44da708a"
+      ],
       "verified_by": [
         "tests/test_host_log_subscription.py:2"
       ]
