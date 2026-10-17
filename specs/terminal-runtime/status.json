@@ -71,7 +71,8 @@
     "TUI-RUNTIME-R008.2.3",
     "TUI-RUNTIME-R002.1.3.2.1",
     "TUI-RUNTIME-R002.1.3.2.2",
-    "TUI-RUNTIME-R010.8"
+    "TUI-RUNTIME-R010.8",
+    "TUI-RUNTIME-R010.9"
   ],
   "requirements": [
     {
@@ -297,8 +298,8 @@
         "99b67585d433"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:633",
-        "native/agent-terminal-ui/src/main.rs:670"
+        "native/agent-terminal-ui/src/main.rs:654",
+        "native/agent-terminal-ui/src/main.rs:691"
       ]
     },
     {
@@ -338,7 +339,8 @@
         "TUI-RUNTIME-R010.5",
         "TUI-RUNTIME-R010.6",
         "TUI-RUNTIME-R010.7",
-        "TUI-RUNTIME-R010.8"
+        "TUI-RUNTIME-R010.8",
+        "TUI-RUNTIME-R010.9"
       ]
     },
     {
@@ -440,7 +442,7 @@
         "e8711e7f49bf"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:609",
+        "native/agent-terminal-ui/src/main.rs:630",
         "native/agent-terminal-ui/tests/discovery.rs:110",
         "native/agent-terminal-ui/tests/discovery.rs:29",
         "native/agent-terminal-ui/tests/discovery.rs:50",
@@ -496,10 +498,10 @@
         "9b0dcc67e610"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:419",
-        "native/agent-terminal-ui/src/main.rs:444",
-        "native/agent-terminal-ui/src/main.rs:463",
-        "native/agent-terminal-ui/src/main.rs:490",
+        "native/agent-terminal-ui/src/main.rs:440",
+        "native/agent-terminal-ui/src/main.rs:465",
+        "native/agent-terminal-ui/src/main.rs:484",
+        "native/agent-terminal-ui/src/main.rs:511",
         "native/agent-terminal-ui/tests/submission.rs:100"
       ]
     },
@@ -522,11 +524,11 @@
         "3c592ffc6075"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:530",
-        "native/agent-terminal-ui/src/main.rs:556",
-        "native/agent-terminal-ui/src/main.rs:572",
-        "native/agent-terminal-ui/src/main.rs:708",
-        "native/agent-terminal-ui/src/main.rs:759"
+        "native/agent-terminal-ui/src/main.rs:551",
+        "native/agent-terminal-ui/src/main.rs:577",
+        "native/agent-terminal-ui/src/main.rs:593",
+        "native/agent-terminal-ui/src/main.rs:729",
+        "native/agent-terminal-ui/src/main.rs:780"
       ]
     },
     {
@@ -537,10 +539,10 @@
         "b05266d66c30"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:772",
-        "native/agent-terminal-ui/src/main.rs:789",
-        "native/agent-terminal-ui/src/main.rs:828",
-        "native/agent-terminal-ui/src/main.rs:888",
+        "native/agent-terminal-ui/src/main.rs:793",
+        "native/agent-terminal-ui/src/main.rs:810",
+        "native/agent-terminal-ui/src/main.rs:849",
+        "native/agent-terminal-ui/src/main.rs:909",
         "native/agent-terminal-ui/tests/cancellation.rs:119"
       ]
     },
@@ -764,7 +766,7 @@
         "608e9e9d122b"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:937",
+        "native/agent-terminal-ui/src/main.rs:958",
         "native/agent-terminal-ui/src/presentation.rs:138",
         "native/agent-terminal-ui/src/presentation.rs:187",
         "native/agent-terminal-ui/src/presentation.rs:212"
@@ -803,14 +805,29 @@
     {
       "id": "TUI-RUNTIME-R010.8",
       "title": "Native inspector transport boundary",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "14a4f6e68157"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/run_inspector_client.rs:294",
         "native/agent-terminal-ui/src/run_inspector_client.rs:332",
         "native/agent-terminal-ui/src/run_inspector_client.rs:365",
         "native/agent-terminal-ui/src/run_inspector_client.rs:446",
         "native/agent-terminal-ui/src/run_inspector_client.rs:475"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R010.9",
+      "title": "Bounded native inspector loop attachment",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [
+        "native/agent-terminal-ui/src/inspector_view.rs:209",
+        "native/agent-terminal-ui/src/inspector_view.rs:227",
+        "native/agent-terminal-ui/src/inspector_view.rs:245",
+        "native/agent-terminal-ui/src/inspector_view.rs:288",
+        "native/agent-terminal-ui/src/inspector_view.rs:302"
       ]
     }
   ]
