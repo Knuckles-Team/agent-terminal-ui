@@ -138,8 +138,8 @@
       ],
       "verified_by": [
         "tests/test_client.py:508",
-        "tests/test_client.py:527",
-        "tests/test_client.py:556",
+        "tests/test_client.py:523",
+        "tests/test_client.py:559",
         "tests/test_commands.py:732",
         "tests/test_commands.py:784"
       ]
@@ -166,11 +166,11 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:540",
-        "tests/test_client.py:569",
-        "tests/test_client.py:592",
-        "tests/test_client.py:606",
-        "tests/test_client.py:629"
+        "tests/test_client.py:536",
+        "tests/test_client.py:572",
+        "tests/test_client.py:595",
+        "tests/test_client.py:609",
+        "tests/test_client.py:632"
       ]
     },
     {
@@ -195,7 +195,7 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:688",
+        "tests/test_client.py:691",
         "tests/test_commands.py:800",
         "tests/test_import_guard.py:46",
         "tests/test_import_guard.py:53",

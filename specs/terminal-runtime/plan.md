@@ -589,6 +589,15 @@ Keep normal agent interaction available. This is a zero-read refusal repair,
 not a receipt, reader, reconnect, rotation, tenant-isolation or served-host
 acceptance claim. R002.2 through R002.6 remain pending.
 
+### 2026-10-17: Refuse unsigned plan confirmation
+
+R001.3 and R001.5 require a signed exchange for the exact pending call.
+The current Python helper accepts only a plan reference, operation and arguments.
+A caller bearer token does not supply the missing pending-call signature.
+Refuse this helper before transport, including when caller credentials exist.
+Keep the pending request available after refusal. This repair does not qualify
+signed confirmation, coding request admission or served approval execution.
+
 ### 2026-10-17: Authenticated HTTP log subscription (R002.10)
 
 The injected HTTP reader obtains binding metadata from GraphOS's authenticated reference endpoint.

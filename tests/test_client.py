@@ -506,20 +506,16 @@ async def test_versioned_operation_refuses_malformed_success_envelope(
 
 @pytest.mark.asyncio
 @pytest.mark.spec("TUI-RUNTIME-R001.3")
-async def test_confirm_plan_sends_full_binding():
+async def test_bearer_credential_cannot_replace_signed_plan_binding():
     client, recorder = _client(
-        lambda request: httpx.Response(
-            200, json={"jsonrpc": "2.0", "result": {"done": True}}
-        ),
-        bearer_token="caller-token",
+        lambda _request: httpx.Response(500), bearer_token="caller-token"
     )
-    assert await client.confirm_plan(
-        plan_ref="p1", op="query.uql", params={"query": "MATCH ()"}
-    ) == {"done": True}
-    sent = json.loads(recorder.requests[0].content)
-    assert sent["method"] == "graphos.plan/confirm"
-    assert sent["params"]["params"] == {"query": "MATCH ()"}
-    assert recorder.requests[0].headers["Authorization"] == "Bearer caller-token"
+    with pytest.raises(GraphOSOperationError) as caught:
+        await client.confirm_plan(
+            plan_ref="p1", op="query.uql", params={"query": "MATCH ()"}
+        )
+    assert caught.value.code == "APPROVAL_UNAVAILABLE"
+    assert recorder.requests == []
     await client.close()
 
 
@@ -538,8 +534,14 @@ async def test_unsigned_plan_confirmation_refuses_before_network():
 
 @pytest.mark.asyncio
 @pytest.mark.spec("TUI-RUNTIME-R001.5")
-async def test_unsigned_input_required_decision_cannot_resume_a2a_task():
-    client, recorder = _client(lambda _request: httpx.Response(500))
+@pytest.mark.parametrize(
+    ("token", "refusal"),
+    [(None, "CALLER_CREDENTIAL_REQUIRED"), ("caller-token", "APPROVAL_UNAVAILABLE")],
+)
+async def test_unsigned_input_required_decision_cannot_resume_a2a_task(token, refusal):
+    client, recorder = _client(
+        lambda _request: httpx.Response(500), bearer_token=token
+    )
     client._pending_plans[_TASK] = {
         "plan_ref": "p1",
         "op": "query.uql",
@@ -547,7 +549,8 @@ async def test_unsigned_input_required_decision_cannot_resume_a2a_task():
     }
     events = [event async for event in client.send_decision({_TASK: "accept"})]
     assert events[-1]["type"] == "error"
-    assert events[-1]["message"] == "CALLER_CREDENTIAL_REQUIRED"
+    assert events[-1]["message"] == refusal
+    assert _TASK in client._pending_plans
     assert recorder.requests == []
     await client.close()
 
