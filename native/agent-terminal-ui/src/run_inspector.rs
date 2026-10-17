@@ -1,5 +1,5 @@
 //! Read-only presentation boundary for TUI-RUNTIME-R010.
-//! Inputs are normalized by an authorized GraphOS adapter, not wire models.
+//! Inputs are normalized by an authorized Arbora adapter, not wire models.
 use ratatui::{
     Frame,
     layout::Rect,
@@ -38,7 +38,7 @@ pub enum PlanRefusal {
 }
 
 /// Interprets the producer's revision and expiry contract. No implementation is
-/// supplied until AU publishes that contract and GraphOS serves it.
+/// supplied until AU publishes that contract and Arbora serves it.
 pub trait PlanValidator {
     fn validate(
         &self,

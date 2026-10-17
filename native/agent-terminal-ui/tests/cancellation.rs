@@ -1,7 +1,7 @@
 mod support;
 
 use agent_terminal_ui_native::{
-    GraphOsClient,
+    ArboraClient,
     correlation::{TaskCorrelation, TaskState},
 };
 use serde_json::{Value, json};
@@ -17,7 +17,7 @@ fn acknowledgement() -> Value {
             "kind": "task",
             "id": "task-1",
             "contextId": "context-2",
-            "metadata": {"graphOs": {"runId": "run-3"}},
+            "metadata": {"arbora": {"runId": "run-3"}},
             "status": {"state": "canceled"}
         }
     })
@@ -39,7 +39,7 @@ async fn cancellation_requires_authenticated_matching_server_acknowledgement() {
                 .remove("metadata");
         }
         let (url, server) = serve("200 OK", &response.to_string()).await;
-        let task = GraphOsClient::new(&url, Some("fixture-token"))
+        let task = ArboraClient::new(&url, Some("fixture-token"))
             .unwrap()
             .cancel_task(&binding())
             .await
@@ -90,8 +90,8 @@ async fn cancellation_refuses_non_canceled_mismatched_and_malformed_results() {
         ("/result/contextId", json!("other-context")),
         ("/result/kind", json!("status-update")),
         ("/result/status/state", json!("unknown")),
-        ("/result/metadata/graphOs/runId", json!("other-run")),
-        ("/result/metadata/graphOs/runId", json!(null)),
+        ("/result/metadata/arbora/runId", json!("other-run")),
+        ("/result/metadata/arbora/runId", json!(null)),
     ] {
         let mut response = acknowledgement();
         *response.pointer_mut(path).unwrap() = value;
@@ -105,7 +105,7 @@ async fn cancellation_refuses_non_canceled_mismatched_and_malformed_results() {
     responses.push(response);
     for response in responses {
         let (url, server) = serve("200 OK", &response.to_string()).await;
-        let error = GraphOsClient::new(&url, None)
+        let error = ArboraClient::new(&url, None)
             .unwrap()
             .cancel_task(&binding())
             .await
@@ -126,7 +126,7 @@ async fn cancellation_preserves_absent_run_and_refuses_new_run() {
         .remove("metadata");
     let unbound_run = TaskCorrelation::from_task(&response["result"]).unwrap();
     let (url, server) = serve("200 OK", &response.to_string()).await;
-    let task = GraphOsClient::new(&url, None)
+    let task = ArboraClient::new(&url, None)
         .unwrap()
         .cancel_task(&unbound_run)
         .await
@@ -135,7 +135,7 @@ async fn cancellation_preserves_absent_run_and_refuses_new_run() {
     server.await.unwrap();
     let (url, server) = serve("200 OK", &acknowledgement().to_string()).await;
     assert!(
-        GraphOsClient::new(&url, None)
+        ArboraClient::new(&url, None)
             .unwrap()
             .cancel_task(&unbound_run)
             .await
@@ -156,7 +156,7 @@ async fn cancellation_refuses_http_failure_redirect_invalid_json_and_oversized_r
         "200 OK",
     ] {
         let (url, server) = serve(status, "secret-server-detail").await;
-        let error = GraphOsClient::new(&url, None)
+        let error = ArboraClient::new(&url, None)
             .unwrap()
             .cancel_task(&binding())
             .await
@@ -166,12 +166,12 @@ async fn cancellation_refuses_http_failure_redirect_invalid_json_and_oversized_r
     }
     let (url, server) = serve("200 OK", &"x".repeat(1024 * 1024 + 1)).await;
     assert_eq!(
-        GraphOsClient::new(&url, None)
+        ArboraClient::new(&url, None)
             .unwrap()
             .cancel_task(&binding())
             .await
             .unwrap_err(),
-        "GraphOS task snapshot exceeds size limit"
+        "Arbora task snapshot exceeds size limit"
     );
     server.await.unwrap();
 }
@@ -182,7 +182,7 @@ async fn interrupted_cancellation_is_not_acknowledged_or_retried() {
     for response in ["", "HTTP/1.1 200 OK\r\nContent-Length: 1000\r\n\r\n{"] {
         let (url, server) = serve_raw(response.to_owned()).await;
         assert!(
-            GraphOsClient::new(&url, None)
+            ArboraClient::new(&url, None)
                 .unwrap()
                 .cancel_task(&binding())
                 .await
@@ -197,7 +197,7 @@ async fn interrupted_cancellation_is_not_acknowledged_or_retried() {
 async fn timed_out_cancellation_has_unknown_outcome_without_retry() {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let client =
-        GraphOsClient::new(&format!("http://{}", listener.local_addr().unwrap()), None).unwrap();
+        ArboraClient::new(&format!("http://{}", listener.local_addr().unwrap()), None).unwrap();
     let server = async {
         let (mut socket, _) = tokio::time::timeout(Duration::from_secs(2), listener.accept())
             .await
@@ -226,7 +226,7 @@ async fn timed_out_cancellation_has_unknown_outcome_without_retry() {
             .expect("production cancellation timeout must remain bounded")
             .unwrap_err();
         assert!(started.elapsed() >= Duration::from_secs(10));
-        assert_eq!(error, "GraphOS cancellation outcome unknown");
+        assert_eq!(error, "Arbora cancellation outcome unknown");
     };
     tokio::join!(server, request);
 }

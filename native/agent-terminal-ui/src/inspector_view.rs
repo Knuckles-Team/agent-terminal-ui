@@ -1,6 +1,6 @@
 use crate::presentation::Viewport;
 use agent_terminal_ui_native::{
-    GraphOsClient,
+    ArboraClient,
     correlation::TaskCorrelation,
     run_inspector::{ReadRefusal, RunInspector},
     run_inspector_client::RunRead,
@@ -44,12 +44,12 @@ impl InspectorView {
         }
     }
 
-    pub fn open(&mut self, client: Arc<GraphOsClient>) {
+    pub fn open(&mut self, client: Arc<ArboraClient>) {
         self.open = true;
         self.refresh(client);
     }
 
-    fn refresh(&mut self, client: Arc<GraphOsClient>) {
+    fn refresh(&mut self, client: Arc<ArboraClient>) {
         if self.pending() {
             return;
         }
@@ -90,7 +90,7 @@ impl InspectorView {
     }
 
     /// An open read-only inspector consumes keys, including effect shortcuts.
-    pub fn key(&mut self, key: KeyCode, client: Arc<GraphOsClient>) -> bool {
+    pub fn key(&mut self, key: KeyCode, client: Arc<ArboraClient>) -> bool {
         if !self.open {
             return false;
         }
@@ -156,12 +156,12 @@ mod tests {
         let mut task =
             json!({"kind":"task","id":"task","contextId":"ctx","status":{"state":"working"}});
         if let Some(run) = run {
-            task["metadata"] = json!({"graphOs":{"runId":run}});
+            task["metadata"] = json!({"arbora":{"runId":run}});
         }
         TaskCorrelation::from_task(&task).unwrap()
     }
-    fn client() -> Arc<GraphOsClient> {
-        Arc::new(GraphOsClient::new("http://127.0.0.1:1", None).unwrap())
+    fn client() -> Arc<ArboraClient> {
+        Arc::new(ArboraClient::new("http://127.0.0.1:1", None).unwrap())
     }
     struct ValidUntil(Instant);
     impl PlanValidator for ValidUntil {

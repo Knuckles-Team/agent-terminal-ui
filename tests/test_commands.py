@@ -732,11 +732,11 @@ class TestCommandEdgeCases:
 @pytest.mark.spec("TUI-RUNTIME-R001.3")
 async def test_op_plan_requires_explicit_confirm(command_processor, mock_app):
     """Confirmation reuses the exact previewed parameters and lease reference."""
-    from agent_terminal_ui.client import GraphOSOperationError
+    from agent_terminal_ui.client import ArboraOperationError
 
     mock_app.agent_client.invoke_op = AsyncMock(
         side_effect=[
-            GraphOSOperationError("CONFIRMATION_REQUIRED", {"plan_ref": "p1"}),
+            ArboraOperationError("CONFIRMATION_REQUIRED", {"plan_ref": "p1"}),
             {"rows": [1]},
         ]
     )
@@ -767,10 +767,10 @@ async def test_approval_op_stays_disabled(command_processor, mock_app, op):
 @pytest.mark.asyncio
 @pytest.mark.spec("TUI-RUNTIME-R001.6")
 async def test_op_reports_optional_client_unavailable(command_processor, mock_app):
-    from agent_terminal_ui.client import GraphOSOperationError
+    from agent_terminal_ui.client import ArboraOperationError
 
     mock_app.agent_client.invoke_op = AsyncMock(
-        side_effect=GraphOSOperationError("CLIENT_UNAVAILABLE")
+        side_effect=ArboraOperationError("CLIENT_UNAVAILABLE")
     )
     await command_processor.process('/op query.uql {"query":"MATCH ()"}')
     conversation = mock_app.query_one.return_value
@@ -783,10 +783,10 @@ async def test_op_reports_optional_client_unavailable(command_processor, mock_ap
 @pytest.mark.asyncio
 @pytest.mark.spec("TUI-RUNTIME-R001.3")
 async def test_console_step_up_cannot_be_confirmed_locally(command_processor, mock_app):
-    from agent_terminal_ui.client import GraphOSOperationError
+    from agent_terminal_ui.client import ArboraOperationError
 
     mock_app.agent_client.invoke_op = AsyncMock(
-        side_effect=GraphOSOperationError("STEP_UP_REQUIRED", {"plan_ref": "p2"})
+        side_effect=ArboraOperationError("STEP_UP_REQUIRED", {"plan_ref": "p2"})
     )
     await command_processor.process('/op query.uql {"query":"MATCH ()"}')
     await command_processor.process("/confirm p2")

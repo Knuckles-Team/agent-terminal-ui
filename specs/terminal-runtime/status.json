@@ -117,7 +117,7 @@
     },
     {
       "id": "TUI-RUNTIME-R001.2",
-      "title": "Verified caller header reaches remote GraphOS only over TLS",
+      "title": "Verified caller header reaches remote Arbora only over TLS",
       "delivery_state": "VERIFIED",
       "landed_in": [
         "d309979d133f"
@@ -204,14 +204,14 @@
     },
     {
       "id": "TUI-RUNTIME-R001.8",
-      "title": "One-shot background tool-task command extends command/client contract with GraphOS preapproval binding",
+      "title": "One-shot background tool-task command extends command/client contract with Arbora preapproval binding",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R002",
-      "title": "Terminal chat transport is reconciled with the current Graph OS boundary",
+      "title": "Terminal chat transport is reconciled with the current Arbora boundary",
       "delivery_state": "SPECIFIED",
       "landed_in": [
         "d2b5cea055c8",

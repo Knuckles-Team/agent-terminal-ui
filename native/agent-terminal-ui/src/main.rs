@@ -1,5 +1,5 @@
 use agent_terminal_ui_native::{
-    GraphOsClient, SUBMISSION_UNKNOWN, TaskSnapshot, TaskSubmission,
+    ArboraClient, SUBMISSION_UNKNOWN, TaskSnapshot, TaskSubmission,
     correlation::{TaskCorrelation, TaskState},
 };
 use crossterm::event::{Event, EventStream, KeyCode, KeyEventKind, KeyModifiers};
@@ -28,7 +28,7 @@ fn draw_viewport(frame: &mut Frame, status: &str, style: Style, viewport: &mut V
         "{status}\n\nTask streaming and approvals remain unavailable.\n\nl: host logs | i: run inspector | r: refresh read | x: cancel remote task | c: cancel local request | q / Ctrl+C: quit"
     );
     let block = Block::bordered()
-        .title("GraphOS")
+        .title("Arbora")
         .title_bottom("PgUp/PgDn Home/End");
     let inner = block.inner(frame.area());
     let paragraph = Paragraph::new(text).style(style).wrap(Wrap { trim: false });
@@ -123,7 +123,7 @@ enum ReadStatus {
 }
 
 async fn read_status(
-    client: &GraphOsClient,
+    client: &ArboraClient,
     task_id: Option<&str>,
     binding: Option<&TaskCorrelation>,
 ) -> Result<ReadStatus, &'static str> {
@@ -261,7 +261,7 @@ fn submission_completed(
 }
 
 async fn run(
-    client: Arc<GraphOsClient>,
+    client: Arc<ArboraClient>,
     mut task_id: Option<String>,
     submission: Option<TaskSubmission>,
 ) -> Result<(), &'static str> {
@@ -270,11 +270,11 @@ async fn run(
     let style = presentation_style(&theme, &no_color);
     let mut submitting = submission.is_some();
     let loading = if submitting {
-        "Submitting GraphOS task..."
+        "Submitting Arbora task..."
     } else if task_id.is_some() {
-        "Reading GraphOS task..."
+        "Reading Arbora task..."
     } else {
-        "Discovering GraphOS..."
+        "Discovering Arbora..."
     };
     let mut terminal = ratatui::init();
     let mut events = EventStream::new();
@@ -370,7 +370,7 @@ async fn run(
                                 }
                             }
                             KeyCode::Char('r') if !pending && !submission_unknown => {
-                                status = if task_id.is_some() { "Reading GraphOS task..." } else { "Discovering GraphOS..." }.to_owned();
+                                status = if task_id.is_some() { "Reading Arbora task..." } else { "Discovering Arbora..." }.to_owned();
                                 let client = client.clone();
                                 let task_id = task_id.clone();
                                 let read_binding = binding.clone();
@@ -424,7 +424,7 @@ async fn main() -> ExitCode {
             return Err("Submission requires a caller credential");
         }
         let submission = prompt.as_deref().map(TaskSubmission::new).transpose()?;
-        let client = GraphOsClient::new(&endpoint, token.as_deref())?;
+        let client = ArboraClient::new(&endpoint, token.as_deref())?;
         run(Arc::new(client), task_id, submission).await
     }
     .await;
@@ -556,7 +556,7 @@ mod tests {
             "status": {"state": "working"}
         });
         if let Some(run_id) = run_id {
-            task["metadata"] = serde_json::json!({"graphOs": {"runId": run_id}});
+            task["metadata"] = serde_json::json!({"arbora": {"runId": run_id}});
         }
         ReadStatus::Task(TaskSnapshot {
             terminal_event: Default::default(),
@@ -618,10 +618,10 @@ mod tests {
         let initial = binding.clone();
         assert_eq!(
             completed_status(
-                Ok(Err("GraphOS task read refused or unavailable")),
+                Ok(Err("Arbora task read refused or unavailable")),
                 &mut binding
             ),
-            "GraphOS task read refused or unavailable"
+            "Arbora task read refused or unavailable"
         );
         assert_eq!(binding, initial);
         let request = tokio::spawn(std::future::pending::<Result<ReadStatus, &'static str>>());
@@ -652,7 +652,7 @@ mod tests {
             .draw(|frame| {
                 draw(
                     frame,
-                    "GraphOS discovery refused or unavailable",
+                    "Arbora discovery refused or unavailable",
                     Style::default(),
                 )
             })
@@ -664,7 +664,7 @@ mod tests {
             .iter()
             .map(|cell| cell.symbol())
             .collect();
-        assert!(text.contains("GraphOS discovery refused"));
+        assert!(text.contains("Arbora discovery refused"));
         assert!(text.contains("Task streaming and approvals remain unavailable"));
     }
 
@@ -721,7 +721,7 @@ mod tests {
                 .draw(|frame| {
                     draw(
                         frame,
-                        "Discovering GraphOS...",
+                        "Discovering Arbora...",
                         presentation_style(theme, no_color),
                     )
                 })
@@ -753,7 +753,7 @@ mod tests {
                 "status": {"state": "working"}
             });
             if let Some(run_id) = run_id {
-                task["metadata"] = serde_json::json!({"graphOs": {"runId": run_id}});
+                task["metadata"] = serde_json::json!({"arbora": {"runId": run_id}});
             }
             let snapshot = TaskSnapshot {
                 terminal_event: Default::default(),
@@ -775,7 +775,7 @@ mod tests {
             assert!(text.contains(&format!("Run ID: {}", run_id.unwrap_or("unavailable"))));
             assert!(text.contains("State: working"));
             let refused = completed_status(
-                Ok(Err("GraphOS task read refused or unavailable")),
+                Ok(Err("Arbora task read refused or unavailable")),
                 &mut Some(snapshot.correlation.clone()),
             );
             terminal
@@ -788,7 +788,7 @@ mod tests {
                 .iter()
                 .map(|cell| cell.symbol())
                 .collect();
-            assert!(text.contains("GraphOS task read refused or unavailable"));
+            assert!(text.contains("Arbora task read refused or unavailable"));
             for protected in ["task-one", "context-two", "run-three", "State: working"] {
                 assert!(!text.contains(protected));
             }
@@ -1040,7 +1040,7 @@ mod terminal_point_view_tests {
     #[test]
     fn committed_identity_renders_literally_and_failed_read_clears_it() {
         let task = json!({"kind":"task","id":"task","contextId":"ctx","status":{"state":"completed"},
-        "metadata":{"graphOs":{"runId":"run","terminalEvent":{
+        "metadata":{"arbora":{"runId":"run","terminalEvent":{
             "status":"available","tenant":"tenant","scope":{"tenant":"tenant","scope":{"kind":"graph","graph":"graph"},"incarnation_id":"inc","identity_digest":vec![170;32]},
             "batch_id":"[bold]actual-batch","commit_sequence":7,"ordinal":0,"run_id":"run","kind":"outcome","outcome":"succeeded","result_ref":null,"payload_digest":"b".repeat(64)
         }}}});

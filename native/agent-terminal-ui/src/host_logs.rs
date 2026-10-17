@@ -1,5 +1,5 @@
 //! Authenticated, read-only host log transport. Bindings cannot be constructed by callers.
-use crate::GraphOsClient;
+use crate::ArboraClient;
 use serde_json::{Value, json};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -12,7 +12,7 @@ pub struct HostLogs {
     reference: String,
     expires: u64,
     cursor: Option<String>,
-    client: std::sync::Arc<GraphOsClient>,
+    client: std::sync::Arc<ArboraClient>,
 }
 
 pub struct LogBatch {
@@ -84,7 +84,7 @@ fn receipt(value: &Value) -> Result<(String, u64), &'static str> {
     Ok((reference.to_owned(), expires))
 }
 
-async fn post(client: &GraphOsClient, path: &str, body: Value) -> Result<Value, &'static str> {
+async fn post(client: &ArboraClient, path: &str, body: Value) -> Result<Value, &'static str> {
     if !client.authenticated {
         return Err(REFUSED);
     }
@@ -120,7 +120,7 @@ async fn post(client: &GraphOsClient, path: &str, body: Value) -> Result<Value, 
 }
 
 impl HostLogs {
-    pub async fn bind(client: std::sync::Arc<GraphOsClient>) -> Result<Self, &'static str> {
+    pub async fn bind(client: std::sync::Arc<ArboraClient>) -> Result<Self, &'static str> {
         let value = post(&client, "/host/logs/reference", json!({})).await?;
         let (reference, expires) = receipt(&value)?;
         Ok(Self {
