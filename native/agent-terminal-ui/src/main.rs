@@ -11,7 +11,9 @@ use ratatui::{
 };
 use std::{env, ffi::OsString, process::ExitCode, sync::Arc};
 
+mod inspector_view;
 mod presentation;
+use inspector_view::InspectorView;
 use presentation::{Viewport, presentation_style};
 
 #[cfg(test)]
@@ -21,7 +23,7 @@ fn draw(frame: &mut Frame, status: &str, style: Style) {
 
 fn draw_viewport(frame: &mut Frame, status: &str, style: Style, viewport: &mut Viewport) {
     let text = format!(
-        "{status}\n\nTask streaming and approvals remain unavailable.\n\nr: refresh read | x: cancel remote task | c: cancel local request | q / Ctrl+C: quit"
+        "{status}\n\nTask streaming and approvals remain unavailable.\n\ni: run inspector | r: refresh read | x: cancel remote task | c: cancel local request | q / Ctrl+C: quit"
     );
     let block = Block::bordered()
         .title("GraphOS")
@@ -287,12 +289,17 @@ async fn run(
     let mut remote_cancel = false;
     let mut submission_unknown = false;
     let mut viewport = Viewport::default();
+    let mut inspector = InspectorView::default();
+    let mut redraw = tokio::time::interval(std::time::Duration::from_millis(250));
+    redraw.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
     let result = async {
         loop {
             let mut confirmation_visible = false;
             terminal.draw(|frame| {
                 if cancellation == Cancellation::Confirming {
                     confirmation_visible = draw_confirmation(frame, &status, style);
+                } else if inspector.is_open() {
+                    inspector.draw(frame, style, std::time::Instant::now());
                 } else {
                     draw_viewport(frame, &status, style, &mut viewport);
                 }
@@ -300,6 +307,8 @@ async fn run(
             tokio::select! {
                 result = &mut request, if pending => {
                     pending = false;
+                    let accepted = matches!(&result, Ok(Ok(ReadStatus::Task(snapshot)))
+                        if binding.as_ref().is_none_or(|bound: &TaskCorrelation| bound.validate_binding(&snapshot.correlation).is_ok()));
                     if submitting {
                         status = submission_completed(result, &mut binding, &mut cancellation);
                         task_id = binding.as_ref().map(|bound| bound.task_id().to_owned());
@@ -308,7 +317,10 @@ async fn run(
                     } else {
                         status = request_completed(result, &mut binding, &mut cancellation, remote_cancel);
                     }
+                    inspector.task_updated(if accepted { binding.as_ref() } else { None });
                 }
+                _ = inspector.complete(), if inspector.pending() => {}
+                _ = redraw.tick(), if inspector.is_open() => {}
                 event = events.next() => {
                     let Some(Ok(event)) = event else { return Err("Terminal input unavailable"); };
                     if let Event::Key(key) = event {
@@ -316,10 +328,18 @@ async fn run(
                         if key.code == KeyCode::Char('q') || (key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL)) {
                             return Ok(());
                         }
-                        if cancellation != Cancellation::Confirming && viewport.handle(key.code) { continue; }
+                        if cancellation != Cancellation::Confirming {
+                            if inspector.key(key.code, client.clone()) { continue; }
+                            if key.code == KeyCode::Char('i') && !pending {
+                                inspector.open(client.clone());
+                                continue;
+                            }
+                            if viewport.handle(key.code) { continue; }
+                        }
                         match key.code {
                             KeyCode::Char('c') if pending => {
                                 request.abort();
+                                inspector.task_updated(None);
                                 pending = false;
                                 let result = (&mut request).await;
                                 if submitting {
@@ -365,6 +385,7 @@ async fn run(
         }
     }.await;
     request.abort();
+    inspector.close();
     ratatui::restore();
     if submitting {
         status = submission_completed((&mut request).await, &mut binding, &mut cancellation);
