@@ -633,3 +633,7 @@ severity in literal bounded display. Reject malformed metadata and unsupported
 versions. Exact HTTP 409 retention_gap stops polling and clears retained lines
 with a visible gap status. No silent cursor reset, authority inference or task
 action replay is permitted. Live host admission remains separately qualified.
+
+## Amendment: current-plan consumer boundary
+
+R010.4.1 consumes the existing runs.current_plan schema. The run ID must be explicit; no local run or plan is invented. The view bounds items and text, checks UTC validity and uses a monotonic UI timer to clear displayed content at expiry. It provides no effects or producer storage. R010.4 and served inspector acceptance remain open until a composed live producer is qualified.

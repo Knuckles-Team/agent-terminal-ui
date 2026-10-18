@@ -561,6 +561,15 @@ class AgentClient:
             raise ArboraOperationError("INVALID_ENVELOPE")
         return payload.get("result")
 
+    async def get_current_plan(self, run_id: str) -> dict[str, Any]:
+        """Read one explicit run's current plan through the public operation client."""
+        if not isinstance(run_id, str) or not run_id.strip() or len(run_id) > 512:
+            raise ValueError("an explicit run ID is required")
+        result = await self.invoke_op("runs.current_plan", {"run_id": run_id})
+        if not isinstance(result, dict) or not isinstance(result.get("value"), dict):
+            raise ArboraOperationError("INVALID_ENVELOPE")
+        return result["value"]
+
     async def confirm_plan(
         self,
         *,

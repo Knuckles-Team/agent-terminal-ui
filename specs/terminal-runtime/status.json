@@ -85,7 +85,8 @@
     "TUI-RUNTIME-R012.3",
     "TUI-RUNTIME-R012.4",
     "TUI-RUNTIME-R012.5",
-    "TUI-RUNTIME-R012.6"
+    "TUI-RUNTIME-R012.6",
+    "TUI-RUNTIME-R010.4.1"
   ],
   "requirements": [
     {
@@ -284,7 +285,7 @@
         "1f9a26a46229"
       ],
       "verified_by": [
-        "tests/test_precommit_hooks.py:9"
+        "tests/test_precommit_hooks.py:10"
       ]
     },
     {
@@ -388,7 +389,10 @@
       "title": "Read-only current plan",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R010.4.1"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R010.5",
@@ -986,6 +990,15 @@
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R010.4.1",
+      "title": "Python current-plan view uses the served read",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [
+        "tests/test_current_plan_view.py:18"
+      ]
     }
   ]
 }
