@@ -12,10 +12,17 @@ widget and this headless ``StreamSink`` present the same event vocabulary.
 
 from __future__ import annotations
 
+import asyncio
 import sys
 from typing import Any, Protocol, TextIO, runtime_checkable
 
-from agent_terminal_ui.client import AgentClient, client_from_environment
+import httpx
+
+from agent_terminal_ui.client import (
+    A2ATransportError,
+    AgentClient,
+    client_from_environment,
+)
 
 # Events that end a turn (mirrors screens/main.py handling).
 _DONE_MARKER = "[DONE]"
@@ -188,3 +195,132 @@ async def run_headless(
     if client.current_session_id:
         sys.stderr.write(f"session: {client.current_session_id}\n")
     return not runner.failed
+
+
+_OBSERVED_STATES = frozenset(
+    {
+        "submitted",
+        "queued",
+        "working",
+        "running",
+        "input-required",
+        "completed",
+        "canceled",
+        "failed",
+        "rejected",
+    }
+)
+_OBSERVED_END = frozenset(
+    {"completed", "canceled", "failed", "rejected", "input-required"}
+)
+
+
+def _valid_task_id(value: object) -> bool:
+    return (
+        isinstance(value, str)
+        and 0 < len(value) <= 512
+        and value.isprintable()
+        and bool(value.strip())
+    )
+
+
+def _task_identity(task: dict[str, Any], task_id: str) -> tuple[str, str | None, str]:
+    context = task.get("contextId")
+    status = task.get("status")
+    state = status.get("state") if isinstance(status, dict) else None
+    metadata = task.get("metadata", {})
+    if not isinstance(metadata, dict):
+        raise ValueError("invalid task metadata")
+    owner = metadata.get("arbora", {})
+    if not isinstance(owner, dict):
+        raise ValueError("invalid task metadata")
+    run = owner.get("runId")
+    if task.get("id") != task_id or not _valid_task_id(context):
+        raise ValueError("invalid task identity")
+    if run is not None and not _valid_task_id(run):
+        raise ValueError("invalid run identity")
+    if not isinstance(state, str) or state not in _OBSERVED_STATES:
+        raise ValueError("unknown task state")
+    if not isinstance(context, str) or (run is not None and not isinstance(run, str)):
+        raise ValueError("invalid task identity")
+    return context, run, state
+
+
+def _task_output(task: dict[str, Any]) -> str | None:
+    artifacts = task.get("artifacts")
+    if not artifacts:
+        return None
+    if not isinstance(artifacts, list):
+        raise ValueError("invalid task output")
+    texts: list[str] = []
+    size = 0
+    for artifact in artifacts:
+        parts = artifact.get("parts") if isinstance(artifact, dict) else None
+        if not isinstance(parts, list):
+            raise ValueError("invalid task output")
+        for part in parts:
+            if not isinstance(part, dict) or part.get("kind") != "text":
+                raise ValueError("unsupported task output")
+            text = part.get("text")
+            if not isinstance(text, str):
+                raise ValueError("invalid task output")
+            size += len(text)
+            if size > 1_000_000:
+                raise ValueError("task output exceeds display limit")
+            texts.append(text)
+    return "".join(texts) if texts else None
+
+
+async def observe_task(client: AgentClient, task_id: str, sink: RenderSink) -> bool:
+    """Read an existing task until it ends or needs input; never submit effects."""
+    if not _valid_task_id(task_id):
+        sink.error("Task unavailable: invalid task ID")
+        return False
+    context: str | None = None
+    run: str | None = None
+    previous: tuple[str, str | None, str] | None = None
+    try:
+        while True:
+            task = await client.get_task(task_id)
+            next_context, next_run, state = _task_identity(task, task_id)
+            if context is not None and next_context != context:
+                raise ValueError("task context changed")
+            if run is not None and next_run is not None and next_run != run:
+                raise ValueError("task run changed")
+            context, run = next_context, next_run or run
+            output = _task_output(task) if state == "completed" else None
+            current = (context, run, state)
+            if current != previous:
+                sink.info(
+                    f"task: {task_id} | context: {context} | "
+                    f"run: {run or 'unavailable'}"
+                )
+                sink.info(f"state: {state}")
+                previous = current
+            if state in _OBSERVED_END:
+                if state == "completed" and output is not None:
+                    sink.agent_text(
+                        "".join(c for c in output if c.isprintable() or c in "\n\t")
+                    )
+                    sink.turn_end()
+                else:
+                    sink.info("output: unavailable")
+                if state == "input-required":
+                    sink.info("Detached: approval or input remains required")
+                sink.info("terminal reason: unavailable")
+                return state in {"completed", "canceled", "input-required"}
+            await asyncio.sleep(client.poll_interval)
+    except (A2ATransportError, httpx.HTTPError, ValueError):
+        sink.error(
+            "Task unavailable: read refused or response invalid; observation stopped"
+        )
+        return False
+
+
+async def run_task_observer(task_id: str) -> bool:
+    """Build the existing authenticated client and close it after observation."""
+    client = client_from_environment()
+    try:
+        return await observe_task(client, task_id, StreamSink())
+    finally:
+        await client.aclose()

@@ -677,3 +677,12 @@ and symlink resolution errors return typed failures without file reads. Missing
 files, directories and invalid UTF-8 also remain typed read failures. Tests
 verify pending state clears and later valid reads still work. This does not
 close concurrent filesystem races or production admission requirements.
+
+### 2026-10-18: Read-only task observation
+
+R002.8.2 and R002.8.3 gain `--observe-task TASK_ID` through the existing
+authenticated tasks/get client. Poll the same task and retain its context and
+known run binding. Render server state and final text only. Missing output is
+unavailable. Input-required detaches without approval; interruption stops local
+reads without remote cancellation. No submission or reconnect effect retry is
+permitted. Full one-shot admission, event replay and served proof remain open.
