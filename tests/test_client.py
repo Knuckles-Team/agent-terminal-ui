@@ -509,7 +509,6 @@ async def test_versioned_operation_refuses_malformed_success_envelope(
 
 
 @pytest.mark.asyncio
-@pytest.mark.spec("TUI-RUNTIME-R001.3")
 async def test_bearer_credential_cannot_replace_signed_plan_binding():
     client, recorder = _client(
         lambda _request: httpx.Response(500), bearer_token="caller-token"
@@ -524,7 +523,6 @@ async def test_bearer_credential_cannot_replace_signed_plan_binding():
 
 
 @pytest.mark.asyncio
-@pytest.mark.spec("TUI-RUNTIME-R001.3")
 async def test_unsigned_plan_confirmation_refuses_before_network():
     client, recorder = _client(lambda _request: httpx.Response(500))
     with pytest.raises(ArboraOperationError) as caught:
@@ -560,7 +558,6 @@ async def test_unsigned_input_required_decision_cannot_resume_a2a_task(token, re
 
 
 @pytest.mark.asyncio
-@pytest.mark.spec("TUI-RUNTIME-R001.3")
 async def test_confirm_plan_refuses_approval_operation_without_network():
     client, recorder = _client(lambda _request: httpx.Response(500))
     with pytest.raises(ArboraOperationError) as caught:

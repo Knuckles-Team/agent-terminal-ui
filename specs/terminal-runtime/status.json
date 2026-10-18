@@ -148,17 +148,11 @@
     {
       "id": "TUI-RUNTIME-R001.3",
       "title": "One /confirm resumes exactly the issued plan",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "d309979d133f"
       ],
-      "verified_by": [
-        "tests/test_client.py:512",
-        "tests/test_client.py:527",
-        "tests/test_client.py:563",
-        "tests/test_commands.py:731",
-        "tests/test_commands.py:783"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R001.4",
@@ -182,11 +176,11 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:540",
-        "tests/test_client.py:576",
-        "tests/test_client.py:599",
-        "tests/test_client.py:613",
-        "tests/test_client.py:636"
+        "tests/test_client.py:538",
+        "tests/test_client.py:573",
+        "tests/test_client.py:596",
+        "tests/test_client.py:610",
+        "tests/test_client.py:633"
       ]
     },
     {
@@ -200,7 +194,7 @@
       "verified_by": [
         "tests/test_client.py:411",
         "tests/test_client.py:427",
-        "tests/test_commands.py:767"
+        "tests/test_commands.py:766"
       ]
     },
     {
@@ -211,8 +205,8 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:695",
-        "tests/test_commands.py:799",
+        "tests/test_client.py:692",
+        "tests/test_commands.py:797",
         "tests/test_import_guard.py:46",
         "tests/test_import_guard.py:53",
         "tests/test_import_guard.py:63"
@@ -238,7 +232,7 @@
         "tests/test_client.py:265",
         "tests/test_client.py:289",
         "tests/test_client.py:317",
-        "tests/test_client.py:761"
+        "tests/test_client.py:758"
       ],
       "rollup_of": [
         "TUI-RUNTIME-R002.1",

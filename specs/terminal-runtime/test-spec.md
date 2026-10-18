@@ -278,3 +278,7 @@ R002.1.3.2.2.3 HTTP acceptance also exercises legacy omission, both unavailable
 reasons, null or incomplete data, unknown refusal reasons, invented cursors and
 oversized projections. Every fixture observes tasks/get with the committed-event
 opt-in; malformed projections refuse the complete snapshot.
+
+R001.3 refusal and mocked dispatch tests remain regression coverage only. They
+are not bound as full-criterion evidence. The signed A2A success, tamper, expiry,
+replay and stale-lease fixture in the original matrix remains required.
