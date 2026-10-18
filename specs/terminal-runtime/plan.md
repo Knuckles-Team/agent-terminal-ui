@@ -637,3 +637,9 @@ action replay is permitted. Live host admission remains separately qualified.
 ## Amendment: served fleet and tenant usage reads
 
 R012.4.2 replaces retired MCP/tool listing and usage screen requests with the public generated operation client. Catalog reads stop after ten pages and refuse incomplete or repeated-cursor results. Reload and toggle remain unavailable without a served equivalent. Tenant usage totals retain their supplied metric names; missing totals and per-turn/session breakdowns remain unavailable. R012.6 needs an owner-defined breakdown contract and served display proof; this slice does not close it.
+### Unavailable management command boundary
+
+Arbora's current generated registry has fleet and usage operations, but no
+skills, prompts, knowledge-base, cron or pipeline operation families.
+R012.4.1 stops those registered commands before their legacy REST handlers.
+Served fleet and usage integration remains in R012.4 and R012.6.

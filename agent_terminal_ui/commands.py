@@ -24,6 +24,15 @@ from agent_terminal_ui.tui.exit_confirm_screen import ExitConfirmScreen
 
 logger = logging.getLogger(__name__)
 
+# These operation families are absent from Arbora's served registry.
+_UNAVAILABLE_COMMANDS = {
+    "skills": "skills.list",
+    "prompts": "prompts.list",
+    "kb": "kb.list",
+    "cron": "cron.calendar",
+    "pipeline": "pipeline.status",
+}
+
 
 class CommandProcessor:
     """Registry and processor for terminal slash commands.
@@ -154,6 +163,14 @@ class CommandProcessor:
 
     async def _run_registered_command(self, cmd_name: str, args: str) -> None:
         """Invoke a locally registered command, surfacing failures as notices."""
+        unavailable = _UNAVAILABLE_COMMANDS.get(cmd_name)
+        if unavailable is not None:
+            self.app.notify(
+                f"/{cmd_name} unavailable: Arbora does not serve {unavailable} "
+                "or its management operations.",
+                severity="warning",
+            )
+            return
         try:
             await self.commands[cmd_name](args)
         except Exception as e:

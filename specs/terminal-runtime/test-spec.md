@@ -264,3 +264,4 @@ Renderer tests display literal commit identity and clear it after failed reads. 
   content and stops reads. Unknown conflicts and malformed metadata refuse.
 
 | TUI-RUNTIME-R012.4.2 | tests/test_served_fleet_usage.py | Versioned reads, opaque pages and tenant totals | Refusals, malformed pages and absent totals never become zero or empty success |
+| TUI-RUNTIME-R012.4.1 | Command dispatcher with real AgentClient and recording transport | One named unavailable notice | No REST or mutation request for any management subcommand |

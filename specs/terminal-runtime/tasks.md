@@ -147,3 +147,4 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R012.6:** Read usage through `usage.read`.
 
 - [ ] **TUI-RUNTIME-R012.4.2:** Wire fleet and tenant usage reads; preserve unavailable and pagination boundaries.
+- [ ] **TUI-RUNTIME-R012.4.1:** Refuse unavailable management command families before transport.
