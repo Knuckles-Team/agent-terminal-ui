@@ -696,3 +696,12 @@ Refusal, input-required, auth-required and terminal states stop polling. Local
 interrupts detach; remote cancellation controls are disabled in this mode.
 R002.8.2 and R002.8.3 still require full one-shot admission and replay proof.
 Native arbitrary artifact display remains separate from committed event reads.
+
+### 2026-10-18: Python theme contract
+
+R008 uses Textual theme tokens for primary, secondary, accent, status colors,
+foreground, background, surface and panel. Unknown startup names fall back to
+Tokyo Night. The four shared baseline palettes require a 4.5:1 foreground to
+background contrast floor. Python honors Textual's NO_COLOR presence rule.
+The prescribed Python test checks these boundaries. Native runtime switching,
+full cross-client parity and performance remain in R008.2.3.

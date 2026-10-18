@@ -188,8 +188,9 @@ class AgentApp(App):
         self.auto_approve = auto_approve
         self._start_bg = start_bg
 
-        # Set built-in theme (tokyo-night = blue palette)
-        self.theme = theme_name
+        self.theme = (
+            theme_name if theme_name in self.available_themes else "tokyo-night"
+        )
 
         # Initialize client
         self._owns_client = client is None

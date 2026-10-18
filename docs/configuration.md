@@ -117,7 +117,7 @@ Custom pricing can be set via `tracker.set_pricing(model, input, output, cached)
 |----------|---------|---------|
 | `AGENT_URL` | `http://localhost:8000` | Arbora base URL for A2A chat and REST operations. |
 | `AGENT_BEARER_TOKEN` | unset | Caller credential for Arbora; required for remote endpoints. |
-| `AGENT_THEME` | `tokyo-night` | Startup theme (any Textual built-in theme name). |
+| `AGENT_THEME` | `tokyo-night` | Startup Textual theme. Unknown names fall back to `tokyo-night`. |
 | `TEXTUAL_ANIMATIONS` | `full` | Set to `none` to disable entrance animations (reduced motion). |
 | `AGENT_UTILITIES_DATA_DIR` | platform default | Override the directory for the SQLite session store. |
 
@@ -141,3 +141,17 @@ agent-terminal-ui [--prompt TEXT] [--override] [--bg] [--headless] [--model ID]
 
 See [Architecture](architecture.md#run-modes) for the interactive vs headless
 footprint comparison.
+
+## Theme and accessibility contract
+
+Python uses Textual's `primary`, `secondary`, `accent`, `warning`, `error`,
+`success`, `foreground`, `background`, `surface` and `panel` tokens. Tokyo Night
+is the default. Tokyo Night, Nord, Gruvbox and Textual Light are the shared
+baseline palettes. Their foreground/background contrast must be at least 4.5:1.
+This floor does not assert contrast for every accent or widget combination.
+
+Set `NO_COLOR` before launch for Textual's monochrome output. Python follows
+Textual's presence rule, including an empty value. Native mode currently uses
+nonempty `NO_COLOR` to select terminal foreground/background colors. Labels and
+keyboard help remain necessary; color alone must not convey task state. Full
+cross-client theme and performance parity remains pending.

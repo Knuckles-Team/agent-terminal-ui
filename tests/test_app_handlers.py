@@ -206,3 +206,54 @@ async def test_app_derives_a2a_url_without_caller_token(monkeypatch):
     app = AgentApp()
     assert app._client.a2a_url == "http://localhost:8000/a2a"
     assert "Authorization" not in app._client._http_client.headers
+
+
+@pytest.mark.asyncio
+async def test_theme_tokens_and_no_color_fallback(monkeypatch):
+    """The Python theme contract retains default, fallback and monochrome mode."""
+    from agent_terminal_ui.app import AgentApp
+    from agent_terminal_ui.client import AgentClient
+
+    monkeypatch.delenv("NO_COLOR", raising=False)
+    client = AgentClient(base_url="http://localhost")
+    try:
+        default = AgentApp(client=client)
+        assert default.theme == "tokyo-night"
+        assert default.no_color is False
+        fallback = AgentApp(theme_name="missing-theme", client=client)
+        assert fallback.theme == "tokyo-night"
+        for value in ("1", ""):
+            monkeypatch.setenv("NO_COLOR", value)
+            monochrome = AgentApp(theme_name="nord", client=client)
+            assert monochrome.no_color is True
+            assert monochrome.theme == "nord"
+    finally:
+        await client.aclose()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("theme_name", ["tokyo-night", "nord", "gruvbox", "textual-light"])
+async def test_baseline_theme_tokens_meet_text_contrast(theme_name):
+    from textual.color import Color
+
+    from agent_terminal_ui.app import AgentApp
+    from agent_terminal_ui.client import AgentClient
+
+    def luminance(value):
+        color = Color.parse(value)
+        channels = [channel / 255 for channel in (color.r, color.g, color.b)]
+        linear = [v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4 for v in channels]
+        return sum(v * weight for v, weight in zip(linear, [0.2126, 0.7152, 0.0722]))
+
+    client = AgentClient(base_url="http://localhost")
+    try:
+        app = AgentApp(theme_name=theme_name, client=client)
+        assert app.theme == theme_name
+        tokens = app.current_theme.to_color_system().generate()
+        for token in ("primary", "secondary", "accent", "warning", "error", "success",
+                      "foreground", "background", "surface", "panel"):
+            assert Color.parse(tokens[token])
+        light, dark = sorted([luminance(tokens["foreground"]), luminance(tokens["background"])], reverse=True)
+        assert (light + 0.05) / (dark + 0.05) >= 4.5
+    finally:
+        await client.aclose()
