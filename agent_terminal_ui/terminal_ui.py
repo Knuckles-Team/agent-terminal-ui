@@ -44,7 +44,38 @@ def terminal_ui() -> None:
         default="ask",
         help="Task mode for headless runs",
     )
+    parser.add_argument(
+        "--observe-task",
+        type=str,
+        help="Read an existing task without submission or approval",
+    )
     args = parser.parse_args()
+
+    if args.observe_task is not None:
+        if (
+            not args.observe_task.strip()
+            or len(args.observe_task) > 512
+            or args.prompt is not None
+            or args.override
+            or args.bg
+            or args.model is not None
+            or args.session is not None
+            or args.mode != "ask"
+        ):
+            parser.error(
+                "--observe-task requires a task ID and cannot combine with turn options"
+            )
+        import asyncio
+
+        from agent_terminal_ui.headless import run_task_observer
+
+        try:
+            ok = asyncio.run(run_task_observer(args.observe_task))
+        except KeyboardInterrupt:
+            raise SystemExit(130) from None
+        if not ok:
+            raise SystemExit(1)
+        return
 
     if args.headless:
         if not args.prompt:

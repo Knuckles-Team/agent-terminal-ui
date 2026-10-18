@@ -47,3 +47,11 @@ the task state before trying again. Stopping the local wait cannot undo a remote
 cancellation. The client never retries cancellation automatically. This preview
 does not stream responses or approve actions. Keep Python and
 OpenCode for existing workflows.
+
+## Observe an existing task
+
+Run `agent-terminal-ui --observe-task TASK_ID` with the usual `AGENT_URL` and
+`AGENT_BEARER_TOKEN` settings. This reads the task until it ends or needs input.
+It never submits, approves or cancels a task. Ctrl+C detaches locally.
+Missing output and terminal reason remain unavailable. This mode polls snapshots;
+it does not replay streamed output or resume a lost event cursor.
