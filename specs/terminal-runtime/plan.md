@@ -29,7 +29,7 @@ keyboard / slash command
 
 ## Compatibility and migration
 
-Keep the TUI's base Python 3.11 chat install working. Put a generated Arbora operation client behind a compatible optional extra or runtime capability check. Document the precise supported Python range in package metadata and lock. Where legacy capability/run APIs remain, inventory their callers and retire each only after a public replacement is served. The GeniusBot consumer must independently prove the same versioned envelope and identity rules. This repository only supplies its contract expectations.
+Keep the TUI's base chat install working at the supported Python floor. The 2026-10-18 support amendment below records its accepted change. Put a generated Arbora operation client behind a compatible optional extra or runtime capability check. Document the precise supported Python range in package metadata and lock. Where legacy capability/run APIs remain, inventory their callers and retire each only after a public replacement is served. The GeniusBot consumer must independently prove the same versioned envelope and identity rules. This repository only supplies its contract expectations.
 
 ## Quality and reuse
 
@@ -742,3 +742,22 @@ reconciliation. The pinned public-surface check passes. Root hygiene requires
 an absent .config/repo-layout.toml. Gitignore convergence rejects tracked
 .specify files, while AGENTS.md calls that tree canonical specification source.
 Do not delete that source or weaken blocking checks to declare parity.
+
+### 2026-10-18: Reconcile R001.6 with the accepted Python support floor
+
+Merged PR 70 adopted the pipelines gate standard: Python 3.12 is the support
+floor; Python 3.14 runs CI and releases. Package metadata, tooling and the
+backward CI leg already implement that decision. This amendment explicitly
+supersedes the earlier Python 3.11 support statements in this plan and R001.6.
+It records the accepted floor change rather than treating the 3.11 guard as
+proof of a supported install.
+
+R001.6 still requires base chat, a compatible optional generated client, and
+clear CLIENT_UNAVAILABLE refusal without an untyped fallback. Its clean-base
+fixture now targets Python 3.12. No runtime behavior or acceptance evidence
+changes here. Keep the defensive older-interpreter refusal guard.
+
+R004.2 remains open. AGENTS.md designates .specify as canonical source; the
+shared convergence rule permits only its constitution.md file. Resolving this
+conflict requires an approved source migration or an owner-approved shared
+policy change. Preserve the source and blocking checks until that decision.
