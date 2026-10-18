@@ -775,3 +775,7 @@ TUI-RUNTIME-R002.1.7 tracks raw results before presentation normalization.
 Only an explicit unsupported response before any result permits unary fallback.
 This preserves R002.1.6 discovery. It does not recover uncertain submissions,
 retry transport failures or replay acknowledged tasks.
+
+### 2026-10-18 packaged terminal styles (TUI-RUNTIME-R001.7)
+
+Ship every Textual stylesheet with the Python package. Validate the built wheel outside the source checkout before release; source-tree rendering alone cannot prove package assets are present. Preserve the existing screen and authority behavior.
