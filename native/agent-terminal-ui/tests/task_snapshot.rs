@@ -226,3 +226,63 @@ async fn point_read_preserves_identity_and_rejects_retained_binding_mismatch() {
     );
     server.await.unwrap();
 }
+
+// spec: TUI-RUNTIME-R002.1.3.2.2.3
+#[tokio::test]
+async fn point_read_omission_and_refusal_remain_unavailable_over_http() {
+    for reason in [None, Some("legacy_unbound"), Some("producer_unavailable")] {
+        let mut response = snapshot();
+        if let Some(reason) = reason {
+            response["result"]["metadata"]["arbora"]["terminalEvent"] =
+                json!({"status":"unavailable", "reason":reason});
+        }
+        let (url, server) = serve("200 OK", &response.to_string()).await;
+        let task = ArboraClient::new(&url, Some("fixture-token"))
+            .unwrap()
+            .get_task("task-1")
+            .await
+            .unwrap();
+        assert_eq!(task.correlation.run_id(), Some("run-3"));
+        let text = task.terminal_event.text();
+        assert!(text.contains("unavailable"));
+        assert!(!text.contains("Commit sequence:"));
+        let request = server.await.unwrap();
+        let (headers, body) = request.split_once("\r\n\r\n").unwrap();
+        assert!(
+            headers
+                .to_lowercase()
+                .contains("authorization: bearer fixture-token")
+        );
+        let body: Value = serde_json::from_str(body).unwrap();
+        assert_eq!(body["method"], "tasks/get");
+        assert_eq!(
+            body["params"],
+            json!({"id":"task-1", "includeCommittedEvent":true})
+        );
+    }
+}
+
+// spec: TUI-RUNTIME-R002.1.3.2.2.3
+#[tokio::test]
+async fn point_read_malformed_projection_refuses_the_whole_http_snapshot() {
+    for event in [
+        Value::Null,
+        json!({"status":"available"}),
+        json!({"status":"unavailable", "reason":"unknown"}),
+        json!({"status":"unavailable", "reason":"legacy_unbound", "cursor":"invented"}),
+        json!({"status":"unavailable", "reason":"x".repeat(16_385)}),
+    ] {
+        let mut response = snapshot();
+        response["result"]["metadata"]["arbora"]["terminalEvent"] = event;
+        let (url, server) = serve("200 OK", &response.to_string()).await;
+        let result = ArboraClient::new(&url, Some("fixture-token"))
+            .unwrap()
+            .get_task("task-1")
+            .await;
+        assert!(result.is_err());
+        let request = server.await.unwrap();
+        let (_, body) = request.split_once("\r\n\r\n").unwrap();
+        let body: Value = serde_json::from_str(body).unwrap();
+        assert_eq!(body["method"], "tasks/get");
+    }
+}

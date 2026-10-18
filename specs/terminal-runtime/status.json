@@ -951,9 +951,9 @@
       "verified_by": [
         "native/agent-terminal-ui/src/main.rs:1188",
         "native/agent-terminal-ui/tests/task_snapshot.rs:193",
-        "native/agent-terminal-ui/tests/terminal_event.rs:110",
-        "native/agent-terminal-ui/tests/terminal_event.rs:131",
-        "native/agent-terminal-ui/tests/terminal_event.rs:146"
+        "native/agent-terminal-ui/tests/task_snapshot.rs:230",
+        "native/agent-terminal-ui/tests/task_snapshot.rs:265",
+        "native/agent-terminal-ui/tests/terminal_event.rs:110"
       ]
     },
     {
