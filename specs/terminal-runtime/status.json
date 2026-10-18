@@ -1087,8 +1087,10 @@
     {
       "id": "TUI-RUNTIME-R002.1.7",
       "title": "Refuse replay after stream acknowledgment",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "3af008493f62"
+      ],
       "verified_by": [
         "tests/test_stream_fallback.py:11"
       ]
