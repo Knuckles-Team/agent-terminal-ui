@@ -147,6 +147,7 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R012.6:** Read usage through `usage.read`.
 
 - [ ] **TUI-RUNTIME-R010.4.1:** Wire the Python current-plan command and expiring read-only view.
+- [ ] **TUI-RUNTIME-R012.4.2:** Wire fleet and tenant usage reads; preserve unavailable and pagination boundaries.
 - [ ] **TUI-RUNTIME-R004.1:** Consolidate spec checks while preserving stages and trailer fallback.
 - [ ] **TUI-RUNTIME-R012.4.1:** Refuse unavailable management command families before transport.
 

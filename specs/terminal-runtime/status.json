@@ -89,6 +89,7 @@
     "TUI-RUNTIME-R012.5",
     "TUI-RUNTIME-R012.6",
     "TUI-RUNTIME-R010.4.1",
+    "TUI-RUNTIME-R012.4.2",
     "TUI-RUNTIME-R004.2",
     "TUI-RUNTIME-R012.4.3",
     "TUI-RUNTIME-R010.4.2"
@@ -999,6 +1000,7 @@
       "verified_by": [],
       "rollup_of": [
         "TUI-RUNTIME-R012.4.1",
+        "TUI-RUNTIME-R012.4.2",
         "TUI-RUNTIME-R012.4.3"
       ]
     },
@@ -1036,6 +1038,15 @@
       ],
       "verified_by": [
         "tests/test_current_plan_view.py:18"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R012.4.2",
+      "title": "Read fleet and usage through served operations",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [
+        "tests/test_served_fleet_usage.py:16"
       ]
     },
     {

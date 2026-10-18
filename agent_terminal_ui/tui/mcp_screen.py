@@ -68,9 +68,7 @@ class MCPScreen(ModalScreen[None]):
         """
         with Vertical(id="mcp-dialog"):
             yield Label("[bold]MCP Ecosystem Status[/bold]", id="mcp-title")
-            yield Label(
-                f"Configured Servers: {len(self.mcp_config.get('mcpServers', {}))}"
-            )
+            yield Label(f"Visible Servers: {len(self.mcp_config.get('children', {}))}")
 
             yield DataTable(id="tools-table")
             yield Label("Press [bold]Esc[/bold] to return")
