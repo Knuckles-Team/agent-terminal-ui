@@ -946,8 +946,10 @@
     {
       "id": "TUI-RUNTIME-R002.1.3.2.2.3",
       "title": "Bounded committed terminal point-read",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "faeede3c59e8"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/main.rs:1188",
         "native/agent-terminal-ui/tests/task_snapshot.rs:193",
