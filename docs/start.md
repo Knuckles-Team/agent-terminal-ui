@@ -55,3 +55,9 @@ Run `agent-terminal-ui --observe-task TASK_ID` with the usual `AGENT_URL` and
 It never submits, approves or cancels a task. Ctrl+C detaches locally.
 Missing output and terminal reason remain unavailable. This mode polls snapshots;
 it does not replay streamed output or resume a lost event cursor.
+
+The native binary accepts the same `--observe-task TASK_ID` option. Supply the
+caller credential with `AGENT_BEARER_TOKEN`. Do not combine it with
+`AGENT_TASK_ID` or prompt options. This mode polls the existing committed task
+view. Remote cancellation is disabled; `c` stops a pending local read and `q`
+exits. Input-required and terminal states stop polling; `r` reads again.

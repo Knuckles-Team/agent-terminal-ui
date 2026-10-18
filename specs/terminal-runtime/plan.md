@@ -686,3 +686,13 @@ known run binding. Render server state and final text only. Missing output is
 unavailable. Input-required detaches without approval; interruption stops local
 reads without remote cancellation. No submission or reconnect effect retry is
 permitted. Full one-shot admission, event replay and served proof remain open.
+
+### 2026-10-18: Native read-only observation entry
+
+The Python observation increment did not add a native CLI option. The native
+`--observe-task TASK_ID` path reuses authenticated task reads, binding checks
+and committed-output display. It polls only submitted or working tasks.
+Refusal, input-required, auth-required and terminal states stop polling. Local
+interrupts detach; remote cancellation controls are disabled in this mode.
+R002.8.2 and R002.8.3 still require full one-shot admission and replay proof.
+Native arbitrary artifact display remains separate from committed event reads.
