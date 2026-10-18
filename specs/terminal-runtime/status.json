@@ -811,7 +811,7 @@
         "608e9e9d122b"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1043",
+        "native/agent-terminal-ui/src/main.rs:1125",
         "native/agent-terminal-ui/src/presentation.rs:138",
         "native/agent-terminal-ui/src/presentation.rs:189",
         "native/agent-terminal-ui/src/presentation.rs:215"
@@ -949,7 +949,7 @@
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1106",
+        "native/agent-terminal-ui/src/main.rs:1188",
         "native/agent-terminal-ui/tests/task_snapshot.rs:193",
         "native/agent-terminal-ui/tests/terminal_event.rs:110",
         "native/agent-terminal-ui/tests/terminal_event.rs:131",
