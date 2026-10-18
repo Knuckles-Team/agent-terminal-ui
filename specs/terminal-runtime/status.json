@@ -16,6 +16,7 @@
     "TUI-RUNTIME-R002",
     "TUI-RUNTIME-R003",
     "TUI-RUNTIME-R004",
+    "TUI-RUNTIME-R004.1",
     "TUI-RUNTIME-R005",
     "TUI-RUNTIME-R006",
     "TUI-RUNTIME-R007",
@@ -84,6 +85,7 @@
     "TUI-RUNTIME-R012.2",
     "TUI-RUNTIME-R012.3",
     "TUI-RUNTIME-R012.4",
+    "TUI-RUNTIME-R012.4.1",
     "TUI-RUNTIME-R012.5",
     "TUI-RUNTIME-R012.6",
     "TUI-RUNTIME-R010.4.1"
@@ -264,7 +266,19 @@
       "title": "Pre-commit runs the spec and sprawl hooks agent-webui runs",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R004.1"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R004.1",
+      "title": "Consolidate equivalent spec checks without losing stages",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [
+        "tests/test_precommit_hooks.py:18"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R005",
@@ -387,7 +401,7 @@
     {
       "id": "TUI-RUNTIME-R010.4",
       "title": "Read-only current plan",
-      "delivery_state": "SPECIFIED",
+      "delivery_state": "VERIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
@@ -975,7 +989,19 @@
       "title": "Commands reach only served operations",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R012.4.1"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R012.4.1",
+      "title": "Unavailable management commands make no requests",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [
+        "tests/test_unavailable_commands.py:12"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R012.5",
@@ -994,8 +1020,10 @@
     {
       "id": "TUI-RUNTIME-R010.4.1",
       "title": "Python current-plan view uses the served read",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "4554c7538da9"
+      ],
       "verified_by": [
         "tests/test_current_plan_view.py:18"
       ]
