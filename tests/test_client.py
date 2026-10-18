@@ -62,14 +62,19 @@ class _Recorder:
 
     def __call__(self, request: httpx.Request) -> httpx.Response:
         card_path = "/a2a/.well-known/agent-card.json"
-        if request.url.path == card_path and not self._serves_card:
+        if (
+            request.url.path in {card_path, "/.well-known/agent-card.json"}
+            and not self._serves_card
+        ):
             return httpx.Response(404)
         self.requests.append(request)
         return self._responder(request)
 
 
-def _client(responder: Any, **kwargs: Any) -> tuple[AgentClient, _Recorder]:
-    recorder = _Recorder(responder)
+def _client(
+    responder: Any, *, serves_card: bool = False, **kwargs: Any
+) -> tuple[AgentClient, _Recorder]:
+    recorder = _Recorder(responder, serves_card=serves_card)
     client = AgentClient(base_url="http://localhost:8000", **kwargs)
     client._http_client = httpx.AsyncClient(
         transport=httpx.MockTransport(recorder),
@@ -372,7 +377,9 @@ async def test_versioned_operation_uses_generated_digest_contract() -> None:
             },
         )
     )
-    assert await client.invoke_op("query.uql", {"text": "RETURN 1", "params": {}}) == {"rows": [1]}
+    assert await client.invoke_op("query.uql", {"text": "RETURN 1", "params": {}}) == {
+        "rows": [1]
+    }
     assert recorder.requests[0].url.path == "/api/v1/ops/query.uql"
     await client.close()
 
@@ -541,9 +548,7 @@ async def test_unsigned_plan_confirmation_refuses_before_network():
     [(None, "CALLER_CREDENTIAL_REQUIRED"), ("caller-token", "APPROVAL_UNAVAILABLE")],
 )
 async def test_unsigned_input_required_decision_cannot_resume_a2a_task(token, refusal):
-    client, recorder = _client(
-        lambda _request: httpx.Response(500), bearer_token=token
-    )
+    client, recorder = _client(lambda _request: httpx.Response(500), bearer_token=token)
     client._pending_plans[_TASK] = {
         "plan_ref": "p1",
         "op": "query.uql",
@@ -655,7 +660,9 @@ async def test_forged_plan_binding_cannot_offer_approval_operation():
 @pytest.mark.asyncio
 async def test_metadata_reads_the_agent_card():
     card = {"name": "Arbora", "capabilities": {"streaming": True}}
-    client, recorder = _client(lambda request: httpx.Response(200, json=card))
+    client, recorder = _client(
+        lambda request: httpx.Response(200, json=card), serves_card=True
+    )
 
     assert await client.get_metadata() == card
     assert recorder.requests[0].url.path == "/.well-known/agent-card.json"
