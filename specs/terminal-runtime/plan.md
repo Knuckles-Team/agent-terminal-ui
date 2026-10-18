@@ -726,3 +726,19 @@ production behavior or transport.
 Historical status labels are not proof of broader acceptance. R001.3 currently
 has a VERIFIED label but its current tests prove unsigned confirmation refusal,
 not successful signed-plan resumption. That served criterion remains unproven.
+
+### 2026-10-18: Correct signed-plan verification evidence
+
+Remove R001.3 verification tags from four refusal tests and one mocked command
+dispatch test. Preserve every test, assertion and historical delivery receipt.
+Regenerate status with the canonical spec tool. A historical LANDED receipt is
+not completed acceptance: successful signed-plan resumption remains missing.
+The unchanged requirement still needs one issued plan resumed through A2A and
+rejection of tampered operation, input, digest or subject, expired or replayed
+plans and stale server leases. Do not enable confirmation from fixture results.
+
+The next hook-parity criterion R004.2 remains blocked by owner-contract
+reconciliation. The pinned public-surface check passes. Root hygiene requires
+an absent .config/repo-layout.toml. Gitignore convergence rejects tracked
+.specify files, while AGENTS.md calls that tree canonical specification source.
+Do not delete that source or weaken blocking checks to declare parity.
