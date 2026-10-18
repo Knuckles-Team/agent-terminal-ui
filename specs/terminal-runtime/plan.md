@@ -646,3 +646,7 @@ Arbora's current generated registry has fleet and usage operations, but no
 skills, prompts, knowledge-base, cron or pipeline operation families.
 R012.4.1 stops those registered commands before their legacy REST handlers.
 Served fleet and usage integration remains in R012.4 and R012.6.
+
+### Remaining acceptance rollups
+
+Explicit pending children retain the broader parent acceptance criteria. The status generator rolls up children, so prose-only deferrals are insufficient. These rows record remaining acceptance; they do not weaken a requirement or claim new proof.

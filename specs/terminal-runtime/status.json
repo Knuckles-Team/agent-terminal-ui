@@ -88,7 +88,9 @@
     "TUI-RUNTIME-R012.4.1",
     "TUI-RUNTIME-R012.5",
     "TUI-RUNTIME-R012.6",
-    "TUI-RUNTIME-R012.4.2"
+    "TUI-RUNTIME-R012.4.2",
+    "TUI-RUNTIME-R004.2",
+    "TUI-RUNTIME-R012.4.3"
   ],
   "requirements": [
     {
@@ -264,11 +266,12 @@
     {
       "id": "TUI-RUNTIME-R004",
       "title": "Pre-commit runs the spec and sprawl hooks agent-webui runs",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R004.1"
+        "TUI-RUNTIME-R004.1",
+        "TUI-RUNTIME-R004.2"
       ]
     },
     {
@@ -986,12 +989,13 @@
     {
       "id": "TUI-RUNTIME-R012.4",
       "title": "Commands reach only served operations",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
         "TUI-RUNTIME-R012.4.1",
-        "TUI-RUNTIME-R012.4.2"
+        "TUI-RUNTIME-R012.4.2",
+        "TUI-RUNTIME-R012.4.3"
       ]
     },
     {
@@ -1030,6 +1034,20 @@
       "verified_by": [
         "tests/test_served_fleet_usage.py:16"
       ]
+    },
+    {
+      "id": "TUI-RUNTIME-R004.2",
+      "title": "Remaining hook parity",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R012.4.3",
+      "title": "Complete served command matrix",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
     }
   ]
 }

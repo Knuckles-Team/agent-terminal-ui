@@ -149,3 +149,7 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R012.4.2:** Wire fleet and tenant usage reads; preserve unavailable and pagination boundaries.
 - [ ] **TUI-RUNTIME-R004.1:** Consolidate spec checks while preserving stages and trailer fallback.
 - [ ] **TUI-RUNTIME-R012.4.1:** Refuse unavailable management command families before transport.
+
+- [ ] **TUI-RUNTIME-R004.2:** Remaining hook parity; acceptance remains pending.
+
+- [ ] **TUI-RUNTIME-R012.4.3:** Complete served command matrix; acceptance remains pending.
