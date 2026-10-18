@@ -970,7 +970,7 @@
     {
       "id": "TUI-RUNTIME-R012.4",
       "title": "Commands reach only served operations",
-      "delivery_state": "SPECIFIED",
+      "delivery_state": "VERIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
@@ -994,8 +994,10 @@
     {
       "id": "TUI-RUNTIME-R012.4.2",
       "title": "Read fleet and usage through served operations",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "26659005d190"
+      ],
       "verified_by": [
         "tests/test_served_fleet_usage.py:15"
       ]
