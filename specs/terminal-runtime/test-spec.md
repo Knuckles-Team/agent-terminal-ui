@@ -262,3 +262,5 @@ Renderer tests display literal commit identity and clear it after failed reads. 
 - `TUI-RUNTIME-R002.11`: Version-two loopback responses preserve original log
   metadata in literal Python and native displays. A retained-history gap clears
   content and stops reads. Unknown conflicts and malformed metadata refuse.
+
+| TUI-RUNTIME-R004.1 | `tests/test_precommit_hooks.py::test_spec_group_preserves_stages_and_trailer_fallback` | Group runs at commit, push and manual stages; explicit trailer fallback remains | Missing stage, fallback or retained blocking hook fails |

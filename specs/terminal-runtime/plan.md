@@ -633,3 +633,7 @@ severity in literal bounded display. Reject malformed metadata and unsupported
 versions. Exact HTTP 409 retention_gap stops polling and clears retained lines
 with a visible gap status. No silent cursor reset, authority inference or task
 action replay is permitted. Live host admission remains separately qualified.
+
+## Amendment: equivalent spec hook consolidation
+
+R004.1 replaces the three separate standard, decomposition and status hooks with the shared spec group. The group also checks trailers when range metadata exists. Keep the existing explicit trailer hook because the group skips that member without range metadata. Preserve prose, stubs and sprawl checks. Full R004 remains open; this amendment removes no blocking coverage.
