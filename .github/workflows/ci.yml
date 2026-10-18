@@ -45,7 +45,7 @@ jobs:
       python-version: '3.14'
       setup-command: |
         uv sync --python 3.14 --frozen --extra test
-        uv pip install --no-deps "arbora==0.1.1"
+        uv pip install --no-deps "arbora>=0.1.5"
       rust: true
       # sibling-checkout hooks are unavailable on a hosted runner; pytest is replaced by the shared affected-tests step
       # ste-staged (STE-lite prose lint) is advisory: the ste-advisory job runs it
