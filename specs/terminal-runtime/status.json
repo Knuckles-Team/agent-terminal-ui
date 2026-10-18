@@ -285,7 +285,7 @@
         "1f9a26a46229"
       ],
       "verified_by": [
-        "tests/test_precommit_hooks.py:9"
+        "tests/test_precommit_hooks.py:10"
       ]
     },
     {
