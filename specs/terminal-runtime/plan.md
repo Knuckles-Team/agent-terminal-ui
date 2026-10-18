@@ -654,9 +654,26 @@ Served fleet and usage integration remains in R012.4 and R012.6.
 
 Explicit pending children retain the broader parent acceptance criteria. The status generator rolls up children, so prose-only deferrals are insufficient. These rows record remaining acceptance; they do not weaken a requirement or claim new proof.
 
+### 2026-10-18: Explicit coding grants and read refusals
+
+R011.1 to R011.3 require granted capabilities and root containment. An omitted
+capability list grants nothing. Read windows reject booleans, non-integers,
+lines below one and negative limits before file access. Tests prove missing
+grants and paths outside the root read no bytes, including in trust mode.
+Production admission, approval and request transport remain pending. Existing
+local handler tests use explicit fixture grants; they do not prove authority.
+
 ### 2026-10-18: Cost aliases use the served usage view
 
 R012.6 remains open for served turn and session totals. Route `/cost` and
 `/stats` to the existing `/usage` view. Remove cached zero defaults and claims
-of cross-agent history. If the view is absent, show one unavailable notice.
+of cross-agent history. If the view is absent, display one unavailable notice.
 This repairs command routing; it does not qualify new usage metrics.
+
+### 2026-10-18: Path resolution failures remain refusals
+
+The R011.3 local boundary rejects NUL paths before path resolution. Filesystem
+and symlink resolution errors return typed failures without file reads. Missing
+files, directories and invalid UTF-8 also remain typed read failures. Tests
+verify pending state clears and later valid reads still work. This does not
+close concurrent filesystem races or production admission requirements.
