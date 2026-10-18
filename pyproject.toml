@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-terminal-ui"
-version = "2.3.0"
+version = "2.3.1"
 description = "Terminal UI for Agentic SI!"
 readme = "README.md"
 authors = [{ name = "Project maintainers" }]
@@ -58,7 +58,7 @@ where = ["."]
 include = ["agent_terminal_ui*"]
 
 [tool.setuptools.package-data]
-agent_terminal_ui = ["py.typed", "skills/**/*"]
+agent_terminal_ui = ["py.typed", "skills/**/*", "screens/*.tcss", "tui/*.tcss"]
 
 [tool.ruff]
 line-length = 88
