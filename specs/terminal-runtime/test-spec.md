@@ -287,3 +287,8 @@ TUI-RUNTIME-R002.1.6 covers root unary discovery, scoped fallback after 404/405,
 credential preservation, malformed cards and refused discovery. A completed
 history reply must render after exactly one message/send. These tests do not
 qualify native prompt startup or model execution.
+
+TUI-RUNTIME-R002.1.7 exercises unsupported codes -32010, -32004 and -32601.
+Any raw result prevents fallback, including empty artifacts. HTTP 401/403 and
+RPC permission refusals produce one failed stream request and no unary request.
+Permitted fallback preserves message identity and the idempotency key.

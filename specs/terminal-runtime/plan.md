@@ -768,3 +768,10 @@ TUI-RUNTIME-R002.1.6 reuses get_metadata for transport selection. The root card
 path precedes the scoped path. Only HTTP 404 and 405 permit scoped fallback.
 This slice qualifies basic unary conversation, not native prompt startup,
 selected-interface host admission, streaming or cancellation.
+
+### Safe unsupported-stream fallback
+
+TUI-RUNTIME-R002.1.7 tracks raw results before presentation normalization.
+Only an explicit unsupported response before any result permits unary fallback.
+This preserves R002.1.6 discovery. It does not recover uncertain submissions,
+retry transport failures or replay acknowledged tasks.
