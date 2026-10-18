@@ -393,38 +393,31 @@ class TestStatsCommand:
     """Test the /stats command."""
 
     @pytest.mark.asyncio
-    async def test_cmd_stats_with_usage(self, command_processor, mock_app):
-        """Test stats command when usage data is available."""
-        mock_app._last_usage = {"total_tokens": 1000, "estimated_cost_usd": 0.05}
-
-        await command_processor.cmd_stats("")
-
-        event_log = mock_app.query_one("Conversation")
-        event_log.add_info.assert_called()
-        written_text = event_log.add_info.call_args[0][0]
-        assert "Session Statistics" in written_text
-        assert "1000" in written_text
-        assert "0.05" in written_text
+    @pytest.mark.parametrize("command", ["cost", "stats", "usage"])
+    async def test_usage_alias_opens_served_view(
+        self, command_processor, mock_app, command
+    ):
+        """All aliases use the same view, without cached-value rendering."""
+        mock_app._last_usage = {"total_tokens": 1000}
+        await command_processor.commands[command]("")
+        mock_app.action_switch_usage.assert_called_once_with()
+        mock_app.query_one("Conversation").add_info.assert_not_called()
+        mock_app.cost_tracker.get_session_summary.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_cmd_stats_without_usage(self, command_processor, mock_app):
-        """Test stats command when usage data is not available."""
-        # Ensure _last_usage is not set
-        if hasattr(mock_app, "_last_usage"):
-            delattr(mock_app, "_last_usage")
-
-        await command_processor.cmd_stats("")
-
-        event_log = mock_app.query_one("Conversation")
-        event_log.add_info.assert_called()
-        written_text = event_log.add_info.call_args[0][0]
-        assert "No usage yet" in written_text
-
-    @pytest.mark.asyncio
-    async def test_cmd_cost_alias(self, command_processor, mock_app):
-        """Test that /cost is an alias for /stats."""
-        # Both commands should map to the same handler
-        assert command_processor.commands["cost"] == command_processor.commands["stats"]
+    @pytest.mark.parametrize("command", ["cost", "stats", "usage"])
+    @pytest.mark.parametrize("cached", [None, {}, {"total_tokens": 1000}])
+    async def test_usage_alias_without_view_is_unavailable(
+        self, command_processor, mock_app, command, cached
+    ):
+        """Missing views do not invent zero costs or historical metrics."""
+        mock_app.action_switch_usage = None
+        mock_app._last_usage = cached
+        await command_processor.commands[command]("")
+        mock_app.query_one("Conversation").add_info.assert_awaited_once_with(
+            "Usage unavailable: the usage.read view is not available."
+        )
+        mock_app.cost_tracker.get_session_summary.assert_not_called()
 
 
 class TestModelCommand:
