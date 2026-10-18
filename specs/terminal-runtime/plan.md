@@ -669,3 +669,11 @@ R012.6 remains open for served turn and session totals. Route `/cost` and
 `/stats` to the existing `/usage` view. Remove cached zero defaults and claims
 of cross-agent history. If the view is absent, display one unavailable notice.
 This repairs command routing; it does not qualify new usage metrics.
+
+### 2026-10-18: Path resolution failures remain refusals
+
+The R011.3 local boundary rejects NUL paths before path resolution. Filesystem
+and symlink resolution errors return typed failures without file reads. Missing
+files, directories and invalid UTF-8 also remain typed read failures. Tests
+verify pending state clears and later valid reads still work. This does not
+close concurrent filesystem races or production admission requirements.

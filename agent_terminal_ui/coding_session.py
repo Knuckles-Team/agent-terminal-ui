@@ -112,13 +112,18 @@ def _contained_path(
     view: CodingSessionView, raw: object, operation: FileOperation
 ) -> Path | CapabilityRefusal:
     """Resolve ``raw`` (symlinks followed) and refuse anything outside the root."""
-    if not isinstance(raw, str) or not raw:
-        return _refuse(RefusalReason.INVALID_PARAMS, "path must be a string")
+    if not isinstance(raw, str) or not raw or "\x00" in raw:
+        return _refuse(
+            RefusalReason.INVALID_PARAMS, "path must be a nonempty string without NUL"
+        )
     target = view.root / raw
-    violation = view.policy.check_operation(operation, target, contained=True)
-    if violation is not None:
-        return _refuse(RefusalReason.OUTSIDE_ROOT, violation.reason)
-    return target.resolve()
+    try:
+        violation = view.policy.check_operation(operation, target, contained=True)
+        if violation is not None:
+            return _refuse(RefusalReason.OUTSIDE_ROOT, violation.reason)
+        return target.resolve()
+    except (OSError, RuntimeError, ValueError):
+        return _refuse(RefusalReason.FAILED, "path resolution failed")
 
 
 async def read_text_file(

@@ -200,3 +200,56 @@ async def test_explicit_read_grant_preserves_line_window(tmp_path: Path) -> None
     result = _refusal(await view.handle("fs/write_text_file", {"path": "a", "content": "x"}))
     assert result.reason is RefusalReason.NOT_GRANTED
     assert (tmp_path / "a").read_text() == "one\ntwo\nthree\n"
+
+
+async def test_nul_path_refuses_before_resolution(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    view = CodingSessionView.open(tmp_path, "s1", ["fs/read_text_file"])
+
+    def forbidden(*args: Any, **kwargs: Any) -> Path:
+        raise AssertionError("invalid path reached resolution")
+
+    with monkeypatch.context() as patch:
+        patch.setattr(Path, "resolve", forbidden)
+        result = _refusal(await view.handle("fs/read_text_file", {"path": "bad\x00name"}))
+    assert result.reason is RefusalReason.INVALID_PARAMS
+    assert view.pending is None
+
+
+@pytest.mark.parametrize("error", [OSError, RuntimeError, ValueError])
+async def test_path_resolution_error_is_typed_and_clears_pending(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, error: type[Exception]
+) -> None:
+    view = CodingSessionView.open(tmp_path, "s1", ["fs/read_text_file"])
+    (tmp_path / "a").write_text("ok")
+
+    def failed_resolution(*args: Any, **kwargs: Any) -> Path:
+        raise error("resolution unavailable")
+
+    def forbidden_read(*args: Any, **kwargs: Any) -> str:
+        raise AssertionError("failed resolution reached file bytes")
+
+    with monkeypatch.context() as patch:
+        patch.setattr(Path, "resolve", failed_resolution)
+        patch.setattr(Path, "read_text", forbidden_read)
+        result = _refusal(await view.handle("fs/read_text_file", {"path": "a"}))
+    assert result.reason is RefusalReason.FAILED
+    assert result.detail == "path resolution failed"
+    assert view.pending is None
+    assert await view.handle("fs/read_text_file", {"path": "a"}) == {"content": "ok"}
+
+
+@pytest.mark.parametrize("kind", ["missing", "directory", "invalid_utf8", "symlink_loop"])
+async def test_unreadable_files_are_typed_failures(tmp_path: Path, kind: str) -> None:
+    view = CodingSessionView.open(tmp_path, "s1", ["fs/read_text_file"])
+    path = tmp_path / "a"
+    if kind == "directory":
+        path.mkdir()
+    elif kind == "invalid_utf8":
+        path.write_bytes(b"\xff")
+    elif kind == "symlink_loop":
+        path.symlink_to(path)
+    result = _refusal(await view.handle("fs/read_text_file", {"path": "a"}))
+    assert result.reason is RefusalReason.FAILED
+    assert view.pending is None
