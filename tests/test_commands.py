@@ -437,15 +437,15 @@ class TestModelCommand:
 
     @pytest.mark.asyncio
     async def test_cmd_model_with_args(self, command_processor, mock_app):
-        """Bare ``/model <id>`` is a legacy shorthand for /model set <id>;
-        it tolerates ids that are not in the backend registry so existing
-        workflows keep working."""
+        """Unsupported selection preserves existing model state."""
+        mock_app._current_model = "previous"
+        mock_app._current_model_id = "previous"
         await command_processor.cmd_model("gpt-4")
 
-        assert mock_app._current_model == "gpt-4"
-        assert mock_app._current_model_id == "gpt-4"
+        assert mock_app._current_model == "previous"
+        assert mock_app._current_model_id == "previous"
         mock_app.notify.assert_called()
-        assert "Switched to model" in mock_app.notify.call_args[0][0]
+        assert "Model selection is unavailable" in mock_app.notify.call_args[0][0]
 
 
 class TestThemeCommand:
@@ -702,8 +702,9 @@ class TestCommandEdgeCases:
     @pytest.mark.asyncio
     async def test_command_with_extra_spaces(self, command_processor, mock_app):
         """Test command with extra spaces around args."""
+        mock_app._current_model = "previous"
         await command_processor.process("/model   gpt-4   ")
-        assert mock_app._current_model == "gpt-4"
+        assert mock_app._current_model == "previous"
 
     @pytest.mark.asyncio
     async def test_plain_exit_case_insensitive(self, command_processor, mock_app):

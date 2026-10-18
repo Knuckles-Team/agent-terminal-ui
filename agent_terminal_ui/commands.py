@@ -638,13 +638,13 @@ class CommandProcessor:
         await self._fleet_overview(conversation, client)
 
     async def cmd_model(self, args: str) -> None:
-        """List, select, or inspect configured models.
+        """Inspect registry details; model selection is unavailable.
 
         Usage:
             /model                 alias for /model list
             /model list            show all configured models in a table
-            /model show            show the currently active model
-            /model set <id>        select a model id for subsequent turns
+            /model show            inspect local preference or registry default
+            /model set <id>        report that model selection is unavailable
             /model <id>            legacy shorthand for /model set <id>
         """
         tokens = args.strip().split(maxsplit=1)
@@ -665,30 +665,11 @@ class CommandProcessor:
             await self._model_set_shorthand(shorthand)
 
     async def _model_set_shorthand(self, model_id: str) -> None:
-        """Legacy bare ``/model <id>`` that tolerates unknown ids.
-
-        Unlike ``/model set <id>``, this shorthand accepts ids that are
-        not present in the backend registry (so existing workflows that
-        pass raw provider model strings keep working). When the id *is*
-        in the registry, the richer ``_model_set`` flow is used so users
-        get the same validation message.
-        """
-        registry = await self.app._client.list_configured_models()
-        models = registry.get("models") or []
-        match = next((m for m in models if m.get("id") == model_id), None)
-        if match is not None:
-            await self._model_set(model_id)
-            return
-
-        self.app._current_model_id = model_id
-        self.app._current_model = model_id
-        self.app.notify(f"Switched to model: {model_id}", severity="information")
-        await self.app.query_one("Conversation").add_info(
-            f"[dim]Switched to model: {model_id}[/dim]"
-        )
+        """Handle legacy selection syntax with the same unavailable result."""
+        await self._model_set(model_id)
 
     def _active_model_id(self, registry: dict[str, Any]) -> Any:
-        """Resolve the active model id from app state, falling back to default."""
+        """Resolve a local preference, falling back to the registry default."""
         return (
             getattr(self.app, "_current_model_id", None)
             or getattr(self.app, "_current_model", None)
@@ -701,11 +682,10 @@ class CommandProcessor:
         cost = entry.get("cost") or {}
         return float(cost.get("input", 0.0)), float(cost.get("output", 0.0))
 
-    def _model_row(self, entry: dict[str, Any], active_id: Any) -> list[str]:
+    def _model_row(self, entry: dict[str, Any]) -> list[str]:
         """Build the registry-table cells for one configured model."""
         cost_in, cost_out = self._model_cost_pair(entry)
         return [
-            "*" if entry.get("id") == active_id else "",
             str(entry.get("id", "")),
             str(entry.get("name", "")),
             str(entry.get("provider", "")),
@@ -719,8 +699,6 @@ class CommandProcessor:
         """Render the configured model registry as a Rich table."""
         registry = await self.app._client.list_configured_models()
         models = registry.get("models") or []
-        active_id = self._active_model_id(registry)
-
         if not models:
             await self.app.query_one("Conversation").add_info(
                 "[yellow]No models configured on the backend. "
@@ -729,7 +707,6 @@ class CommandProcessor:
             return
 
         table = Table(title="Configured Models", show_lines=False)
-        table.add_column("Active", justify="center", style="cyan", width=6)
         table.add_column("ID", style="bold")
         table.add_column("Name")
         table.add_column("Provider")
@@ -739,19 +716,22 @@ class CommandProcessor:
         table.add_column("Cost / 1M (in / out)")
 
         for entry in models:
-            table.add_row(*self._model_row(entry, active_id))
+            table.add_row(*self._model_row(entry))
 
         event_log = self.app.query_one("Conversation")
         await event_log.add_info(table)
         await event_log.add_info(
-            "[dim]Use `/model set <id>` to switch, `/model show` to inspect.[/dim]"
+            "[dim]Model selection is unavailable through this Arbora connection. "
+            "Use `/model show` to inspect registry details.[/dim]"
         )
 
     def _model_panel(self, match: dict[str, Any]) -> Panel:
-        """Build the detail panel for the currently active model."""
+        """Build registry details without claiming server model selection."""
         cost_in, cost_out = self._model_cost_pair(match)
         return Panel(
             (
+                "[yellow]Registry details only; "
+                "model selection is unavailable.[/yellow]\n"
                 f"[bold]ID:[/bold] {match.get('id')}\n"
                 f"[bold]Name:[/bold] {match.get('name')}\n"
                 f"[bold]Provider:[/bold] {match.get('provider')}\n"
@@ -763,12 +743,12 @@ class CommandProcessor:
                 f"[bold]Default:[/bold] "
                 f"{'yes' if match.get('is_default') else 'no'}"
             ),
-            title="Active Model",
+            title="Model Details",
             border_style="cyan",
         )
 
     async def _model_show(self) -> None:
-        """Display the currently active model, resolving the backend default."""
+        """Display details for a local preference or registry default."""
         registry = await self.app._client.list_configured_models()
         models = registry.get("models") or []
         active_id = self._active_model_id(registry)
@@ -776,7 +756,7 @@ class CommandProcessor:
 
         if match is None:
             await self.app.query_one("Conversation").add_info(
-                "[yellow]No active model. "
+                "[yellow]No model details available. "
                 "Run `/model list` to see what is configured.[/yellow]"
             )
             return
@@ -784,7 +764,7 @@ class CommandProcessor:
         await self.app.query_one("Conversation").add_info(self._model_panel(match))
 
     async def _model_set(self, model_id: str) -> None:
-        """Select a model id for subsequent turns."""
+        """Refuse unsupported selection without changing local model state."""
         model_id = model_id.strip()
         if not model_id:
             await self.app.query_one("Conversation").add_info(
@@ -792,28 +772,12 @@ class CommandProcessor:
             )
             return
 
-        registry = await self.app._client.list_configured_models()
-        models = registry.get("models") or []
-        match = next((m for m in models if m.get("id") == model_id), None)
-
-        if match is None:
-            available = ", ".join(m.get("id", "") for m in models) or "<none>"
-            await self.app.query_one("Conversation").add_info(
-                f"[red]Model id '{model_id}' not found.[/red]\n"
-                f"[dim]Available: {available}[/dim]"
-            )
-            return
-
-        self.app._current_model_id = model_id
-        # ``_current_model`` is the attribute already wired into the client
-        # stream call; keep it in sync so existing send paths pick up the
-        # override without code changes elsewhere.
-        self.app._current_model = model_id
-        self.app.notify(f"Switched to model: {model_id}", severity="information")
-        await self.app.query_one("Conversation").add_info(
-            f"[green]Active model set to {model_id}[/green] "
-            f"([dim]{match.get('provider')}:{match.get('model_id')}[/dim])"
+        message = (
+            "Model selection is unavailable through this Arbora connection; "
+            "no model change was sent."
         )
+        self.app.notify(message, severity="warning")
+        await self.app.query_one("Conversation").add_info(f"[yellow]{message}[/yellow]")
 
     async def _submit_prompt(self, prompt: str) -> None:
         """Helper to submit a prompt to the agent."""

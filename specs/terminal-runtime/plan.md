@@ -458,9 +458,8 @@ and their checkboxes stay pending. This child requires no production activation.
 ### 2026-10-16: Native approval state boundary (R011.13)
 
 `native/agent-terminal-ui/src/coding_approval.rs` is the Rust presentation
-attachment for this slice of `CodingSessionView`. It holds exact pending request
-content, previews the full diff or command, and records an explicit choice bound
-to that preview. Changed, foreign and completed request IDs cannot reuse a choice.
+attachment for this slice of `CodingSessionView`. It holds exact pending request content and previews the full diff or command.
+It records an explicit choice bound to that preview. Changed, foreign and completed request IDs cannot reuse a choice.
 Gateway loss retains unanswered requests. Reattachment does not approve them.
 Records contain request/session identity, method, resolved path or adapter-supplied
 command digest, choice and actor. Preview bodies never enter records.
@@ -779,3 +778,16 @@ retry transport failures or replay acknowledged tasks.
 ### 2026-10-18 packaged terminal styles (TUI-RUNTIME-R001.7)
 
 Ship every Textual stylesheet with the Python package. Validate the built wheel outside the source checkout before release; source-tree rendering alone cannot prove package assets are present. Preserve the existing screen and authority behavior.
+
+
+## 2026-10-18: unavailable model selection feedback
+
+R012.2 still requires served profile discovery, preference transport and task
+metadata naming the profile Arbora selected. The current Python client drops
+the legacy model argument. Until that contract is available, `/model set` and
+its shorthand must report unavailable selection. Neither path changes local
+model state or sends a change. List and detail views present registry information,
+without an active server model claim. Do not add model selection authority or
+change the wire request. Tests cover both command paths, unchanged state,
+detail labels and omission of the model argument from the request.
+This feedback repair does not complete R012.2 or qualify served model choice.

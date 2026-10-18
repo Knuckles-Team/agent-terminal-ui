@@ -168,13 +168,17 @@ async def test_stream_runs_one_authenticated_a2a_task_to_its_final_state():
         bearer_token="tok",
     )
 
-    events = [event async for event in client.stream("hello", session_id="ctx-1")]
+    events = [
+        event
+        async for event in client.stream("hello", session_id="ctx-1", model="local-only-preference")
+    ]
 
     request = recorder.requests[0]
     sent = json.loads(request.content)
     assert request.url.path == "/a2a"
     assert request.headers["Authorization"] == "Bearer tok"
     assert request.headers["Idempotency-Key"]
+    assert "local-only-preference" not in request.content.decode()
     assert sent["method"] == "message/stream"
     assert sent["params"]["message"]["contextId"] == "ctx-1"
     assert sent["params"]["message"]["parts"] == [{"kind": "text", "text": "hello"}]

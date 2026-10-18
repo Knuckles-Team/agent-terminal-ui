@@ -124,11 +124,11 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:368",
-        "tests/test_client.py:388",
-        "tests/test_client.py:407",
-        "tests/test_client.py:450",
-        "tests/test_client.py:483"
+        "tests/test_client.py:372",
+        "tests/test_client.py:392",
+        "tests/test_client.py:411",
+        "tests/test_client.py:454",
+        "tests/test_client.py:487"
       ]
     },
     {
@@ -165,9 +165,9 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:205",
-        "tests/test_client.py:217",
-        "tests/test_client.py:241"
+        "tests/test_client.py:209",
+        "tests/test_client.py:221",
+        "tests/test_client.py:245"
       ]
     },
     {
@@ -178,11 +178,11 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:545",
-        "tests/test_client.py:578",
-        "tests/test_client.py:601",
-        "tests/test_client.py:615",
-        "tests/test_client.py:638"
+        "tests/test_client.py:549",
+        "tests/test_client.py:582",
+        "tests/test_client.py:605",
+        "tests/test_client.py:619",
+        "tests/test_client.py:642"
       ]
     },
     {
@@ -194,9 +194,9 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:418",
-        "tests/test_client.py:434",
-        "tests/test_commands.py:766"
+        "tests/test_client.py:422",
+        "tests/test_client.py:438",
+        "tests/test_commands.py:767"
       ]
     },
     {
@@ -208,8 +208,8 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:699",
-        "tests/test_commands.py:797",
+        "tests/test_client.py:703",
+        "tests/test_commands.py:798",
         "tests/test_import_guard.py:46",
         "tests/test_import_guard.py:53",
         "tests/test_import_guard.py:63"
@@ -232,10 +232,10 @@
       ],
       "verified_by": [
         "tests/test_client.py:145",
-        "tests/test_client.py:270",
-        "tests/test_client.py:294",
-        "tests/test_client.py:322",
-        "tests/test_client.py:765"
+        "tests/test_client.py:274",
+        "tests/test_client.py:298",
+        "tests/test_client.py:326",
+        "tests/test_client.py:769"
       ],
       "rollup_of": [
         "TUI-RUNTIME-R002.1",
