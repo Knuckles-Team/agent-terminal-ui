@@ -61,67 +61,6 @@ async def test_list_chats_raises_on_error(client: AgentClient) -> None:
             await client.list_chats()
 
 
-@pytest.mark.asyncio
-async def test_get_mcp_config_returns_dict(client: AgentClient) -> None:
-    """``get_mcp_config`` should GET ``/mcp/config`` and return the JSON dict."""
-    payload = {
-        "mcpServers": {
-            "memory": {"command": "mcp-memory", "args": []},
-        }
-    }
-    with patch.object(client._http_client, "get", new_callable=AsyncMock) as mock_get:
-        mock_get.return_value = _mock_response(payload)
-
-        result = await client.get_mcp_config()
-
-        mock_get.assert_awaited_once_with("http://localhost:8000/mcp/config")
-        assert result == payload
-        assert "mcpServers" in result
-
-
-@pytest.mark.asyncio
-async def test_get_mcp_config_raises_on_error(client: AgentClient) -> None:
-    """Non-2xx responses from ``/mcp/config`` should return graceful empty default."""
-    with patch.object(client._http_client, "get", new_callable=AsyncMock) as mock_get:
-        mock_get.return_value = _mock_response({"detail": "nope"}, status_code=404)
-
-        # Should not raise - returns safe empty default instead
-        result = await client.get_mcp_config()
-
-        assert isinstance(result, dict)
-        assert "servers" in result or "available" in result
-
-
-@pytest.mark.asyncio
-async def test_list_mcp_tools_returns_list(client: AgentClient) -> None:
-    """``list_mcp_tools`` should GET ``/mcp/tools`` and return the JSON list."""
-    payload = [
-        {"name": "memory.save", "description": "Store a memory"},
-        {"name": "memory.recall", "description": "Fetch a memory"},
-    ]
-    with patch.object(client._http_client, "get", new_callable=AsyncMock) as mock_get:
-        mock_get.return_value = _mock_response({"tools": payload})
-
-        result = await client.list_mcp_tools()
-
-        mock_get.assert_awaited_once_with("http://localhost:8000/mcp/tools")
-        assert result == payload
-
-
-@pytest.mark.asyncio
-async def test_list_mcp_tools_raises_on_error(client: AgentClient) -> None:
-    """Non-2xx responses from ``/mcp/tools`` should return graceful empty default."""
-    with patch.object(client._http_client, "get", new_callable=AsyncMock) as mock_get:
-        mock_get.return_value = _mock_response(
-            {"detail": "unavailable"}, status_code=503
-        )
-
-    # Should not raise - returns safe empty list instead
-    result = await client.list_mcp_tools()
-
-    assert isinstance(result, list)
-
-
 # ---------------------------------------------------------------------------
 # Knowledge graph endpoints
 # ---------------------------------------------------------------------------

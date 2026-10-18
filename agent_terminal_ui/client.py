@@ -970,8 +970,9 @@ class AgentClient:
             logger.debug(f"observability {path} failed: {e}")
             return None
 
-    async def get_usage_summary(self, **f: Any) -> dict[str, Any]:
-        return await self._obs_get("/summary", f) or {}
+    async def get_usage_summary(self) -> dict[str, Any]:
+        """Read the caller tenant snapshot without inventing absent metrics."""
+        return await self._read_operation_value("usage.read", {})
 
     async def get_usage_by_model(self, **f: Any) -> list[dict[str, Any]]:
         return await self._obs_get("/by-model", f) or []
@@ -1017,39 +1018,60 @@ class AgentClient:
         response.raise_for_status()
         return response.json()
 
+    async def _read_operation_value(
+        self, op: str, params: dict[str, Any]
+    ) -> dict[str, Any]:
+        result = await self.invoke_op(op, params)
+        if not isinstance(result, dict) or not isinstance(result.get("value"), dict):
+            raise ArboraOperationError("INVALID_ENVELOPE")
+        return result["value"]
+
     async def get_mcp_config(self) -> dict[str, Any]:
-        """Fetch MCP server configuration from the backend.
-
-        Returns MCP config or empty default on error to prevent AttributeError.
-
-        Returns:
-            Dictionary containing MCP configuration (has ``mcpServers`` key),
-            or a safe empty default when servers are not available.
-        """
-        try:
-            response = await self._http_client.get(f"{self.base_url}/mcp/config")
-            response.raise_for_status()
-            return response.json()
-        except Exception as e:
-            logger.debug(f"Failed to fetch MCP config, using empty default: {e}")
-            return {"servers": [], "available": False}
+        """Read caller-visible fleet status without inferring configuration."""
+        value = await self._read_operation_value("fleet.status", {})
+        if not isinstance(value.get("children"), dict):
+            raise ArboraOperationError("INVALID_ENVELOPE")
+        return value
 
     async def list_mcp_tools(self) -> list[dict[str, Any]]:
-        """Fetch the list of tools exposed by connected MCP servers.
-
-        Returns tool list or empty on error to prevent AttributeError.
-
-        Returns:
-            List of MCP tool definition dictionaries with name and description.
-            Empty list if no tools available or connection fails.
-        """
-        try:
-            response = await self._http_client.get(f"{self.base_url}/mcp/tools")
-            response.raise_for_status()
-            return response.json().get("tools", [])
-        except Exception as e:
-            logger.debug(f"Failed to fetch MCP tools, returning empty list: {e}")
-            return []
+        """Read at most ten catalog pages; never return an incomplete list."""
+        items: list[dict[str, Any]] = []
+        cursor: str | None = None
+        seen: set[str] = set()
+        for _ in range(10):
+            params: dict[str, Any] = {"browse": True, "kinds": ["tool"], "limit": 100}
+            if cursor is not None:
+                params["cursor"] = cursor
+            value = await self._read_operation_value("fleet.catalog.list", params)
+            page = value.get("items")
+            if (
+                not isinstance(page, list)
+                or len(page) > 100
+                or any(
+                    not isinstance(item, dict)
+                    or any(
+                        not isinstance(item.get(key), str)
+                        for key in ("id", "name", "description")
+                    )
+                    for item in page
+                )
+            ):
+                raise ArboraOperationError("INVALID_ENVELOPE")
+            items.extend(page)
+            if "next_cursor" not in value:
+                raise ArboraOperationError("INVALID_ENVELOPE")
+            cursor = value["next_cursor"]
+            if cursor is None:
+                return items
+            if (
+                not isinstance(cursor, str)
+                or not cursor
+                or len(cursor) > 1024
+                or cursor in seen
+            ):
+                raise ArboraOperationError("INVALID_ENVELOPE")
+            seen.add(cursor)
+        raise ArboraOperationError("CATALOG_PAGE_LIMIT")
 
     async def list_skills(self) -> list[dict[str, Any]]:
         """Fetch available skills from the backend or filesystem."""
@@ -1895,9 +1917,7 @@ class AgentClient:
 
         CONCEPT:TU-KG.compute.granular-resource-queries — Granular Resource Queries
         """
-        response = await self._http_client.get(f"{self.base_url}/api/enhanced/tools")
-        response.raise_for_status()
-        return response.json()
+        return await self.list_mcp_tools()
 
     async def toggle_resource(self, resource_id: str) -> dict[str, Any]:
         """Toggle enabled/disabled on any skill or tool.

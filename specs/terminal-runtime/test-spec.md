@@ -263,5 +263,10 @@ Renderer tests display literal commit identity and clear it after failed reads. 
   metadata in literal Python and native displays. A retained-history gap clears
   content and stops reads. Unknown conflicts and malformed metadata refuse.
 
+| TUI-RUNTIME-R012.4.2 | tests/test_served_fleet_usage.py | Versioned reads, opaque pages and tenant totals | Refusals, malformed pages and absent totals never become zero or empty success |
 | TUI-RUNTIME-R004.1 | `tests/test_precommit_hooks.py::test_spec_group_preserves_stages_and_trailer_fallback` | Group runs at commit, push and manual stages; explicit trailer fallback remains | Missing stage, fallback or retained blocking hook fails |
 | TUI-RUNTIME-R012.4.1 | Command dispatcher with real AgentClient and recording transport | One named unavailable notice | No REST or mutation request for any management subcommand |
+
+| TUI-RUNTIME-R004.2 | Planned remaining acceptance | Planned hook-policy comparison and regression tests must prove the remaining parent coverage. | Parent remains open until this proof passes |
+
+| TUI-RUNTIME-R012.4.3 | Planned remaining acceptance | Planned full command-matrix served fixture must cover every command family and make zero unserved-route requests. | Parent remains open until this proof passes |

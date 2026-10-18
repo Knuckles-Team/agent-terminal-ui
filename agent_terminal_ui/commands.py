@@ -243,8 +243,15 @@ class CommandProcessor:
 
     async def cmd_mcp(self, args: str) -> None:
         """Browse connected MCP servers and their available tools."""
-        config = await self.app._client.get_mcp_config()
-        tools = await self.app._client.list_mcp_tools()
+        try:
+            config = await self.app._client.get_mcp_config()
+            tools = await self.app._client.list_mcp_tools()
+        except (ArboraOperationError, httpx.HTTPError) as exc:
+            self.app.notify(
+                f"/mcp unavailable: fleet.status / fleet.catalog.list ({exc})",
+                severity="warning",
+            )
+            return
 
         # Fixed legacy import from agent_tui to agent_terminal_ui
         from agent_terminal_ui.tui.mcp_screen import MCPScreen
@@ -1619,31 +1626,11 @@ class CommandProcessor:
         await log.add_info(self._render_impact_table(query, impacts))
 
     async def cmd_mcp_reload(self, args: str) -> None:
-        """Hot-reload the backend MCP server configuration. Usage: /mcp:reload"""
-        log = self.app.query_one("Conversation")
-        try:
-            result = await self.app._client.reload_mcp()
-        except httpx.HTTPStatusError as exc:
-            await self._write_http_error(log, "mcp:reload", exc)
-            return
-        except Exception as exc:
-            await log.add_info(f"[red]Error (mcp:reload): {exc}[/red]")
-            return
-
-        status = result.get("status", "unknown")
-        if status == "error":
-            error = result.get("error", "unknown error")
-            self.app.notify(f"MCP reload failed: {error}", severity="error")
-            await log.add_info(f"[red]MCP reload failed:[/red] {error}")
-            return
-
-        agent_count = result.get("agents", 0)
-        tool_count = result.get("tools", 0)
-        message = (
-            f"MCP config reloaded. {agent_count} servers active ({tool_count} tools)."
+        """Refuse reload until Arbora serves a governed equivalent."""
+        self.app.notify(
+            "/mcp:reload unavailable: Arbora does not serve MCP reload.",
+            severity="warning",
         )
-        self.app.notify(message, severity="information")
-        await log.add_info(f"[green]{message}[/green]")
 
     async def _write_codemap(self, log: Any, result: dict[str, Any]) -> None:
         """Render a codemap result's header plus its mermaid/markdown artifacts."""
@@ -2894,15 +2881,19 @@ class CommandProcessor:
         parts = args.strip().split(maxsplit=1)
         subcmd = parts[0].lower() if parts else ""
 
-        if subcmd == "toggle" and len(parts) >= 2:
-            result = await self.app._client.toggle_resource(parts[1])
-            status = "enabled" if result.get("enabled") else "disabled"
-            await self.app.query_one("Conversation").add_info(
-                f"[green]✓ {parts[1]} is now {status}[/green]"
+        if subcmd not in {"", "list"}:
+            self.app.notify(
+                "/tools unavailable: only fleet.catalog.list is supported.",
+                severity="warning",
             )
             return
-
-        tools = await self.app._client.list_tools_only()
+        try:
+            tools = await self.app._client.list_tools_only()
+        except (ArboraOperationError, httpx.HTTPError) as exc:
+            self.app.notify(
+                f"/tools unavailable: fleet.catalog.list ({exc})", severity="warning"
+            )
+            return
         if not tools:
             await self.app.query_one("Conversation").add_info(
                 "[yellow]No MCP tools discovered.[/yellow]"
@@ -2915,13 +2906,10 @@ class CommandProcessor:
         table.add_column("ID", style="cyan", no_wrap=True)
         table.add_column("Name", style="bold")
         table.add_column("Server/Source")
-        table.add_column("Enabled", justify="center")
         for t in tools:
-            enabled = "✅" if t.get("enabled", True) else "❌"
             table.add_row(
                 str(t.get("id", "")),
                 str(t.get("name", "")),
-                str(t.get("source", t.get("endpoint", "unknown"))),
-                enabled,
+                str(t.get("server", "unavailable")),
             )
         await self.app.query_one("Conversation").add_info(table)
