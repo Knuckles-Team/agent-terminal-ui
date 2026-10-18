@@ -47,7 +47,7 @@ gates:
 
   - name: pytest
     command: ["bash", "-c",
-      "test -d .venv-mq || uv venv .venv-mq --python 3.11 >/dev/null; uv pip install --python .venv-mq/bin/python -q -e '.[test]' >/dev/null; .venv-mq/bin/python -m pytest -q --tb=short -rfE -m 'not integration'"]
+      "test -d .venv-mq || uv venv .venv-mq --python 3.14 >/dev/null; uv pip install --python .venv-mq/bin/python -q -e '.[test]' >/dev/null; .venv-mq/bin/python -m pytest -q --tb=short -rfE -m 'not integration'"]
     tier: fast
     timeout: 300
     baseline_timeout: 600
@@ -57,7 +57,7 @@ gates:
 
   - name: full-suite
     command: ["bash", "-c",
-      "test -d .venv-mq || uv venv .venv-mq --python 3.11 >/dev/null; uv pip install --python .venv-mq/bin/python -q -e '.[test]' >/dev/null; .venv-mq/bin/python -m pytest -q --tb=short -rfE"]
+      "test -d .venv-mq || uv venv .venv-mq --python 3.14 >/dev/null; uv pip install --python .venv-mq/bin/python -q -e '.[test]' >/dev/null; .venv-mq/bin/python -m pytest -q --tb=short -rfE"]
     tier: slow
     timeout: 900
     compare: pytest-ids

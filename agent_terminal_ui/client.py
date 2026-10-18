@@ -525,7 +525,7 @@ class AgentClient:
             raise ValueError("operation id and object params are required")
         if _is_approval_operation(op):
             raise ArboraOperationError("APPROVAL_UNAVAILABLE")
-        if sys.version_info < (3, 12):
+        if sys.version_info < (3, 12):  # noqa: UP036 - TUI-RUNTIME-R001.6 refusal
             raise ArboraOperationError("CLIENT_UNAVAILABLE")
         try:
             from arbora.client._generated_models import schema_for

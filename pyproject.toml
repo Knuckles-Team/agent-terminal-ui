@@ -14,8 +14,8 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Environment :: Console",
     "Operating System :: POSIX :: Linux",
-    "Programming Language :: Python :: 3"]
-requires-python = ">=3.11,<3.15"
+    "Programming Language :: Python :: 3", "Programming Language :: Python :: 3.12", "Programming Language :: Python :: 3.13", "Programming Language :: Python :: 3.14"]
+requires-python = ">=3.12"
 dependencies = [
     "textual>=8.2.8",
     "rich>=15.0.0",
@@ -62,14 +62,14 @@ agent_terminal_ui = ["py.typed", "skills/**/*"]
 
 [tool.ruff]
 line-length = 88
-target-version = "py311"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 ignore = ["E402"]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 ignore_missing_imports = true
 check_untyped_defs = true
 
