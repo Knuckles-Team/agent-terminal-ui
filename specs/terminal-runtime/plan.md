@@ -633,3 +633,10 @@ severity in literal bounded display. Reject malformed metadata and unsupported
 versions. Exact HTTP 409 retention_gap stops polling and clears retained lines
 with a visible gap status. No silent cursor reset, authority inference or task
 action replay is permitted. Live host admission remains separately qualified.
+
+### Unavailable management command boundary
+
+Arbora's current generated registry has fleet and usage operations, but no
+skills, prompts, knowledge-base, cron or pipeline operation families.
+R012.4.1 stops those registered commands before their legacy REST handlers.
+Served fleet and usage integration remains in R012.4 and R012.6.

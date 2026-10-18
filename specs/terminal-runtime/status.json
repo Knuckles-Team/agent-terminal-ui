@@ -84,6 +84,7 @@
     "TUI-RUNTIME-R012.2",
     "TUI-RUNTIME-R012.3",
     "TUI-RUNTIME-R012.4",
+    "TUI-RUNTIME-R012.4.1",
     "TUI-RUNTIME-R012.5",
     "TUI-RUNTIME-R012.6"
   ],
@@ -969,6 +970,16 @@
     {
       "id": "TUI-RUNTIME-R012.4",
       "title": "Commands reach only served operations",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R012.4.1"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R012.4.1",
+      "title": "Unavailable management commands make no requests",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
