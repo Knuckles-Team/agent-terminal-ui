@@ -42,6 +42,7 @@ jobs:
     uses: Knuckles-Team/pipelines/.github/workflows/gates_pipeline.yml@main
     with:
       config: .pre-commit-config.yaml
+      python-version: '3.12'
       setup-command: |
         uv sync --python 3.12 --frozen --extra test
         uv pip install --no-deps "arbora==0.1.1"
