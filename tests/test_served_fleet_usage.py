@@ -1,5 +1,6 @@
 """Public generated-client fixtures, not live native service qualification."""
 import json
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import httpx
@@ -22,7 +23,7 @@ def client_factory():
         def reply(request):
             requests.append(request)
             value = values.pop(0)
-            envelope = {"meta": {"registry_digest": REGISTRY_DIGEST}}
+            envelope: dict[str, Any] = {"meta": {"registry_digest": REGISTRY_DIGEST}}
             if isinstance(value, str):
                 envelope.update(ok=False, error={"code": value})
             else:
@@ -101,7 +102,7 @@ async def test_usage_clears_previous_metrics_on_refusal(client_factory):
 @pytest.mark.parametrize("command", ["mcp", "tools"])
 @pytest.mark.parametrize("refused", [False, True])
 async def test_command_reads_reach_generated_operations(client_factory, command, refused):
-    values = ["UNAVAILABLE"] if refused else (
+    values: list[Any] = ["UNAVAILABLE"] if refused else (
         [{"children": {"visible": {}}}, {"items": [], "next_cursor": None}]
         if command == "mcp" else [{"items": [], "next_cursor": None}]
     )
