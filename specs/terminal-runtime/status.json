@@ -88,9 +88,11 @@
     "TUI-RUNTIME-R012.4.1",
     "TUI-RUNTIME-R012.5",
     "TUI-RUNTIME-R012.6",
+    "TUI-RUNTIME-R010.4.1",
     "TUI-RUNTIME-R012.4.2",
     "TUI-RUNTIME-R004.2",
-    "TUI-RUNTIME-R012.4.3"
+    "TUI-RUNTIME-R012.4.3",
+    "TUI-RUNTIME-R010.4.2"
   ],
   "requirements": [
     {
@@ -408,7 +410,11 @@
       "title": "Read-only current plan",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R010.4.1",
+        "TUI-RUNTIME-R010.4.2"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R010.5",
@@ -1024,6 +1030,17 @@
       "verified_by": []
     },
     {
+      "id": "TUI-RUNTIME-R010.4.1",
+      "title": "Python current-plan view uses the served read",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "4554c7538da9"
+      ],
+      "verified_by": [
+        "tests/test_current_plan_view.py:18"
+      ]
+    },
+    {
       "id": "TUI-RUNTIME-R012.4.2",
       "title": "Read fleet and usage through served operations",
       "delivery_state": "VERIFIED",
@@ -1045,6 +1062,13 @@
     {
       "id": "TUI-RUNTIME-R012.4.3",
       "title": "Complete served command matrix",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R010.4.2",
+      "title": "Live current-plan acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []

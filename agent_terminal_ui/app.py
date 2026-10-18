@@ -901,6 +901,12 @@ class AgentApp(App):
                 RunBrowserScreen(self.agent_client, session_id=self.current_session_id)
             )
 
+    def open_current_plan(self, run_id: str) -> None:
+        """Open an expiring read-only projection for an explicit run."""
+        from agent_terminal_ui.tui.run_inspector import CurrentPlanScreen
+
+        self.push_screen(CurrentPlanScreen(self.agent_client, run_id))
+
     def remember_run_id(self, run_id: str) -> None:
         """Record an explicit run identity returned by a capability invocation."""
         self._last_run_id = run_id

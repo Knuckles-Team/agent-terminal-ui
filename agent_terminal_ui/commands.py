@@ -267,7 +267,14 @@ class CommandProcessor:
         opener(initial_query=args.strip())
 
     async def cmd_run(self, args: str) -> None:
-        """Browse runs or follow one in Mission Control. Usage: /run [run_id]"""
+        """Browse a run or read its plan: /run [run_id] or /run plan <run_id>."""
+        parts = args.strip().split(maxsplit=1)
+        if parts and parts[0] == "plan":
+            if len(parts) != 2 or not parts[1].strip():
+                self.app.notify("Usage: /run plan <run_id>", severity="warning")
+                return
+            self.app.open_current_plan(parts[1].strip())
+            return
         run_id = args.strip() or getattr(self.app, "last_run_id", None)
         opener = getattr(self.app, "open_run_inspector", None)
         if not callable(opener):

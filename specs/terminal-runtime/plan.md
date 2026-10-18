@@ -634,6 +634,9 @@ versions. Exact HTTP 409 retention_gap stops polling and clears retained lines
 with a visible gap status. No silent cursor reset, authority inference or task
 action replay is permitted. Live host admission remains separately qualified.
 
+## Amendment: current-plan consumer boundary
+
+R010.4.1 consumes the existing runs.current_plan schema. The run ID must be explicit; no local run or plan is invented. The view bounds items and text, checks UTC validity and uses a monotonic UI timer to clear displayed content at expiry. It provides no effects or producer storage. R010.4 and served inspector acceptance remain open until a composed live producer is qualified.
 ## Amendment: served fleet and tenant usage reads
 
 R012.4.2 replaces retired MCP/tool listing and usage screen requests with the public generated operation client. Catalog reads stop after ten pages and refuse incomplete or repeated-cursor results. Reload and toggle remain unavailable without a served equivalent. Tenant usage totals retain their supplied metric names; missing totals and per-turn/session breakdowns remain unavailable. R012.6 needs an owner-defined breakdown contract and served display proof; this slice does not close it.

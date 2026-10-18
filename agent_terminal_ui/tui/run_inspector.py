@@ -4,14 +4,16 @@ from __future__ import annotations
 
 import asyncio
 import json
+from datetime import UTC, datetime, timedelta
 from typing import ClassVar
 
 from rich.markup import escape
 from rich.syntax import Syntax
 from textual.app import ComposeResult
 from textual.binding import Binding, BindingType
-from textual.containers import Horizontal, Vertical
+from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen
+from textual.timer import Timer
 from textual.widgets import Button, DataTable, Input, ListItem, ListView, Static
 
 from agent_terminal_ui.capabilities import (
@@ -583,3 +585,109 @@ class RunInspectorScreen(ModalScreen[None]):
                 group="run-inspector-follow",
                 exclusive=True,
             )
+
+
+def current_plan_display(
+    value: object, run_id: str, now: datetime
+) -> tuple[str, float]:
+    """Validate the current-plan wire value before rendering any supplied text."""
+    if not isinstance(value, dict):
+        raise ValueError("invalid plan read")
+    if value.get("availability") == "unavailable" and value.get("snapshot") is None:
+        return "Current plan unavailable", 0
+    snapshot = value.get("snapshot")
+    if value.get("availability") != "available" or not isinstance(snapshot, dict):
+        raise ValueError("invalid plan availability")
+    revision = snapshot.get("revision")
+    if snapshot.get("run_id") != run_id or type(revision) is not int or revision < 0:
+        raise ValueError("invalid plan identity or revision")
+    observed = snapshot.get("observed_at")
+    expires = snapshot.get("expires_at")
+    if not isinstance(observed, str) or not isinstance(expires, str):
+        raise ValueError("invalid plan timestamps")
+    start, end = datetime.fromisoformat(observed), datetime.fromisoformat(expires)
+    if start.utcoffset() != timedelta(0) or end.utcoffset() != timedelta(0):
+        raise ValueError("plan timestamps must be UTC")
+    if not start <= now < end:
+        raise ValueError("plan is not current")
+    items = snapshot.get("items")
+    if not isinstance(items, list) or len(items) > 100:
+        raise ValueError("invalid or oversized plan")
+    lines = [f"Current plan for {run_id} (revision {revision})"]
+    for item in items:
+        if not isinstance(item, dict):
+            raise ValueError("invalid plan item")
+        text, status = item.get("text"), item.get("status")
+        if not isinstance(text, str) or not text or len(text) > 4096:
+            raise ValueError("invalid plan text")
+        if status not in ("pending", "in_progress", "done"):
+            raise ValueError("invalid plan item status")
+        lines.append(f"{status}: {text}")
+    if not items:
+        lines.append("Plan is available and empty")
+    return "\n".join(lines), (end - now).total_seconds()
+
+
+class CurrentPlanScreen(ModalScreen[None]):
+    """One run's current plan; read failures and expiry erase the projection."""
+
+    BINDINGS: ClassVar[list[BindingType]] = [
+        Binding("r", "refresh_plan", "Refresh"),
+        Binding("escape", "close", "Close"),
+    ]
+
+    def __init__(self, client: AgentClient, run_id: str) -> None:
+        super().__init__()
+        self.client = client
+        self.run_id = run_id
+        self._generation = 0
+        self._highest_revision = -1
+        self._expiry_timer: Timer | None = None
+
+    def compose(self) -> ComposeResult:
+        with VerticalScroll():
+            yield Static(f"Run: {self.run_id} | R refresh | Esc close", markup=False)
+            yield Static("Current plan unavailable", id="current-plan", markup=False)
+
+    def on_mount(self) -> None:
+        self.action_refresh_plan()
+
+    def action_refresh_plan(self) -> None:
+        if self._expiry_timer is not None:
+            self._expiry_timer.stop()
+        self._generation += 1
+        generation = self._generation
+        self.query_one("#current-plan", Static).update("Loading current plan…")
+        self.run_worker(
+            self._read_plan(generation), group="current-plan", exclusive=True
+        )
+
+    async def _read_plan(self, generation: int) -> None:
+        try:
+            value = await self.client.get_current_plan(self.run_id)
+            text, ttl = current_plan_display(value, self.run_id, datetime.now(UTC))
+            if ttl > 0:
+                revision = value["snapshot"]["revision"]
+                if revision < self._highest_revision:
+                    raise ValueError("plan revision regressed")
+                if generation == self._generation:
+                    self._highest_revision = revision
+        except Exception:
+            text, ttl = "Current plan unavailable", 0
+        if not self.is_mounted or generation != self._generation:
+            return
+        self.query_one("#current-plan", Static).update(text)
+        if ttl > 0:
+            self._expiry_timer = self.set_timer(ttl, lambda: self._expire(generation))
+
+    def _expire(self, generation: int) -> None:
+        if self.is_mounted and generation == self._generation:
+            self.query_one("#current-plan", Static).update(
+                "Current plan unavailable: expired"
+            )
+
+    def action_close(self) -> None:
+        self._generation += 1
+        if self._expiry_timer is not None:
+            self._expiry_timer.stop()
+        self.dismiss()
