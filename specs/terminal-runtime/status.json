@@ -224,6 +224,7 @@
       "title": "Terminal chat transport is reconciled with the current Arbora boundary",
       "delivery_state": "SPECIFIED",
       "landed_in": [
+        "76591e2fc934",
         "d2b5cea055c8",
         "d309979d133f"
       ],
