@@ -273,3 +273,8 @@ Renderer tests display literal commit identity and clear it after failed reads. 
 | TUI-RUNTIME-R012.4.3 | Planned remaining acceptance | Planned full command-matrix served fixture must cover every command family and make zero unserved-route requests. | Parent remains open until this proof passes |
 
 | TUI-RUNTIME-R010.4.2 | Planned remaining acceptance | Planned served fixture must render the actual current scaffold and refuse missing, stale or other-caller state without reconstruction. | Parent remains open until this proof passes |
+
+R002.1.3.2.2.3 HTTP acceptance also exercises legacy omission, both unavailable
+reasons, null or incomplete data, unknown refusal reasons, invented cursors and
+oversized projections. Every fixture observes tasks/get with the committed-event
+opt-in; malformed projections refuse the complete snapshot.

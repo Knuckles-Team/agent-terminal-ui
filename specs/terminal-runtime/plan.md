@@ -705,3 +705,24 @@ Tokyo Night. The four shared baseline palettes require a 4.5:1 foreground to
 background contrast floor. Python honors Textual's NO_COLOR presence rule.
 The prescribed Python test checks these boundaries. Native runtime switching,
 full cross-client parity and performance remain in R008.2.3.
+
+### 2026-10-18: Delivery reconciliation and bounded point-read acceptance
+
+Merged PRs 66 through 75 close four complete leaves: R012.4.1, R004.1,
+R012.4.2 and R010.4.1. PR 70 changes the supported Python environment only.
+Cost aliases in PR 71 do not close per-turn or session usage under R012.6.
+Coding refusals in PR 72 do not establish served R011 acceptance. Observers
+in PRs 73 and 74 do not close one-shot admission or recovery under R002.8.
+Theme evidence in PR 75 does not close R008.2.3 accessibility or performance.
+
+R002.1.3.2.2.3 has an existing native decoder, authenticated task read and
+renderer attachment. HTTP tests now cover omitted, unavailable and malformed
+projections as well as matching identity and retained-binding refusal. Existing
+buffer tests prove literal display and clearing after failed reads. Qualify this
+whole bounded consumer leaf with hosted native tests; do not infer served
+streaming, replay or recovery from it. This is evidence completion, with no new
+production behavior or transport.
+
+Historical status labels are not proof of broader acceptance. R001.3 currently
+has a VERIFIED label but its current tests prove unsigned confirmation refusal,
+not successful signed-plan resumption. That served criterion remains unproven.
