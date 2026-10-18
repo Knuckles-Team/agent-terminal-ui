@@ -1,6 +1,6 @@
 """Public generated-client fixtures, not live native service qualification."""
 import json
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import httpx
 import pytest
@@ -95,4 +95,34 @@ async def test_usage_clears_previous_metrics_on_refusal(client_factory):
         await app.screen.refresh_usage().wait()
         assert "totals unavailable" in str(widget.render())
     assert len(requests) == 3
+    await client._http_client.aclose()
+
+
+@pytest.mark.parametrize("command", ["mcp", "tools"])
+@pytest.mark.parametrize("refused", [False, True])
+async def test_command_reads_reach_generated_operations(client_factory, command, refused):
+    values = ["UNAVAILABLE"] if refused else (
+        [{"children": {"visible": {}}}, {"items": [], "next_cursor": None}]
+        if command == "mcp" else [{"items": [], "next_cursor": None}]
+    )
+    client, requests = client_factory(values)
+    app = MagicMock()
+    app._client = client
+    app.query_one.return_value.add_info = AsyncMock()
+    processor = CommandProcessor(app)
+    if command == "mcp":
+        await processor.cmd_mcp("")
+    else:
+        await processor.cmd_tools_only("")
+    assert all(request.url.path.startswith("/api/v1/ops/fleet.") for request in requests)
+    if refused:
+        app.notify.assert_called_once()
+        assert "unavailable" in app.notify.call_args[0][0]
+        app.push_screen.assert_not_called()
+        app.query_one.return_value.add_info.assert_not_awaited()
+    elif command == "mcp":
+        app.push_screen.assert_called_once()
+        assert app.push_screen.call_args.args[0].mcp_config["children"] == {"visible": {}}
+    else:
+        app.query_one.return_value.add_info.assert_awaited_once()
     await client._http_client.aclose()
