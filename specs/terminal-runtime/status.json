@@ -84,6 +84,7 @@
     "TUI-RUNTIME-R012.2",
     "TUI-RUNTIME-R012.3",
     "TUI-RUNTIME-R012.4",
+    "TUI-RUNTIME-R012.4.1",
     "TUI-RUNTIME-R012.5",
     "TUI-RUNTIME-R012.6"
   ],
@@ -284,7 +285,7 @@
         "1f9a26a46229"
       ],
       "verified_by": [
-        "tests/test_precommit_hooks.py:9"
+        "tests/test_precommit_hooks.py:10"
       ]
     },
     {
@@ -969,9 +970,23 @@
     {
       "id": "TUI-RUNTIME-R012.4",
       "title": "Commands reach only served operations",
-      "delivery_state": "SPECIFIED",
+      "delivery_state": "VERIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R012.4.1"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R012.4.1",
+      "title": "Unavailable management commands make no requests",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "b0cc25d210bc"
+      ],
+      "verified_by": [
+        "tests/test_unavailable_commands.py:12"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R012.5",

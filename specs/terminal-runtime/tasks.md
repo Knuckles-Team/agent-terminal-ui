@@ -145,3 +145,5 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R012.4:** Route every command to a served operation or one unavailable notice.
 - [ ] **TUI-RUNTIME-R012.5:** Send bounded file parts. Depends on `ARBORA-A2A-R001.5`.
 - [ ] **TUI-RUNTIME-R012.6:** Read usage through `usage.read`.
+
+- [ ] **TUI-RUNTIME-R012.4.1:** Refuse unavailable management command families before transport.

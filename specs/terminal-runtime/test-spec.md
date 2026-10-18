@@ -262,3 +262,5 @@ Renderer tests display literal commit identity and clear it after failed reads. 
 - `TUI-RUNTIME-R002.11`: Version-two loopback responses preserve original log
   metadata in literal Python and native displays. A retained-history gap clears
   content and stops reads. Unknown conflicts and malformed metadata refuse.
+
+| TUI-RUNTIME-R012.4.1 | Command dispatcher with real AgentClient and recording transport | One named unavailable notice | No REST or mutation request for any management subcommand |
