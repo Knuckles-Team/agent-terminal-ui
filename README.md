@@ -312,8 +312,8 @@ Example: If you type "fix the bug in app.py" followed by "and add a test for it"
 | `AGENT_THEME` | `tokyo-night` | Startup theme (any Textual built-in theme name) |
 
 The `/op` command requires Python 3.12 or newer and an installed Arbora
-distribution containing its generated client. Chat remains available on Python
-3.11. Without the generated client, `/op` refuses with `CLIENT_UNAVAILABLE`.
+distribution containing its generated client. The package, including basic chat,
+supports Python 3.12 or newer. CI and release validation use Python 3.14. Without the generated client, `/op` refuses with `CLIENT_UNAVAILABLE`.
 
 ### Themes
 
