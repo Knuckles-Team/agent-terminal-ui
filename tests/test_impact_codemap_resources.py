@@ -196,38 +196,14 @@ class TestImpactCommand:
 
 
 class TestMcpReloadCommand:
-    """Tests for ``/mcp:reload``."""
+    """Unserved reload must not issue a request."""
 
     @pytest.mark.asyncio
-    async def test_mcp_reload_success(
-        self, processor: CommandProcessor, mock_app: MagicMock
-    ) -> None:
-        """``/mcp:reload`` reports the number of reloaded servers."""
+    async def test_mcp_reload_unavailable(self, processor, mock_app):
         await processor.cmd_mcp_reload("")
-        mock_app._client.reload_mcp.assert_awaited_once()
-        mock_app.notify.assert_called()
-        assert "reloaded" in mock_app.notify.call_args[0][0].lower()
-
-        last = _last_written(mock_app)
-        assert isinstance(last, str)
-        assert "3" in last and "12" in last
-
-    @pytest.mark.asyncio
-    async def test_mcp_reload_backend_error(
-        self, processor: CommandProcessor, mock_app: MagicMock
-    ) -> None:
-        """Backend-reported errors should render as a red line."""
-        mock_app._client.reload_mcp.return_value = {
-            "status": "error",
-            "error": "kaboom",
-        }
-
-        await processor.cmd_mcp_reload("")
-
-        last = _last_written(mock_app)
-        assert isinstance(last, str)
-        assert "[red]" in last
-        assert "kaboom" in last
+        mock_app._client.reload_mcp.assert_not_awaited()
+        mock_app.notify.assert_called_once()
+        assert "unavailable" in mock_app.notify.call_args[0][0]
 
 
 class TestCodemapCommand:

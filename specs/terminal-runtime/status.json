@@ -85,7 +85,8 @@
     "TUI-RUNTIME-R012.3",
     "TUI-RUNTIME-R012.4",
     "TUI-RUNTIME-R012.5",
-    "TUI-RUNTIME-R012.6"
+    "TUI-RUNTIME-R012.6",
+    "TUI-RUNTIME-R012.4.2"
   ],
   "requirements": [
     {
@@ -971,7 +972,10 @@
       "title": "Commands reach only served operations",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R012.4.2"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R012.5",
@@ -986,6 +990,15 @@
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R012.4.2",
+      "title": "Read fleet and usage through served operations",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [
+        "tests/test_served_fleet_usage.py:15"
+      ]
     }
   ]
 }
