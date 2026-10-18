@@ -262,7 +262,7 @@
     {
       "id": "TUI-RUNTIME-R004",
       "title": "Pre-commit runs the spec and sprawl hooks agent-webui runs",
-      "delivery_state": "SPECIFIED",
+      "delivery_state": "VERIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
@@ -272,8 +272,10 @@
     {
       "id": "TUI-RUNTIME-R004.1",
       "title": "Consolidate equivalent spec checks without losing stages",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "b90eb520052a"
+      ],
       "verified_by": [
         "tests/test_precommit_hooks.py:18"
       ]
