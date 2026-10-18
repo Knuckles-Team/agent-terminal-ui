@@ -1033,6 +1033,88 @@ mod tests {
             assert!(!cancellation.confirm());
         }
     }
+    #[test]
+    fn observation_arguments_are_explicit_and_exclusive() {
+        let arguments = |values: &[&str]| values.iter().map(OsString::from).collect::<Vec<_>>();
+        assert_eq!(
+            super::selected_observation(&arguments(&["--observe-task", "task-1"]), false),
+            Ok(Some("task-1".to_owned()))
+        );
+        for values in [
+            vec!["--observe-task"],
+            vec!["--observe-task", ""],
+            vec!["--observe-task", "x", "--prompt", "effect"],
+            vec!["--observe-task", "x", "--override"],
+            vec!["--observe-task", "bad\nidentity"],
+        ] {
+            assert!(super::selected_observation(&arguments(&values), false).is_err());
+        }
+        assert!(super::selected_observation(&arguments(&["--observe-task", "x"]), true).is_err());
+        assert!(
+            super::selected_observation(&arguments(&["--observe-task", &"x".repeat(513)]), false)
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn observation_polling_requires_active_matching_task() {
+        let ReadStatus::Task(mut snapshot) =
+            task_read("task-one", "context-two", Some("run-three"))
+        else {
+            panic!("task fixture required")
+        };
+        let initial = snapshot.correlation.clone();
+        for state in [TaskState::Submitted, TaskState::Working] {
+            snapshot.state = state;
+            assert!(super::observation_continues(&snapshot, Some(&initial)));
+        }
+        for state in [
+            TaskState::InputRequired,
+            TaskState::AuthRequired,
+            TaskState::Completed,
+            TaskState::Failed,
+            TaskState::Rejected,
+            TaskState::Canceled,
+        ] {
+            snapshot.state = state;
+            assert!(!super::observation_continues(&snapshot, Some(&initial)));
+        }
+        snapshot.state = TaskState::Working;
+        let ReadStatus::Task(other) = task_read("task-one", "other-context", Some("run-three"))
+        else {
+            panic!("task fixture required")
+        };
+        assert!(!super::observation_continues(
+            &snapshot,
+            Some(&other.correlation)
+        ));
+    }
+
+    #[test]
+    fn observation_help_does_not_offer_remote_cancellation() {
+        let mut terminal = Terminal::new(TestBackend::new(180, 12)).unwrap();
+        terminal
+            .draw(|frame| {
+                super::draw_viewport(
+                    frame,
+                    "Task ID: task-one",
+                    Style::default(),
+                    &mut super::Viewport::default(),
+                    true,
+                )
+            })
+            .unwrap();
+        let text: String = terminal
+            .backend()
+            .buffer()
+            .content()
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect();
+        assert!(text.contains("read-only observation"));
+        assert!(!text.contains("x: cancel remote task"));
+        assert!(text.contains("r: refresh read"));
+    }
 }
 
 #[cfg(test)]
@@ -1146,88 +1228,5 @@ mod terminal_point_view_tests {
             .collect();
         assert!(!text.contains("actual-batch"));
         assert!(!text.contains("Commit sequence: 7"));
-    }
-
-    #[test]
-    fn observation_arguments_are_explicit_and_exclusive() {
-        let arguments = |values: &[&str]| values.iter().map(OsString::from).collect::<Vec<_>>();
-        assert_eq!(
-            super::selected_observation(&arguments(&["--observe-task", "task-1"]), false),
-            Ok(Some("task-1".to_owned()))
-        );
-        for values in [
-            vec!["--observe-task"],
-            vec!["--observe-task", ""],
-            vec!["--observe-task", "x", "--prompt", "effect"],
-            vec!["--observe-task", "x", "--override"],
-            vec!["--observe-task", "bad\nidentity"],
-        ] {
-            assert!(super::selected_observation(&arguments(&values), false).is_err());
-        }
-        assert!(super::selected_observation(&arguments(&["--observe-task", "x"]), true).is_err());
-        assert!(
-            super::selected_observation(&arguments(&["--observe-task", &"x".repeat(513)]), false)
-                .is_err()
-        );
-    }
-
-    #[test]
-    fn observation_polling_requires_active_matching_task() {
-        let ReadStatus::Task(mut snapshot) =
-            task_read("task-one", "context-two", Some("run-three"))
-        else {
-            panic!("task fixture required")
-        };
-        let initial = snapshot.correlation.clone();
-        for state in [TaskState::Submitted, TaskState::Working] {
-            snapshot.state = state;
-            assert!(super::observation_continues(&snapshot, Some(&initial)));
-        }
-        for state in [
-            TaskState::InputRequired,
-            TaskState::AuthRequired,
-            TaskState::Completed,
-            TaskState::Failed,
-            TaskState::Rejected,
-            TaskState::Canceled,
-        ] {
-            snapshot.state = state;
-            assert!(!super::observation_continues(&snapshot, Some(&initial)));
-        }
-        snapshot.state = TaskState::Working;
-        let ReadStatus::Task(other) = task_read("task-one", "other-context", Some("run-three"))
-        else {
-            panic!("task fixture required")
-        };
-        assert!(!super::observation_continues(
-            &snapshot,
-            Some(&other.correlation)
-        ));
-    }
-
-    #[test]
-    fn observation_help_does_not_offer_remote_cancellation() {
-        let mut terminal = Terminal::new(TestBackend::new(180, 12)).unwrap();
-        terminal
-            .draw(|frame| {
-                super::draw_viewport(
-                    frame,
-                    "Task ID: task-one",
-                    Style::default(),
-                    &mut super::Viewport::default(),
-                    true,
-                )
-            })
-            .unwrap();
-        let text: String = terminal
-            .backend()
-            .buffer()
-            .content()
-            .iter()
-            .map(|cell| cell.symbol())
-            .collect();
-        assert!(text.contains("read-only observation"));
-        assert!(!text.contains("x: cancel remote task"));
-        assert!(text.contains("r: refresh read"));
     }
 }
