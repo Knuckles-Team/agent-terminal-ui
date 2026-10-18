@@ -637,3 +637,9 @@ action replay is permitted. Live host admission remains separately qualified.
 ## Amendment: equivalent spec hook consolidation
 
 R004.1 replaces the three separate standard, decomposition and status hooks with the shared spec group. The group also checks trailers when range metadata exists. Keep the existing explicit trailer hook because the group skips that member without range metadata. Preserve prose, stubs and sprawl checks. Full R004 remains open; this amendment removes no blocking coverage.
+### Unavailable management command boundary
+
+Arbora's current generated registry has fleet and usage operations, but no
+skills, prompts, knowledge-base, cron or pipeline operation families.
+R012.4.1 stops those registered commands before their legacy REST handlers.
+Served fleet and usage integration remains in R012.4 and R012.6.

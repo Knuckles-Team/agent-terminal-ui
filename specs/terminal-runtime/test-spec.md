@@ -264,3 +264,4 @@ Renderer tests display literal commit identity and clear it after failed reads. 
   content and stops reads. Unknown conflicts and malformed metadata refuse.
 
 | TUI-RUNTIME-R004.1 | `tests/test_precommit_hooks.py::test_spec_group_preserves_stages_and_trailer_fallback` | Group runs at commit, push and manual stages; explicit trailer fallback remains | Missing stage, fallback or retained blocking hook fails |
+| TUI-RUNTIME-R012.4.1 | Command dispatcher with real AgentClient and recording transport | One named unavailable notice | No REST or mutation request for any management subcommand |
