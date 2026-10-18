@@ -26,3 +26,10 @@ def test_spec_group_preserves_stages_and_trailer_fallback():
     assert hooks["spec-trailers"]["stages"] == ["pre-push", "manual"]
     assert hooks["spec-trailers"]["args"] == ["--base-ref", "origin/main"]
     assert {"ste-staged", "stubs", "sprawl"} <= hooks.keys()
+
+
+def test_ci_setup_uses_the_selected_python():
+    workflow = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text())
+    inputs = workflow["jobs"]["gates"]["with"]
+    selected = inputs["python-version"]
+    assert f"uv sync --python {selected} " in inputs["setup-command"]
