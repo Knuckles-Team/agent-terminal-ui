@@ -92,7 +92,8 @@
     "TUI-RUNTIME-R012.4.2",
     "TUI-RUNTIME-R004.2",
     "TUI-RUNTIME-R012.4.3",
-    "TUI-RUNTIME-R010.4.2"
+    "TUI-RUNTIME-R010.4.2",
+    "TUI-RUNTIME-R002.1.6"
   ],
   "requirements": [
     {
@@ -122,11 +123,11 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:363",
-        "tests/test_client.py:381",
-        "tests/test_client.py:400",
-        "tests/test_client.py:443",
-        "tests/test_client.py:476"
+        "tests/test_client.py:368",
+        "tests/test_client.py:388",
+        "tests/test_client.py:407",
+        "tests/test_client.py:450",
+        "tests/test_client.py:483"
       ]
     },
     {
@@ -138,10 +139,10 @@
         "e90084eba29c"
       ],
       "verified_by": [
-        "tests/test_client.py:102",
-        "tests/test_client.py:111",
-        "tests/test_client.py:117",
-        "tests/test_client.py:124",
+        "tests/test_client.py:107",
+        "tests/test_client.py:116",
+        "tests/test_client.py:122",
+        "tests/test_client.py:129",
         "tests/test_headless.py:119"
       ]
     },
@@ -163,9 +164,9 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:200",
-        "tests/test_client.py:212",
-        "tests/test_client.py:236"
+        "tests/test_client.py:205",
+        "tests/test_client.py:217",
+        "tests/test_client.py:241"
       ]
     },
     {
@@ -176,11 +177,11 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:538",
-        "tests/test_client.py:573",
-        "tests/test_client.py:596",
-        "tests/test_client.py:610",
-        "tests/test_client.py:633"
+        "tests/test_client.py:545",
+        "tests/test_client.py:578",
+        "tests/test_client.py:601",
+        "tests/test_client.py:615",
+        "tests/test_client.py:638"
       ]
     },
     {
@@ -192,8 +193,8 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:411",
-        "tests/test_client.py:427",
+        "tests/test_client.py:418",
+        "tests/test_client.py:434",
         "tests/test_commands.py:766"
       ]
     },
@@ -205,7 +206,7 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:692",
+        "tests/test_client.py:699",
         "tests/test_commands.py:797",
         "tests/test_import_guard.py:46",
         "tests/test_import_guard.py:53",
@@ -228,11 +229,11 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:140",
-        "tests/test_client.py:265",
-        "tests/test_client.py:289",
-        "tests/test_client.py:317",
-        "tests/test_client.py:758"
+        "tests/test_client.py:145",
+        "tests/test_client.py:270",
+        "tests/test_client.py:294",
+        "tests/test_client.py:322",
+        "tests/test_client.py:765"
       ],
       "rollup_of": [
         "TUI-RUNTIME-R002.1",
@@ -435,7 +436,8 @@
         "TUI-RUNTIME-R002.1.2",
         "TUI-RUNTIME-R002.1.3",
         "TUI-RUNTIME-R002.1.4",
-        "TUI-RUNTIME-R002.1.5"
+        "TUI-RUNTIME-R002.1.5",
+        "TUI-RUNTIME-R002.1.6"
       ]
     },
     {
@@ -1068,6 +1070,17 @@
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R002.1.6",
+      "title": "Discover unary Agent Cards",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "13b66721ab49"
+      ],
+      "verified_by": [
+        "tests/test_card_discovery.py:10"
+      ]
     }
   ]
 }
