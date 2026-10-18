@@ -17,7 +17,7 @@ from agent_terminal_ui.workspace_policy import FileOperation
 
 
 def _view(root: Path, trust: bool = False) -> CodingSessionView:
-    view = CodingSessionView.open(root, "s1")
+    view = CodingSessionView.open(root, "s1", [c.value for c in ClientCapability])
     view.policy.trust_mode = trust
     return view
 
@@ -129,3 +129,74 @@ async def test_path_containment_refuses_escape(tmp_path: Path, trust: bool) -> N
         view.policy.check_operation(FileOperation.READ, sibling, contained=True)
         is not None
     )
+
+
+@pytest.mark.parametrize("capabilities", [None, [], ["fs/delete"]])
+async def test_missing_capabilities_never_reach_host_handlers(
+    tmp_path: Path, capabilities: list[str] | None
+) -> None:
+    view = CodingSessionView.open(tmp_path, "s1", capabilities)
+
+    async def forbidden(view: CodingSessionView, params: dict[str, Any]) -> Any:
+        pytest.fail("ungranted request reached a host handler")
+
+    view.handlers = {capability: forbidden for capability in ClientCapability}
+    for capability in ClientCapability:
+        result = _refusal(await view.handle(capability.value, {"path": "a.txt"}))
+        assert result.reason is RefusalReason.NOT_GRANTED
+        assert view.pending is None
+
+
+@pytest.mark.parametrize("trust", [False, True])
+async def test_escaping_reads_touch_no_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, trust: bool
+) -> None:
+    root = tmp_path / "root"
+    root.mkdir()
+    outside = tmp_path / "secret"
+    outside.write_text("secret")
+    (root / "link").symlink_to(outside)
+    view = CodingSessionView.open(root, "s1", ["fs/read_text_file"])
+    view.policy.trust_mode = trust
+
+    def forbidden(*args: Any, **kwargs: Any) -> str:
+        raise AssertionError("escaping read accessed file bytes")
+
+    monkeypatch.setattr(Path, "read_text", forbidden)
+    for path in ("../secret", str(outside), "link"):
+        result = _refusal(await view.handle("fs/read_text_file", {"path": path}))
+        assert result.reason is RefusalReason.OUTSIDE_ROOT
+        assert view.pending is None
+
+
+@pytest.mark.parametrize(
+    "window",
+    [{"line": True}, {"line": 0}, {"line": -1}, {"line": "1"},
+     {"limit": False}, {"limit": -1}, {"limit": 1.5}],
+)
+async def test_invalid_read_windows_touch_no_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, window: dict[str, Any]
+) -> None:
+    view = CodingSessionView.open(tmp_path, "s1", ["fs/read_text_file"])
+
+    def forbidden(*args: Any, **kwargs: Any) -> str:
+        raise AssertionError("invalid read window accessed file bytes")
+
+    monkeypatch.setattr(Path, "read_text", forbidden)
+    result = _refusal(await view.handle("fs/read_text_file", {"path": "a", **window}))
+    assert result.reason is RefusalReason.INVALID_PARAMS
+    assert view.pending is None
+
+
+async def test_explicit_read_grant_preserves_line_window(tmp_path: Path) -> None:
+    (tmp_path / "a").write_text("one\ntwo\nthree\n")
+    view = CodingSessionView.open(tmp_path, "s1", ["fs/read_text_file"])
+    assert await view.handle("fs/read_text_file", {"path": "a", "line": 2, "limit": 1}) == {
+        "content": "two\n"
+    }
+    assert await view.handle("fs/read_text_file", {"path": "a", "limit": 0}) == {
+        "content": ""
+    }
+    result = _refusal(await view.handle("fs/write_text_file", {"path": "a", "content": "x"}))
+    assert result.reason is RefusalReason.NOT_GRANTED
+    assert (tmp_path / "a").read_text() == "one\ntwo\nthree\n"

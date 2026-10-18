@@ -125,6 +125,11 @@ async def read_text_file(
     view: CodingSessionView, params: dict[str, Any]
 ) -> CapabilityResult:
     """Default ``fs/read_text_file``: return file text, no prompt inside the root."""
+    line, limit = params.get("line"), params.get("limit")
+    if (line is not None and (type(line) is not int or line < 1)) or (
+        limit is not None and (type(limit) is not int or limit < 0)
+    ):
+        return _refuse(RefusalReason.INVALID_PARAMS, "invalid read window")
     path = _contained_path(view, params.get("path"), FileOperation.READ)
     if isinstance(path, CapabilityRefusal):
         return path
@@ -132,7 +137,6 @@ async def read_text_file(
         text = path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as exc:
         return _refuse(RefusalReason.FAILED, str(exc))
-    line, limit = params.get("line"), params.get("limit")
     if isinstance(line, int) or isinstance(limit, int):
         start = max(line - 1, 0) if isinstance(line, int) else 0
         lines = text.splitlines(keepends=True)[start:]
@@ -287,9 +291,9 @@ class CodingSessionView:
         session_id: str,
         capabilities: Iterable[str] | None = None,
     ) -> CodingSessionView:
-        """Open a session; unknown capability names are dropped, never granted."""
+        """Open with explicit grants; omitted and unknown capabilities grant nothing."""
         known = {c.value: c for c in ClientCapability}
-        names = known if capabilities is None else capabilities
+        names = () if capabilities is None else capabilities
         granted = frozenset(known[n] for n in names if n in known)
         return cls(Path(root), granted, session_id)
 

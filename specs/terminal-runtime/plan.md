@@ -653,3 +653,12 @@ Served fleet and usage integration remains in R012.4 and R012.6.
 ### Remaining acceptance rollups
 
 Explicit pending children retain the broader parent acceptance criteria. The status generator rolls up children, so prose-only deferrals are insufficient. These rows record remaining acceptance; they do not weaken a requirement or claim new proof.
+
+### 2026-10-18: Explicit coding grants and read refusals
+
+R011.1 to R011.3 require granted capabilities and root containment. An omitted
+capability list grants nothing. Read windows reject booleans, non-integers,
+lines below one and negative limits before file access. Tests prove missing
+grants and paths outside the root read no bytes, including in trust mode.
+Production admission, approval and request transport remain pending. Existing
+local handler tests use explicit fixture grants; they do not prove authority.
