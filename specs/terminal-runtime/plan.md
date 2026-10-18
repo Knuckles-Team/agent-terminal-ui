@@ -761,3 +761,10 @@ R004.2 remains open. AGENTS.md designates .specify as canonical source; the
 shared convergence rule permits only its constitution.md file. Resolving this
 conflict requires an approved source migration or an owner-approved shared
 policy change. Preserve the source and blocking checks until that decision.
+
+### Unary card discovery
+
+TUI-RUNTIME-R002.1.6 reuses get_metadata for transport selection. The root card
+path precedes the scoped path. Only HTTP 404 and 405 permit scoped fallback.
+This slice qualifies basic unary conversation, not native prompt startup,
+selected-interface host admission, streaming or cancellation.

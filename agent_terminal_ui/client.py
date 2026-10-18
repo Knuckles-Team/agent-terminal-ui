@@ -397,13 +397,7 @@ class AgentClient:
         sees the original transport.
         """
         if self._streaming is None:
-            try:
-                response = await self._http_client.get(
-                    f"{self.a2a_url}{AGENT_CARD_PATH}"
-                )
-                card = response.json() if response.status_code == 200 else {}
-            except (httpx.HTTPError, ValueError):
-                card = {}
+            card = await self.get_metadata()
             capabilities = card.get("capabilities") if isinstance(card, dict) else None
             self._streaming = not (
                 isinstance(capabilities, dict)
@@ -770,7 +764,14 @@ class AgentClient:
         """
         try:
             response = await self._http_client.get(f"{self.base_url}{AGENT_CARD_PATH}")
-            return response.json()
+            if response.status_code in {404, 405}:
+                response = await self._http_client.get(
+                    f"{self.a2a_url}{AGENT_CARD_PATH}"
+                )
+            if response.status_code != 200:
+                return {}
+            card = response.json()
+            return card if isinstance(card, dict) else {}
         except (httpx.HTTPError, ValueError):
             return {}
 

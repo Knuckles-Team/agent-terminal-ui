@@ -282,3 +282,8 @@ opt-in; malformed projections refuse the complete snapshot.
 R001.3 refusal and mocked dispatch tests remain regression coverage only. They
 are not bound as full-criterion evidence. The signed A2A success, tamper, expiry,
 replay and stale-lease fixture in the original matrix remains required.
+
+TUI-RUNTIME-R002.1.6 covers root unary discovery, scoped fallback after 404/405,
+credential preservation, malformed cards and refused discovery. A completed
+history reply must render after exactly one message/send. These tests do not
+qualify native prompt startup or model execution.

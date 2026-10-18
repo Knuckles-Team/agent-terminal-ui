@@ -155,3 +155,7 @@ session recovery. Retain OpenCode until the operator accepts the replacement.
 | `TUI-RUNTIME-R012.4.3` | **Complete served command matrix.** Qualify the full registered command matrix, including the usage command entry point, against served fixtures or explicit unavailable notices. The narrow refusal and client wiring children do not establish this complete served acceptance. | Planned full command-matrix served fixture must cover every command family and make zero unserved-route requests. |
 
 | `TUI-RUNTIME-R010.4.2` | **Live current-plan acceptance.** Qualify the current-plan view against a composed live harness producer with caller isolation, revision changes and expiry. Consumer fixtures alone do not complete R010.4. | Planned served fixture must render the actual current scaffold and refuse missing, stale or other-caller state without reconstruction. |
+
+| ID | Requirement | Acceptance |
+| --- | --- | --- |
+| `TUI-RUNTIME-R002.1.6` | **Discover unary Agent Cards.** Python metadata and transport selection use the standard root card path. Fall back to the scoped A2A card only after HTTP 404 or 405. Preserve authentication and existing transport behavior when no card is available. | Root unary cards select message/send and render history replies. Scoped cards remain supported. Denials and malformed responses do not trigger another discovery path. |
