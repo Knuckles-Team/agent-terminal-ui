@@ -637,6 +637,9 @@ action replay is permitted. Live host admission remains separately qualified.
 ## Amendment: served fleet and tenant usage reads
 
 R012.4.2 replaces retired MCP/tool listing and usage screen requests with the public generated operation client. Catalog reads stop after ten pages and refuse incomplete or repeated-cursor results. Reload and toggle remain unavailable without a served equivalent. Tenant usage totals retain their supplied metric names; missing totals and per-turn/session breakdowns remain unavailable. R012.6 needs an owner-defined breakdown contract and served display proof; this slice does not close it.
+## Amendment: equivalent spec hook consolidation
+
+R004.1 replaces the three separate standard, decomposition and status hooks with the shared spec group. The group also checks trailers when range metadata exists. Keep the existing explicit trailer hook because the group skips that member without range metadata. Preserve prose, stubs and sprawl checks. Full R004 remains open; this amendment removes no blocking coverage.
 ### Unavailable management command boundary
 
 Arbora's current generated registry has fleet and usage operations, but no

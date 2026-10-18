@@ -73,9 +73,8 @@ repos:
 - repo: https://github.com/Knuckles-Team/pipelines
   rev: main
   hooks:
-  - id: spec-status
-  - id: spec-decomposition
-  - id: spec-standard
+  - id: spec
+    stages: [pre-commit, pre-push, manual]
   - id: ste-staged
   - id: stubs
   - id: sprawl
