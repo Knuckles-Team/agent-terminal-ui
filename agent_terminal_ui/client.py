@@ -61,14 +61,23 @@ MODE_TASK_IRIS = {
 #: A2A task states that end a stream.
 _FINAL_STATES = frozenset({"completed", "canceled", "failed", "rejected"})
 _FAILED_STATES = frozenset({"failed", "rejected"})
+_STREAM_UNSUPPORTED = frozenset({-32010, -32004, -32601})
 
 
 class A2ATransportError(RuntimeError):
     """Arbora answered a JSON-RPC request with an error object."""
 
-    def __init__(self, error: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        error: dict[str, Any],
+        *,
+        status_code: int | None = None,
+        acknowledged: bool = False,
+    ) -> None:
         super().__init__(str(error.get("message") or "A2A request failed"))
         self.code = error.get("code")
+        self.status_code = status_code
+        self.acknowledged = acknowledged
 
 
 class ArboraOperationError(RuntimeError):
@@ -116,7 +125,7 @@ def _sse_frames(lines: list[str]) -> list[dict[str, Any]]:
 def _frame_result(frame: dict[str, Any]) -> dict[str, Any]:
     error = frame.get("error")
     if isinstance(error, dict):
-        raise A2ATransportError(error)
+        raise A2ATransportError(error, acknowledged="result" in frame)
     result = frame.get("result")
     if not isinstance(result, dict):
         raise A2ATransportError({"message": "A2A frame carried no result"})
@@ -378,7 +387,11 @@ class AgentClient:
                 await response.aread()
                 frame = response.json()
                 error = frame.get("error") if isinstance(frame, dict) else None
-                raise A2ATransportError(error if isinstance(error, dict) else {})
+                raise A2ATransportError(
+                    error if isinstance(error, dict) else {},
+                    status_code=response.status_code,
+                    acknowledged=isinstance(frame, dict) and "result" in frame,
+                )
             pending: list[str] = []
             async for line in response.aiter_lines():
                 if line:
@@ -624,19 +637,39 @@ class AgentClient:
         }
         headers = {"Idempotency-Key": uuid.uuid4().hex}
         try:
-            if await self.streaming_supported():
-                events = self._follow(
-                    "message/stream", {"message": message}, session_id, headers
-                )
-            else:
-                events = self._follow_results(
-                    self._poll_results(message, headers), session_id
-                )
-            async for event in events:
+            async for event in self._follow_results(
+                self._conversation_results(message, headers), session_id
+            ):
                 yield event
         except (A2ATransportError, httpx.HTTPError, ValueError) as exc:
             logger.warning("A2A stream failed: %s", exc)
             yield {"type": "error", "message": str(exc), "session_id": session_id}
+
+    async def _conversation_results(
+        self, message: dict[str, Any], headers: dict[str, str]
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        acknowledged = False
+        if await self.streaming_supported():
+            try:
+                async for result in self._rpc_stream(
+                    "message/stream", {"message": message}, headers=headers
+                ):
+                    # Even a result that renders nothing may acknowledge admission.
+                    acknowledged = True
+                    yield result
+                return
+            except A2ATransportError as exc:
+                if (
+                    acknowledged
+                    or exc.acknowledged
+                    or type(exc.code) is not int
+                    or exc.status_code in {401, 403}
+                    or exc.code not in _STREAM_UNSUPPORTED
+                ):
+                    raise
+                self._streaming = False
+        async for result in self._poll_results(message, headers):
+            yield result
 
     async def resubscribe(
         self, task_id: str, *, last_event_id: str | None = None
