@@ -971,7 +971,7 @@
     {
       "id": "TUI-RUNTIME-R012.4",
       "title": "Commands reach only served operations",
-      "delivery_state": "SPECIFIED",
+      "delivery_state": "VERIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
@@ -982,8 +982,10 @@
     {
       "id": "TUI-RUNTIME-R012.4.1",
       "title": "Unavailable management commands make no requests",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "b0cc25d210bc"
+      ],
       "verified_by": [
         "tests/test_unavailable_commands.py:12"
       ]
