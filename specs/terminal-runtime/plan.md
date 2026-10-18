@@ -662,3 +662,10 @@ lines below one and negative limits before file access. Tests prove missing
 grants and paths outside the root read no bytes, including in trust mode.
 Production admission, approval and request transport remain pending. Existing
 local handler tests use explicit fixture grants; they do not prove authority.
+
+### 2026-10-18: Cost aliases use the served usage view
+
+R012.6 remains open for served turn and session totals. Route `/cost` and
+`/stats` to the existing `/usage` view. Remove cached zero defaults and claims
+of cross-agent history. If the view is absent, display one unavailable notice.
+This repairs command routing; it does not qualify new usage metrics.

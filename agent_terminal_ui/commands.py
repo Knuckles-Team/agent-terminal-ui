@@ -390,47 +390,21 @@ class CommandProcessor:
         await self._submit_prompt(f"Search the codebase for: {args}")
 
     async def cmd_stats(self, args: str) -> None:
-        """Show live token/cost stats for the current session.
+        """Open the served usage view for the cost and stats aliases.
 
         CONCEPT:AU-ECO.mcp.usage-cost-observability-surface
         """
-        tracker = getattr(self.app, "cost_tracker", None)
-        if tracker is not None:
-            with contextlib.suppress(Exception):
-                s = tracker.get_session_summary()
-                stats = (
-                    f"[bold blue]This session (live):[/bold blue]\n"
-                    f"- Turns: {s.total_turns}\n"
-                    f"- Tokens: {s.total_input_tokens} in / "
-                    f"{s.total_output_tokens} out\n"
-                    f"- Cache hit: {s.cache_hit_rate * 100:.0f}%\n"
-                    f"- Cost: ${s.total_cost_usd:.4f}\n"
-                    f"[dim]Run /usage (or Alt+U) for cross-agent history.[/dim]"
-                )
-                await self.app.query_one("Conversation").add_info(stats)
-                return
-        # Fallback to any server-provided usage snapshot.
-        usage = getattr(self.app, "_last_usage", None)
-        if usage:
-            stats = (
-                f"[bold blue]Session Statistics:[/bold blue]\n"
-                f"- Total Tokens: {usage.get('total_tokens', 0)}\n"
-                f"- Estimated Cost: ${usage.get('estimated_cost_usd', 0):.4f}\n"
-            )
-        else:
-            stats = (
-                "[yellow]No usage yet. Run /usage (Alt+U) for the full "
-                "cross-agent dashboard.[/yellow]"
-            )
-        await self.app.query_one("Conversation").add_info(stats)
+        await self.cmd_usage(args)
 
     async def cmd_usage(self, args: str) -> None:
-        """Open the full Usage & Cost dashboard (live + cross-agent history)."""
+        """Open tenant usage and separately labelled local estimates."""
         action = getattr(self.app, "action_switch_usage", None)
-        if action is not None:
+        if callable(action):
             action()
         else:
-            await self.cmd_stats(args)
+            await self.app.query_one("Conversation").add_info(
+                "Usage unavailable: the usage.read view is not available."
+            )
 
     async def cmd_ingest(self, args: str) -> None:
         """Extract a knowledge graph from a URL, file, or text (live).

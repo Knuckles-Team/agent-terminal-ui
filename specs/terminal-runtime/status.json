@@ -156,8 +156,8 @@
         "tests/test_client.py:512",
         "tests/test_client.py:527",
         "tests/test_client.py:563",
-        "tests/test_commands.py:738",
-        "tests/test_commands.py:790"
+        "tests/test_commands.py:731",
+        "tests/test_commands.py:783"
       ]
     },
     {
@@ -200,7 +200,7 @@
       "verified_by": [
         "tests/test_client.py:411",
         "tests/test_client.py:427",
-        "tests/test_commands.py:774"
+        "tests/test_commands.py:767"
       ]
     },
     {
@@ -212,7 +212,7 @@
       ],
       "verified_by": [
         "tests/test_client.py:695",
-        "tests/test_commands.py:806",
+        "tests/test_commands.py:799",
         "tests/test_import_guard.py:46",
         "tests/test_import_guard.py:53",
         "tests/test_import_guard.py:63"
