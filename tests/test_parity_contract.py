@@ -231,6 +231,11 @@ def _method_references_backend_route(name: str, public: set[str]) -> bool | None
         )
     if name == "grant_fleet_approval":
         return None
+    if "self._read_operation_value(" in source:
+        # Served-operation reads: the helper must reach the checked
+        # ``invoke_op`` adapter, whose transport is verified above.
+        helper = inspect.getsource(AgentClient._read_operation_value)
+        return "self.invoke_op(" in helper
 
     return (
         bool(_PATH_IN_SOURCE_PATTERN.search(source))
