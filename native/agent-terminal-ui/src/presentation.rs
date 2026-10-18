@@ -145,25 +145,27 @@ mod viewport_tests {
         let mut terminal = Terminal::new(TestBackend::new(24, 8)).unwrap();
         let mut viewport = Viewport::default();
         terminal
-            .draw(|frame| draw_viewport(frame, &status, Style::default(), &mut viewport))
+            .draw(|frame| draw_viewport(frame, &status, Style::default(), &mut viewport, false))
             .unwrap();
         assert!(contents(&terminal).contains("row-000"));
         assert!(viewport.handle(KeyCode::PageDown));
         terminal
-            .draw(|frame| draw_viewport(frame, &status, Style::default(), &mut viewport))
+            .draw(|frame| draw_viewport(frame, &status, Style::default(), &mut viewport, false))
             .unwrap();
         assert_eq!(viewport.offset(), 6);
         assert!(contents(&terminal).contains("row-006"));
         assert!(!contents(&terminal).contains("row-000"));
         let before = terminal.backend().buffer().clone();
         terminal
-            .draw(|frame| draw_viewport(frame, "Reading...", Style::default(), &mut viewport))
+            .draw(|frame| {
+                draw_viewport(frame, "Reading...", Style::default(), &mut viewport, false)
+            })
             .unwrap();
         for (width, height) in [(40, 12), (16, 6), (24, 8)] {
             terminal.backend_mut().resize(width, height);
             terminal.autoresize().unwrap();
             terminal
-                .draw(|frame| draw_viewport(frame, &status, Style::default(), &mut viewport))
+                .draw(|frame| draw_viewport(frame, &status, Style::default(), &mut viewport, false))
                 .unwrap();
             assert_eq!(viewport.offset(), 6);
         }
@@ -172,13 +174,13 @@ mod viewport_tests {
         assert_eq!(viewport.offset(), 0);
         viewport.handle(KeyCode::End);
         terminal
-            .draw(|frame| draw_viewport(frame, &status, Style::default(), &mut viewport))
+            .draw(|frame| draw_viewport(frame, &status, Style::default(), &mut viewport, false))
             .unwrap();
         assert!(contents(&terminal).contains("quit"));
         assert!(!contents(&terminal).contains("row-000"));
         viewport.handle(KeyCode::Home);
         terminal
-            .draw(|frame| draw_viewport(frame, &status, Style::default(), &mut viewport))
+            .draw(|frame| draw_viewport(frame, &status, Style::default(), &mut viewport, false))
             .unwrap();
         assert!(contents(&terminal).contains("row-000"));
         assert!(!viewport.handle(KeyCode::Char('x')));
@@ -196,6 +198,7 @@ mod viewport_tests {
                     "界界界界界界\ne\u{301}e\u{301}\nabcdefghijklmnop",
                     Style::default(),
                     &mut viewport,
+                    false,
                 )
             })
             .unwrap();
@@ -223,7 +226,9 @@ mod viewport_tests {
         for size in [0, 1, 2, 3] {
             let mut terminal = Terminal::new(TestBackend::new(size, size)).unwrap();
             terminal
-                .draw(|frame| draw_viewport(frame, "界e\u{301}", Style::default(), &mut viewport))
+                .draw(|frame| {
+                    draw_viewport(frame, "界e\u{301}", Style::default(), &mut viewport, false)
+                })
                 .unwrap();
             viewport.handle(KeyCode::PageDown);
             viewport.handle(KeyCode::PageUp);

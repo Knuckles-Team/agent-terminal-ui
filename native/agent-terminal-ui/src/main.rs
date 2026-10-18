@@ -20,12 +20,23 @@ use presentation::{Viewport, presentation_style};
 
 #[cfg(test)]
 fn draw(frame: &mut Frame, status: &str, style: Style) {
-    draw_viewport(frame, status, style, &mut Viewport::default());
+    draw_viewport(frame, status, style, &mut Viewport::default(), false);
 }
 
-fn draw_viewport(frame: &mut Frame, status: &str, style: Style, viewport: &mut Viewport) {
+fn draw_viewport(
+    frame: &mut Frame,
+    status: &str,
+    style: Style,
+    viewport: &mut Viewport,
+    read_only: bool,
+) {
+    let cancel_help = if read_only {
+        "read-only observation"
+    } else {
+        "x: cancel remote task"
+    };
     let text = format!(
-        "{status}\n\nTask streaming and approvals remain unavailable.\n\nl: host logs | i: run inspector | r: refresh read | x: cancel remote task | c: cancel local request | q / Ctrl+C: quit"
+        "{status}\n\nTask streaming and approvals remain unavailable.\n\nl: host logs | i: run inspector | r: refresh read | {cancel_help} | c: cancel local request | q / Ctrl+C: quit"
     );
     let block = Block::bordered()
         .title("Arbora")
@@ -68,7 +79,9 @@ fn confirm_visible(
 
 fn selected_task(value: Result<String, env::VarError>) -> Result<Option<String>, &'static str> {
     match value {
-        Ok(task) if task.trim().is_empty() || task.chars().any(char::is_control) => {
+        Ok(task)
+            if task.trim().is_empty() || task.len() > 512 || task.chars().any(char::is_control) =>
+        {
             Err("AGENT_TASK_ID must be a non-empty task identifier")
         }
         Ok(task) => Ok(Some(task)),
@@ -95,6 +108,31 @@ fn selected_prompt(args: &[OsString], task_selected: bool) -> Result<Option<Stri
         return Err("Prompt must contain text and be at most 65536 bytes");
     }
     Ok(Some(prompt.to_owned()))
+}
+
+fn selected_observation(
+    args: &[OsString],
+    task_selected: bool,
+) -> Result<Option<String>, &'static str> {
+    if args.first().is_none_or(|flag| flag != "--observe-task") {
+        return Ok(None);
+    }
+    let [_, task] = args else {
+        return Err("Expected exactly --observe-task TASK_ID");
+    };
+    if task_selected {
+        return Err("--observe-task cannot be combined with AGENT_TASK_ID");
+    }
+    let task = task.to_str().ok_or("Task ID must be valid Unicode")?;
+    selected_task(Ok(task.to_owned()))
+}
+
+fn observation_continues(snapshot: &TaskSnapshot, binding: Option<&TaskCorrelation>) -> bool {
+    matches!(snapshot.state, TaskState::Submitted | TaskState::Working)
+        && binding.is_none_or(|initial| {
+            initial.validate_binding(&snapshot.correlation).is_ok()
+                && snapshot.terminal_event.validate_binding(initial).is_ok()
+        })
 }
 
 fn snapshot_status(snapshot: &TaskSnapshot) -> String {
@@ -264,6 +302,7 @@ async fn run(
     client: Arc<ArboraClient>,
     mut task_id: Option<String>,
     submission: Option<TaskSubmission>,
+    observe: bool,
 ) -> Result<(), &'static str> {
     let theme = env::var("AGENT_THEME").unwrap_or_else(|_| "tokyo-night".to_owned());
     let no_color = env::var("NO_COLOR").unwrap_or_default();
@@ -289,6 +328,9 @@ async fn run(
         }
     });
     let mut pending = true;
+    let mut observation_active = observe;
+    let mut observation_tick = tokio::time::interval(std::time::Duration::from_millis(500));
+    observation_tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
     let mut status = loading.to_owned();
     let mut binding = None;
     let mut cancellation = Cancellation::default();
@@ -310,12 +352,14 @@ async fn run(
                 } else if inspector.is_open() {
                     inspector.draw(frame, style, std::time::Instant::now());
                 } else {
-                    draw_viewport(frame, &status, style, &mut viewport);
+                    draw_viewport(frame, &status, style, &mut viewport, observe);
                 }
             }).map_err(|_| "Cannot draw terminal")?;
             tokio::select! {
                 result = &mut request, if pending => {
                     pending = false;
+                    observation_active = observe && matches!(&result,
+                        Ok(Ok(ReadStatus::Task(snapshot))) if observation_continues(snapshot, binding.as_ref()));
                     let accepted = matches!(&result, Ok(Ok(ReadStatus::Task(snapshot)))
                         if binding.as_ref().is_none_or(|bound: &TaskCorrelation| bound.validate_binding(&snapshot.correlation).is_ok()));
                     if submitting {
@@ -327,6 +371,18 @@ async fn run(
                         status = request_completed(result, &mut binding, &mut cancellation, remote_cancel);
                     }
                     inspector.task_updated(if accepted { binding.as_ref() } else { None });
+                }
+                _ = observation_tick.tick(), if observation_active && !pending => {
+                    status = "Reading Arbora task...".to_owned();
+                    let client = client.clone();
+                    let task_id = task_id.clone();
+                    let read_binding = binding.clone();
+                    request = tokio::spawn(async move {
+                        read_status(&client, task_id.as_deref(), read_binding.as_ref()).await
+                    });
+                    pending = true;
+                    remote_cancel = false;
+                    cancellation.read_started();
                 }
                 _ = inspector.complete(), if inspector.pending() => {}
                 _ = logs.complete(), if logs.pending() => {}
@@ -353,6 +409,7 @@ async fn run(
                         }
                         match key.code {
                             KeyCode::Char('c') if pending => {
+                                observation_active = false;
                                 request.abort();
                                 inspector.task_updated(None);
                                 pending = false;
@@ -379,9 +436,9 @@ async fn run(
                                 remote_cancel = false;
                                 cancellation.read_started();
                             }
-                            KeyCode::Char('x') if !pending => cancellation.arm(),
+                            KeyCode::Char('x') if !pending && !observe => cancellation.arm(),
                             KeyCode::Char('n') | KeyCode::Esc => cancellation.dismiss(),
-                            KeyCode::Char('y') if !pending && confirm_visible(&mut cancellation, confirmation_visible, crossterm::terminal::size()) => {
+                            KeyCode::Char('y') if !observe && !pending && confirm_visible(&mut cancellation, confirmation_visible, crossterm::terminal::size()) => {
                                 if let Some(binding) = binding.clone() {
                                     let client = client.clone();
                                     request = tokio::spawn(async move {
@@ -419,13 +476,23 @@ async fn main() -> ExitCode {
     let result = async {
         let task_id = selected_task(env::var("AGENT_TASK_ID"))?;
         let args: Vec<_> = env::args_os().skip(1).collect();
-        let prompt = selected_prompt(&args, task_id.is_some())?;
+        let observation = selected_observation(&args, task_id.is_some())?;
+        let observe = observation.is_some();
+        if observe && token.is_none() {
+            return Err("Observation requires a caller credential");
+        }
+        let prompt = if observe {
+            None
+        } else {
+            selected_prompt(&args, task_id.is_some())?
+        };
+        let task_id = observation.or(task_id);
         if prompt.is_some() && token.is_none() {
             return Err("Submission requires a caller credential");
         }
         let submission = prompt.as_deref().map(TaskSubmission::new).transpose()?;
         let client = ArboraClient::new(&endpoint, token.as_deref())?;
-        run(Arc::new(client), task_id, submission).await
+        run(Arc::new(client), task_id, submission, observe).await
     }
     .await;
     match result {
@@ -981,7 +1048,7 @@ mod confirmation_view_tests {
         let mut terminal = Terminal::new(TestBackend::new(40, 10)).unwrap();
         let mut viewport = Viewport::default();
         terminal
-            .draw(|frame| draw_viewport(frame, status, Style::default(), &mut viewport))
+            .draw(|frame| draw_viewport(frame, status, Style::default(), &mut viewport, false))
             .unwrap();
         viewport.handle(KeyCode::End);
         for (width, height, allowed) in [
@@ -1079,5 +1146,88 @@ mod terminal_point_view_tests {
             .collect();
         assert!(!text.contains("actual-batch"));
         assert!(!text.contains("Commit sequence: 7"));
+    }
+
+    #[test]
+    fn observation_arguments_are_explicit_and_exclusive() {
+        let arguments = |values: &[&str]| values.iter().map(OsString::from).collect::<Vec<_>>();
+        assert_eq!(
+            super::selected_observation(&arguments(&["--observe-task", "task-1"]), false),
+            Ok(Some("task-1".to_owned()))
+        );
+        for values in [
+            vec!["--observe-task"],
+            vec!["--observe-task", ""],
+            vec!["--observe-task", "x", "--prompt", "effect"],
+            vec!["--observe-task", "x", "--override"],
+            vec!["--observe-task", "bad\nidentity"],
+        ] {
+            assert!(super::selected_observation(&arguments(&values), false).is_err());
+        }
+        assert!(super::selected_observation(&arguments(&["--observe-task", "x"]), true).is_err());
+        assert!(
+            super::selected_observation(&arguments(&["--observe-task", &"x".repeat(513)]), false)
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn observation_polling_requires_active_matching_task() {
+        let ReadStatus::Task(mut snapshot) =
+            task_read("task-one", "context-two", Some("run-three"))
+        else {
+            panic!("task fixture required")
+        };
+        let initial = snapshot.correlation.clone();
+        for state in [TaskState::Submitted, TaskState::Working] {
+            snapshot.state = state;
+            assert!(super::observation_continues(&snapshot, Some(&initial)));
+        }
+        for state in [
+            TaskState::InputRequired,
+            TaskState::AuthRequired,
+            TaskState::Completed,
+            TaskState::Failed,
+            TaskState::Rejected,
+            TaskState::Canceled,
+        ] {
+            snapshot.state = state;
+            assert!(!super::observation_continues(&snapshot, Some(&initial)));
+        }
+        snapshot.state = TaskState::Working;
+        let ReadStatus::Task(other) = task_read("task-one", "other-context", Some("run-three"))
+        else {
+            panic!("task fixture required")
+        };
+        assert!(!super::observation_continues(
+            &snapshot,
+            Some(&other.correlation)
+        ));
+    }
+
+    #[test]
+    fn observation_help_does_not_offer_remote_cancellation() {
+        let mut terminal = Terminal::new(TestBackend::new(180, 12)).unwrap();
+        terminal
+            .draw(|frame| {
+                super::draw_viewport(
+                    frame,
+                    "Task ID: task-one",
+                    Style::default(),
+                    &mut super::Viewport::default(),
+                    true,
+                )
+            })
+            .unwrap();
+        let text: String = terminal
+            .backend()
+            .buffer()
+            .content()
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect();
+        assert!(text.contains("read-only observation"));
+        assert!(!text.contains("x: cancel remote task"));
+        assert!(text.contains("r: refresh read"));
     }
 }
