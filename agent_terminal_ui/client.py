@@ -61,6 +61,9 @@ MODE_TASK_IRIS = {
 #: A2A task states that end a stream.
 _FINAL_STATES = frozenset({"completed", "canceled", "failed", "rejected"})
 _FAILED_STATES = frozenset({"failed", "rejected"})
+#: JSON-RPC codes for "this server does not stream": Arbora's streaming
+#: unavailable refusal, A2A UnsupportedOperation, and method not found.
+_STREAM_UNSUPPORTED = frozenset({-32010, -32004, -32601})
 
 
 class A2ATransportError(RuntimeError):
@@ -630,15 +633,24 @@ class AgentClient:
         }
         headers = {"Idempotency-Key": uuid.uuid4().hex}
         try:
+            streamed = False
             if await self.streaming_supported():
-                events = self._follow(
-                    "message/stream", {"message": message}, session_id, headers
-                )
-            else:
-                events = self._follow_results(
-                    self._poll_results(message, headers), session_id
-                )
-            async for event in events:
+                try:
+                    async for event in self._follow(
+                        "message/stream", {"message": message}, session_id, headers
+                    ):
+                        streamed = True
+                        yield event
+                    return
+                except A2ATransportError as exc:
+                    # A server that refuses message/stream as unsupported (or
+                    # does not know it) serves the same task over message/send.
+                    if streamed or exc.code not in _STREAM_UNSUPPORTED:
+                        raise
+                    self._streaming = False
+            async for event in self._follow_results(
+                self._poll_results(message, headers), session_id
+            ):
                 yield event
         except (A2ATransportError, httpx.HTTPError, ValueError) as exc:
             logger.warning("A2A stream failed: %s", exc)

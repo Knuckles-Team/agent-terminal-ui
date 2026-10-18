@@ -790,6 +790,71 @@ async def test_stream_polls_a_unary_task_when_the_card_refuses_streaming():
 
 @pytest.mark.asyncio
 @pytest.mark.spec("TUI-RUNTIME-R002")
+async def test_stream_falls_back_to_polling_when_the_server_refuses_streaming():
+    """An unreadable card means streaming; a refused stream then polls."""
+    pending = ["submitted", "completed"]
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        if request.method == "GET":
+            return httpx.Response(503, text="unavailable")
+        method = json.loads(request.content)["method"]
+        if method == "message/stream":
+            return httpx.Response(
+                501,
+                json={
+                    "jsonrpc": "2.0",
+                    "id": method,
+                    "error": {"code": -32010, "message": "use message/send"},
+                },
+            )
+        task = _task(pending.pop(0))
+        if task["status"]["state"] == "completed":
+            task["artifacts"] = [{"parts": [{"kind": "text", "text": "the answer"}]}]
+        return httpx.Response(200, json=_result(task))
+
+    recorder = _Recorder(respond, serves_card=True)
+    client = AgentClient(base_url="http://localhost:8000", bearer_token="tok")
+    client.poll_interval = 0
+    client._http_client = httpx.AsyncClient(
+        transport=httpx.MockTransport(recorder), headers=client._http_client.headers
+    )
+
+    events = [event async for event in client.stream("hello", session_id="ctx-1")]
+
+    calls = [
+        json.loads(r.content)["method"] for r in recorder.requests if r.method == "POST"
+    ]
+    assert calls == ["message/stream", "message/send", "tasks/get"]
+    assert any(e.get("content") == "the answer" for e in events)
+    assert not [e for e in events if e["type"] == "error"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R002")
+async def test_a_refused_credential_is_reported_not_retried():
+    def respond(request: httpx.Request) -> httpx.Response:
+        if request.method == "GET":
+            return httpx.Response(401, json={})
+        return httpx.Response(
+            401,
+            json={
+                "jsonrpc": "2.0",
+                "id": 1,
+                "error": {"code": -32001, "message": "A2A authority refused"},
+            },
+        )
+
+    client = AgentClient(base_url="http://localhost:8000", bearer_token="tok")
+    client._http_client = httpx.AsyncClient(
+        transport=httpx.MockTransport(_Recorder(respond, serves_card=True))
+    )
+    events = [event async for event in client.stream("hello")]
+    errors = [e for e in events if e["type"] == "error"]
+    assert errors and "A2A authority refused" in errors[0]["message"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R002")
 async def test_unary_task_failure_reports_an_error_and_ends_the_turn():
     recorder = _Recorder(_unary_server(["submitted", "failed"]), serves_card=True)
     client = AgentClient(base_url="http://localhost:8000")
