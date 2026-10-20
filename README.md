@@ -365,3 +365,11 @@ See [AGENTS.md](AGENTS.md) for contribution and validation guidance.
 ## License
 
 Agent Terminal UI is released under the MIT License.
+
+### Native turn usage
+
+When Arbora returns a usage receipt bound to the displayed task, context and run,
+the native client shows its reported turn counters. Missing counters stay
+unavailable; a reported zero remains zero. Session totals and costs remain
+unavailable. A later task read without a receipt clears those counters rather
+than treating an earlier transient receipt as durable usage history.
