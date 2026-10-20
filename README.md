@@ -66,7 +66,7 @@ The full command, keyboard shortcut, and module reference lives in
 - **Session management and chat history** -- browse and resume previous conversations
 - **MCP server browser** -- inspect connected MCP servers and their tools
 - **Live capability palette** -- search the gateway catalog from Alt+C, the global command palette, the sidebar, or `/capabilities`; forms are generated from action schemas
-- **Governed generic invocation** -- every action is preflighted, acknowledged as a canonical run, followed through events, and safely resumed when approval is pending
+- **Governed generic invocation** -- preflight each action and acknowledge its canonical run. Follow events and resume safely after pending approval.
 - **Live run Mission Control** -- `/run` discovers recent runs and follows versioned events by cursor, with sequence deduplication and bounded-history gap notices
 
 #### Session Persistence & Crash Recovery (TUI-1)
@@ -373,5 +373,5 @@ Agent Terminal UI is released under the MIT License.
 When Arbora returns a usage receipt bound to the displayed task, context and run,
 the native client shows its reported turn counters. Missing counters stay
 unavailable; a reported zero remains zero. Session totals and costs remain
-unavailable. A later task read without a receipt clears those counters rather
-than treating an earlier transient receipt as durable usage history.
+unavailable. A later task read without a receipt clears those counters.
+An earlier transient receipt is not durable usage history.

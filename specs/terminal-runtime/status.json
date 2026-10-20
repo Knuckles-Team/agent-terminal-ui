@@ -70,6 +70,8 @@
     "TUI-RUNTIME-R008.2.1",
     "TUI-RUNTIME-R008.2.2",
     "TUI-RUNTIME-R008.2.3",
+    "TUI-RUNTIME-R008.2.3.1",
+    "TUI-RUNTIME-R008.2.3.2",
     "TUI-RUNTIME-R002.1.3.2.1",
     "TUI-RUNTIME-R002.1.3.2.2",
     "TUI-RUNTIME-R002.1.3.2.2.1",
@@ -818,6 +820,28 @@
     },
     {
       "id": "TUI-RUNTIME-R008.2.3",
+      "title": "Remaining full presentation acceptance",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R008.2.3.1",
+        "TUI-RUNTIME-R008.2.3.2"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R008.2.3.1",
+      "title": "Python selection during startup",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "7d244200bb23"
+      ],
+      "verified_by": [
+        "tests/test_app_handlers.py:262"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R008.2.3.2",
       "title": "Remaining full presentation acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],

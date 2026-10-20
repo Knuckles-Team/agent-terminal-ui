@@ -257,3 +257,24 @@ async def test_baseline_theme_tokens_meet_text_contrast(theme_name):
         assert (light + 0.05) / (dark + 0.05) >= 4.5
     finally:
         await client.aclose()
+
+
+# spec: TUI-RUNTIME-R008.2.3.1
+@pytest.mark.asyncio
+async def test_selection_clear_before_mount_and_on_active_screen(fake_client):
+    """Input mounting may clear selection before the first screen is active."""
+    from textual.selection import Selection
+    from textual.widgets import Static
+
+    from agent_terminal_ui.app import AgentApp
+
+    app = AgentApp(client=fake_client)
+    app.clear_selection()
+    async with app.run_test() as pilot:
+        label = Static("Selected text", id="selection-regression")
+        await app.screen.mount(label)
+        await pilot.pause()
+        app.screen.selections = {label: Selection(None, None)}
+        assert app.screen.get_selected_text() == "Selected text"
+        app.clear_selection()
+        assert app.screen.get_selected_text() is None
