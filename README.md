@@ -309,6 +309,8 @@ Example: If you type "fix the bug in app.py" followed by "and add a test for it"
 |----------|---------|---------|
 | `AGENT_URL` | `http://localhost:8000` | Arbora base URL for A2A chat and REST operations |
 | `AGENT_BEARER_TOKEN` | unset | Caller credential for Arbora; required for remote endpoints |
+| `AGENT_SUBMISSION_TIMEOUT_SECONDS` | `300` | Native unary send deadline, 1–900 seconds; accounts for shared-server queueing without automatic resubmission |
+| `AGENT_INCLUDE_COMMITTED_EVENT` | `false` | Native task reads request optional committed-event evidence only when explicitly `true`; requires existing caller access |
 | `AGENT_THEME` | `tokyo-night` | Startup theme (any Textual built-in theme name) |
 
 The `/op` command requires Python 3.12 or newer and an installed Arbora
@@ -365,3 +367,11 @@ See [AGENTS.md](AGENTS.md) for contribution and validation guidance.
 ## License
 
 Agent Terminal UI is released under the MIT License.
+
+### Native turn usage
+
+When Arbora returns a usage receipt bound to the displayed task, context and run,
+the native client shows its reported turn counters. Missing counters stay
+unavailable; a reported zero remains zero. Session totals and costs remain
+unavailable. A later task read without a receipt clears those counters rather
+than treating an earlier transient receipt as durable usage history.

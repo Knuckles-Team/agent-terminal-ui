@@ -22,6 +22,67 @@ fn accepted(request_id: &str) -> Value {
     })
 }
 
+#[test]
+fn submission_timeout_requires_bounded_whole_seconds() {
+    for seconds in [1, 300, 900] {
+        assert!(
+            ArboraClient::new("http://localhost:1234", Some("token"))
+                .unwrap()
+                .with_submission_timeout(Duration::from_secs(seconds))
+                .is_ok()
+        );
+    }
+    for timeout in [
+        Duration::ZERO,
+        Duration::from_secs(901),
+        Duration::from_millis(1500),
+    ] {
+        assert!(
+            ArboraClient::new("http://localhost:1234", Some("token"))
+                .unwrap()
+                .with_submission_timeout(timeout)
+                .is_err()
+        );
+    }
+}
+
+#[tokio::test]
+async fn submission_default_accepts_a_reply_after_the_read_timeout() {
+    let submission = TaskSubmission::new("Queued local fixture").unwrap();
+    let body = accepted(submission.message_id()).to_string();
+    let response = format!(
+        "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+        body.len()
+    );
+    let (url, server) = support::serve_raw_after(response, Duration::from_secs(11)).await;
+    let result = ArboraClient::new(&url, Some("fixture-token"))
+        .unwrap()
+        .submit_task(&submission)
+        .await
+        .unwrap();
+    assert_eq!(result.correlation.task_id(), "task-1");
+    server.await.unwrap();
+}
+
+#[tokio::test]
+async fn submission_timeout_is_unknown_without_resubmission() {
+    let submission = TaskSubmission::new("Timeout local fixture").unwrap();
+    let body = accepted(submission.message_id()).to_string();
+    let response = format!(
+        "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+        body.len()
+    );
+    let (url, server) = support::serve_raw_after(response, Duration::from_secs(2)).await;
+    let result = ArboraClient::new(&url, Some("fixture-token"))
+        .unwrap()
+        .with_submission_timeout(Duration::from_secs(1))
+        .unwrap()
+        .submit_task(&submission)
+        .await;
+    assert_eq!(result.unwrap_err(), SUBMISSION_UNKNOWN);
+    server.await.unwrap();
+}
+
 // spec: TUI-RUNTIME-R002.1.3.1
 #[tokio::test]
 async fn submits_exact_authenticated_text_with_one_stable_identity() {

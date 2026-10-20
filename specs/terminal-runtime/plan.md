@@ -791,3 +791,50 @@ without an active server model claim. Do not add model selection authority or
 change the wire request. Tests cover both command paths, unchanged state,
 detail labels and omission of the model argument from the request.
 This feedback repair does not complete R012.2 or qualify served model choice.
+
+## Amendment 2026-10-20: native unary reply rendering
+
+R002.1.3.2 and R012.1 retain their full served acceptance obligations. Native
+unary task responses currently discard ordinary text artifacts. Display completed
+reply artifacts through the existing authenticated submission and task-read path.
+Validate task binding before display. Limit decoded reply text to 256 KiB, with
+at most 32 artifacts and 32 text parts per artifact. Render text literally and
+remove terminal controls, preserving newlines and tabs. Missing output stays
+unavailable; an explicit empty text part remains an empty reply.
+
+Clear the displayed reply on refresh, denial, cancellation or changed binding.
+Do not turn artifacts into durable history, resume cursors, model selection or
+streaming support. Keep existing streaming and approval refusals visible. Native
+HTTP and buffer tests qualify wiring only. The host owner must supply the actual
+governed Arbora, EG and vLLM acceptance receipt before claiming live delivery.
+
+For the still-incomplete R008.2.3 presentation requirement, Up and Down move one
+wrapped row with bounded positions. Existing paging, Unicode wrapping, refresh
+and resize position retention remain in force. This increment does not complete
+selection, dynamic themes, accessibility parity or performance acceptance.
+
+## Amendment 2026-10-20: native turn usage receipt
+
+R012.6 remains open: its served usage.read per-turn/session and cost acceptance
+is not replaced by transient task metadata. Consume the producer's optional
+Arbora turn-usage receipt only when task, context and run match the current task.
+Preserve the five reported integer counters in 0..9007199254740991 and distinguish missing
+values from actual zero. Invalid or foreign receipts display unavailable without
+hiding an otherwise valid reply. No session totals or costs are derived. Reads
+without a receipt clear old usage. HTTP and buffer checks establish client wiring;
+real producer integration and the full usage.read obligation remain required.
+
+## Amendment 2026-10-20: queued unary inference and ordinary task reads
+
+R002.1.3.2 and R012.1 retain their full acceptance. Real governed inference took
+11.81 and 69.36 seconds while sharing the vLLM server with another client. Treat
+queueing as normal. Native sends wait up to 300 seconds by default, configurable
+with AGENT_SUBMISSION_TIMEOUT_SECONDS in 1..900. Reads and remote cancellation
+retain their shorter deadlines. Local cancellation stays responsive; an interrupted
+or timed-out send remains unknown and is never replayed automatically.
+
+Ordinary tasks/get must omit optional committed-event enrichment. An explicit
+AGENT_INCLUDE_COMMITTED_EVENT=true requests that data under the existing caller
+credential. Denial stops the read without downgrade or alternate retrieval. Omitted
+evidence stays unavailable; ordinary permitted artifacts can still display. This
+changes no grant or scope and does not claim terminal-event authority when absent.
