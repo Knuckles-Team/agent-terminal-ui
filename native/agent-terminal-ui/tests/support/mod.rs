@@ -5,6 +5,13 @@ use tokio::{
 };
 
 pub async fn serve_raw(response: String) -> (String, tokio::task::JoinHandle<String>) {
+    serve_raw_after(response, Duration::ZERO).await
+}
+
+pub async fn serve_raw_after(
+    response: String,
+    delay: Duration,
+) -> (String, tokio::task::JoinHandle<String>) {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let url = format!("http://{}", listener.local_addr().unwrap());
     let server = tokio::spawn(async move {
@@ -30,6 +37,7 @@ pub async fn serve_raw(response: String) -> (String, tokio::task::JoinHandle<Str
                 }
             }
         }
+        tokio::time::sleep(delay).await;
         let _ = socket.write_all(response.as_bytes()).await;
         drop(socket);
         assert!(
