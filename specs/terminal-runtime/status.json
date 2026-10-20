@@ -904,8 +904,10 @@
     {
       "id": "TUI-RUNTIME-R008.2.3.1",
       "title": "Python selection during startup",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "7d244200bb23"
+      ],
       "verified_by": [
         "tests/test_app_handlers.py:262"
       ]
