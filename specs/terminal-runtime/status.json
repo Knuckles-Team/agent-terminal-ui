@@ -338,8 +338,8 @@
         "99b67585d433"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:738",
-        "native/agent-terminal-ui/src/main.rs:775"
+        "native/agent-terminal-ui/src/main.rs:865",
+        "native/agent-terminal-ui/src/main.rs:902"
       ]
     },
     {
@@ -488,7 +488,7 @@
         "e8711e7f49bf"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:714",
+        "native/agent-terminal-ui/src/main.rs:841",
         "native/agent-terminal-ui/tests/discovery.rs:110",
         "native/agent-terminal-ui/tests/discovery.rs:29",
         "native/agent-terminal-ui/tests/discovery.rs:50",
@@ -544,11 +544,11 @@
         "9b0dcc67e610"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:523",
-        "native/agent-terminal-ui/src/main.rs:548",
-        "native/agent-terminal-ui/src/main.rs:567",
-        "native/agent-terminal-ui/src/main.rs:594",
-        "native/agent-terminal-ui/tests/submission.rs:100"
+        "native/agent-terminal-ui/src/main.rs:554",
+        "native/agent-terminal-ui/src/main.rs:579",
+        "native/agent-terminal-ui/src/main.rs:598",
+        "native/agent-terminal-ui/src/main.rs:625",
+        "native/agent-terminal-ui/tests/submission.rs:137"
       ]
     },
     {
@@ -570,11 +570,11 @@
         "3c592ffc6075"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:635",
-        "native/agent-terminal-ui/src/main.rs:661",
-        "native/agent-terminal-ui/src/main.rs:677",
-        "native/agent-terminal-ui/src/main.rs:813",
-        "native/agent-terminal-ui/src/main.rs:865"
+        "native/agent-terminal-ui/src/main.rs:762",
+        "native/agent-terminal-ui/src/main.rs:788",
+        "native/agent-terminal-ui/src/main.rs:804",
+        "native/agent-terminal-ui/src/main.rs:940",
+        "native/agent-terminal-ui/src/main.rs:994"
       ]
     },
     {
@@ -585,10 +585,10 @@
         "b05266d66c30"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:878",
-        "native/agent-terminal-ui/src/main.rs:895",
-        "native/agent-terminal-ui/src/main.rs:934",
-        "native/agent-terminal-ui/src/main.rs:994",
+        "native/agent-terminal-ui/src/main.rs:1007",
+        "native/agent-terminal-ui/src/main.rs:1024",
+        "native/agent-terminal-ui/src/main.rs:1063",
+        "native/agent-terminal-ui/src/main.rs:1123",
         "native/agent-terminal-ui/tests/cancellation.rs:119"
       ]
     },
@@ -812,10 +812,10 @@
         "608e9e9d122b"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1125",
-        "native/agent-terminal-ui/src/presentation.rs:138",
-        "native/agent-terminal-ui/src/presentation.rs:189",
-        "native/agent-terminal-ui/src/presentation.rs:215"
+        "native/agent-terminal-ui/src/main.rs:1254",
+        "native/agent-terminal-ui/src/presentation.rs:203",
+        "native/agent-terminal-ui/src/presentation.rs:254",
+        "native/agent-terminal-ui/src/presentation.rs:280"
       ]
     },
     {
@@ -857,10 +857,10 @@
       ],
       "verified_by": [
         "native/agent-terminal-ui/src/recovery_view_tests.rs:8",
-        "native/agent-terminal-ui/tests/recovery.rs:112",
-        "native/agent-terminal-ui/tests/recovery.rs:130",
-        "native/agent-terminal-ui/tests/recovery.rs:154",
-        "native/agent-terminal-ui/tests/recovery.rs:188"
+        "native/agent-terminal-ui/tests/recovery.rs:111",
+        "native/agent-terminal-ui/tests/recovery.rs:140",
+        "native/agent-terminal-ui/tests/recovery.rs:158",
+        "native/agent-terminal-ui/tests/recovery.rs:182"
       ]
     },
     {
@@ -974,10 +974,10 @@
         "faeede3c59e8"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1188",
+        "native/agent-terminal-ui/src/main.rs:1317",
         "native/agent-terminal-ui/tests/task_snapshot.rs:193",
-        "native/agent-terminal-ui/tests/task_snapshot.rs:230",
-        "native/agent-terminal-ui/tests/task_snapshot.rs:265",
+        "native/agent-terminal-ui/tests/task_snapshot.rs:231",
+        "native/agent-terminal-ui/tests/task_snapshot.rs:263",
         "native/agent-terminal-ui/tests/terminal_event.rs:110"
       ]
     },
