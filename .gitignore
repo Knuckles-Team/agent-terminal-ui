@@ -241,3 +241,14 @@ snapshot_report.html
 
 # Native terminal build output
 native/agent-terminal-ui/target/
+
+# Shared repository hygiene requirements
+*maturin.lock
+.kiss/
+.kissconfig
+.specify/
+dist-*/
+node_modules/
+reports/
+scratch/
+target-*/
