@@ -36,7 +36,7 @@ except ImportError:
         return decorator
 
 
-from textual.app import App
+from textual.app import App, ScreenStackError
 from textual.binding import Binding, BindingType
 from textual.message import Message
 
@@ -236,6 +236,15 @@ class AgentApp(App):
             self.run_worker(
                 screen.action_toggle_logs(), group="host-log-toggle", exclusive=True
             )
+
+    def clear_selection(self) -> None:
+        """Clear the active selection when a screen is available."""
+        try:
+            screen = self.screen
+        except ScreenStackError:
+            # Textual inputs may clear selection before the first screen mounts.
+            return
+        screen.clear_selection()
 
     def on_mount(self) -> None:
         """Handle application startup."""

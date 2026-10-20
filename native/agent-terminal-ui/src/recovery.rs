@@ -59,12 +59,16 @@ impl ArboraClient {
     ) -> Result<TaskSnapshot, ReadFailure> {
         let mut url = self.card_url.clone();
         url.set_path("/a2a");
+        let mut params = serde_json::json!({"id": task_id});
+        if self.committed_event_reads {
+            params["includeCommittedEvent"] = serde_json::Value::Bool(true);
+        }
         let mut response = self
             .http
             .post(url)
             .json(&serde_json::json!({
                 "jsonrpc": "2.0", "id": "task-snapshot",
-                "method": "tasks/get", "params": {"id": task_id, "includeCommittedEvent": true},
+                "method": "tasks/get", "params": params,
             }))
             .send()
             .await

@@ -40,7 +40,7 @@ fn draw_viewport(
     );
     let block = Block::bordered()
         .title("Arbora")
-        .title_bottom("PgUp/PgDn Home/End");
+        .title_bottom("Up/Down PgUp/PgDn Home/End");
     let inner = block.inner(frame.area());
     let paragraph = Paragraph::new(text).style(style).wrap(Wrap { trim: false });
     viewport.measure(paragraph.line_count(inner.width), inner.height);
@@ -87,6 +87,31 @@ fn selected_task(value: Result<String, env::VarError>) -> Result<Option<String>,
         Ok(task) => Ok(Some(task)),
         Err(env::VarError::NotPresent) => Ok(None),
         Err(env::VarError::NotUnicode(_)) => Err("AGENT_TASK_ID must be valid Unicode"),
+    }
+}
+
+fn submission_timeout(
+    value: Result<String, env::VarError>,
+) -> Result<std::time::Duration, &'static str> {
+    let seconds = match value {
+        Err(env::VarError::NotPresent) => 300,
+        Ok(value) if !value.is_empty() && value.bytes().all(|byte| byte.is_ascii_digit()) => value
+            .parse::<u64>()
+            .map_err(|_| "AGENT_SUBMISSION_TIMEOUT_SECONDS must be 1..900")?,
+        _ => return Err("AGENT_SUBMISSION_TIMEOUT_SECONDS must be 1..900"),
+    };
+    if !(1..=900).contains(&seconds) {
+        return Err("AGENT_SUBMISSION_TIMEOUT_SECONDS must be 1..900");
+    }
+    Ok(std::time::Duration::from_secs(seconds))
+}
+
+fn committed_event_reads(value: Result<String, env::VarError>) -> Result<bool, &'static str> {
+    match value {
+        Err(env::VarError::NotPresent) => Ok(false),
+        Ok(value) if value == "true" => Ok(true),
+        Ok(value) if value == "false" => Ok(false),
+        _ => Err("AGENT_INCLUDE_COMMITTED_EVENT must be true or false"),
     }
 }
 
@@ -147,11 +172,13 @@ fn snapshot_status(snapshot: &TaskSnapshot) -> String {
         TaskState::Rejected => "rejected",
     };
     format!(
-        "Task ID: {}\nContext ID: {}\nRun ID: {}\nState: {state}\n{}",
+        "Task ID: {}\nContext ID: {}\nRun ID: {}\nState: {state}\n{}\n\n{}\n\n{}",
         snapshot.correlation.task_id(),
         snapshot.correlation.context_id(),
         snapshot.correlation.run_id().unwrap_or("unavailable"),
         snapshot.terminal_event.text(),
+        snapshot.output.text(),
+        snapshot.usage.text(),
     )
 }
 
@@ -491,7 +518,11 @@ async fn main() -> ExitCode {
             return Err("Submission requires a caller credential");
         }
         let submission = prompt.as_deref().map(TaskSubmission::new).transpose()?;
-        let client = ArboraClient::new(&endpoint, token.as_deref())?;
+        let timeout = submission_timeout(env::var("AGENT_SUBMISSION_TIMEOUT_SECONDS"))?;
+        let include_event = committed_event_reads(env::var("AGENT_INCLUDE_COMMITTED_EVENT"))?;
+        let client = ArboraClient::new(&endpoint, token.as_deref())?
+            .with_submission_timeout(timeout)?
+            .with_committed_event_reads(include_event);
         run(Arc::new(client), task_id, submission, observe).await
     }
     .await;
@@ -627,9 +658,105 @@ mod tests {
         }
         ReadStatus::Task(TaskSnapshot {
             terminal_event: Default::default(),
+            output: Default::default(),
+            usage: Default::default(),
             correlation: TaskCorrelation::from_task(&task).unwrap(),
             state: TaskState::Working,
         })
+    }
+
+    #[test]
+    fn turn_usage_renders_missing_values_and_clears_after_read_refusal() {
+        let ReadStatus::Task(mut snapshot) =
+            task_read("task-one", "context-two", Some("run-three"))
+        else {
+            panic!("expected task fixture");
+        };
+        let task = serde_json::json!({"id":"task-one","contextId":"context-two",
+            "metadata":{"arbora":{"runId":"run-three","usage":{
+            "taskId":"task-one","contextId":"context-two","runId":"run-three",
+            "scope":"turn","counts":{"input_tokens":17,"output_tokens":0}}}}});
+        snapshot.usage = agent_terminal_ui_native::turn_usage::TurnUsage::from_task(
+            &task,
+            &snapshot.correlation,
+        );
+        let mut binding = None;
+        let status = completed_status(Ok(Ok(ReadStatus::Task(snapshot))), &mut binding);
+        let mut terminal = Terminal::new(TestBackend::new(100, 40)).unwrap();
+        terminal
+            .draw(|frame| draw(frame, &status, Style::default()))
+            .unwrap();
+        let text: String = terminal
+            .backend()
+            .buffer()
+            .content()
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect();
+        for expected in [
+            "Input tokens: 17",
+            "Output tokens: 0",
+            "Total tokens: unavailable",
+            "Session usage: unavailable",
+            "Cost: unavailable",
+        ] {
+            assert!(text.contains(expected), "{expected}");
+        }
+        let failed = completed_status(Ok(Err("read refused")), &mut binding);
+        terminal
+            .draw(|frame| draw(frame, &failed, Style::default()))
+            .unwrap();
+        let text: String = terminal
+            .backend()
+            .buffer()
+            .content()
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect();
+        assert!(!text.contains("Input tokens: 17"));
+        assert!(text.contains("read refused"));
+    }
+
+    #[test]
+    fn completed_reply_renders_literally_and_failed_read_clears_it() {
+        let ReadStatus::Task(mut snapshot) =
+            task_read("task-one", "context-two", Some("run-three"))
+        else {
+            panic!("expected task fixture");
+        };
+        snapshot.state = TaskState::Completed;
+        snapshot.output = agent_terminal_ui_native::task_output::TaskOutput::Text(
+            "[bold]model reply\nsecond line".to_owned(),
+        );
+        let mut binding = None;
+        let status = completed_status(Ok(Ok(ReadStatus::Task(snapshot))), &mut binding);
+        let mut terminal = Terminal::new(TestBackend::new(100, 24)).unwrap();
+        terminal
+            .draw(|frame| draw(frame, &status, Style::default()))
+            .unwrap();
+        let text: String = terminal
+            .backend()
+            .buffer()
+            .content()
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect();
+        assert!(text.contains("[bold]model reply"));
+        assert!(text.contains("second line"));
+        assert!(text.contains("Task streaming and approvals remain unavailable"));
+        let failed = completed_status(Ok(Err("read refused")), &mut binding);
+        terminal
+            .draw(|frame| draw(frame, &failed, Style::default()))
+            .unwrap();
+        let text: String = terminal
+            .backend()
+            .buffer()
+            .content()
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect();
+        assert!(!text.contains("model reply"));
+        assert!(text.contains("read refused"));
     }
 
     // spec: TUI-RUNTIME-R002.1.4
@@ -824,6 +951,8 @@ mod tests {
             }
             let snapshot = TaskSnapshot {
                 terminal_event: Default::default(),
+                output: Default::default(),
+                usage: Default::default(),
                 correlation: TaskCorrelation::from_task(&task).unwrap(),
                 state: TaskState::Working,
             };
@@ -1195,6 +1324,8 @@ mod terminal_point_view_tests {
         }}}});
         let correlation = TaskCorrelation::from_task(&task).unwrap();
         let snapshot = TaskSnapshot {
+            output: Default::default(),
+            usage: Default::default(),
             terminal_event: TerminalEvent::from_task(&task, &correlation, TaskState::Completed)
                 .unwrap(),
             correlation,
@@ -1228,5 +1359,46 @@ mod terminal_point_view_tests {
             .collect();
         assert!(!text.contains("actual-batch"));
         assert!(!text.contains("Commit sequence: 7"));
+    }
+}
+
+#[cfg(test)]
+mod request_settings_tests {
+    use super::*;
+    #[test]
+    fn queue_timeout_is_bounded_and_does_not_accept_ambiguous_values() {
+        assert_eq!(
+            submission_timeout(Err(env::VarError::NotPresent))
+                .unwrap()
+                .as_secs(),
+            300
+        );
+        for value in ["1", "120", "900"] {
+            assert_eq!(
+                submission_timeout(Ok(value.into())).unwrap().as_secs(),
+                value.parse::<u64>().unwrap()
+            );
+        }
+        for value in [
+            "",
+            "0",
+            "901",
+            "-1",
+            "1.5",
+            " 120",
+            "+120",
+            "18446744073709551616",
+        ] {
+            assert!(submission_timeout(Ok(value.into())).is_err());
+        }
+    }
+    #[test]
+    fn committed_events_require_explicit_true() {
+        assert!(!committed_event_reads(Err(env::VarError::NotPresent)).unwrap());
+        assert!(!committed_event_reads(Ok("false".into())).unwrap());
+        assert!(committed_event_reads(Ok("true".into())).unwrap());
+        for value in ["", "1", "yes", "TRUE", " true"] {
+            assert!(committed_event_reads(Ok(value.into())).is_err());
+        }
     }
 }

@@ -4,8 +4,10 @@ pub mod host_logs;
 pub mod recovery;
 pub mod run_inspector;
 pub mod run_inspector_client;
+pub mod task_output;
 pub mod task_stream;
 pub mod terminal_event;
+pub mod turn_usage;
 
 use correlation::{TaskCorrelation, TaskEvent, TaskState};
 use reqwest::{Client, Url, header};
@@ -43,12 +45,16 @@ pub struct TaskSnapshot {
     pub correlation: TaskCorrelation,
     pub state: TaskState,
     pub terminal_event: terminal_event::TerminalEvent,
+    pub output: task_output::TaskOutput,
+    pub usage: turn_usage::TurnUsage,
 }
 
 pub struct ArboraClient {
     http: Client,
     card_url: Url,
     authenticated: bool,
+    submission_timeout: Duration,
+    committed_event_reads: bool,
 }
 
 impl ArboraClient {
@@ -100,7 +106,22 @@ impl ArboraClient {
             http,
             card_url: url,
             authenticated: token.is_some(),
+            submission_timeout: Duration::from_secs(300),
+            committed_event_reads: false,
         })
+    }
+
+    pub fn with_submission_timeout(mut self, timeout: Duration) -> Result<Self, &'static str> {
+        if !(1..=900).contains(&timeout.as_secs()) || timeout.subsec_nanos() != 0 {
+            return Err("Submission timeout must be whole seconds between 1 and 900");
+        }
+        self.submission_timeout = timeout;
+        Ok(self)
+    }
+
+    pub fn with_committed_event_reads(mut self, enabled: bool) -> Self {
+        self.committed_event_reads = enabled;
+        self
     }
 
     pub async fn submit_task(
@@ -115,6 +136,7 @@ impl ArboraClient {
         let response = self
             .http
             .post(url)
+            .timeout(self.submission_timeout)
             .header("Idempotency-Key", submission.message_id())
             .json(&serde_json::json!({
                 "jsonrpc": "2.0",
@@ -187,6 +209,8 @@ impl ArboraClient {
             correlation: binding.clone(),
             state: task.state,
             terminal_event: terminal_event::TerminalEvent::default(),
+            output: task_output::TaskOutput::default(),
+            usage: turn_usage::TurnUsage::default(),
         })
     }
 
@@ -270,7 +294,11 @@ fn parse_returned_task(request_id: &str, bytes: &[u8]) -> Result<TaskSnapshot, &
     } else {
         terminal_event::TerminalEvent::default()
     };
+    let output = task_output::TaskOutput::from_task(task, state)?;
+    let usage = turn_usage::TurnUsage::from_task(task, &correlation);
     Ok(TaskSnapshot {
+        usage,
+        output,
         correlation,
         state,
         terminal_event,

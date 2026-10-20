@@ -66,7 +66,7 @@ The full command, keyboard shortcut, and module reference lives in
 - **Session management and chat history** -- browse and resume previous conversations
 - **MCP server browser** -- inspect connected MCP servers and their tools
 - **Live capability palette** -- search the gateway catalog from Alt+C, the global command palette, the sidebar, or `/capabilities`; forms are generated from action schemas
-- **Governed generic invocation** -- every action is preflighted, acknowledged as a canonical run, followed through events, and safely resumed when approval is pending
+- **Governed generic invocation** -- preflight each action and acknowledge its canonical run. Follow events and resume safely after pending approval.
 - **Live run Mission Control** -- `/run` discovers recent runs and follows versioned events by cursor, with sequence deduplication and bounded-history gap notices
 
 #### Session Persistence & Crash Recovery (TUI-1)
@@ -309,6 +309,8 @@ Example: If you type "fix the bug in app.py" followed by "and add a test for it"
 |----------|---------|---------|
 | `AGENT_URL` | `http://localhost:8000` | Arbora base URL for A2A chat and REST operations |
 | `AGENT_BEARER_TOKEN` | unset | Caller credential for Arbora; required for remote endpoints |
+| `AGENT_SUBMISSION_TIMEOUT_SECONDS` | `300` | Native unary send deadline, 1–900 seconds; accounts for shared-server queueing without automatic resubmission |
+| `AGENT_INCLUDE_COMMITTED_EVENT` | `false` | Native task reads request optional committed-event evidence only when explicitly `true`; requires existing caller access |
 | `AGENT_THEME` | `tokyo-night` | Startup theme (any Textual built-in theme name) |
 
 The `/op` command requires Python 3.12 or newer and an installed Arbora
@@ -365,3 +367,11 @@ See [AGENTS.md](AGENTS.md) for contribution and validation guidance.
 ## License
 
 Agent Terminal UI is released under the MIT License.
+
+### Native turn usage
+
+When Arbora returns a usage receipt bound to the displayed task, context and run,
+the native client shows its reported turn counters. Missing counters stay
+unavailable; a reported zero remains zero. Session totals and costs remain
+unavailable. A later task read without a receipt clears those counters.
+An earlier transient receipt is not durable usage history.

@@ -22,12 +22,20 @@ fn response(status: u16, body: Value) -> String {
 }
 
 async fn serve(responses: Vec<String>) -> (ArboraClient, tokio::task::JoinHandle<()>) {
+    serve_with_event_reads(responses, false).await
+}
+
+async fn serve_with_event_reads(
+    responses: Vec<String>,
+    include_event: bool,
+) -> (ArboraClient, tokio::task::JoinHandle<()>) {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let client = ArboraClient::new(
         &format!("http://{}", listener.local_addr().unwrap()),
         Some("fixture-token"),
     )
-    .unwrap();
+    .unwrap()
+    .with_committed_event_reads(include_event);
     let server = tokio::spawn(async move {
         for response in responses {
             let (mut socket, _) = tokio::time::timeout(Duration::from_secs(2), listener.accept())
@@ -59,10 +67,14 @@ async fn serve(responses: Vec<String>) -> (ArboraClient, tokio::task::JoinHandle
                             .contains("authorization: bearer fixture-token")
                     );
                     assert!(!headers.to_lowercase().contains("idempotency-key"));
+                    let mut params = json!({"id":"task-one"});
+                    if include_event {
+                        params["includeCommittedEvent"] = json!(true);
+                    }
                     assert_eq!(
                         serde_json::from_str::<Value>(body).unwrap(),
                         json!({
-                            "jsonrpc":"2.0", "id":"task-snapshot", "method":"tasks/get", "params":{"id":"task-one","includeCommittedEvent":true}
+                            "jsonrpc":"2.0", "id":"task-snapshot", "method":"tasks/get", "params":params
                         })
                     );
                     break;
@@ -78,6 +90,22 @@ async fn serve(responses: Vec<String>) -> (ArboraClient, tokio::task::JoinHandle
         );
     });
     (client, server)
+}
+
+#[tokio::test]
+async fn committed_event_opt_in_is_explicit_and_denial_never_retries() {
+    let (client, server) = serve_with_event_reads(vec![response(200, snapshot())], true).await;
+    assert!(client.read_task("task-one", None).await.is_ok());
+    server.await.unwrap();
+    for status in [401, 403] {
+        let (client, server) =
+            serve_with_event_reads(vec![response(status, json!({}))], true).await;
+        assert_eq!(
+            client.read_task("task-one", None).await,
+            Err(ReadFailure::Refused)
+        );
+        server.await.unwrap();
+    }
 }
 
 // spec: TUI-RUNTIME-R002.1.3.2.1
