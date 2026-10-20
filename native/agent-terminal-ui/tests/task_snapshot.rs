@@ -89,7 +89,7 @@ async fn reads_task_snapshot_over_authenticated_json_rpc() {
             serde_json::from_str::<Value>(body).unwrap(),
             json!({
                 "jsonrpc": "2.0", "id": "task-snapshot",
-                "method": "tasks/get", "params": {"id": "task-1", "includeCommittedEvent": true}
+                "method": "tasks/get", "params": {"id": "task-1"}
             })
         );
     }
@@ -204,6 +204,7 @@ async fn point_read_preserves_identity_and_rejects_retained_binding_mismatch() {
     let (url, server) = serve("200 OK", &response.to_string()).await;
     let task = ArboraClient::new(&url, Some("fixture-token"))
         .unwrap()
+        .with_committed_event_reads(true)
         .get_task("task-1")
         .await
         .unwrap();
@@ -255,10 +256,7 @@ async fn point_read_omission_and_refusal_remain_unavailable_over_http() {
         );
         let body: Value = serde_json::from_str(body).unwrap();
         assert_eq!(body["method"], "tasks/get");
-        assert_eq!(
-            body["params"],
-            json!({"id":"task-1", "includeCommittedEvent":true})
-        );
+        assert_eq!(body["params"], json!({"id":"task-1"}));
     }
 }
 
