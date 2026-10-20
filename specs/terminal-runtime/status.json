@@ -337,7 +337,7 @@
     {
       "id": "TUI-RUNTIME-R004",
       "title": "Shared spec and repository checks",
-      "delivery_state": "SPECIFIED",
+      "delivery_state": "VERIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
@@ -1128,8 +1128,10 @@
     {
       "id": "TUI-RUNTIME-R004.2",
       "title": "Remaining hook parity",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "417e3a75f217"
+      ],
       "verified_by": [
         "tests/test_precommit_hooks.py:38",
         "tests/test_precommit_hooks.py:53"
