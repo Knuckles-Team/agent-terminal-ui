@@ -7,6 +7,7 @@ pub mod run_inspector_client;
 pub mod task_output;
 pub mod task_stream;
 pub mod terminal_event;
+pub mod turn_usage;
 
 use correlation::{TaskCorrelation, TaskEvent, TaskState};
 use reqwest::{Client, Url, header};
@@ -45,6 +46,7 @@ pub struct TaskSnapshot {
     pub state: TaskState,
     pub terminal_event: terminal_event::TerminalEvent,
     pub output: task_output::TaskOutput,
+    pub usage: turn_usage::TurnUsage,
 }
 
 pub struct ArboraClient {
@@ -190,6 +192,7 @@ impl ArboraClient {
             state: task.state,
             terminal_event: terminal_event::TerminalEvent::default(),
             output: task_output::TaskOutput::default(),
+            usage: turn_usage::TurnUsage::default(),
         })
     }
 
@@ -274,7 +277,9 @@ fn parse_returned_task(request_id: &str, bytes: &[u8]) -> Result<TaskSnapshot, &
         terminal_event::TerminalEvent::default()
     };
     let output = task_output::TaskOutput::from_task(task, state)?;
+    let usage = turn_usage::TurnUsage::from_task(task, &correlation);
     Ok(TaskSnapshot {
+        usage,
         output,
         correlation,
         state,

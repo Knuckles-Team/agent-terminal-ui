@@ -147,12 +147,13 @@ fn snapshot_status(snapshot: &TaskSnapshot) -> String {
         TaskState::Rejected => "rejected",
     };
     format!(
-        "Task ID: {}\nContext ID: {}\nRun ID: {}\nState: {state}\n{}\n\n{}",
+        "Task ID: {}\nContext ID: {}\nRun ID: {}\nState: {state}\n{}\n\n{}\n\n{}",
         snapshot.correlation.task_id(),
         snapshot.correlation.context_id(),
         snapshot.correlation.run_id().unwrap_or("unavailable"),
         snapshot.terminal_event.text(),
         snapshot.output.text(),
+        snapshot.usage.text(),
     )
 }
 
@@ -629,9 +630,62 @@ mod tests {
         ReadStatus::Task(TaskSnapshot {
             terminal_event: Default::default(),
             output: Default::default(),
+            usage: Default::default(),
             correlation: TaskCorrelation::from_task(&task).unwrap(),
             state: TaskState::Working,
         })
+    }
+
+    #[test]
+    fn turn_usage_renders_missing_values_and_clears_after_read_refusal() {
+        let ReadStatus::Task(mut snapshot) =
+            task_read("task-one", "context-two", Some("run-three"))
+        else {
+            panic!("expected task fixture");
+        };
+        let task = serde_json::json!({"id":"task-one","contextId":"context-two",
+            "metadata":{"arbora":{"runId":"run-three","usage":{
+            "taskId":"task-one","contextId":"context-two","runId":"run-three",
+            "scope":"turn","counts":{"input_tokens":17,"output_tokens":0}}}}});
+        snapshot.usage = agent_terminal_ui_native::turn_usage::TurnUsage::from_task(
+            &task,
+            &snapshot.correlation,
+        );
+        let mut binding = None;
+        let status = completed_status(Ok(Ok(ReadStatus::Task(snapshot))), &mut binding);
+        let mut terminal = Terminal::new(TestBackend::new(100, 40)).unwrap();
+        terminal
+            .draw(|frame| draw(frame, &status, Style::default()))
+            .unwrap();
+        let text: String = terminal
+            .backend()
+            .buffer()
+            .content()
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect();
+        for expected in [
+            "Input tokens: 17",
+            "Output tokens: 0",
+            "Total tokens: unavailable",
+            "Session usage: unavailable",
+            "Cost: unavailable",
+        ] {
+            assert!(text.contains(expected), "{expected}");
+        }
+        let failed = completed_status(Ok(Err("read refused")), &mut binding);
+        terminal
+            .draw(|frame| draw(frame, &failed, Style::default()))
+            .unwrap();
+        let text: String = terminal
+            .backend()
+            .buffer()
+            .content()
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect();
+        assert!(!text.contains("Input tokens: 17"));
+        assert!(text.contains("read refused"));
     }
 
     #[test]
@@ -869,6 +923,7 @@ mod tests {
             let snapshot = TaskSnapshot {
                 terminal_event: Default::default(),
                 output: Default::default(),
+                usage: Default::default(),
                 correlation: TaskCorrelation::from_task(&task).unwrap(),
                 state: TaskState::Working,
             };
@@ -1241,6 +1296,7 @@ mod terminal_point_view_tests {
         let correlation = TaskCorrelation::from_task(&task).unwrap();
         let snapshot = TaskSnapshot {
             output: Default::default(),
+            usage: Default::default(),
             terminal_event: TerminalEvent::from_task(&task, &correlation, TaskState::Completed)
                 .unwrap(),
             correlation,

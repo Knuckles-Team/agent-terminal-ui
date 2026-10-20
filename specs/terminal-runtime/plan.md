@@ -812,3 +812,14 @@ For the still-incomplete R008.2.3 presentation requirement, Up and Down move one
 wrapped row with bounded positions. Existing paging, Unicode wrapping, refresh
 and resize position retention remain in force. This increment does not complete
 selection, dynamic themes, accessibility parity or performance acceptance.
+
+## Amendment 2026-10-20: native turn usage receipt
+
+R012.6 remains open: its served usage.read per-turn/session and cost acceptance
+is not replaced by transient task metadata. Consume the producer's optional
+Arbora turn-usage receipt only when task, context and run match the current task.
+Preserve the five reported integer counters in 0..9007199254740991 and distinguish missing
+values from actual zero. Invalid or foreign receipts display unavailable without
+hiding an otherwise valid reply. No session totals or costs are derived. Reads
+without a receipt clear old usage. HTTP and buffer checks establish client wiring;
+real producer integration and the full usage.read obligation remain required.
