@@ -4,6 +4,7 @@ pub mod host_logs;
 pub mod recovery;
 pub mod run_inspector;
 pub mod run_inspector_client;
+pub mod task_output;
 pub mod task_stream;
 pub mod terminal_event;
 
@@ -43,6 +44,7 @@ pub struct TaskSnapshot {
     pub correlation: TaskCorrelation,
     pub state: TaskState,
     pub terminal_event: terminal_event::TerminalEvent,
+    pub output: task_output::TaskOutput,
 }
 
 pub struct ArboraClient {
@@ -187,6 +189,7 @@ impl ArboraClient {
             correlation: binding.clone(),
             state: task.state,
             terminal_event: terminal_event::TerminalEvent::default(),
+            output: task_output::TaskOutput::default(),
         })
     }
 
@@ -270,7 +273,9 @@ fn parse_returned_task(request_id: &str, bytes: &[u8]) -> Result<TaskSnapshot, &
     } else {
         terminal_event::TerminalEvent::default()
     };
+    let output = task_output::TaskOutput::from_task(task, state)?;
     Ok(TaskSnapshot {
+        output,
         correlation,
         state,
         terminal_event,

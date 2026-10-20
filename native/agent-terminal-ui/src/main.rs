@@ -147,11 +147,12 @@ fn snapshot_status(snapshot: &TaskSnapshot) -> String {
         TaskState::Rejected => "rejected",
     };
     format!(
-        "Task ID: {}\nContext ID: {}\nRun ID: {}\nState: {state}\n{}",
+        "Task ID: {}\nContext ID: {}\nRun ID: {}\nState: {state}\n{}\n\n{}",
         snapshot.correlation.task_id(),
         snapshot.correlation.context_id(),
         snapshot.correlation.run_id().unwrap_or("unavailable"),
         snapshot.terminal_event.text(),
+        snapshot.output.text(),
     )
 }
 
@@ -627,9 +628,52 @@ mod tests {
         }
         ReadStatus::Task(TaskSnapshot {
             terminal_event: Default::default(),
+            output: Default::default(),
             correlation: TaskCorrelation::from_task(&task).unwrap(),
             state: TaskState::Working,
         })
+    }
+
+    #[test]
+    fn completed_reply_renders_literally_and_failed_read_clears_it() {
+        let ReadStatus::Task(mut snapshot) =
+            task_read("task-one", "context-two", Some("run-three"))
+        else {
+            panic!("expected task fixture");
+        };
+        snapshot.state = TaskState::Completed;
+        snapshot.output = agent_terminal_ui_native::task_output::TaskOutput::Text(
+            "[bold]model reply\nsecond line".to_owned(),
+        );
+        let mut binding = None;
+        let status = completed_status(Ok(Ok(ReadStatus::Task(snapshot))), &mut binding);
+        let mut terminal = Terminal::new(TestBackend::new(100, 24)).unwrap();
+        terminal
+            .draw(|frame| draw(frame, &status, Style::default()))
+            .unwrap();
+        let text: String = terminal
+            .backend()
+            .buffer()
+            .content()
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect();
+        assert!(text.contains("[bold]model reply"));
+        assert!(text.contains("second line"));
+        assert!(text.contains("Task streaming and approvals remain unavailable"));
+        let failed = completed_status(Ok(Err("read refused")), &mut binding);
+        terminal
+            .draw(|frame| draw(frame, &failed, Style::default()))
+            .unwrap();
+        let text: String = terminal
+            .backend()
+            .buffer()
+            .content()
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect();
+        assert!(!text.contains("model reply"));
+        assert!(text.contains("read refused"));
     }
 
     // spec: TUI-RUNTIME-R002.1.4
@@ -824,6 +868,7 @@ mod tests {
             }
             let snapshot = TaskSnapshot {
                 terminal_event: Default::default(),
+                output: Default::default(),
                 correlation: TaskCorrelation::from_task(&task).unwrap(),
                 state: TaskState::Working,
             };
@@ -1195,6 +1240,7 @@ mod terminal_point_view_tests {
         }}}});
         let correlation = TaskCorrelation::from_task(&task).unwrap();
         let snapshot = TaskSnapshot {
+            output: Default::default(),
             terminal_event: TerminalEvent::from_task(&task, &correlation, TaskState::Completed)
                 .unwrap(),
             correlation,
