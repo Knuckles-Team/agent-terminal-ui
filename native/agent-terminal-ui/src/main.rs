@@ -40,7 +40,7 @@ fn draw_viewport(
     );
     let block = Block::bordered()
         .title("Arbora")
-        .title_bottom("PgUp/PgDn Home/End");
+        .title_bottom("Up/Down PgUp/PgDn Home/End");
     let inner = block.inner(frame.area());
     let paragraph = Paragraph::new(text).style(style).wrap(Wrap { trim: false });
     viewport.measure(paragraph.line_count(inner.width), inner.height);

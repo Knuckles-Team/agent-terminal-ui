@@ -807,3 +807,8 @@ Do not turn artifacts into durable history, resume cursors, model selection or
 streaming support. Keep existing streaming and approval refusals visible. Native
 HTTP and buffer tests qualify wiring only. The host owner must supply the actual
 governed Arbora, EG and vLLM acceptance receipt before claiming live delivery.
+
+For the still-incomplete R008.2.3 presentation requirement, Up and Down move one
+wrapped row with bounded positions. Existing paging, Unicode wrapping, refresh
+and resize position retention remain in force. This increment does not complete
+selection, dynamic themes, accessibility parity or performance acceptance.

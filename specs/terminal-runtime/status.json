@@ -811,9 +811,9 @@
       ],
       "verified_by": [
         "native/agent-terminal-ui/src/main.rs:1170",
-        "native/agent-terminal-ui/src/presentation.rs:138",
-        "native/agent-terminal-ui/src/presentation.rs:189",
-        "native/agent-terminal-ui/src/presentation.rs:215"
+        "native/agent-terminal-ui/src/presentation.rs:203",
+        "native/agent-terminal-ui/src/presentation.rs:254",
+        "native/agent-terminal-ui/src/presentation.rs:280"
       ]
     },
     {

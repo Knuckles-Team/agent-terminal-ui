@@ -107,6 +107,8 @@ impl Viewport {
         use crossterm::event::KeyCode;
         let page = self.height.max(1);
         self.requested = match key {
+            KeyCode::Up => self.visible.saturating_sub(1),
+            KeyCode::Down => self.visible.saturating_add(1).min(self.maximum),
             KeyCode::PageUp => self.visible.saturating_sub(page),
             KeyCode::PageDown => self.visible.saturating_add(page).min(self.maximum),
             KeyCode::Home => 0,
@@ -133,6 +135,69 @@ mod viewport_tests {
             .iter()
             .map(|cell| cell.symbol())
             .collect()
+    }
+
+    #[test]
+    fn arrows_scroll_one_wrapped_row_and_restore_it_after_refresh() {
+        let status = "界界界界界界\ne\u{301}e\u{301}\nabcdefghijklmnop";
+        let mut terminal = Terminal::new(TestBackend::new(12, 5)).unwrap();
+        let mut viewport = Viewport::default();
+        terminal
+            .draw(|frame| draw_viewport(frame, status, Style::default(), &mut viewport, false))
+            .unwrap();
+        assert!(viewport.handle(KeyCode::Up));
+        assert_eq!(viewport.offset(), 0);
+        assert!(viewport.handle(KeyCode::Down));
+        terminal
+            .draw(|frame| draw_viewport(frame, status, Style::default(), &mut viewport, false))
+            .unwrap();
+        assert_eq!(viewport.offset(), 1);
+        // The second wrapped row has one wide glyph, not the next logical line.
+        assert_eq!(terminal.backend().buffer()[(1, 1)].symbol(), "界");
+        assert_eq!(terminal.backend().buffer()[(3, 1)].symbol(), " ");
+        assert_eq!(terminal.backend().buffer()[(1, 2)].symbol(), "e\u{301}");
+        terminal
+            .draw(|frame| {
+                draw_viewport(frame, "Reading...", Style::default(), &mut viewport, false)
+            })
+            .unwrap();
+        // The help footer still wraps beyond this tiny viewport during refresh.
+        assert_eq!(viewport.offset(), 1);
+        viewport.measure(1, 3);
+        assert_eq!(viewport.offset(), 0);
+        terminal
+            .draw(|frame| draw_viewport(frame, status, Style::default(), &mut viewport, false))
+            .unwrap();
+        assert_eq!(viewport.offset(), 1);
+        assert!(viewport.handle(KeyCode::Up));
+        terminal
+            .draw(|frame| draw_viewport(frame, status, Style::default(), &mut viewport, false))
+            .unwrap();
+        assert_eq!(viewport.offset(), 0);
+        assert_eq!(terminal.backend().buffer()[(9, 1)].symbol(), "界");
+    }
+
+    #[test]
+    fn arrows_clamp_at_both_ends_and_in_empty_viewports() {
+        let mut viewport = Viewport::default();
+        viewport.measure(5, 3);
+        for _ in 0..4 {
+            assert!(viewport.handle(KeyCode::Down));
+        }
+        assert_eq!(viewport.offset(), 2);
+        assert!(viewport.handle(KeyCode::Up));
+        assert_eq!(viewport.offset(), 1);
+        for _ in 0..4 {
+            assert!(viewport.handle(KeyCode::Up));
+        }
+        assert_eq!(viewport.offset(), 0);
+        for height in [0, 1, 2] {
+            viewport.measure(0, height);
+            assert!(viewport.handle(KeyCode::Down));
+            assert_eq!(viewport.offset(), 0);
+            assert!(viewport.handle(KeyCode::Up));
+            assert_eq!(viewport.offset(), 0);
+        }
     }
 
     // spec: TUI-RUNTIME-R008.2.2
