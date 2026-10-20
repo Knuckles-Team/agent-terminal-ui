@@ -1,0 +1,17 @@
+name: Repository contract advisory
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  advisory:
+    uses: Knuckles-Team/pipelines/.github/workflows/advisory_pipeline.yml@main
+    with:
+      gates: public-surface root-hygiene gitignore-convergence
+      python-tools: false
+      scanners: false

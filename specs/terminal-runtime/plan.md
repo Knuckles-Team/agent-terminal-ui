@@ -822,6 +822,25 @@ Quality repairs attach at the files each child names; they must preserve this pr
 The final two child rows require wiring inspection and a served integration proof.
 Tooling-only children use their configured check entry points and must reject a failing fixture.
 
+### 2026-10-20: R004.2 follows the current shared gate policy
+
+Pipelines `058643e13f9ad9032ce53c7174eb454380bcccbb` defines the applicable gate policy.
+Its `reference/gate-standard.md` classifies public-surface, root-hygiene and gitignore-convergence as weekly advisory checks.
+The shared catalogue no longer defines check-public-specs or check-root-hygiene.
+R004 now names current checks and their required execution stages.
+This correction adds missing coverage; it removes no existing blocking hook.
+The approved source migration resolves the prior layout conflict.
+
+The weekly caller invokes `advisory_pipeline.yml@main` with the three required check identifiers.
+The shared workflow resolves its own immutable revision and records each result in its report.
+Locally, the same gates run through `pipelines-hook` with their ordinary exit codes.
+Malformed surface, layout and ignore fixtures must produce findings rather than clean results.
+
+Documentation and spec changes enter `ci-skip.yml` through its existing path filter.
+The job now checks out full history and runs the configured shared spec hook against the PR base.
+The command propagates failure; it has no skip list or continue-on-error setting.
+The shared spec group validates names, decomposition, generated status and commit trailers.
+The existing code CI and all existing blocking hook entries remain unchanged.
 ### 2026-10-20: Python selection during startup
 
 R008.2.3.1 preserves the Python view for the presentation comparison.

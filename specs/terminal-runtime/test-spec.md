@@ -25,7 +25,7 @@ No manual-only proof substitutes for the negative tests. If a live identity prov
 | Requirement | Layer and fixture | Expected positive result | Required negative proof |
 |---|---|---|---|
 | TUI-RUNTIME-R003 | File-level unit test in `tests/test_skill_package.py` | Wheel contains the skill | Skill missing from wheel fails |
-| TUI-RUNTIME-R004 | File-level unit test in `tests/test_precommit_hooks.py` | All five hook ids present | A missing id fails |
+| TUI-RUNTIME-R004 | Child proofs in `tests/test_precommit_hooks.py` | Shared spec enforcement and weekly repository checks follow policy | Missing coverage or a nonblocking spec command fails |
 | TUI-RUNTIME-R005 | File-level unit test in `tests/test_docs_layout.py` | Four pages exist and are in nav | A page absent from nav fails |
 | TUI-RUNTIME-R006 | File-level unit test in `tests/test_precommit_hooks.py` | Both sections present | A missing section fails |
 | TUI-RUNTIME-R007 | File-level unit test in `tests/test_docs_layout.py` | Workflow calls pipelines at main | A SHA pin fails |
@@ -270,7 +270,7 @@ Renderer tests display literal commit identity and clear it after failed reads. 
 | TUI-RUNTIME-R004.1 | `tests/test_precommit_hooks.py::test_spec_group_preserves_stages_and_trailer_fallback` | Group runs at commit, push and manual stages; explicit trailer fallback remains | Missing stage, fallback or retained blocking hook fails |
 | TUI-RUNTIME-R012.4.1 | Command dispatcher with real AgentClient and recording transport | One named unavailable notice | No REST or mutation request for any management subcommand |
 
-| TUI-RUNTIME-R004.2 | Planned remaining acceptance | Planned hook-policy comparison and regression tests must prove the remaining parent coverage. | Parent remains open until this proof passes |
+| TUI-RUNTIME-R004.2 | `tests/test_precommit_hooks.py::test_layout_and_surface_checks_follow_shared_advisory_policy` and `test_docs_ci_enforces_spec_checks_with_full_history_and_range` | Weekly checks and blocking spec CI cover documentation changes | Missing gate, shallow checkout, absent range or suppressed failure fails |
 
 | TUI-RUNTIME-R012.4.3 | Planned remaining acceptance | Planned full command-matrix served fixture must cover every command family and make zero unserved-route requests. | Parent remains open until this proof passes |
 
