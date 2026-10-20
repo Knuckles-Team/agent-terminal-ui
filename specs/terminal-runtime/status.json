@@ -336,7 +336,7 @@
     },
     {
       "id": "TUI-RUNTIME-R004",
-      "title": "Pre-commit runs the spec and sprawl hooks agent-webui runs",
+      "title": "Shared spec and repository checks",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
@@ -1130,7 +1130,10 @@
       "title": "Remaining hook parity",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [
+        "tests/test_precommit_hooks.py:38",
+        "tests/test_precommit_hooks.py:53"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R012.4.3",
