@@ -791,3 +791,17 @@ without an active server model claim. Do not add model selection authority or
 change the wire request. Tests cover both command paths, unchanged state,
 detail labels and omission of the model argument from the request.
 This feedback repair does not complete R012.2 or qualify served model choice.
+
+### 2026-10-20: Python selection during startup
+
+R008.2.3.1 preserves the Python view for the presentation comparison.
+R008.2.3.2 retains all remaining presentation and performance criteria.
+Textual input selection watchers can run before the first screen is active.
+The application treats selection clearing as a no-op only while no active
+screen exists. Once a screen is active, it clears that screen's selection.
+Errors from an active screen still propagate.
+
+The focused regression calls selection clearing before mount, then selects
+and clears real text in the mounted application. A terminal fixture also
+checks startup, a completed reply and clean exit. This repair does not close
+native presentation parity or release performance acceptance.
