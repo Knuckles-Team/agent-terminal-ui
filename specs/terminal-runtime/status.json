@@ -94,7 +94,79 @@
     "TUI-RUNTIME-R012.4.3",
     "TUI-RUNTIME-R010.4.2",
     "TUI-RUNTIME-R002.1.6",
-    "TUI-RUNTIME-R002.1.7"
+    "TUI-RUNTIME-R002.1.7",
+    "TUI-RUNTIME-R015",
+    "TUI-RUNTIME-R015.1",
+    "TUI-RUNTIME-R015.2",
+    "TUI-RUNTIME-R015.3",
+    "TUI-RUNTIME-R015.4",
+    "TUI-RUNTIME-R015.5",
+    "TUI-RUNTIME-R015.6",
+    "TUI-RUNTIME-R015.7",
+    "TUI-RUNTIME-R015.8",
+    "TUI-RUNTIME-R015.9",
+    "TUI-RUNTIME-R015.10",
+    "TUI-RUNTIME-R015.11",
+    "TUI-RUNTIME-R015.12",
+    "TUI-RUNTIME-R015.13",
+    "TUI-RUNTIME-R015.14",
+    "TUI-RUNTIME-R015.15",
+    "TUI-RUNTIME-R015.16",
+    "TUI-RUNTIME-R015.17",
+    "TUI-RUNTIME-R015.18",
+    "TUI-RUNTIME-R015.19",
+    "TUI-RUNTIME-R015.20",
+    "TUI-RUNTIME-R015.21",
+    "TUI-RUNTIME-R015.22",
+    "TUI-RUNTIME-R015.23",
+    "TUI-RUNTIME-R015.24",
+    "TUI-RUNTIME-R015.25",
+    "TUI-RUNTIME-R015.26",
+    "TUI-RUNTIME-R015.27",
+    "TUI-RUNTIME-R015.28",
+    "TUI-RUNTIME-R015.29",
+    "TUI-RUNTIME-R015.30",
+    "TUI-RUNTIME-R015.31",
+    "TUI-RUNTIME-R015.32",
+    "TUI-RUNTIME-R015.33",
+    "TUI-RUNTIME-R015.34",
+    "TUI-RUNTIME-R015.35",
+    "TUI-RUNTIME-R015.36",
+    "TUI-RUNTIME-R015.37",
+    "TUI-RUNTIME-R015.38",
+    "TUI-RUNTIME-R015.39",
+    "TUI-RUNTIME-R015.40",
+    "TUI-RUNTIME-R015.41",
+    "TUI-RUNTIME-R015.42",
+    "TUI-RUNTIME-R015.43",
+    "TUI-RUNTIME-R015.44",
+    "TUI-RUNTIME-R015.45",
+    "TUI-RUNTIME-R015.46",
+    "TUI-RUNTIME-R015.47",
+    "TUI-RUNTIME-R015.48",
+    "TUI-RUNTIME-R015.49",
+    "TUI-RUNTIME-R015.50",
+    "TUI-RUNTIME-R015.51",
+    "TUI-RUNTIME-R015.52",
+    "TUI-RUNTIME-R015.53",
+    "TUI-RUNTIME-R015.54",
+    "TUI-RUNTIME-R015.55",
+    "TUI-RUNTIME-R015.56",
+    "TUI-RUNTIME-R015.57",
+    "TUI-RUNTIME-R015.58",
+    "TUI-RUNTIME-R015.59",
+    "TUI-RUNTIME-R015.60",
+    "TUI-RUNTIME-R015.61",
+    "TUI-RUNTIME-R015.62",
+    "TUI-RUNTIME-R015.63",
+    "TUI-RUNTIME-R015.64",
+    "TUI-RUNTIME-R015.65",
+    "TUI-RUNTIME-R015.66",
+    "TUI-RUNTIME-R015.67",
+    "TUI-RUNTIME-R015.68",
+    "TUI-RUNTIME-R015.69",
+    "TUI-RUNTIME-R015.70",
+    "TUI-RUNTIME-R015.71"
   ],
   "requirements": [
     {
@@ -1095,6 +1167,583 @@
       "verified_by": [
         "tests/test_stream_fallback.py:11"
       ]
+    },
+    {
+      "id": "TUI-RUNTIME-R015",
+      "title": "The client must satisfy each source-quality child obligation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R015.1",
+        "TUI-RUNTIME-R015.2",
+        "TUI-RUNTIME-R015.3",
+        "TUI-RUNTIME-R015.4",
+        "TUI-RUNTIME-R015.5",
+        "TUI-RUNTIME-R015.6",
+        "TUI-RUNTIME-R015.7",
+        "TUI-RUNTIME-R015.8",
+        "TUI-RUNTIME-R015.9",
+        "TUI-RUNTIME-R015.10",
+        "TUI-RUNTIME-R015.11",
+        "TUI-RUNTIME-R015.12",
+        "TUI-RUNTIME-R015.13",
+        "TUI-RUNTIME-R015.14",
+        "TUI-RUNTIME-R015.15",
+        "TUI-RUNTIME-R015.16",
+        "TUI-RUNTIME-R015.17",
+        "TUI-RUNTIME-R015.18",
+        "TUI-RUNTIME-R015.19",
+        "TUI-RUNTIME-R015.20",
+        "TUI-RUNTIME-R015.21",
+        "TUI-RUNTIME-R015.22",
+        "TUI-RUNTIME-R015.23",
+        "TUI-RUNTIME-R015.24",
+        "TUI-RUNTIME-R015.25",
+        "TUI-RUNTIME-R015.26",
+        "TUI-RUNTIME-R015.27",
+        "TUI-RUNTIME-R015.28",
+        "TUI-RUNTIME-R015.29",
+        "TUI-RUNTIME-R015.30",
+        "TUI-RUNTIME-R015.31",
+        "TUI-RUNTIME-R015.32",
+        "TUI-RUNTIME-R015.33",
+        "TUI-RUNTIME-R015.34",
+        "TUI-RUNTIME-R015.35",
+        "TUI-RUNTIME-R015.36",
+        "TUI-RUNTIME-R015.37",
+        "TUI-RUNTIME-R015.38",
+        "TUI-RUNTIME-R015.39",
+        "TUI-RUNTIME-R015.40",
+        "TUI-RUNTIME-R015.41",
+        "TUI-RUNTIME-R015.42",
+        "TUI-RUNTIME-R015.43",
+        "TUI-RUNTIME-R015.44",
+        "TUI-RUNTIME-R015.45",
+        "TUI-RUNTIME-R015.46",
+        "TUI-RUNTIME-R015.47",
+        "TUI-RUNTIME-R015.48",
+        "TUI-RUNTIME-R015.49",
+        "TUI-RUNTIME-R015.50",
+        "TUI-RUNTIME-R015.51",
+        "TUI-RUNTIME-R015.52",
+        "TUI-RUNTIME-R015.53",
+        "TUI-RUNTIME-R015.54",
+        "TUI-RUNTIME-R015.55",
+        "TUI-RUNTIME-R015.56",
+        "TUI-RUNTIME-R015.57",
+        "TUI-RUNTIME-R015.58",
+        "TUI-RUNTIME-R015.59",
+        "TUI-RUNTIME-R015.60",
+        "TUI-RUNTIME-R015.61",
+        "TUI-RUNTIME-R015.62",
+        "TUI-RUNTIME-R015.63",
+        "TUI-RUNTIME-R015.64",
+        "TUI-RUNTIME-R015.65",
+        "TUI-RUNTIME-R015.66",
+        "TUI-RUNTIME-R015.67",
+        "TUI-RUNTIME-R015.68",
+        "TUI-RUNTIME-R015.69",
+        "TUI-RUNTIME-R015.70",
+        "TUI-RUNTIME-R015.71"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R015.1",
+      "title": "Terminal functions must meet the shared function-size checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.2",
+      "title": "The command processor must meet shared complexity and responsibility checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.3",
+      "title": "The client must meet shared complexity and responsibility checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.4",
+      "title": "The application event handlers must meet shared complexity checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.5",
+      "title": "The skill integration tests must meet shared complexity checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.6",
+      "title": "The input widget must meet shared complexity checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.7",
+      "title": "Terminal functions must meet the shared nesting-depth checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.8",
+      "title": "The dependency and source security scans must report no medium-severity findings. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.9",
+      "title": "Each terminal test must assert its observable result. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.10",
+      "title": "Documentation examples must match the tested terminal behavior. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.11",
+      "title": "The README must explain the terminal purpose and installation. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.12",
+      "title": "The README must cover each supported operator entry point. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.13",
+      "title": "The README must supply navigation for its documented sections. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.14",
+      "title": "The README must supply reproducible installation instructions. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.15",
+      "title": "The README must explain the terminal architecture. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.16",
+      "title": "The README must link its detailed documentation. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.17",
+      "title": "The contributor guide must describe tools, commands and source structure. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.18",
+      "title": "The repository must declare its license in a tracked license file. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.19",
+      "title": "Terminal modules must meet the shared module-size checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.20",
+      "title": "Terminal classes must meet the shared method-count checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.21",
+      "title": "The terminal must separate presentation from its served client adapter. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.22",
+      "title": "Terminal collaborators must use explicit dependency injection at test seams. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.23",
+      "title": "The terminal package must organize its public modules by responsibility. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.24",
+      "title": "The terminal must trace each declared concept to its owning implementation. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.25",
+      "title": "The terminal must resolve each orphaned concept reference. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.26",
+      "title": "Terminal tests must bind their owning contract identifiers. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.27",
+      "title": "Significant terminal functions must identify their owning contracts. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.28",
+      "title": "The terminal source must pass the configured lint checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.29",
+      "title": "The repository must validate its pinned formatter and dependency hook versions. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.30",
+      "title": "The terminal CLI must supply help text for its supported arguments. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.31",
+      "title": "The version configuration must cover every authoritative version mirror. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.32",
+      "title": "The preserved JSON analysis must remain historical evidence, separate from authoritative version mirrors. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.33",
+      "title": "The preserved Markdown analysis must remain historical evidence, separate from authoritative version mirrors. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.34",
+      "title": "Terminal test modules must meet the shared file-size checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.35",
+      "title": "Terminal test modules must meet the shared test-count checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.36",
+      "title": "Terminal tests must organize unit, integration and served acceptance coverage. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.37",
+      "title": "Terminal tests must supply a shared fixture entry point. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.38",
+      "title": "Terminal tests must reuse shared fixtures for common setup. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.39",
+      "title": "Each terminal test must assert its observable result. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.40",
+      "title": "Terminal tests must reject incorrect values through behavior-specific assertions. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.41",
+      "title": "The documentation must cover every supported terminal environment variable. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.42",
+      "title": "The documentation must define AGENT_LOG_FILE and AGENT_THEME behavior. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.43",
+      "title": "The repository must supply a credential-free environment configuration example. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.44",
+      "title": "The client must obtain MCP configuration through the currently authorized served contract. Touches `agent_terminal_ui/client.py`",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.45",
+      "title": "The client must list MCP tools through the currently authorized served contract. Touches `agent_terminal_ui/client.py`",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.46",
+      "title": "The client must list conversation identifiers through the currently authorized served contract. Touches `agent_terminal_ui/client.py`",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.47",
+      "title": "The client must follow TUI-RUNTIME-R012.4.2 failure semantics. Authenticated empty results differ from unavailable requests. Touches `agent_terminal_ui/client.py`",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.48",
+      "title": "The client changes must pass the configured lint and type hooks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.49",
+      "title": "The client methods must carry type hints consistent with the existing code style. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.50",
+      "title": "The client tests must prove the three methods satisfy their contract. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.51",
+      "title": "The owning client contract must record the method implementation and its acceptance evidence. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.52",
+      "title": "The repository must run available client maintenance checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.53",
+      "title": "The terminal must resolve the remaining theme-switch regression. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.54",
+      "title": "The terminal must assess the remaining environment-example and tool-guard obligations. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.55",
+      "title": "The terminal must score at least 80 in project analysis. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.56",
+      "title": "The terminal must score at least 80 in codebase optimization. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.57",
+      "title": "The terminal must score at least 80 in security analysis. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.58",
+      "title": "The terminal must score at least 80 in test coverage. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.59",
+      "title": "The terminal must score at least 80 in documentation & governance. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.60",
+      "title": "The terminal must score at least 80 in architecture & design patterns. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.61",
+      "title": "The terminal must score at least 80 in concept traceability. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.62",
+      "title": "The terminal must score at least 80 in pre-commit compliance. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.63",
+      "title": "The terminal must score at least 80 in test execution. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.64",
+      "title": "The terminal must score at least 80 in version sync analysis. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.65",
+      "title": "The terminal must score at least 80 in pytest quality. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.66",
+      "title": "The terminal must score at least 80 in environment variables. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.67",
+      "title": "The terminal must achieve an overall source-quality grade of at least 3.0. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.68",
+      "title": "The terminal must achieve grade B or higher in all 17 source-quality domains. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.69",
+      "title": "The terminal must resolve all 43 actionable source findings. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.70",
+      "title": "Source-quality repairs must preserve the installed command path through `agent_terminal_ui/terminal_ui.py:10`",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R015.71",
+      "title": "A served integration test must launch the installed command and observe client behavior after source-quality repairs. It must distinguish a denied request from an authenticated empty result",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
     }
   ]
 }

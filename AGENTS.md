@@ -5,8 +5,8 @@
 
 > **Notice:** This project uses **Spec-Driven Development (SDD)**.
 > - Project constitution and governance: `.specify/memory/constitution.md`.
-> - Feature specifications and tasks: `.specify/specs/` and `.specify/tasks/`.
-> This file (`AGENTS.md`) is for system-prompt context; the SDD directory is the source of truth for architecture and new features.
+> - Feature specifications and tasks: `specs/terminal-runtime/`.
+> This file (`AGENTS.md`) is for system-prompt context; the `specs/` tree is the source of truth for architecture and new features.
 
 <!-- Ecosystem Concepts (cross-project, from agent-utilities kernel) -->
 <!-- CONCEPT:AU-OS.deployment.infra-orchestration Ecosystem Topology Map — classified as FrontendPackage -->
@@ -110,9 +110,9 @@ For comprehensive documentation, see the `docs/` directory:
 
 ## ⛔ Keep the Repository Root Pristine
 
-The repository root must contain only canonical project files. The only hidden
-directories allowed at root are `.git/`, `.github/`, `.specify/` (plus a local,
-git-ignored `.venv/`). NEVER write scratch/debug/migration files to the repo —
+The repository root must contain only canonical project files. Tracked root entries and their purposes are declared in `.config/repo-layout.toml`.
+Only `.specify/memory/constitution.md` may remain tracked under `.specify/`.
+Canonical specifications live in `specs/`; historical source records live in `plans/`. NEVER write scratch/debug/migration files to the repo —
 especially the root: no `fix_*.py`/`migrate_*.py`/`refactor_*.py`/root `test_*.py`,
 no `*.db`/`*.log`/scratch `*.txt`/`*.orig`/`*.rej`/`*.bak`, no build artifacts
 (`*.tsbuildinfo`), and no SI scratch dirs (`.agent/`, `.agents/`, `.agent_data/`,

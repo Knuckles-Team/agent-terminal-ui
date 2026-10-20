@@ -292,3 +292,80 @@ TUI-RUNTIME-R002.1.7 exercises unsupported codes -32010, -32004 and -32601.
 Any raw result prevents fallback, including empty artifacts. HTTP 401/403 and
 RPC permission refusals produce one failed stream request and no unary request.
 Permitted fallback preserves message identity and the idempotency key.
+
+## Source quality acceptance
+
+| ID | Acceptance evidence |
+|---|---|
+| `TUI-RUNTIME-R015` | All child tests must pass through their owning production or tooling entry points. |
+| `TUI-RUNTIME-R015.1` | Planned `tests/test_source_quality.py::test_source_quality_1` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.2` | Planned `tests/test_source_quality.py::test_source_quality_2` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.3` | Planned `tests/test_source_quality.py::test_source_quality_3` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.4` | Planned `tests/test_source_quality.py::test_source_quality_4` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.5` | Planned `tests/test_source_quality.py::test_source_quality_5` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.6` | Planned `tests/test_source_quality.py::test_source_quality_6` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.7` | Planned `tests/test_source_quality.py::test_source_quality_7` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.8` | Planned `tests/test_source_quality.py::test_source_quality_8` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.9` | Planned `tests/test_source_quality.py::test_source_quality_9` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.10` | Planned `tests/test_source_quality.py::test_source_quality_10` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.11` | Planned `tests/test_source_quality.py::test_source_quality_11` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.12` | Planned `tests/test_source_quality.py::test_source_quality_12` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.13` | Planned `tests/test_source_quality.py::test_source_quality_13` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.14` | Planned `tests/test_source_quality.py::test_source_quality_14` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.15` | Planned `tests/test_source_quality.py::test_source_quality_15` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.16` | Planned `tests/test_source_quality.py::test_source_quality_16` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.17` | Planned `tests/test_source_quality.py::test_source_quality_17` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.18` | Planned `tests/test_source_quality.py::test_source_quality_18` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.19` | Planned `tests/test_source_quality.py::test_source_quality_19` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.20` | Planned `tests/test_source_quality.py::test_source_quality_20` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.21` | Planned `tests/test_source_quality.py::test_source_quality_21` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.22` | Planned `tests/test_source_quality.py::test_source_quality_22` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.23` | Planned `tests/test_source_quality.py::test_source_quality_23` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.24` | Planned `tests/test_source_quality.py::test_source_quality_24` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.25` | Planned `tests/test_source_quality.py::test_source_quality_25` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.26` | Planned `tests/test_source_quality.py::test_source_quality_26` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.27` | Planned `tests/test_source_quality.py::test_source_quality_27` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.28` | Planned `tests/test_source_quality.py::test_source_quality_28` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.29` | Planned `tests/test_source_quality.py::test_source_quality_29` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.30` | Planned `tests/test_source_quality.py::test_source_quality_30` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.31` | Planned `tests/test_source_quality.py::test_source_quality_31` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.32` | Planned `tests/test_source_quality.py::test_source_quality_32` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.33` | Planned `tests/test_source_quality.py::test_source_quality_33` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.34` | Planned `tests/test_source_quality.py::test_source_quality_34` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.35` | Planned `tests/test_source_quality.py::test_source_quality_35` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.36` | Planned `tests/test_source_quality.py::test_source_quality_36` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.37` | Planned `tests/test_source_quality.py::test_source_quality_37` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.38` | Planned `tests/test_source_quality.py::test_source_quality_38` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.39` | Planned `tests/test_source_quality.py::test_source_quality_39` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.40` | Planned `tests/test_source_quality.py::test_source_quality_40` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.41` | Planned `tests/test_source_quality.py::test_source_quality_41` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.42` | Planned `tests/test_source_quality.py::test_source_quality_42` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.43` | Planned `tests/test_source_quality.py::test_source_quality_43` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.44` | Planned `tests/test_source_quality.py::test_source_quality_44` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.45` | Planned `tests/test_source_quality.py::test_source_quality_45` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.46` | Planned `tests/test_source_quality.py::test_source_quality_46` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.47` | Planned `tests/test_source_quality.py::test_source_quality_47` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.48` | Planned `tests/test_source_quality.py::test_source_quality_48` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.49` | Planned `tests/test_source_quality.py::test_source_quality_49` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.50` | Planned `tests/test_source_quality.py::test_source_quality_50` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.51` | Planned `tests/test_source_quality.py::test_source_quality_51` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.52` | Planned `tests/test_source_quality.py::test_source_quality_52` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.53` | Planned `tests/test_source_quality.py::test_source_quality_53` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.54` | Planned `tests/test_source_quality.py::test_source_quality_54` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.55` | Planned `tests/test_source_quality.py::test_source_quality_55` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.56` | Planned `tests/test_source_quality.py::test_source_quality_56` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.57` | Planned `tests/test_source_quality.py::test_source_quality_57` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.58` | Planned `tests/test_source_quality.py::test_source_quality_58` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.59` | Planned `tests/test_source_quality.py::test_source_quality_59` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.60` | Planned `tests/test_source_quality.py::test_source_quality_60` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.61` | Planned `tests/test_source_quality.py::test_source_quality_61` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.62` | Planned `tests/test_source_quality.py::test_source_quality_62` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.63` | Planned `tests/test_source_quality.py::test_source_quality_63` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.64` | Planned `tests/test_source_quality.py::test_source_quality_64` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.65` | Planned `tests/test_source_quality.py::test_source_quality_65` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.66` | Planned `tests/test_source_quality.py::test_source_quality_66` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.67` | Planned `tests/test_source_quality.py::test_source_quality_67` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.68` | Planned `tests/test_source_quality.py::test_source_quality_68` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.69` | Planned `tests/test_source_quality.py::test_source_quality_69` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.70` | Planned `tests/test_source_quality.py::test_source_quality_entry_wiring` must enter the installed command against an authorized served fixture. |
+| `TUI-RUNTIME-R015.71` | Planned `tests/test_source_quality.py::test_source_quality_served_entry` must enter the installed command against an authorized served fixture. |

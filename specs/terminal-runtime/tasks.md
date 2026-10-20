@@ -156,3 +156,78 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R012.4.3:** Complete served command matrix; acceptance remains pending.
 
 - [ ] **TUI-RUNTIME-R010.4.2:** Live current-plan acceptance; acceptance remains pending.
+
+## Source quality obligations
+
+- [ ] **TUI-RUNTIME-R015:** Complete each child with current source and acceptance evidence.
+- [ ] **TUI-RUNTIME-R015.1:** Terminal functions must meet the shared function-size checks. Source obligation: `T001`.
+- [ ] **TUI-RUNTIME-R015.2:** The command processor must meet shared complexity and responsibility checks. Source obligation: `T002`.
+- [ ] **TUI-RUNTIME-R015.3:** The client must meet shared complexity and responsibility checks. Source obligation: `T003`.
+- [ ] **TUI-RUNTIME-R015.4:** The application event handlers must meet shared complexity checks. Source obligation: `T004`.
+- [ ] **TUI-RUNTIME-R015.5:** The skill integration tests must meet shared complexity checks. Source obligation: `T005`.
+- [ ] **TUI-RUNTIME-R015.6:** The input widget must meet shared complexity checks. Source obligation: `T006`.
+- [ ] **TUI-RUNTIME-R015.7:** Terminal functions must meet the shared nesting-depth checks. Source obligation: `T007`.
+- [ ] **TUI-RUNTIME-R015.8:** The dependency and source security scans must report no medium-severity findings. Source obligation: `T008`.
+- [ ] **TUI-RUNTIME-R015.9:** Each terminal test must assert its observable result. Source obligation: `T009`.
+- [ ] **TUI-RUNTIME-R015.10:** Documentation examples must match the tested terminal behavior. Source obligation: `T010`.
+- [ ] **TUI-RUNTIME-R015.11:** The README must explain the terminal purpose and installation. Source obligation: `T011`.
+- [ ] **TUI-RUNTIME-R015.12:** The README must cover each supported operator entry point. Source obligation: `T012`.
+- [ ] **TUI-RUNTIME-R015.13:** The README must provide navigation for its documented sections. Source obligation: `T013`.
+- [ ] **TUI-RUNTIME-R015.14:** The README must provide reproducible installation instructions. Source obligation: `T014`.
+- [ ] **TUI-RUNTIME-R015.15:** The README must explain the terminal architecture. Source obligation: `T015`.
+- [ ] **TUI-RUNTIME-R015.16:** The README must link its detailed documentation. Source obligation: `T016`.
+- [ ] **TUI-RUNTIME-R015.17:** The contributor guide must describe tools, commands and source structure. Source obligation: `T017`.
+- [ ] **TUI-RUNTIME-R015.18:** The repository must declare its license in a tracked license file. Source obligation: `T018`.
+- [ ] **TUI-RUNTIME-R015.19:** Terminal modules must meet the shared module-size checks. Source obligation: `T019`.
+- [ ] **TUI-RUNTIME-R015.20:** Terminal classes must meet the shared method-count checks. Source obligation: `T020`.
+- [ ] **TUI-RUNTIME-R015.21:** The terminal must separate presentation from its served client adapter. Source obligation: `T021`.
+- [ ] **TUI-RUNTIME-R015.22:** Terminal collaborators must use explicit dependency injection at test seams. Source obligation: `T022`.
+- [ ] **TUI-RUNTIME-R015.23:** The terminal package must organize its public modules by responsibility. Source obligation: `T023`.
+- [ ] **TUI-RUNTIME-R015.24:** The terminal must trace each declared concept to its owning implementation. Source obligation: `T024`.
+- [ ] **TUI-RUNTIME-R015.25:** The terminal must resolve each orphaned concept reference. Source obligation: `T025`.
+- [ ] **TUI-RUNTIME-R015.26:** Terminal tests must bind their owning contract identifiers. Source obligation: `T026`.
+- [ ] **TUI-RUNTIME-R015.27:** Significant terminal functions must identify their owning contracts. Source obligation: `T027`.
+- [ ] **TUI-RUNTIME-R015.28:** The terminal source must pass the configured lint checks. Source obligation: `T028`.
+- [ ] **TUI-RUNTIME-R015.29:** The repository must validate its pinned formatter and dependency hook versions. Source obligation: `T029`.
+- [ ] **TUI-RUNTIME-R015.30:** The terminal CLI must provide help text for its supported arguments. Source obligation: `T030`.
+- [ ] **TUI-RUNTIME-R015.31:** The version configuration must cover every authoritative version mirror. Source obligation: `T031`.
+- [ ] **TUI-RUNTIME-R015.32:** The preserved JSON analysis must remain historical evidence, separate from authoritative version mirrors. Source obligation: `T032`.
+- [ ] **TUI-RUNTIME-R015.33:** The preserved Markdown analysis must remain historical evidence, separate from authoritative version mirrors. Source obligation: `T033`.
+- [ ] **TUI-RUNTIME-R015.34:** Terminal test modules must meet the shared file-size checks. Source obligation: `T034`.
+- [ ] **TUI-RUNTIME-R015.35:** Terminal test modules must meet the shared test-count checks. Source obligation: `T035`.
+- [ ] **TUI-RUNTIME-R015.36:** Terminal tests must organize unit, integration and served acceptance coverage. Source obligation: `T036`.
+- [ ] **TUI-RUNTIME-R015.37:** Terminal tests must provide a shared fixture entry point. Source obligation: `T037`.
+- [ ] **TUI-RUNTIME-R015.38:** Terminal tests must reuse shared fixtures for common setup. Source obligation: `T038`.
+- [ ] **TUI-RUNTIME-R015.39:** Each terminal test must assert its observable result. Source obligation: `T039`.
+- [ ] **TUI-RUNTIME-R015.40:** Terminal tests must reject incorrect values through behavior-specific assertions. Source obligation: `T040`.
+- [ ] **TUI-RUNTIME-R015.41:** The documentation must cover every supported terminal environment variable. Source obligation: `T041`.
+- [ ] **TUI-RUNTIME-R015.42:** The documentation must define AGENT_LOG_FILE and AGENT_THEME behavior. Source obligation: `T042`.
+- [ ] **TUI-RUNTIME-R015.43:** The repository must provide a credential-free environment configuration example. Source obligation: `T043`.
+- [ ] **TUI-RUNTIME-R015.44:** The client must obtain MCP configuration through the currently authorized served contract. Source obligation: `missing-client-methods checkbox 1`.
+- [ ] **TUI-RUNTIME-R015.45:** The client must list MCP tools through the currently authorized served contract. Source obligation: `missing-client-methods checkbox 2`.
+- [ ] **TUI-RUNTIME-R015.46:** The client must list conversation identifiers through the currently authorized served contract. Source obligation: `missing-client-methods checkbox 3`.
+- [ ] **TUI-RUNTIME-R015.47:** The client must follow TUI-RUNTIME-R012.4.2 failure semantics. Authenticated empty results differ from unavailable requests. Source obligation: `missing-client-methods checkbox 4`.
+- [ ] **TUI-RUNTIME-R015.48:** The client changes must pass the configured lint and type hooks. Source obligation: `missing-client-methods checkbox 5`.
+- [ ] **TUI-RUNTIME-R015.49:** The client methods must carry type hints consistent with the existing code style. Source obligation: `missing-client-methods checkbox 6`.
+- [ ] **TUI-RUNTIME-R015.50:** The client tests must prove the three methods satisfy their contract. Source obligation: `missing-client-methods checkbox 7`.
+- [ ] **TUI-RUNTIME-R015.51:** The owning client contract must record the method implementation and its acceptance evidence. Source obligation: `missing-client-methods next step 1`.
+- [ ] **TUI-RUNTIME-R015.52:** The repository must run available client maintenance checks. Source obligation: `missing-client-methods next step 2`.
+- [ ] **TUI-RUNTIME-R015.53:** The terminal must resolve the remaining theme-switch regression. Source obligation: `missing-client-methods next step 3`.
+- [ ] **TUI-RUNTIME-R015.54:** The terminal must assess the remaining environment-example and tool-guard obligations. Source obligation: `missing-client-methods next step 4`.
+- [ ] **TUI-RUNTIME-R015.55:** The terminal must score at least 80 in project analysis. Source obligation: `CHECKLIST non-FR checkbox 44`.
+- [ ] **TUI-RUNTIME-R015.56:** The terminal must score at least 80 in codebase optimization. Source obligation: `CHECKLIST non-FR checkbox 45`.
+- [ ] **TUI-RUNTIME-R015.57:** The terminal must score at least 80 in security analysis. Source obligation: `CHECKLIST non-FR checkbox 46`.
+- [ ] **TUI-RUNTIME-R015.58:** The terminal must score at least 80 in test coverage. Source obligation: `CHECKLIST non-FR checkbox 47`.
+- [ ] **TUI-RUNTIME-R015.59:** The terminal must score at least 80 in documentation & governance. Source obligation: `CHECKLIST non-FR checkbox 48`.
+- [ ] **TUI-RUNTIME-R015.60:** The terminal must score at least 80 in architecture & design patterns. Source obligation: `CHECKLIST non-FR checkbox 49`.
+- [ ] **TUI-RUNTIME-R015.61:** The terminal must score at least 80 in concept traceability. Source obligation: `CHECKLIST non-FR checkbox 50`.
+- [ ] **TUI-RUNTIME-R015.62:** The terminal must score at least 80 in pre-commit compliance. Source obligation: `CHECKLIST non-FR checkbox 51`.
+- [ ] **TUI-RUNTIME-R015.63:** The terminal must score at least 80 in test execution. Source obligation: `CHECKLIST non-FR checkbox 52`.
+- [ ] **TUI-RUNTIME-R015.64:** The terminal must score at least 80 in version sync analysis. Source obligation: `CHECKLIST non-FR checkbox 53`.
+- [ ] **TUI-RUNTIME-R015.65:** The terminal must score at least 80 in pytest quality. Source obligation: `CHECKLIST non-FR checkbox 54`.
+- [ ] **TUI-RUNTIME-R015.66:** The terminal must score at least 80 in environment variables. Source obligation: `CHECKLIST non-FR checkbox 55`.
+- [ ] **TUI-RUNTIME-R015.67:** The terminal must achieve an overall source-quality grade of at least 3.0. Source obligation: `CHECKLIST non-FR checkbox 56`.
+- [ ] **TUI-RUNTIME-R015.68:** The terminal must achieve grade B or higher in all 17 source-quality domains. Source obligation: `CHECKLIST non-FR checkbox 57`.
+- [ ] **TUI-RUNTIME-R015.69:** The terminal must resolve all 43 actionable source findings. Source obligation: `CHECKLIST non-FR checkbox 58`.
+- [ ] **TUI-RUNTIME-R015.70:** Source-quality repairs must preserve the installed command path through `agent_terminal_ui/terminal_ui.py:10`.
+- [ ] **TUI-RUNTIME-R015.71:** A served integration test must start the installed command and observe client behavior after source-quality repairs. It must distinguish a denied request from an authenticated empty result.

@@ -1,0 +1,37 @@
+# Every tracked root entry has an explicit purpose.
+
+[dirs]
+".config" = "Shared gate declarations and documentation theme overrides."
+".github" = "GitHub Actions workflows and dashboard source configuration."
+".security" = "Security scanning configuration and reviewed policy inputs."
+".specify" = "Project constitution; no feature or generated source belongs here."
+"agent_terminal_ui" = "Terminal application source."
+"docs" = "Published documentation content."
+"native" = "Native terminal implementation and build inputs."
+"plans" = "Historical source evidence and complete spec migration path map."
+"scripts" = "Repository validation and maintenance commands."
+"specs" = "Canonical requirements, plans, tasks, test contracts and generated status."
+"tests" = "Automated regression and acceptance tests."
+
+[files]
+"AGENTS.md" = "Repository contributor instructions."
+"CHANGELOG.md" = "Release history."
+"CLAUDE.md" = "Claude instruction entry point."
+"Dockerfile" = "Container image build definition."
+"README.md" = "Public installation and project entry point."
+"mkdocs.yml" = "Published documentation navigation and build configuration."
+"opencode.json" = "Terminal client integration configuration."
+"pyproject.toml" = "Python package metadata and tool configuration."
+"pytest.ini" = "Pytest discovery and test configuration."
+"requirements.txt" = "Exported Python installation requirements."
+"uv.lock" = "Locked Python dependency graph."
+
+[dotfiles]
+".bumpversion.cfg" = "Version mirror configuration."
+".codespellignore" = "Spelling dictionary entries."
+".dockerignore" = "Container build context exclusions."
+".gitattributes" = "Git file attributes."
+".gitignore" = "Repository exclusion patterns."
+".mergequeue.yaml" = "Merge queue configuration."
+".pre-commit-config.yaml" = "Blocking pre-commit and push checks."
+".python-version" = "Python interpreter selection."

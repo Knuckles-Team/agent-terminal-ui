@@ -791,3 +791,33 @@ without an active server model claim. Do not add model selection authority or
 change the wire request. Tests cover both command paths, unchanged state,
 detail labels and omission of the model argument from the request.
 This feedback repair does not complete R012.2 or qualify served model choice.
+
+## Source quality contract
+
+TUI-RUNTIME-R015 preserves unresolved source-quality obligations in this owning specification.
+Each child retains its source mapping in [source history](../../plans/spec-source-history/README.md).
+The byte-preserved records include original unchecked items and historical completion claims.
+Those claims supply no current acceptance evidence.
+Each repair must name its production or tooling call path before implementation.
+Each repair must bind a positive test and a counterexample to its child identifier.
+The migration introduces no runtime behavior and closes no child obligation.
+The [shared spec standard](https://github.com/Knuckles-Team/pipelines/blob/main/reference/spec-standard.md) governs future changes.
+
+### Current layout decision
+
+The approved migration supersedes the earlier statements that migration approval and the layout manifest were absent.
+Canonical requirements and tasks now live in `specs/terminal-runtime/`.
+The tracked constitution remains at `.specify/memory/constitution.md`.
+The layout declaration now lives at `.config/repo-layout.toml`.
+R004.2 still requires its remaining hook-parity proof. This migration changes no blocking check.
+
+The current served-client contract supersedes the historical empty-default behavior.
+R015.44 through R015.47 preserve the method obligations without restoring retired endpoints.
+R012.4.2 governs failures; authenticated empty results remain distinct from unavailable requests.
+
+### Source-quality wiring and served proof
+
+The terminal command enters `terminal_ui`, then `app.main` at `agent_terminal_ui/app.py:982`. That function creates `AgentApp` and calls `app.run` at line 997.
+Quality repairs attach at the files each child names; they must preserve this production entry path.
+The final two child rows require wiring inspection and a served integration proof.
+Tooling-only children use their configured check entry points and must reject a failing fixture.
