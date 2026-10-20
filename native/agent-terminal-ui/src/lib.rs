@@ -51,6 +51,8 @@ pub struct ArboraClient {
     http: Client,
     card_url: Url,
     authenticated: bool,
+    submission_timeout: Duration,
+    committed_event_reads: bool,
 }
 
 impl ArboraClient {
@@ -102,7 +104,22 @@ impl ArboraClient {
             http,
             card_url: url,
             authenticated: token.is_some(),
+            submission_timeout: Duration::from_secs(300),
+            committed_event_reads: false,
         })
+    }
+
+    pub fn with_submission_timeout(mut self, timeout: Duration) -> Result<Self, &'static str> {
+        if !(1..=900).contains(&timeout.as_secs()) || timeout.subsec_nanos() != 0 {
+            return Err("Submission timeout must be whole seconds between 1 and 900");
+        }
+        self.submission_timeout = timeout;
+        Ok(self)
+    }
+
+    pub fn with_committed_event_reads(mut self, enabled: bool) -> Self {
+        self.committed_event_reads = enabled;
+        self
     }
 
     pub async fn submit_task(
@@ -117,6 +134,7 @@ impl ArboraClient {
         let response = self
             .http
             .post(url)
+            .timeout(self.submission_timeout)
             .header("Idempotency-Key", submission.message_id())
             .json(&serde_json::json!({
                 "jsonrpc": "2.0",

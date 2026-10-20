@@ -90,6 +90,31 @@ fn selected_task(value: Result<String, env::VarError>) -> Result<Option<String>,
     }
 }
 
+fn submission_timeout(
+    value: Result<String, env::VarError>,
+) -> Result<std::time::Duration, &'static str> {
+    let seconds = match value {
+        Err(env::VarError::NotPresent) => 300,
+        Ok(value) if !value.is_empty() && value.bytes().all(|byte| byte.is_ascii_digit()) => value
+            .parse::<u64>()
+            .map_err(|_| "AGENT_SUBMISSION_TIMEOUT_SECONDS must be 1..900")?,
+        _ => return Err("AGENT_SUBMISSION_TIMEOUT_SECONDS must be 1..900"),
+    };
+    if !(1..=900).contains(&seconds) {
+        return Err("AGENT_SUBMISSION_TIMEOUT_SECONDS must be 1..900");
+    }
+    Ok(std::time::Duration::from_secs(seconds))
+}
+
+fn committed_event_reads(value: Result<String, env::VarError>) -> Result<bool, &'static str> {
+    match value {
+        Err(env::VarError::NotPresent) => Ok(false),
+        Ok(value) if value == "true" => Ok(true),
+        Ok(value) if value == "false" => Ok(false),
+        _ => Err("AGENT_INCLUDE_COMMITTED_EVENT must be true or false"),
+    }
+}
+
 fn selected_prompt(args: &[OsString], task_selected: bool) -> Result<Option<String>, &'static str> {
     if args.is_empty() {
         return Ok(None);
@@ -492,7 +517,11 @@ async fn main() -> ExitCode {
             return Err("Submission requires a caller credential");
         }
         let submission = prompt.as_deref().map(TaskSubmission::new).transpose()?;
-        let client = ArboraClient::new(&endpoint, token.as_deref())?;
+        let timeout = submission_timeout(env::var("AGENT_SUBMISSION_TIMEOUT_SECONDS"))?;
+        let include_event = committed_event_reads(env::var("AGENT_INCLUDE_COMMITTED_EVENT"))?;
+        let client = ArboraClient::new(&endpoint, token.as_deref())?
+            .with_submission_timeout(timeout)?
+            .with_committed_event_reads(include_event);
         run(Arc::new(client), task_id, submission, observe).await
     }
     .await;
@@ -1274,5 +1303,46 @@ mod terminal_point_view_tests {
             .collect();
         assert!(!text.contains("actual-batch"));
         assert!(!text.contains("Commit sequence: 7"));
+    }
+}
+
+#[cfg(test)]
+mod request_settings_tests {
+    use super::*;
+    #[test]
+    fn queue_timeout_is_bounded_and_does_not_accept_ambiguous_values() {
+        assert_eq!(
+            submission_timeout(Err(env::VarError::NotPresent))
+                .unwrap()
+                .as_secs(),
+            300
+        );
+        for value in ["1", "120", "900"] {
+            assert_eq!(
+                submission_timeout(Ok(value.into())).unwrap().as_secs(),
+                value.parse::<u64>().unwrap()
+            );
+        }
+        for value in [
+            "",
+            "0",
+            "901",
+            "-1",
+            "1.5",
+            " 120",
+            "+120",
+            "18446744073709551616",
+        ] {
+            assert!(submission_timeout(Ok(value.into())).is_err());
+        }
+    }
+    #[test]
+    fn committed_events_require_explicit_true() {
+        assert!(!committed_event_reads(Err(env::VarError::NotPresent)).unwrap());
+        assert!(!committed_event_reads(Ok("false".into())).unwrap());
+        assert!(committed_event_reads(Ok("true".into())).unwrap());
+        for value in ["", "1", "yes", "TRUE", " true"] {
+            assert!(committed_event_reads(Ok(value.into())).is_err());
+        }
     }
 }

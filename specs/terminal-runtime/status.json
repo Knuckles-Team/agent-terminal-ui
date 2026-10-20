@@ -336,8 +336,8 @@
         "99b67585d433"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:782",
-        "native/agent-terminal-ui/src/main.rs:819"
+        "native/agent-terminal-ui/src/main.rs:811",
+        "native/agent-terminal-ui/src/main.rs:848"
       ]
     },
     {
@@ -486,7 +486,7 @@
         "e8711e7f49bf"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:758",
+        "native/agent-terminal-ui/src/main.rs:787",
         "native/agent-terminal-ui/tests/discovery.rs:110",
         "native/agent-terminal-ui/tests/discovery.rs:29",
         "native/agent-terminal-ui/tests/discovery.rs:50",
@@ -542,11 +542,11 @@
         "9b0dcc67e610"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:524",
-        "native/agent-terminal-ui/src/main.rs:549",
-        "native/agent-terminal-ui/src/main.rs:568",
-        "native/agent-terminal-ui/src/main.rs:595",
-        "native/agent-terminal-ui/tests/submission.rs:100"
+        "native/agent-terminal-ui/src/main.rs:553",
+        "native/agent-terminal-ui/src/main.rs:578",
+        "native/agent-terminal-ui/src/main.rs:597",
+        "native/agent-terminal-ui/src/main.rs:624",
+        "native/agent-terminal-ui/tests/submission.rs:137"
       ]
     },
     {
@@ -568,11 +568,11 @@
         "3c592ffc6075"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:679",
-        "native/agent-terminal-ui/src/main.rs:705",
-        "native/agent-terminal-ui/src/main.rs:721",
-        "native/agent-terminal-ui/src/main.rs:857",
-        "native/agent-terminal-ui/src/main.rs:910"
+        "native/agent-terminal-ui/src/main.rs:708",
+        "native/agent-terminal-ui/src/main.rs:734",
+        "native/agent-terminal-ui/src/main.rs:750",
+        "native/agent-terminal-ui/src/main.rs:886",
+        "native/agent-terminal-ui/src/main.rs:939"
       ]
     },
     {
@@ -583,10 +583,10 @@
         "b05266d66c30"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1039",
-        "native/agent-terminal-ui/src/main.rs:923",
-        "native/agent-terminal-ui/src/main.rs:940",
-        "native/agent-terminal-ui/src/main.rs:979",
+        "native/agent-terminal-ui/src/main.rs:1008",
+        "native/agent-terminal-ui/src/main.rs:1068",
+        "native/agent-terminal-ui/src/main.rs:952",
+        "native/agent-terminal-ui/src/main.rs:969",
         "native/agent-terminal-ui/tests/cancellation.rs:119"
       ]
     },
@@ -810,7 +810,7 @@
         "608e9e9d122b"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1170",
+        "native/agent-terminal-ui/src/main.rs:1199",
         "native/agent-terminal-ui/src/presentation.rs:203",
         "native/agent-terminal-ui/src/presentation.rs:254",
         "native/agent-terminal-ui/src/presentation.rs:280"
@@ -833,10 +833,10 @@
       ],
       "verified_by": [
         "native/agent-terminal-ui/src/recovery_view_tests.rs:8",
-        "native/agent-terminal-ui/tests/recovery.rs:112",
-        "native/agent-terminal-ui/tests/recovery.rs:130",
-        "native/agent-terminal-ui/tests/recovery.rs:154",
-        "native/agent-terminal-ui/tests/recovery.rs:188"
+        "native/agent-terminal-ui/tests/recovery.rs:111",
+        "native/agent-terminal-ui/tests/recovery.rs:140",
+        "native/agent-terminal-ui/tests/recovery.rs:158",
+        "native/agent-terminal-ui/tests/recovery.rs:182"
       ]
     },
     {
@@ -950,10 +950,10 @@
         "faeede3c59e8"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1233",
+        "native/agent-terminal-ui/src/main.rs:1262",
         "native/agent-terminal-ui/tests/task_snapshot.rs:193",
-        "native/agent-terminal-ui/tests/task_snapshot.rs:230",
-        "native/agent-terminal-ui/tests/task_snapshot.rs:265",
+        "native/agent-terminal-ui/tests/task_snapshot.rs:231",
+        "native/agent-terminal-ui/tests/task_snapshot.rs:263",
         "native/agent-terminal-ui/tests/terminal_event.rs:110"
       ]
     },
