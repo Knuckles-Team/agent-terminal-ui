@@ -1,6 +1,6 @@
 # Configuration Reference
 
-All configuration is managed via `settings.py` and stored in the settings store. New settings introduced in the DeepSeek-TUI parity update.
+Settings are managed by `settings.py`. The tables below describe the Python entry point unless marked as native.
 
 ## Settings
 
@@ -119,28 +119,43 @@ Custom pricing can be set via `tracker.set_pricing(model, input, output, cached)
 | `AGENT_BEARER_TOKEN` | unset | Caller credential for Arbora; required for remote endpoints. |
 | `AGENT_THEME` | `tokyo-night` | Startup Textual theme. Unknown names fall back to `tokyo-night`. |
 | `TEXTUAL_ANIMATIONS` | `full` | Set to `none` to disable entrance animations (reduced motion). |
-| `AGENT_UTILITIES_DATA_DIR` | platform default | Override the directory for the SQLite session store. |
+| `AGENT_UTILITIES_DATA_DIR` | platform default | Override the local session data directory. Takes precedence over the configuration-relative fallback. |
+| `AGENT_UTILITIES_CONFIG_DIR` | platform default | Override the settings directory. Without a data override, local session data uses its sibling `share/agent-utilities` directory. |
+| `AGENT_LOG_FILE` | ignored | Never opened by the main screen. `/logs` and Ctrl+V require an authenticated host reader. |
 
 The `/op` command needs Python 3.12 or newer and the Arbora distribution
 containing the generated client. Without it, `/op` refuses with
-`CLIENT_UNAVAILABLE`; A2A chat remains available on Python 3.11.
+`CLIENT_UNAVAILABLE`; basic A2A chat remains available. The package requires Python 3.12 or newer.
 
 ## CLI Flags
 
-```bash
-agent-terminal-ui [--prompt TEXT] [--override] [--bg] [--headless] [--model ID]
-```
+Run `agent-terminal-ui --help` for the complete Python argument list.
 
 | Flag | Purpose |
 |------|---------|
-| `--prompt TEXT` | Inject an initial task on launch (auto-submitted once ready). |
-| `--override` | Auto-approve all tool calls (yolo mode), bypassing the approval modal. |
-| `--bg` | Start in Agent View (background/multi-session mode). |
-| `--headless` | Run `--prompt` without the TUI, streaming to stdout (requires `--prompt`). |
-| `--model ID` | Model id to use for a headless run. |
+| `--help` | Print usage and exit without starting a client. |
+| `--prompt TEXT` | Send an initial prompt. Interactive mode submits it after startup. |
+| `--override` | Set the interactive auto-approval preference. This does not grant backend authority. |
+| `--bg` | Start the interactive Agent View. |
+| `--headless` | Run `--prompt` without the widget tree. Requires a nonempty prompt. |
+| `--model ID` | Compatibility option. The A2A transport ignores it; the server selects the authorized model. |
+| `--session ID` | Reuse a context ID. This does not load prior turns for the model or provide durable conversation resume. |
+| `--mode {ask,plan,build}` | Select the typed task for a headless turn. Defaults to `ask`; interactive startup does not consume it. |
+| `--observe-task ID` | Read an existing task without submission or approval. |
 
-See [Architecture](architecture.md#run-modes) for the interactive vs headless
-footprint comparison.
+Observation accepts a nonblank ID of at most 512 characters. It cannot combine
+with `--prompt`, `--override`, `--bg`, `--model`, `--session`, or a non-default
+`--mode`. It can combine with `--headless`. `--override` and `--bg` have no effect
+in headless mode. Neither client mode grants permission to execute tools.
+
+```bash
+agent-terminal-ui --headless --prompt "summarize the task" --mode ask
+agent-terminal-ui --observe-task TASK_ID
+agent-terminal-ui --headless --prompt "new turn" --session CONTEXT_ID
+```
+
+The last example reuses a context identifier only. Full history loading and
+successful governed model selection remain separate acceptance requirements.
 
 ## Theme and accessibility contract
 

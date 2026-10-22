@@ -30,13 +30,17 @@ def terminal_ui() -> None:
         "(lightweight; for non-interactive/automated sessions)",
     )
     parser.add_argument(
-        "--model", type=str, default=None, help="Model id for headless runs"
+        "--model",
+        type=str,
+        default=None,
+        help="Compatibility option; ignored by the A2A transport "
+        "(server selects model)",
     )
     parser.add_argument(
         "--session",
         type=str,
         default=None,
-        help="Continue the Arbora conversation with this session id",
+        help="Reuse this context ID; does not load prior turns for the model",
     )
     parser.add_argument(
         "--mode",

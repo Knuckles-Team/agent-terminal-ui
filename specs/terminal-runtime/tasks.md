@@ -240,3 +240,7 @@ Record deferred validation as deferred, never passed.
 
 - [ ] `TUI-RUNTIME-R008.2.3.2.1`: Deliver native runtime baseline palette switching with focused production-handler and rendering coverage.
 - [ ] `TUI-RUNTIME-R008.2.3.2.2`: Complete remaining served presentation parity and release performance qualification.
+
+- [ ] TUI-RUNTIME-R015.30.1: qualify truthful Python help and operator examples.
+- [ ] TUI-RUNTIME-R015.41.1: qualify configuration and data directory documentation.
+- [ ] TUI-RUNTIME-R015.42.1: qualify theme and unbound log documentation.

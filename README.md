@@ -254,8 +254,15 @@ running many concurrent, non-interactive sessions against one shared backend.
 
 ```bash
 agent-terminal-ui --headless --prompt "summarize the open PRs"
-agent-terminal-ui --headless --prompt "run the tests" --model claude-opus-4-8
+agent-terminal-ui --headless --prompt "summarize the plan" --mode plan
+agent-terminal-ui --observe-task TASK_ID
 ```
+
+The Python CLI also accepts `--prompt`, `--override`, `--bg`, `--session`, and
+`--model`. Run `agent-terminal-ui --help` for usage. `--session` reuses a context
+ID; it does not load prior turns for the model. `--model` is a compatibility
+option ignored by the A2A transport. The server selects the authorized model.
+See [CLI flags](docs/configuration.md#cli-flags) for supported combinations.
 
 ### Docker
 
@@ -327,7 +334,10 @@ through `AGENT_BEARER_TOKEN` outside the tracked example. Never commit credentia
 | `AGENT_BEARER_TOKEN` | unset | Caller credential for Arbora; required for remote endpoints |
 | `AGENT_SUBMISSION_TIMEOUT_SECONDS` | `300` | Native unary send deadline, 1–900 seconds; accounts for shared-server queueing without automatic resubmission |
 | `AGENT_INCLUDE_COMMITTED_EVENT` | `false` | Native task reads request optional committed-event evidence only when explicitly `true`; requires existing caller access |
-| `AGENT_THEME` | `tokyo-night` | Startup theme (any Textual built-in theme name) |
+| `AGENT_THEME` | `tokyo-night` | Startup theme; unknown names fall back to `tokyo-night` |
+| `AGENT_LOG_FILE` | ignored | Unbound paths are never opened; log viewing requires an authenticated host reader |
+| `AGENT_UTILITIES_CONFIG_DIR` | platform default | Settings directory override |
+| `AGENT_UTILITIES_DATA_DIR` | platform default | Local session data directory override |
 
 The `/op` command requires Python 3.12 or newer and an installed Arbora
 distribution containing its generated client. The package, including basic chat,
