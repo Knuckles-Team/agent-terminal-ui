@@ -953,8 +953,8 @@ binds only the two shared guard consumers. R015.29.2 retains validation of all
 remaining formatter and dependency hooks. The terminal
 consumes the no-legacy-concepts hook from pipelines and lane-guard from
 repository-manager at exact revisions. Both hooks run for every commit and push,
-without filenames. Neither owner becomes a runtime dependency. The existing
-pipelines main revision for other hooks remains unchanged.
+without filenames. Neither owner becomes a runtime dependency. The canonical spec generator uses an exact current revision. This avoids stale
+mutable-reference caches while preserving every existing hook and stage.
 
 The configuration regression tests check these two pins, stages and invocation
 flags, including rejection of altered entries. Real pre-commit runs separately
