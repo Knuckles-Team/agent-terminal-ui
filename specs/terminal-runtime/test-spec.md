@@ -342,7 +342,7 @@ Permitted fallback preserves message identity and the idempotency key.
 | `TUI-RUNTIME-R015.40` | Planned `tests/test_source_quality.py::test_source_quality_40` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.41` | Planned `tests/test_source_quality.py::test_source_quality_41` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.42` | Planned `tests/test_source_quality.py::test_source_quality_42` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.43` | Planned `tests/test_source_quality.py::test_source_quality_43` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.43` | `tests/test_source_quality.py::test_source_quality_43` parses the credential-free example and creates the production client with its loopback defaults. Counterexamples with missing values, remote URLs, credentials or shell execution must fail validation. |
 | `TUI-RUNTIME-R015.44` | Planned `tests/test_source_quality.py::test_source_quality_44` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.45` | Planned `tests/test_source_quality.py::test_source_quality_45` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.46` | Planned `tests/test_source_quality.py::test_source_quality_46` must enter the owning path and prove the requirement. |
