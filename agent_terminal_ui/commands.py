@@ -294,46 +294,11 @@ class CommandProcessor:
         self.app.push_screen(HistoryScreen(self.app._client, page))
 
     async def cmd_image(self, args: str) -> None:
-        """Attach an image file to the next agent prompt.
-
-        Usage: /image path/to/image.png
-        """
-        import base64
-        from pathlib import Path
-
-        path_str = args.strip().strip('"').strip("'")
-        path = Path(path_str)
-        if not path.exists():
-            self.app.notify(f"Image file not found: {path}", severity="error")
-            return
-
-        try:
-            raw_bytes = path.read_bytes()
-            suffix = path.suffix.lower().strip(".")
-            if suffix in ["jpg", "jpeg"]:
-                media_type = "image/jpeg"
-            elif suffix == "png":
-                media_type = "image/png"
-            elif suffix == "gif":
-                media_type = "image/gif"
-            elif suffix == "webp":
-                media_type = "image/webp"
-            else:
-                media_type = f"image/{suffix}"
-
-            # Store in app state for next submission
-            if not hasattr(self.app, "_pending_parts"):
-                self.app._pending_parts = []
-
-            img_b64 = base64.b64encode(raw_bytes).decode()
-            self.app._pending_parts.append({"image": img_b64, "media_type": media_type})
-
-            self.app.notify(f"Attached image: {path.name}", severity="information")
-            await self.app.query_one("Conversation").add_info(
-                f"[dim]Attached image: {path.name}[/dim]"
-            )
-        except Exception as e:
-            self.app.notify(f"Failed to load image: {e}", severity="error")
+        """Refuse image input until the transport supports file-part admission."""
+        self.app.notify(
+            "Images are not supported by the current Arbora transport.",
+            severity="warning",
+        )
 
     async def cmd_plan(self, args: str) -> None:
         """Switch agent to planning mode. Usage: /plan [optional prompt]"""

@@ -615,7 +615,13 @@ class AgentClient:
         session_id = session_id or new_session_id()
         self._current_session_id = session_id
         yield {"type": "session_started", "session_id": session_id}
-        if any((part or {}).get("type", "text") != "text" for part in parts or []):
+        if any(
+            not isinstance(part, dict)
+            or set(part) - {"type", "text"}
+            or part.get("type", "text") != "text"
+            or not isinstance(part.get("text"), str)
+            for part in parts or []
+        ):
             yield {
                 "type": "error",
                 "message": "only text parts are supported by the Arbora A2A transport",
