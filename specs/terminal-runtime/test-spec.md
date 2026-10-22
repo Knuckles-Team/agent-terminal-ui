@@ -102,9 +102,9 @@ principal, mixed tenants, changed policy epoch, bounded retention and a slow
 subscriber. Every rejected scope yields zero protected records. Record replay
 sequences and resnapshot generation; no independent graph or MCP path is allowed.
 
-## OpenCode cutover evidence
+## Incumbent coding-terminal cutover evidence
 
-Start from working OpenCode skill access and Arbora connectivity. Keep that
+Start from working incumbent-terminal skill access and Arbora connectivity. Keep that
 installation available while testing the native terminal. In each client,
 discover and invoke the maintained development skill. Run two Arbora-managed
 agents concurrently and stream both tasks. Cancel one without affecting the other.
@@ -112,7 +112,7 @@ Disconnect and recover the surviving task with unchanged task/context/run IDs.
 Exercise approval denial, expired confirmation and identity mismatch. No client
 may grant an effect locally. Compare served results and refusal behavior at
 recorded client and Arbora heads. Cutover requires operator acceptance after
-parity and performance evidence. Verify OpenCode remains a working rollback path.
+parity and performance evidence. Verify the incumbent coding terminal remains a working rollback path.
 
 ## Native discovery tests (R002.7)
 

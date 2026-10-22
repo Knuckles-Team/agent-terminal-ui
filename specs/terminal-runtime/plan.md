@@ -207,11 +207,11 @@ not served deployment proof. The missing producer methods remain blockers.
 Keep pipeline callers and shared hooks at `@main` / `rev: main`. Parent reviews
 and merges the non-draft PR. No version or dependency change is needed here.
 
-### OpenCode coexistence and cutover
+### Incumbent coding-terminal coexistence and cutover
 
 The goal is a native terminal connected directly to Arbora that replaces
-OpenCode. First establish working OpenCode access to the terminal development
-skill and Arbora. Keep OpenCode installed and usable throughout implementation
+the incumbent third-party coding terminal. First establish working incumbent-terminal access to the terminal development
+skill and Arbora. Keep the incumbent coding terminal installed and usable throughout implementation
 and validation. A Rust build or mock test cannot authorize its removal.
 
 Before cutover, demonstrate skill discovery and invocation in both clients.
@@ -220,10 +220,10 @@ lifecycle; the TUI only presents and controls authorized tasks. Preserve each
 agent's task/context/run bindings. Do not spawn a second local orchestrator.
 Record exact client and producer heads, served receipts and parity gaps. Require
 operator approval after parity evidence and the performance gates pass. Keep a
-working OpenCode rollback path until the operator accepts the replacement.
+working incumbent-terminal rollback path until the operator accepts the replacement.
 
 Canonical skill: `agent_terminal_ui/skills/agent-terminal-ui-development/SKILL.md`.
-OpenCode provisioning must expose that maintained file, rather than a forked
+Incumbent-terminal provisioning must expose that maintained file, rather than a forked
 copy of its instructions. Provisioning itself is not delivered by this spec.
 
 ### Native discovery entry point (R002.7)
@@ -235,7 +235,7 @@ the request and terminal input. A response name does not prove task capabilities
 The c key cancels local discovery; r retries after completion; q exits and
 restores the terminal. There is no task, approval or engine execution path.
 
-The Python executable and OpenCode remain available. Native compilation uses a coordinated validation slot. Source and format checks
+The Python executable and the incumbent coding terminal remain available. Native compilation uses a coordinated validation slot. Source and format checks
 alone do not establish delivery or served Arbora acceptance.
 
 The initial Linux check passed six native tests with real loopback HTTP fixtures.
@@ -261,7 +261,7 @@ read capability. The native task view uses only the unary tasks/get method.
 
 Arbora still lacks message/stream. Its tasks/resubscribe handler returns an
 explicit refusal. Host receipts, bound web_logs and log-reader exports remain
-specifications. R002.1.3 and R002.2 through R002.6 stay pending. OpenCode and
+specifications. R002.1.3 and R002.2 through R002.6 stay pending. The incumbent coding terminal and
 Python remain available. No cutover, performance or complete migration claim
 is made by the model and snapshot children.
 
@@ -286,7 +286,7 @@ queue boundaries. Check the authenticated carrier and zero admission for
 denied requests. This proves the submission adapter, not durable engine or
 worker completion. Preserve production-profile refusal when its configured
 dispatch authority is absent. Streaming, session recovery, the six original
-requirements and OpenCode cutover remain pending.
+requirements and the incumbent-terminal cutover remain pending.
 
 R002.1.3 now rolls up this bounded adapter in R002.1.3.1 and the preserved
 original served integration acceptance in R002.1.3.2. Retain every parent criterion. A fixture-only positive response cannot close
@@ -313,7 +313,7 @@ They cover confirmation, dismissal, refusal, response loss after commit, local i
 Each case checked wire counts and terminal restoration. The fixture uses a
 synthetic session and scripted storage. Native EG storage, worker interruption,
 production authentication and TLS remain unqualified. The original six migration
-rows remain pending. Keep OpenCode until served parity and cutover acceptance pass.
+rows remain pending. Keep the incumbent coding terminal until served parity and cutover acceptance pass.
 
 ## One-shot tool-task consumer
 
