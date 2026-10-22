@@ -2,6 +2,7 @@
 
 import json
 from types import SimpleNamespace
+from typing import Any
 from unittest.mock import MagicMock
 
 import httpx
@@ -17,7 +18,7 @@ pytestmark = pytest.mark.asyncio
 
 
 def task(number, reply=None):
-    result = {
+    result: dict[str, Any] = {
         "id": f"work-item:{number}",
         "contextId": f"context-{number}",
         "status": {"state": "completed", "timestamp": "2026-10-22T10:00:00Z"},

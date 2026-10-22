@@ -1844,11 +1844,11 @@
         "655161ef1a11"
       ],
       "verified_by": [
-        "tests/test_task_history.py:121",
-        "tests/test_task_history.py:164",
-        "tests/test_task_history.py:212",
-        "tests/test_task_history.py:217",
-        "tests/test_task_history.py:250"
+        "tests/test_task_history.py:100",
+        "tests/test_task_history.py:122",
+        "tests/test_task_history.py:165",
+        "tests/test_task_history.py:213",
+        "tests/test_task_history.py:218"
       ]
     },
     {
