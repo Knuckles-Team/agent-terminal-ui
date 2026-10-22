@@ -931,3 +931,17 @@ The acceptance test parses the example as data and passes
 its values to the production client factory. It rejects missing defaults, remote
 URLs, credentials and executable shell values. This slice changes no runtime
 configuration loader, authentication policy or other source-quality requirement.
+
+## Amendment 2026-10-22: model client boundary regression coverage
+
+TUI-RUNTIME-R012.2 remains open. R012.2.1 replaces the retired in-process model-registry
+and tier-routing tests with coverage of AgentClient.list_configured_models.
+R012.2.2 retains every original governed model-choice acceptance criterion.
+The parent rolls up both children; legacy test coverage cannot close it.
+The legacy GET /models response is registry metadata only; the client must
+preserve it without choosing by tier. After a successful read, a missing or
+denied route, invalid response or network failure must return an empty result
+without stale registry data or alternate requests. These HTTP transport fixtures
+qualify current client behavior, not a served models.list operation, governed
+model admission or successful preference transport. Existing command-refusal
+and A2A model-omission tests remain required.

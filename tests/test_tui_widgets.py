@@ -18,7 +18,10 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import httpx
 import pytest
+
+from agent_terminal_ui.client import AgentClient
 
 # ── Danger Level Tests ──
 
@@ -870,81 +873,89 @@ class TestModelConfiguration:
         assert hasattr(proc, "_model_set")
         assert hasattr(proc, "_model_set_shorthand")
 
-    def test_model_registry_integration(self):
-        """ModelRegistry from agent-utilities should be importable."""
-        pytest.importorskip("agent_utilities")
-        from agent_utilities.models.model_registry import (
-            ModelCostRate,
-            ModelDefinition,
-            ModelRegistry,
+    @pytest.mark.asyncio
+    @pytest.mark.spec("TUI-RUNTIME-R012.2.1")
+    async def test_model_registry_metadata_crosses_client_boundary(self) -> None:
+        """The legacy registry read preserves metadata without tier routing."""
+        payload = {
+            "default_id": "heavy",
+            "models": [
+                {"id": "fast", "tier": "light", "model_id": "example-fast"},
+                {"id": "heavy", "tier": "heavy", "model_id": "example-heavy"},
+            ],
+        }
+        requests: list[httpx.Request] = []
+
+        def respond(request: httpx.Request) -> httpx.Response:
+            requests.append(request)
+            return httpx.Response(200, json=payload)
+
+        client = AgentClient(
+            base_url="http://localhost:9000", bearer_token="test-token"
         )
-
-        # Create a registry with a local model
-        registry = ModelRegistry(
-            models=[
-                ModelDefinition(
-                    id="qwen-local",
-                    name="Qwen 3.5 9B",
-                    provider="openai",
-                    model_id="qwen/qwen3.5-9b",
-                    base_url="http://vllm.arpa/v1",
-                    tier="medium",
-                    tags=["code", "local"],
-                    cost=ModelCostRate(input=0.0, output=0.0),
-                    is_default=True,
-                )
-            ]
+        headers = client._http_client.headers
+        await client._http_client.aclose()
+        client._http_client = httpx.AsyncClient(
+            transport=httpx.MockTransport(respond),
+            headers=headers,
         )
+        try:
+            assert await client.list_configured_models() == payload
+        finally:
+            await client.close()
 
-        # Verify API payload shape matches what TUI client expects
-        payload = registry.to_api_payload()
-        assert "models" in payload
-        assert "default_id" in payload
-        assert payload["default_id"] == "qwen-local"
-        assert len(payload["models"]) == 1
-        assert payload["models"][0]["model_id"] == "qwen/qwen3.5-9b"
-        assert payload["models"][0]["base_url"] == "http://vllm.arpa/v1"
+        assert len(requests) == 1
+        assert requests[0].method == "GET"
+        assert str(requests[0].url) == "http://localhost:9000/models"
+        assert requests[0].content == b""
+        assert requests[0].headers["Authorization"] == "Bearer test-token"
 
-    def test_model_tier_routing(self):
-        """ModelRegistry should route by tier correctly."""
-        pytest.importorskip("agent_utilities")
-        from agent_utilities.models.model_registry import (
-            ModelDefinition,
-            ModelRegistry,
-        )
+    @pytest.mark.asyncio
+    @pytest.mark.spec("TUI-RUNTIME-R012.2.1")
+    @pytest.mark.parametrize(
+        "failure", ["missing", "denied", "invalid-json", "non-object", "timeout"]
+    )
+    async def test_model_registry_failure_does_not_reuse_or_route(
+        self, failure: str
+    ) -> None:
+        """A failed read returns no models, even after a successful read."""
+        requests: list[httpx.Request] = []
+        payload = {"default_id": "fast", "models": [{"id": "fast", "tier": "light"}]}
 
-        registry = ModelRegistry(
-            models=[
-                ModelDefinition(
-                    id="fast",
-                    name="Fast Model",
-                    provider="openai",
-                    model_id="gpt-4o-mini",
-                    tier="light",
-                ),
-                ModelDefinition(
-                    id="heavy",
-                    name="Heavy Model",
-                    provider="anthropic",
-                    model_id="claude-3-5-sonnet",
-                    tier="heavy",
-                    is_default=True,
-                ),
-            ]
-        )
+        def respond(request: httpx.Request) -> httpx.Response:
+            requests.append(request)
+            if len(requests) == 1:
+                return httpx.Response(200, json=payload)
+            if failure == "timeout":
+                raise httpx.ReadTimeout("model registry unavailable", request=request)
+            if failure == "invalid-json":
+                return httpx.Response(200, content=b"not-json")
+            if failure == "non-object":
+                return httpx.Response(200, json=payload["models"])
+            return httpx.Response(404 if failure == "missing" else 403)
 
-        picked = registry.pick_for_task(complexity="light")
-        assert picked.id == "fast"
+        client = AgentClient(base_url="http://localhost:9000")
+        await client._http_client.aclose()
+        client._http_client = httpx.AsyncClient(transport=httpx.MockTransport(respond))
+        try:
+            assert await client.list_configured_models() == payload
+            assert await client.list_configured_models() == {
+                "models": [], "default_id": None
+            }
+        finally:
+            await client.close()
 
-        picked = registry.pick_for_task(complexity="heavy")
-        assert picked.id == "heavy"
+        assert [(request.method, str(request.url)) for request in requests] == [
+            ("GET", "http://localhost:9000/models"),
+            ("GET", "http://localhost:9000/models"),
+        ]
 
     def test_terminal_launch_env_propagation(self):
         """Server should propagate AGENT_URL to subprocess env."""
         # This tests the contract between server/__init__.py and agent-terminal-ui
         # Line 196: env["AGENT_URL"] = f"http://{host}:{port}"
         # Line 200: subprocess.run(["agent-terminal-ui"], env=env)
-        # The client rejects remote cleartext URLs, so the launch contract uses loopback.
+        # The client rejects remote cleartext URLs; launches use loopback.
         host = "localhost"
         port = 9000
         expected_url = f"http://{host}:{port}"
