@@ -1841,7 +1841,8 @@
       "title": "Read caller task history without claiming conversation resume",
       "delivery_state": "VERIFIED",
       "landed_in": [
-        "655161ef1a11"
+        "655161ef1a11",
+        "9dae309b58c9"
       ],
       "verified_by": [
         "tests/test_task_history.py:100",
