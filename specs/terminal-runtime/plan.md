@@ -980,3 +980,10 @@ The configuration regression tests check these two pins, stages and invocation
 flags, including rejection of altered entries. Real pre-commit runs separately
 check clean linked worktrees and refusal cases. This bounded repair does not
 verify every formatter or dependency hook, or close R015.29 or R015.
+
+## Amendment: truthful Python entry-point documentation
+
+Describe existing CLI behavior without changing transport or backend authority.
+R015.30.1 covers Python help and examples. R015.41.1 covers directory overrides.
+R015.42.1 covers theme fallback and unbound log refusal. Keep the remaining
+entry-point, environment inventory and served resume requirements open.

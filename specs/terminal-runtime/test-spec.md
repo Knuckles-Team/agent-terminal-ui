@@ -412,3 +412,10 @@ These local contracts do not close full served recovery, presentation parity or 
 | Requirement | Layer and fixture | Expected positive result | Required negative proof |
 |---|---|---|---|
 | TUI-RUNTIME-R015.29.1 | `tests/test_shared_hook_consumers.py` and actual remote pre-commit installs | Exact pins preserve both stages and invocation flags. A clean linked worktree passes. | Altered configuration fails. Real hooks reject legacy markers, canonical edits and foreign Cargo targets. |
+
+## Python operator documentation
+
+`tests/test_cli_documentation.py` captures actual CLI help and tests dispatch.
+It rejects invalid observer combinations and checks documented directory precedence.
+Existing theme fallback and mounted log refusal tests remain behavior evidence.
+These tests do not prove model selection, history loading or backend authority.
