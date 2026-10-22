@@ -392,6 +392,19 @@ not replace the remaining served parity and performance checks.
 | TUI-RUNTIME-R012.2.1 | `tests/test_tui_widgets.py::TestModelConfiguration::test_model_registry_metadata_crosses_client_boundary` and `test_model_registry_failure_does_not_reuse_or_route`; real AgentClient with HTTP transport fixtures | Registry metadata, including tiers and the default, survives an authenticated GET /models unchanged | After success, missing route, denied route, invalid JSON, non-object response and timeout each return no models, with no stale data or alternate requests |
 | TUI-RUNTIME-R012.2.2 | Planned served fixture through the model picker, /model and the real client; actual models.list operation from ARBORA-A2A-R016.6 | Discover profiles, send arboraModelProfile preference and display the producer-selected profile from task metadata | When Arbora does not honour the preference, display its different selected profile without local model routing. Legacy reads and selection refusal are not evidence for this child |
 
+## Bounded native reply and metadata contracts
+
+- `TUI-RUNTIME-R002.1.3.2.2.2.1`: Task output parser, HTTP and production renderer tests cover bounds, malformed parts, unavailable output and clearing.
+- `TUI-RUNTIME-R008.2.3.2.2.3`: Production viewport tests check wrapped row movement, refresh restoration and boundary clamping.
+- `TUI-RUNTIME-R012.6.1`: Usage parser, HTTP and renderer tests cover binding, malformed counters, zero versus missing, valid reply preservation and clearing.
+- `TUI-RUNTIME-R002.1.3.2.2.2.2`: Submission HTTP and argument tests check queue delay beyond the read deadline, configured bounds, unknown timeout and no resend.
+- `TUI-RUNTIME-R002.1.3.2.2.2.3`: Argument and authenticated HTTP tests check default omission, explicit opt-in, unavailable evidence and refusal without retry.
+
+These local contracts do not close full served recovery, presentation parity or usage.read session cost acceptance.
+
+- `TUI-RUNTIME-R002.1.3.2.2.2.4`: Remaining served stream recovery acceptance. Full served receipts remain required; local unary tests cannot close this row.
+- `TUI-RUNTIME-R008.2.3.2.2.4`: Remaining served presentation qualification. Full served parity and release performance receipts remain required.
+- `TUI-RUNTIME-R012.6.2`: Served turn and session token and cost display. A served fixture renders turn and session totals and unavailable values after operation refusal.
 ## Shared development guard consumer
 
 | Requirement | Layer and fixture | Expected positive result | Required negative proof |

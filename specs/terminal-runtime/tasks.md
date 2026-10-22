@@ -240,3 +240,13 @@ Record deferred validation as deferred, never passed.
 
 - [ ] `TUI-RUNTIME-R008.2.3.2.1`: Deliver native runtime baseline palette switching with focused production-handler and rendering coverage.
 - [ ] `TUI-RUNTIME-R008.2.3.2.2`: Complete remaining served presentation parity and release performance qualification.
+
+- [ ] `TUI-RUNTIME-R002.1.3.2.2.2.1`: Bounded native unary reply display.
+- [ ] `TUI-RUNTIME-R008.2.3.2.2.3`: Native single-row keyboard scrolling.
+- [ ] `TUI-RUNTIME-R012.6.1`: Transient native turn usage receipt.
+- [ ] `TUI-RUNTIME-R002.1.3.2.2.2.2`: Bounded queued unary submission deadline.
+- [ ] `TUI-RUNTIME-R002.1.3.2.2.2.3`: Explicit committed-event read enrichment.
+
+- [ ] `TUI-RUNTIME-R002.1.3.2.2.2.4`: Remaining served stream recovery acceptance. Full served receipts remain required; local unary tests cannot close this row.
+- [ ] `TUI-RUNTIME-R008.2.3.2.2.4`: Remaining served presentation qualification. Full served parity and release performance receipts remain required.
+- [ ] `TUI-RUNTIME-R012.6.2`: Served turn and session token and cost display. A served fixture renders turn and session totals and unavailable values after operation refusal.

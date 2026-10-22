@@ -2,6 +2,7 @@ mod support;
 use agent_terminal_ui_native::{ArboraClient, TaskSubmission, turn_usage::TurnUsage};
 use serde_json::json;
 
+// spec: TUI-RUNTIME-R012.6.1
 #[tokio::test]
 async fn served_receipt_is_bound_and_missing_read_receipt_clears_usage() {
     let submission = TaskSubmission::new("Example").unwrap();
@@ -41,6 +42,7 @@ async fn served_receipt_is_bound_and_missing_read_receipt_clears_usage() {
     server.await.unwrap();
 }
 
+// spec: TUI-RUNTIME-R012.6.1
 #[tokio::test]
 async fn foreign_usage_does_not_hide_valid_reply() {
     let submission = TaskSubmission::new("Example").unwrap();

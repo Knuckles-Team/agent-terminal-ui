@@ -22,6 +22,7 @@ fn accepted(request_id: &str) -> Value {
     })
 }
 
+// spec: TUI-RUNTIME-R002.1.3.2.2.2.2
 #[test]
 fn submission_timeout_requires_bounded_whole_seconds() {
     for seconds in [1, 300, 900] {
@@ -46,6 +47,7 @@ fn submission_timeout_requires_bounded_whole_seconds() {
     }
 }
 
+// spec: TUI-RUNTIME-R002.1.3.2.2.2.2
 #[tokio::test]
 async fn submission_default_accepts_a_reply_after_the_read_timeout() {
     let submission = TaskSubmission::new("Queued local fixture").unwrap();
@@ -64,6 +66,7 @@ async fn submission_default_accepts_a_reply_after_the_read_timeout() {
     server.await.unwrap();
 }
 
+// spec: TUI-RUNTIME-R002.1.3.2.2.2.2
 #[tokio::test]
 async fn submission_timeout_is_unknown_without_resubmission() {
     let submission = TaskSubmission::new("Timeout local fixture").unwrap();
@@ -226,6 +229,7 @@ async fn refusal_redirect_invalid_json_and_oversize_remain_unknown_without_retry
 }
 
 // spec: TUI-RUNTIME-R002.1.3.1
+// spec: TUI-RUNTIME-R002.1.3.2.2.2.2
 #[tokio::test]
 async fn lost_or_interrupted_submission_response_has_no_automatic_resend() {
     let submission = TaskSubmission::new("Read the fixture").unwrap();
