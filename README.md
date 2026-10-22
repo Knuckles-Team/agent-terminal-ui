@@ -305,6 +305,22 @@ Example: If you type "fix the bug in app.py" followed by "and add a test for it"
 
 ### Environment Variables
 
+Start with the credential-free [environment example](.env.example).
+The terminal does not load `.env` files automatically. In a POSIX shell:
+
+```sh
+cp .env.example .env
+set -a
+. ./.env
+set +a
+agent-terminal-ui
+```
+
+Inspect the file before sourcing it. `.env` is ignored by Git.
+The example uses a local Arbora endpoint; it does not start a server.
+For a remote endpoint, use HTTPS and supply the existing caller credential
+through `AGENT_BEARER_TOKEN` outside the tracked example. Never commit credentials.
+
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `AGENT_URL` | `http://localhost:8000` | Arbora base URL for A2A chat and REST operations |

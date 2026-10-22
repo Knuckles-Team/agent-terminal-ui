@@ -30,6 +30,7 @@
 ".bumpversion.cfg" = "Version mirror configuration."
 ".codespellignore" = "Spelling dictionary entries."
 ".dockerignore" = "Container build context exclusions."
+".env.example" = "Credential-free local environment configuration example."
 ".gitattributes" = "Git file attributes."
 ".gitignore" = "Repository exclusion patterns."
 ".mergequeue.yaml" = "Merge queue configuration."

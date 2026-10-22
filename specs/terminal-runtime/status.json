@@ -1576,7 +1576,10 @@
       "title": "The repository must supply a credential-free environment configuration example. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [
+        "tests/test_source_quality.py:28",
+        "tests/test_source_quality.py:45"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.44",
