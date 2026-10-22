@@ -143,6 +143,8 @@ Record deferred validation as deferred, never passed.
 
 - [ ] **TUI-RUNTIME-R012.1:** Render served turn events live; keep the unary path. Depends on `ARBORA-A2A-R001.4`.
 - [ ] **TUI-RUNTIME-R012.2:** List and prefer Arbora model profiles. Depends on `ARBORA-A2A-R016.6`.
+- [x] **TUI-RUNTIME-R012.2.1:** Replace retired registry imports with current legacy client boundary regression coverage.
+- [ ] **TUI-RUNTIME-R012.2.2:** Qualify served profile discovery, preference transport and producer-selected model display. Depends on `ARBORA-A2A-R016.6`.
 - [ ] **TUI-RUNTIME-R012.3:** List, resume and continue caller contexts. Depends on `ARBORA-A2A-R001.3`.
 - [ ] **TUI-RUNTIME-R012.4:** Route every command to a served operation or one unavailable notice.
 - [ ] **TUI-RUNTIME-R012.5:** Send bounded file parts. Depends on `ARBORA-A2A-R001.5`.

@@ -383,3 +383,11 @@ boundaries separately from the palette-handler tests. These focused tests do
 not replace the remaining served parity and performance checks.
 
 - `TUI-RUNTIME-R008.2.3.2.2`: Retain all parent served parity and release performance checks after baseline palette switching.
+
+## Model-choice boundary and served acceptance
+
+| Requirement | Layer and fixture | Expected positive result | Required negative proof |
+|---|---|---|---|
+| TUI-RUNTIME-R012.2 | Rollup of R012.2.1 and R012.2.2 | Both legacy client regression coverage and governed served model choice meet their child criteria | Legacy reads and selection refusal alone cannot close model-choice acceptance |
+| TUI-RUNTIME-R012.2.1 | `tests/test_tui_widgets.py::TestModelConfiguration::test_model_registry_metadata_crosses_client_boundary` and `test_model_registry_failure_does_not_reuse_or_route`; real AgentClient with HTTP transport fixtures | Registry metadata, including tiers and the default, survives an authenticated GET /models unchanged | After success, missing route, denied route, invalid JSON, non-object response and timeout each return no models, with no stale data or alternate requests |
+| TUI-RUNTIME-R012.2.2 | Planned served fixture through the model picker, /model and the real client; actual models.list operation from ARBORA-A2A-R016.6 | Discover profiles, send arboraModelProfile preference and display the producer-selected profile from task metadata | When Arbora does not honour the preference, display its different selected profile without local model routing. Legacy reads and selection refusal are not evidence for this child |

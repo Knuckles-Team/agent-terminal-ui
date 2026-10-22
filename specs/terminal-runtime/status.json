@@ -87,6 +87,8 @@
     "TUI-RUNTIME-R012",
     "TUI-RUNTIME-R012.1",
     "TUI-RUNTIME-R012.2",
+    "TUI-RUNTIME-R012.2.1",
+    "TUI-RUNTIME-R012.2.2",
     "TUI-RUNTIME-R012.3",
     "TUI-RUNTIME-R012.4",
     "TUI-RUNTIME-R012.4.1",
@@ -1104,6 +1106,27 @@
     {
       "id": "TUI-RUNTIME-R012.2",
       "title": "Model choice",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R012.2.1",
+        "TUI-RUNTIME-R012.2.2"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R012.2.1",
+      "title": "Legacy model-read boundary regression coverage",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [
+        "tests/test_tui_widgets.py:877",
+        "tests/test_tui_widgets.py:914"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R012.2.2",
+      "title": "Preserve governed model-choice acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
