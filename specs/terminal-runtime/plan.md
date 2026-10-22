@@ -945,3 +945,18 @@ without stale registry data or alternate requests. These HTTP transport fixtures
 qualify current client behavior, not a served models.list operation, governed
 model admission or successful preference transport. Existing command-refusal
 and A2A model-omission tests remain required.
+
+## Amendment 2026-10-22: shared development hook owners
+
+TUI-RUNTIME-R015.29 owns development hook dependency validation. R015.29.1
+binds only the two shared guard consumers. R015.29.2 retains validation of all
+remaining formatter and dependency hooks. The terminal
+consumes the no-legacy-concepts hook from pipelines and lane-guard from
+repository-manager at exact revisions. Both hooks run for every commit and push,
+without filenames. Neither owner becomes a runtime dependency. The existing
+pipelines main revision for other hooks remains unchanged.
+
+The configuration regression tests check these two pins, stages and invocation
+flags, including rejection of altered entries. Real pre-commit runs separately
+check clean linked worktrees and refusal cases. This bounded repair does not
+verify every formatter or dependency hook, or close R015.29 or R015.
