@@ -1117,8 +1117,10 @@
     {
       "id": "TUI-RUNTIME-R012.2.1",
       "title": "Legacy model-read boundary regression coverage",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "3ea65009beab"
+      ],
       "verified_by": [
         "tests/test_tui_widgets.py:877",
         "tests/test_tui_widgets.py:914"
