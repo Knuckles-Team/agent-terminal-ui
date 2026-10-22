@@ -27,6 +27,14 @@ subcommands:
 | MCP & tools | `/mcp`, `/mcp:reload`, `/tools`, `/skills`, `/resources` |
 | Ops | `/logs`, `/cron`, `/pipeline`, `/maintenance` |
 
+### Read-only task history
+
+`/history` lists caller-owned Arbora tasks. Press Enter to read a selected
+reply, N for the next server page, or Esc to close. Browsing does not change
+the active conversation or submit work. Missing replies show unavailable.
+This view does not yet provide prior user turns, ordered conversation
+summaries or conversation resume.
+
 ### Engine-surface commands (`/graph/*` gateway routes)
 
 These wrap the epistemic-graph engine surfaces exposed over the AU gateway

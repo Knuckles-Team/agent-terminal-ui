@@ -45,7 +45,7 @@ def mock_app():
     app._client = AsyncMock()
     app._client.get_mcp_config = AsyncMock(return_value={})
     app._client.list_mcp_tools = AsyncMock(return_value=[])
-    app._client.list_chats = AsyncMock(return_value=[])
+    app._client.list_history_tasks = AsyncMock(return_value={"tasks": [], "nextCursor": None})
     app._client.list_skills = AsyncMock(return_value=[])
     # Default to an empty model registry so /model list/show render the
     # "no models configured" fallback unless a test populates it.
@@ -229,7 +229,7 @@ class TestHistoryCommand:
         """Test the history command opens history screen."""
         await command_processor.cmd_history("")
 
-        mock_app._client.list_chats.assert_called_once()
+        mock_app._client.list_history_tasks.assert_called_once()
         mock_app.push_screen.assert_called_once()
 
 

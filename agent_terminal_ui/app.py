@@ -701,53 +701,6 @@ class AgentApp(App):
             if main_screen:
                 main_screen.stop_processing()
 
-    # ── Session Management ──
-
-    async def _replay_assistant_content(self, conversation: Any, content: Any) -> None:
-        """Replay one historical assistant message's content (str or parts list)."""
-        if isinstance(content, str):
-            await conversation.add_agent_response(content)
-        elif isinstance(content, list):
-            for item in content:
-                text = item if isinstance(item, str) else item.get("text", "")
-                if text:
-                    await conversation.add_agent_response(text)
-
-    async def _replay_message(self, conversation: Any, msg: dict[str, Any]) -> None:
-        """Replay one historical chat message into the conversation widget."""
-        role = msg.get("role")
-        content = msg.get("content", "")
-        if role == "user":
-            await conversation.add_user_message(content)
-        elif role == "assistant":
-            await self._replay_assistant_content(conversation, content)
-
-    @work(exclusive=True)
-    async def _resume_session(self, chat_id: str | None) -> None:
-        """Fetch and display a past chat session from history.
-
-        Args:
-            chat_id: The unique identifier of the session to resume.
-        """
-        if not chat_id:
-            return
-
-        self._current_session_id = chat_id
-        main_screen = self._get_main_screen()
-        if not main_screen:
-            return
-
-        conversation = main_screen.query_one(
-            "#conversation",
-            lazy_import("agent_terminal_ui.widgets.conversation", "Conversation"),
-        )
-        await conversation.clear_conversation()
-        await conversation.add_info(f"[$primary]Resuming session: {chat_id}[/$primary]")
-
-        chat_data = await self._client.get_chat(chat_id)
-        for msg in chat_data.get("messages", []):
-            await self._replay_message(conversation, msg)
-
     # ── Actions ──
 
     def action_interrupt(self) -> None:

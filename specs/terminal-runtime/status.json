@@ -172,7 +172,9 @@
     "TUI-RUNTIME-R015.68",
     "TUI-RUNTIME-R015.69",
     "TUI-RUNTIME-R015.70",
-    "TUI-RUNTIME-R015.71"
+    "TUI-RUNTIME-R015.71",
+    "TUI-RUNTIME-R012.3.1",
+    "TUI-RUNTIME-R012.3.2"
   ],
   "requirements": [
     {
@@ -913,7 +915,7 @@
         "7d244200bb23"
       ],
       "verified_by": [
-        "tests/test_app_handlers.py:262"
+        "tests/test_app_handlers.py:231"
       ]
     },
     {
@@ -1138,7 +1140,11 @@
       "title": "Conversation list and resume",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R012.3.1",
+        "TUI-RUNTIME-R012.3.2"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R012.4",
@@ -1826,6 +1832,26 @@
     {
       "id": "TUI-RUNTIME-R015.71",
       "title": "A served integration test must launch the installed command and observe client behavior after source-quality repairs. It must distinguish a denied request from an authenticated empty result",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R012.3.1",
+      "title": "Read caller task history without claiming conversation resume",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [
+        "tests/test_task_history.py:121",
+        "tests/test_task_history.py:164",
+        "tests/test_task_history.py:212",
+        "tests/test_task_history.py:217",
+        "tests/test_task_history.py:250"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R012.3.2",
+      "title": "Remaining conversation resume acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []

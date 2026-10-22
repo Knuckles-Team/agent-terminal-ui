@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 
 #: Prefix the gateway mounts the canonical Knowledge-Graph REST table under.
 #: The ``/graph/*`` action twins live there, unlike the server's own
-#: un-prefixed routers (``/models``, ``/chats``, ``/tools``, ``/mcp/*``).
+#: un-prefixed routers (``/models``, ``/tools``, ``/mcp/*``).
 GATEWAY_API_PREFIX = "/api"
 
 #: The Arbora A2A JSON-RPC endpoint and its Agent Card.
@@ -1034,32 +1034,47 @@ class AgentClient:
     async def get_usage_traces(self) -> dict[str, Any]:
         return await self._obs_get("/traces") or {"enabled": False, "traces": []}
 
-    async def get_chat(self, chat_id: str) -> dict[str, Any]:
-        """Fetch full history for a specific chat session.
+    async def list_history_tasks(self, cursor: str | None = None) -> dict[str, Any]:
+        """Read one caller-scoped tasks/list page through POST /a2a."""
+        params: dict[str, Any] = {"limit": 50}
+        if cursor is not None:
+            params["cursor"] = cursor
+        page = await self._rpc("tasks/list", params)
+        tasks = page.get("tasks")
+        continuation = page.get("nextCursor")
+        if not isinstance(tasks, list) or len(tasks) > 50:
+            raise ValueError("Invalid task history page")
+        if continuation is not None and (
+            not isinstance(continuation, str)
+            or not continuation
+            or continuation == cursor
+        ):
+            raise ValueError("Invalid task history cursor")
+        for task in tasks:
+            self._validate_history_task(task)
+        if len({task["id"] for task in tasks}) != len(tasks):
+            raise ValueError("Duplicate task history identity")
+        return page
 
-        Args:
-            chat_id: The unique identifier of the chat.
+    @staticmethod
+    def _validate_history_task(task: Any) -> None:
+        if not isinstance(task, dict) or any(
+            not isinstance(task.get(key), str) or not task[key].strip()
+            for key in ("id", "contextId")
+        ):
+            raise ValueError("Invalid task history identity")
+        if not isinstance(task.get("status"), dict) or not isinstance(
+            task["status"].get("state"), str
+        ):
+            raise ValueError("Invalid task history status")
 
-        Returns:
-            Dictionary containing chat metadata and message history.
-        """
-        try:
-            response = await self._http_client.get(f"{self.base_url}/chats/{chat_id}")
-            response.raise_for_status()
-            return response.json()
-        except Exception as e:
-            logger.error(f"Failed to fetch chat {chat_id}: {e}")
-            return {}
-
-    async def list_chats(self) -> list[dict[str, Any]]:
-        """Fetch the list of available chat sessions.
-
-        Returns:
-            List of chat summary dictionaries.
-        """
-        response = await self._http_client.get(f"{self.base_url}/chats")
-        response.raise_for_status()
-        return response.json()
+    async def get_history_task(self, task_id: str, context_id: str) -> dict[str, Any]:
+        """Read tasks/get through POST /a2a without changing conversations."""
+        task = await self._rpc("tasks/get", {"id": task_id})
+        self._validate_history_task(task)
+        if task["id"] != task_id or task["contextId"] != context_id:
+            raise ValueError("Task history identity changed")
+        return task
 
     async def _read_operation_value(
         self, op: str, params: dict[str, Any]

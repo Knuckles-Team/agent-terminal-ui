@@ -19,7 +19,7 @@ from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Table
 
-from agent_terminal_ui.client import ArboraOperationError
+from agent_terminal_ui.client import A2ATransportError, ArboraOperationError
 from agent_terminal_ui.tui.exit_confirm_screen import ExitConfirmScreen
 
 logger = logging.getLogger(__name__)
@@ -283,13 +283,15 @@ class CommandProcessor:
         opener(str(run_id) if run_id else None)
 
     async def cmd_history(self, args: str) -> None:
-        """Browse and select from historical chat sessions."""
-        chats = await self.app._client.list_chats()
-
-        # Fixed legacy import from agent_tui to agent_terminal_ui
+        """Browse caller-owned task replies without changing conversations."""
         from agent_terminal_ui.tui.history_screen import HistoryScreen
 
-        self.app.push_screen(HistoryScreen(chats), self.app._resume_session)
+        try:
+            page = await self.app._client.list_history_tasks()
+        except (httpx.HTTPError, A2ATransportError, ValueError):
+            self.app.notify("Task history unavailable.", severity="warning")
+            return
+        self.app.push_screen(HistoryScreen(self.app._client, page))
 
     async def cmd_image(self, args: str) -> None:
         """Attach an image file to the next agent prompt.
