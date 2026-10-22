@@ -147,7 +147,9 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R012.2.2:** Qualify served profile discovery, preference transport and producer-selected model display. Depends on `ARBORA-A2A-R016.6`.
 - [ ] **TUI-RUNTIME-R012.3:** List, resume and continue caller contexts. Depends on `ARBORA-A2A-R001.3`.
 - [ ] **TUI-RUNTIME-R012.4:** Route every command to a served operation or one unavailable notice.
-- [ ] **TUI-RUNTIME-R012.5:** Send bounded file parts. Depends on `ARBORA-A2A-R001.5`.
+- [ ] **TUI-RUNTIME-R012.5:** Complete unsupported refusal and served file-part admission.
+- [ ] **TUI-RUNTIME-R012.5.1:** Refuse unsupported image inputs without silent payload loss; qualify the command-to-submission boundary.
+- [ ] **TUI-RUNTIME-R012.5.2:** Send bounded file parts. Depends on `ARBORA-A2A-R001.5`.
 - [ ] **TUI-RUNTIME-R012.6:** Read usage through `usage.read`.
 
 - [ ] **TUI-RUNTIME-R010.4.1:** Wire the Python current-plan command and expiring read-only view.

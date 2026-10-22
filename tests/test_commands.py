@@ -234,62 +234,29 @@ class TestHistoryCommand:
 
 
 class TestImageCommand:
-    """Test the /image command."""
+    """Unsupported image input never claims a successful attachment."""
 
     @pytest.mark.asyncio
-    async def test_cmd_image_success(self, command_processor, mock_app):
-        """Test successful image attachment."""
-        # Create a temporary test image file
-        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
-            temp_path = f.name
-            f.write(b"fake image data")
+    @pytest.mark.spec("TUI-RUNTIME-R012.5.1")
+    @pytest.mark.parametrize("path", ["", "/missing.png", '"image.png"', "malformed.jpg"])
+    async def test_cmd_image_refuses_without_reading(
+        self, command_processor, mock_app, monkeypatch, path
+    ):
+        pending = [{"type": "text", "text": "existing attachment"}]
+        mock_app._pending_parts = pending.copy()
+        reader = MagicMock(side_effect=AssertionError("must not read unsupported input"))
+        monkeypatch.setattr(Path, "read_bytes", reader)
 
-        try:
-            await command_processor.cmd_image(temp_path)
+        assert await command_processor.process(f"/image {path}")
 
-            mock_app.notify.assert_called()
-            assert "Attached image" in mock_app.notify.call_args[0][0]
-            assert hasattr(mock_app, "_pending_parts")
-        finally:
-            Path(temp_path).unlink()
-
-    @pytest.mark.asyncio
-    async def test_cmd_image_not_found(self, command_processor, mock_app):
-        """Test image command with non-existent file."""
-        await command_processor.cmd_image("/nonexistent/image.png")
-
-        mock_app.notify.assert_called()
-        assert "not found" in mock_app.notify.call_args[0][0]
-        assert mock_app.notify.call_args[1]["severity"] == "error"
-
-    @pytest.mark.asyncio
-    async def test_cmd_image_jpeg(self, command_processor, mock_app):
-        """Test image command with JPEG file."""
-        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as f:
-            temp_path = f.name
-            f.write(b"fake jpeg data")
-
-        try:
-            await command_processor.cmd_image(temp_path)
-
-            mock_app.notify.assert_called()
-            assert hasattr(mock_app, "_pending_parts")
-        finally:
-            Path(temp_path).unlink()
-
-    @pytest.mark.asyncio
-    async def test_cmd_image_with_quotes(self, command_processor, mock_app):
-        """Test image command with quoted path."""
-        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
-            temp_path = f.name
-            f.write(b"fake image data")
-
-        try:
-            await command_processor.cmd_image(f'"{temp_path}"')
-
-            mock_app.notify.assert_called()
-        finally:
-            Path(temp_path).unlink()
+        mock_app.notify.assert_called_once_with(
+            "Images are not supported by the current Arbora transport.",
+            severity="warning",
+        )
+        assert mock_app._pending_parts == pending
+        reader.assert_not_called()
+        mock_app.query_one.assert_not_called()
+        mock_app.on_input_text_area_submitted.assert_not_awaited()
 
 
 class TestModeCommands:

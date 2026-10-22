@@ -257,16 +257,65 @@ async def test_error_frame_mid_stream_ends_the_turn_with_an_error():
 
 
 @pytest.mark.asyncio
-async def test_non_text_parts_are_refused_before_any_request():
+@pytest.mark.spec("TUI-RUNTIME-R012.5.1")
+@pytest.mark.parametrize("part", [
+    {"type": "image", "url": "u"},
+    {"image": "encoded", "media_type": "image/png"},
+    {"type": "text", "text": "caption", "image": "encoded"},
+    {"file": {"bytes": "encoded"}},
+    {"kind": "file", "file": {"uri": "https://example.test/a.png"}},
+    {"type": "text", "text": 42},
+    {},
+    None,
+])
+async def test_non_text_parts_are_refused_before_any_request(part):
     client, recorder = _client(lambda request: httpx.Response(500))
 
     events = [
         event
-        async for event in client.stream("x", parts=[{"type": "image", "url": "u"}])
+        async for event in client.stream("x", parts=[part])
     ]
 
     assert events[-1]["type"] == "error"
     assert recorder.requests == []
+    await client.close()
+
+
+@pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R012.5.1")
+async def test_image_command_refusal_preserves_next_text_submission(monkeypatch):
+    from unittest.mock import MagicMock
+
+    from agent_terminal_ui.app import AgentApp
+    from agent_terminal_ui.commands import CommandProcessor
+
+    task = _task("completed")
+    client, recorder = _client(
+        lambda request: httpx.Response(200, content=_sse(_result(task)))
+    )
+    app = AgentApp(client=client)
+    notice = MagicMock()
+    monkeypatch.setattr(app, "notify", notice)
+    app._pending_parts = [{"text": "existing text attachment"}]
+    reader = MagicMock(side_effect=AssertionError("must not read an image"))
+    monkeypatch.setattr(Path, "read_bytes", reader)
+
+    assert await CommandProcessor(app).process('/image "image.png"')
+
+    assert recorder.requests == []
+    reader.assert_not_called()
+    notice.assert_called_once_with(
+        "Images are not supported by the current Arbora transport.", severity="warning"
+    )
+    assert app._pending_parts == [{"text": "existing text attachment"}]
+    parts = app._collect_pending_parts("next prompt")
+    events = [event async for event in client.stream("next prompt", parts=parts)]
+    assert not any(event["type"] == "error" for event in events)
+    sent = json.loads(recorder.requests[0].content)
+    sent_parts = sent["params"]["message"]["parts"]
+    assert {"kind": "text", "text": "existing text attachment"} in sent_parts
+    assert {"kind": "text", "text": "next prompt"} in sent_parts
+    assert all(part["kind"] == "text" for part in sent_parts)
     await client.close()
 
 
