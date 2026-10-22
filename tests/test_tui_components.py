@@ -422,12 +422,11 @@ async def test_send_decision_keeps_pending_plan_when_cancel_fails():
 
 
 @pytest.mark.asyncio
-async def test_get_metadata_and_get_chat_error_paths():
+async def test_get_metadata_error_path():
     c = AgentClient()
     with patch.object(c._http_client, "get", new_callable=AsyncMock) as mock_get:
         mock_get.side_effect = httpx.ConnectError("network")
         assert await c.get_metadata() == {}
-        assert await c.get_chat("cid") == {}
     await c.close()
 
 
@@ -522,7 +521,6 @@ def mock_app():
     app.query_one.return_value = event_log
     app._client = AsyncMock()
     app._client.list_skills = AsyncMock(return_value=[])
-    app._client.get_chat = AsyncMock(return_value={"messages": []})
     app._agent_mode = "ask"
     app.notify = MagicMock()
     app.push_screen = MagicMock()

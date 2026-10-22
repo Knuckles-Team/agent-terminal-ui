@@ -2,7 +2,7 @@
 
 Drives the high-level ``AgentApp`` through ``run_test`` to exercise
 ``on_input_text_area_submitted``, queue interaction,
-``_resume_session``, ``_show_tool_approval_modal``, and
+``_show_tool_approval_modal``, and
 ``_handle_tool_approval_result`` branches that are not reachable via the
 simpler handlers already covered in ``test_tui_components.py``.
 """
@@ -93,37 +93,6 @@ async def test_submitted_normal_processing(agent_app):
         await agent_app.on_input_text_area_submitted(event)
         agent_app._run_agent_turn.assert_called_once()
         assert agent_app._is_processing is True
-
-
-@pytest.mark.asyncio
-async def test_resume_session_text_and_list_content(agent_app):
-    async with agent_app.run_test() as pilot:
-        await pilot.pause()
-        # Mock the client's get_chat
-        agent_app._client.get_chat = AsyncMock(
-            return_value={
-                "messages": [
-                    {"role": "user", "content": "hi"},
-                    {"role": "assistant", "content": "hello!"},
-                    {
-                        "role": "assistant",
-                        "content": ["nested string", {"text": "item text"}],
-                    },
-                ]
-            }
-        )
-        # Call the worker coroutine directly (bypassing @work decorator)
-        coro = agent_app._resume_session.__wrapped__(agent_app, "session-1")
-        await coro
-        assert agent_app._current_session_id == "session-1"
-
-
-@pytest.mark.asyncio
-async def test_resume_session_no_chat_id(agent_app):
-    async with agent_app.run_test() as pilot:
-        await pilot.pause()
-        coro = agent_app._resume_session.__wrapped__(agent_app, None)
-        await coro  # returns early without error
 
 
 @pytest.mark.asyncio

@@ -1,101 +1,136 @@
-#!/usr/bin/python
-"""Session history browser screen.
-
-Provides a modal interface for viewing past conversation summaries and
-selecting a session to resume in the terminal UI.
-"""
+"""Read-only browser for caller-owned A2A tasks and their served replies."""
 
 from typing import Any
 
+import httpx
+from rich.text import Text
+from textual import work
 from textual.app import ComposeResult
-from textual.containers import Vertical
+from textual.containers import Vertical, VerticalScroll
 from textual.screen import ModalScreen
-from textual.widgets import DataTable, Label
+from textual.widgets import DataTable, Label, Static
+
+from agent_terminal_ui.client import A2ATransportError, AgentClient
 
 
-class HistoryScreen(ModalScreen[str | None]):
-    """Modal screen for browsing chat history and selecting a session.
+def task_reply(task: dict[str, Any]) -> str:
+    """Render text artifacts only; absence is not an empty conversation."""
+    artifacts = task.get("artifacts")
+    if not isinstance(artifacts, list):
+        return "Reply unavailable."
+    texts: list[str] = []
+    for artifact in artifacts:
+        if not isinstance(artifact, dict) or not isinstance(
+            artifact.get("parts"), list
+        ):
+            return "Reply unavailable."
+        for part in artifact["parts"]:
+            if not isinstance(part, dict):
+                return "Reply unavailable."
+            if part.get("kind") == "text":
+                if not isinstance(part.get("text"), str):
+                    return "Reply unavailable."
+                texts.append(part["text"])
+    return "\n".join(texts) if any(texts) else "Reply unavailable."
 
-    Displays a searchable table of past chat sessions with timestamps,
-    unique identifiers, and message snippets.
+
+class HistoryScreen(ModalScreen[None]):
+    """Browse one task page at a time without resuming or submitting a turn."""
+
+    BINDINGS = [("escape", "close", "Close"), ("n", "next_page", "Next page")]
+    DEFAULT_CSS = """
+    HistoryScreen { align: center middle; }
+    #history-dialog { width: 90%; height: 90%; border: thick $primary; padding: 1; }
+    #history-table { height: 40%; }
+    #history-reply-scroll { height: 1fr; }
     """
 
-    DEFAULT_CSS: str = """
-    HistoryScreen {
-        align: center middle;
-    }
-
-    #history-dialog {
-        width: 90%;
-        height: 80%;
-        background: $surface;
-        border: thick $primary;
-        padding: 1;
-    }
-
-    #history-title {
-        text-align: center;
-        text-style: bold;
-        margin-bottom: 1;
-    }
-    """
-
-    def __init__(self, chats: list[dict[str, Any]]) -> None:
-        """Initialize the history screen with session data.
-
-        Args:
-            chats: A list of message history metadata dictionaries from the server.
-
-        """
+    def __init__(self, client: AgentClient, page: dict[str, Any]) -> None:
         super().__init__()
-        self.chats: list[dict[str, Any]] = chats
+        self.client = client
+        self.page = page
+        self._seen_cursors: set[str] = set()
+        self._reading = False
 
     def compose(self) -> ComposeResult:
-        """Construct the history dialog layout.
-
-        Returns:
-            A Textual ComposeResult containing title, table, and instructions.
-
-        """
         with Vertical(id="history-dialog"):
-            yield Label("[bold]Session History[/bold]", id="history-title")
+            yield Label("Task history (read-only)")
+            yield Label("Task replies only. Prior user turns and resume unavailable.")
             yield DataTable(id="history-table")
             yield Label(
-                "Press [bold]Enter[/bold] to select, [bold]Esc[/bold] to cancel"
+                "Enter: read reply | N: next page | Esc: close", id="history-page"
             )
+            with VerticalScroll(id="history-reply-scroll"):
+                yield Static(
+                    "Select a task to read its reply.", id="history-reply", markup=False
+                )
 
     def on_mount(self) -> None:
-        """Populate the history table when the screen is mounted."""
         table = self.query_one(DataTable)
-        table.add_columns("Date", "ID", "Snippet")
+        table.add_columns("Updated", "Task", "Context", "State")
         table.cursor_type = "row"
+        self._render_page()
 
-        for chat in self.chats:
+    def _render_page(self) -> None:
+        table = self.query_one(DataTable)
+        table.clear()
+        for task in self.page["tasks"]:
             table.add_row(
-                chat.get("timestamp", "N/A"),
-                chat.get("id", "N/A"),
-                chat.get("firstMessage", "N/A")[:80],
+                Text(str(task["status"].get("timestamp") or "Unavailable")),
+                Text(task["id"]),
+                Text(task["contextId"]),
+                Text(task["status"]["state"]),
             )
+        self.query_one("#history-page", Label).update(
+            "Enter: read reply | N: next page | Esc: close"
+            if self.page.get("nextCursor")
+            else "Enter: read reply | End of task list | Esc: close"
+        )
+        self.query_one("#history-reply", Static).update(
+            "Select a task to read its reply."
+            if self.page["tasks"]
+            else "No tasks on this page."
+        )
 
-    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Handle selection of a chat session row.
+    @work(group="task-history")
+    async def action_next_page(self) -> None:
+        cursor = self.page.get("nextCursor")
+        if self._reading or cursor is None:
+            return
+        if cursor in self._seen_cursors:
+            self.notify("Task history pagination unavailable.", severity="warning")
+            return
+        self._reading = True
+        self.query_one("#history-reply", Static).update("")
+        try:
+            page = await self.client.list_history_tasks(cursor)
+            if page.get("nextCursor") in self._seen_cursors:
+                raise ValueError("Task history cursor repeated")
+            self._seen_cursors.add(cursor)
+            self.page = page
+            self._render_page()
+        except (httpx.HTTPError, A2ATransportError, ValueError):
+            self.query_one("#history-reply", Static).update("Task history unavailable.")
+        finally:
+            self._reading = False
 
-        Dismisses the modal and returns the selected chat identifier.
+    @work(group="task-history")
+    async def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        if self._reading or not 0 <= event.cursor_row < len(self.page["tasks"]):
+            return
+        selected = self.page["tasks"][event.cursor_row]
+        self._reading = True
+        reply = self.query_one("#history-reply", Static)
+        reply.update("Reading task reply...")
+        try:
+            task = await self.client.get_history_task(
+                selected["id"], selected["contextId"]
+            )
+            reply.update(task_reply(task))
+        except (httpx.HTTPError, A2ATransportError, ValueError):
+            reply.update("Task reply unavailable.")
+        finally:
+            self._reading = False
 
-        Args:
-            event: The Textual row selection event.
-
-        """
-        row_index = event.cursor_row
-        chat_id = self.chats[row_index].get("id")
-        self.dismiss(chat_id)
-
-    def on_key(self, event: Any) -> None:
-        """Handle key events to allow cancellation via the Escape key.
-
-        Args:
-            event: The Textual key event.
-
-        """
-        if event.key == "escape":
-            self.dismiss(None)
+    def action_close(self) -> None:
+        self.dismiss(None)

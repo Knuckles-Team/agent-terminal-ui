@@ -244,3 +244,14 @@ Record deferred validation as deferred, never passed.
 - [ ] TUI-RUNTIME-R015.30.1: qualify truthful Python help and operator examples.
 - [ ] TUI-RUNTIME-R015.41.1: qualify configuration and data directory documentation.
 - [ ] TUI-RUNTIME-R015.42.1: qualify theme and unbound log documentation.
+- [x] **TUI-RUNTIME-R012.3.1:** Browse caller-owned tasks and read replies without claiming conversation resume.
+- [ ] **TUI-RUNTIME-R012.3.2:** Qualify complete served context history and model-aware continuation after restart.
+- [ ] `TUI-RUNTIME-R002.1.3.2.2.2.1`: Bounded native unary reply display.
+- [ ] `TUI-RUNTIME-R008.2.3.2.2.3`: Native single-row keyboard scrolling.
+- [ ] `TUI-RUNTIME-R012.6.1`: Transient native turn usage receipt.
+- [ ] `TUI-RUNTIME-R002.1.3.2.2.2.2`: Bounded queued unary submission deadline.
+- [ ] `TUI-RUNTIME-R002.1.3.2.2.2.3`: Explicit committed-event read enrichment.
+
+- [ ] `TUI-RUNTIME-R002.1.3.2.2.2.4`: Remaining served stream recovery acceptance. Full served receipts remain required; local unary tests cannot close this row.
+- [ ] `TUI-RUNTIME-R008.2.3.2.2.4`: Remaining served presentation qualification. Full served parity and release performance receipts remain required.
+- [ ] `TUI-RUNTIME-R012.6.2`: Served turn and session token and cost display. A served fixture renders turn and session totals and unavailable values after operation refusal.

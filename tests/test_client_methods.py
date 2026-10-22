@@ -1,7 +1,6 @@
 """Tests for AgentClient backend-query methods.
 
-Covers the thin HTTP wrappers around the agent server: legacy ``/chats`` and
-``/mcp/*`` endpoints plus the ``/api/enhanced/*`` knowledge-graph, KB, memory,
+Covers the thin HTTP wrappers around the agent server: legacy ``/mcp/*`` endpoints plus the ``/api/enhanced/*`` knowledge-graph, KB, memory,
 and SDD endpoints used by the terminal-UI feature-parity commands.
 """
 
@@ -33,32 +32,6 @@ def _mock_response(payload: object, status_code: int = 200) -> MagicMock:
             )
         )
     return response
-
-
-@pytest.mark.asyncio
-async def test_list_chats_returns_list(client: AgentClient) -> None:
-    """``list_chats`` should GET ``/chats`` and return the decoded JSON list."""
-    payload = [
-        {"id": "chat-1", "title": "Session one"},
-        {"id": "chat-2", "title": "Session two"},
-    ]
-    with patch.object(client._http_client, "get", new_callable=AsyncMock) as mock_get:
-        mock_get.return_value = _mock_response(payload)
-
-        result = await client.list_chats()
-
-        mock_get.assert_awaited_once_with("http://localhost:8000/chats")
-        assert result == payload
-
-
-@pytest.mark.asyncio
-async def test_list_chats_raises_on_error(client: AgentClient) -> None:
-    """Non-2xx responses from ``/chats`` should propagate as ``HTTPStatusError``."""
-    with patch.object(client._http_client, "get", new_callable=AsyncMock) as mock_get:
-        mock_get.return_value = _mock_response({"detail": "boom"}, status_code=500)
-
-        with pytest.raises(httpx.HTTPStatusError):
-            await client.list_chats()
 
 
 # ---------------------------------------------------------------------------

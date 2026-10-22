@@ -33,11 +33,11 @@ def _config() -> dict:
 
 @pytest.mark.parametrize("hook_id", OWNERS)
 def test_shared_hook_owner_configuration(hook_id: str) -> None:
-    """Pin the canonical owners without changing other pipelines policy."""
+    """Pin the canonical owners with a reproducible canonical spec generator."""
     config = _config()
     _assert_owner(config, hook_id)
     policy = next(repo for repo in config["repos"] if any(hook["id"] == "spec" for hook in repo["hooks"]))
-    assert policy["rev"] == "main"
+    assert policy["rev"] == "a2dd609d494364daf26fdb3b18abbffa10095993"
 
 
 @pytest.mark.parametrize("hook_id", OWNERS)

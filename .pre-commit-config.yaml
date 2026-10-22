@@ -71,7 +71,7 @@ repos:
   - id: nbqa-ruff
     args: ["--fix"]
 - repo: https://github.com/Knuckles-Team/pipelines
-  rev: main
+  rev: a2dd609d494364daf26fdb3b18abbffa10095993
   hooks:
   - id: spec
     stages: [pre-commit, pre-push, manual]

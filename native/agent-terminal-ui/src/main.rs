@@ -669,6 +669,7 @@ mod tests {
         })
     }
 
+    // spec: TUI-RUNTIME-R012.6.1
     #[test]
     fn turn_usage_renders_missing_values_and_clears_after_read_refusal() {
         let ReadStatus::Task(mut snapshot) =
@@ -721,6 +722,7 @@ mod tests {
         assert!(text.contains("read refused"));
     }
 
+    // spec: TUI-RUNTIME-R002.1.3.2.2.2.1
     #[test]
     fn completed_reply_renders_literally_and_failed_read_clears_it() {
         let ReadStatus::Task(mut snapshot) =
@@ -1369,6 +1371,7 @@ mod terminal_point_view_tests {
 #[cfg(test)]
 mod request_settings_tests {
     use super::*;
+    // spec: TUI-RUNTIME-R002.1.3.2.2.2.2
     #[test]
     fn queue_timeout_is_bounded_and_does_not_accept_ambiguous_values() {
         assert_eq!(
@@ -1396,6 +1399,7 @@ mod request_settings_tests {
             assert!(submission_timeout(Ok(value.into())).is_err());
         }
     }
+    // spec: TUI-RUNTIME-R002.1.3.2.2.2.3
     #[test]
     fn committed_events_require_explicit_true() {
         assert!(!committed_event_reads(Err(env::VarError::NotPresent)).unwrap());
