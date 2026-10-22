@@ -1,6 +1,38 @@
 //! Native presentation tokens from the existing Textual built-in themes.
 
+use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use ratatui::style::{Color, Style};
+
+const THEMES: [&str; 4] = ["tokyo-night", "nord", "gruvbox", "textual-light"];
+
+pub struct ThemeSelection {
+    index: usize,
+    no_color: bool,
+}
+
+impl ThemeSelection {
+    pub fn new(theme: &str, no_color: &str) -> Self {
+        Self {
+            index: THEMES.iter().position(|name| *name == theme).unwrap_or(0),
+            no_color: !no_color.is_empty(),
+        }
+    }
+
+    pub fn style(&self) -> Style {
+        presentation_style(THEMES[self.index], if self.no_color { "1" } else { "" })
+    }
+
+    pub fn key(&mut self, key: KeyEvent) -> bool {
+        if key.code != KeyCode::F(6)
+            || key.kind != KeyEventKind::Press
+            || key.modifiers != KeyModifiers::NONE
+        {
+            return false;
+        }
+        self.index = (self.index + 1) % THEMES.len();
+        true
+    }
+}
 
 pub fn presentation_style(theme: &str, no_color: &str) -> Style {
     if !no_color.is_empty() {
@@ -298,5 +330,105 @@ mod viewport_tests {
             viewport.handle(KeyCode::PageDown);
             viewport.handle(KeyCode::PageUp);
         }
+    }
+}
+
+#[cfg(test)]
+mod theme_switch_tests {
+    use super::*;
+    use crate::{
+        draw_confirmation, draw_viewport, host_log_view::HostLogView, inspector_view::InspectorView,
+    };
+    use ratatui::{Terminal, backend::TestBackend};
+    use std::time::Instant;
+
+    fn switch(themes: &mut ThemeSelection) {
+        assert!(themes.key(KeyEvent::new(KeyCode::F(6), KeyModifiers::NONE)));
+    }
+
+    // spec: TUI-RUNTIME-R008.2.3.2.1
+    #[test]
+    fn runtime_switch_renders_each_palette_in_all_views() {
+        let mut themes = ThemeSelection::new("unknown", "");
+        let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
+        let mut inspector = InspectorView::default();
+        let mut logs = HostLogView::default();
+        let mut viewport = Viewport::default();
+        for theme in THEMES.into_iter().chain([THEMES[0]]) {
+            let expected = presentation_style(theme, "");
+            assert_eq!(themes.style(), expected);
+            for view in 0..4 {
+                terminal
+                    .draw(|frame| match view {
+                        0 => draw_viewport(
+                            frame,
+                            "Task: working",
+                            themes.style(),
+                            &mut viewport,
+                            false,
+                        ),
+                        1 => inspector.draw(frame, themes.style(), Instant::now()),
+                        2 => logs.draw(frame, themes.style()),
+                        _ => {
+                            draw_confirmation(frame, "Task: working", themes.style());
+                        }
+                    })
+                    .unwrap();
+                let cell = &terminal.backend().buffer()[(1, 1)];
+                assert_eq!(cell.fg, expected.fg.unwrap());
+                assert_eq!(cell.bg, expected.bg.unwrap());
+            }
+            switch(&mut themes);
+        }
+    }
+
+    // spec: TUI-RUNTIME-R008.2.3.2.1
+    #[test]
+    fn runtime_switch_preserves_scroll_and_no_color() {
+        let status = (0..100).map(|n| format!("row {n}\n")).collect::<String>();
+        let mut terminal = Terminal::new(TestBackend::new(40, 10)).unwrap();
+        for no_color in ["", "1", "0", "false"] {
+            let mut themes = ThemeSelection::new("gruvbox", no_color);
+            let mut viewport = Viewport::default();
+            terminal
+                .draw(|frame| draw_viewport(frame, &status, themes.style(), &mut viewport, false))
+                .unwrap();
+            viewport.handle(KeyCode::PageDown);
+            let offset = viewport.offset();
+            for _ in 0..5 {
+                switch(&mut themes);
+                terminal
+                    .draw(|frame| {
+                        draw_viewport(frame, &status, themes.style(), &mut viewport, false)
+                    })
+                    .unwrap();
+                assert_eq!(viewport.offset(), offset);
+                let cell = &terminal.backend().buffer()[(1, 1)];
+                assert_eq!(cell.symbol(), "r");
+                if !no_color.is_empty() {
+                    assert_eq!((cell.fg, cell.bg), (Color::Reset, Color::Reset));
+                }
+            }
+        }
+    }
+
+    // spec: TUI-RUNTIME-R008.2.3.2.1
+    #[test]
+    fn only_unmodified_f6_presses_switch_the_theme() {
+        let mut themes = ThemeSelection::new("nord", "");
+        for key in [
+            KeyEvent::new_with_kind(KeyCode::F(6), KeyModifiers::NONE, KeyEventKind::Repeat),
+            KeyEvent::new_with_kind(KeyCode::F(6), KeyModifiers::NONE, KeyEventKind::Release),
+            KeyEvent::new(KeyCode::F(6), KeyModifiers::CONTROL),
+            KeyEvent::new(KeyCode::F(6), KeyModifiers::ALT),
+            KeyEvent::new(KeyCode::F(6), KeyModifiers::SHIFT),
+            KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE),
+            KeyEvent::new(KeyCode::Char('y'), KeyModifiers::NONE),
+        ] {
+            assert!(!themes.key(key));
+            assert_eq!(themes.style(), presentation_style("nord", ""));
+        }
+        switch(&mut themes);
+        assert_eq!(themes.style(), presentation_style("gruvbox", ""));
     }
 }

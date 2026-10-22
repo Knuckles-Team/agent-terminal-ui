@@ -902,6 +902,23 @@ credential. Denial stops the read without downgrade or alternate retrieval. Omit
 evidence stays unavailable; ordinary permitted artifacts can still display. This
 changes no grant or scope and does not claim terminal-event authority when absent.
 
+### 2026-10-22: Native runtime baseline palette switching
+
+R008.2.3.2.1 owns a bounded runtime-switching increment. An unmodified F6
+press cycles Tokyo Night, Nord, Gruvbox and Textual Light in that order. Unknown
+startup names begin at Tokyo Night. The action applies to task, inspector, log
+and cancellation views, including during pending reads. It changes only the
+presentation palette. It retains viewport positions, task bindings and request
+ownership, makes no transport calls and never confirms or dismisses a dialog.
+Release, repeat and modified F6 events do not switch themes. Nonempty NO_COLOR
+continues to select reset foreground and background after switching.
+
+Palette-handler and Ratatui rendering tests cover palette order, wraparound,
+ignored events, task scroll retention and monochrome output. Global dispatch
+and its lack of request or task-state mutations are checked by code review.
+Full theme tokens, selection, cross-client served parity and release performance
+remain open under R008.2.3.2.2. No broader acceptance is claimed by this increment.
+
 ## Amendment 2026-10-22: credential-free environment example
 
 TUI-RUNTIME-R015.43 adds a tracked `.env.example` for local onboarding.

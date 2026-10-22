@@ -233,3 +233,6 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R015.69:** The terminal must resolve all 43 actionable source findings. Source obligation: `CHECKLIST non-FR checkbox 58`.
 - [ ] **TUI-RUNTIME-R015.70:** Source-quality repairs must preserve the installed command path through `agent_terminal_ui/terminal_ui.py:10`.
 - [ ] **TUI-RUNTIME-R015.71:** A served integration test must start the installed command and observe client behavior after source-quality repairs. It must distinguish a denied request from an authenticated empty result.
+
+- [ ] `TUI-RUNTIME-R008.2.3.2.1`: Deliver native runtime baseline palette switching with focused production-handler and rendering coverage.
+- [ ] `TUI-RUNTIME-R008.2.3.2.2`: Complete remaining served presentation parity and release performance qualification.
