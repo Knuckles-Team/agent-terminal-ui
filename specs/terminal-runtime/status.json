@@ -134,6 +134,8 @@
     "TUI-RUNTIME-R015.29.1",
     "TUI-RUNTIME-R015.29.2",
     "TUI-RUNTIME-R015.30",
+    "TUI-RUNTIME-R015.30.1",
+    "TUI-RUNTIME-R015.30.2",
     "TUI-RUNTIME-R015.31",
     "TUI-RUNTIME-R015.32",
     "TUI-RUNTIME-R015.33",
@@ -145,7 +147,11 @@
     "TUI-RUNTIME-R015.39",
     "TUI-RUNTIME-R015.40",
     "TUI-RUNTIME-R015.41",
+    "TUI-RUNTIME-R015.41.1",
+    "TUI-RUNTIME-R015.41.2",
     "TUI-RUNTIME-R015.42",
+    "TUI-RUNTIME-R015.42.1",
+    "TUI-RUNTIME-R015.42.2",
     "TUI-RUNTIME-R015.43",
     "TUI-RUNTIME-R015.44",
     "TUI-RUNTIME-R015.45",
@@ -1561,6 +1567,28 @@
       "title": "The terminal CLI must supply help text for its supported arguments. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R015.30.1",
+        "TUI-RUNTIME-R015.30.2"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R015.30.1",
+      "title": "Python CLI help and operator examples describe the current arguments without promising model selection or prior-turn loading",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "2f6d1188fb53"
+      ],
+      "verified_by": [
+        "tests/test_cli_documentation.py:3"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R015.30.2",
+      "title": "Retain help acceptance for other terminal entry points and future supported arguments",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
       "verified_by": []
     },
     {
@@ -1638,11 +1666,55 @@
       "title": "The documentation must cover every supported terminal environment variable. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R015.41.1",
+        "TUI-RUNTIME-R015.41.2"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R015.41.1",
+      "title": "Document the Python configuration and data directory overrides, including their fallback order",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "2f6d1188fb53"
+      ],
+      "verified_by": [
+        "tests/test_cli_documentation.py:4"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R015.41.2",
+      "title": "Retain a complete inventory of other terminal environment inputs and dynamic setting overrides",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.42",
       "title": "The documentation must define AGENT_LOG_FILE and AGENT_THEME behavior. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R015.42.1",
+        "TUI-RUNTIME-R015.42.2"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R015.42.1",
+      "title": "Operator documentation explains startup theme fallback and refusal of unbound AGENT_LOG_FILE paths",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "2f6d1188fb53"
+      ],
+      "verified_by": [
+        "tests/test_cli_documentation.py:5"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R015.42.2",
+      "title": "Retain theme and log documentation acceptance for native and installed entry points",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
