@@ -945,6 +945,18 @@ qualify current client behavior, not a served models.list operation, governed
 model admission or successful preference transport. Existing command-refusal
 and A2A model-omission tests remain required.
 
+## Amendment 2026-10-22: bounded caller task history
+
+R012.3.1 replaces retired `/chats` reads with paginated A2A task reads.
+The selected task is read again before its reply is displayed. Its identity
+must match the selected row. Pagination preserves server order and opaque
+cursors; the client does not infer the newest context. The view is read-only.
+No conversation selection, persisted transcript or model-memory claim is made.
+R012.3 still requires the producer to expose ordered context summaries and
+prior user turns, and load prior turns when continuing a context.
+
+R012.3 rolls up the bounded read-only child R012.3.1 and the remaining
+full conversation acceptance R012.3.2. Both are required for parent completion.
 ## Native reply and metadata ownership
 
 - `TUI-RUNTIME-R002.1.3.2.2.2.1` owns bounded native unary reply display.

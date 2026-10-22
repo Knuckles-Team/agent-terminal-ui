@@ -15,7 +15,6 @@ import pytest
 from textual.app import App, ComposeResult
 from textual.widgets import DataTable
 
-from agent_terminal_ui.tui.history_screen import HistoryScreen
 from agent_terminal_ui.tui.input_text_area import (
     CommandSuggestionsOverlay,
     FileSuggestionsOverlay,
@@ -306,45 +305,6 @@ async def test_input_text_area_close_overlays_directly():
 # ---------------------------------------------------------------------------
 # History / MCP / Tool approval screens - invoke actions
 # ---------------------------------------------------------------------------
-
-
-@pytest.mark.asyncio
-async def test_history_screen_row_selected_and_escape():
-    chats = [
-        {"id": "c1", "timestamp": "2024-01-01", "firstMessage": "hello" * 20},
-        {"id": "c2", "timestamp": "2024-01-02", "firstMessage": "short"},
-    ]
-    picked: list[str | None] = []
-
-    class _Host(App):
-        def on_mount(self) -> None:
-            self.push_screen(HistoryScreen(chats), picked.append)
-
-    app = _Host()
-    async with app.run_test() as pilot:
-        await pilot.pause()
-        screen = app.screen
-        screen.query_one(DataTable)
-        # Row 0 is implicit, simulate row selection event
-        screen.on_data_table_row_selected(SimpleNamespace(cursor_row=0))
-        await pilot.pause()
-    assert picked == ["c1"]
-
-
-@pytest.mark.asyncio
-async def test_history_screen_escape_returns_none():
-    picked: list[str | None] = []
-
-    class _Host(App):
-        def on_mount(self) -> None:
-            self.push_screen(HistoryScreen([]), picked.append)
-
-    app = _Host()
-    async with app.run_test() as pilot:
-        await pilot.pause()
-        await pilot.press("escape")
-        await pilot.pause()
-    assert picked == [None]
 
 
 @pytest.mark.asyncio

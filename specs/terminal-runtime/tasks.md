@@ -241,6 +241,8 @@ Record deferred validation as deferred, never passed.
 - [ ] `TUI-RUNTIME-R008.2.3.2.1`: Deliver native runtime baseline palette switching with focused production-handler and rendering coverage.
 - [ ] `TUI-RUNTIME-R008.2.3.2.2`: Complete remaining served presentation parity and release performance qualification.
 
+- [x] **TUI-RUNTIME-R012.3.1:** Browse caller-owned tasks and read replies without claiming conversation resume.
+- [ ] **TUI-RUNTIME-R012.3.2:** Qualify complete served context history and model-aware continuation after restart.
 - [ ] `TUI-RUNTIME-R002.1.3.2.2.2.1`: Bounded native unary reply display.
 - [ ] `TUI-RUNTIME-R008.2.3.2.2.3`: Native single-row keyboard scrolling.
 - [ ] `TUI-RUNTIME-R012.6.1`: Transient native turn usage receipt.
