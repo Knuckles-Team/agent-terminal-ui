@@ -1855,8 +1855,10 @@
     {
       "id": "TUI-RUNTIME-R002.1.3.2.2.2.1",
       "title": "Bounded native unary reply display",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "90fadd31b95d"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/main.rs:725",
         "native/agent-terminal-ui/src/task_output.rs:125",
@@ -1868,8 +1870,10 @@
     {
       "id": "TUI-RUNTIME-R008.2.3.2.2.3",
       "title": "Native single-row keyboard scrolling",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "90fadd31b95d"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/presentation.rs:172",
         "native/agent-terminal-ui/src/presentation.rs:213"
@@ -1878,8 +1882,10 @@
     {
       "id": "TUI-RUNTIME-R012.6.1",
       "title": "Transient native turn usage receipt",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "90fadd31b95d"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/main.rs:672",
         "native/agent-terminal-ui/src/turn_usage.rs:101",
@@ -1891,8 +1897,10 @@
     {
       "id": "TUI-RUNTIME-R002.1.3.2.2.2.2",
       "title": "Bounded queued unary submission deadline",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "90fadd31b95d"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/main.rs:1374",
         "native/agent-terminal-ui/tests/submission.rs:232",
@@ -1904,8 +1912,10 @@
     {
       "id": "TUI-RUNTIME-R002.1.3.2.2.2.3",
       "title": "Explicit committed-event read enrichment",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "90fadd31b95d"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/main.rs:1402",
         "native/agent-terminal-ui/tests/task_snapshot.rs:156",
