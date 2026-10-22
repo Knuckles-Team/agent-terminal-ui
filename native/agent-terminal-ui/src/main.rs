@@ -16,7 +16,9 @@ mod inspector_view;
 use host_log_view::HostLogView;
 mod presentation;
 use inspector_view::InspectorView;
-use presentation::{Viewport, presentation_style};
+#[cfg(test)]
+use presentation::presentation_style;
+use presentation::{ThemeSelection, Viewport};
 
 #[cfg(test)]
 fn draw(frame: &mut Frame, status: &str, style: Style) {
@@ -36,7 +38,7 @@ fn draw_viewport(
         "x: cancel remote task"
     };
     let text = format!(
-        "{status}\n\nTask streaming and approvals remain unavailable.\n\nl: host logs | i: run inspector | r: refresh read | {cancel_help} | c: cancel local request | q / Ctrl+C: quit"
+        "{status}\n\nTask streaming and approvals remain unavailable.\n\nF6: theme | l: host logs | i: run inspector | r: refresh read | {cancel_help} | c: cancel local request | q / Ctrl+C: quit"
     );
     let block = Block::bordered()
         .title("Arbora")
@@ -333,7 +335,7 @@ async fn run(
 ) -> Result<(), &'static str> {
     let theme = env::var("AGENT_THEME").unwrap_or_else(|_| "tokyo-night".to_owned());
     let no_color = env::var("NO_COLOR").unwrap_or_default();
-    let style = presentation_style(&theme, &no_color);
+    let mut themes = ThemeSelection::new(&theme, &no_color);
     let mut submitting = submission.is_some();
     let loading = if submitting {
         "Submitting Arbora task..."
@@ -370,6 +372,7 @@ async fn run(
     redraw.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
     let result = async {
         loop {
+            let style = themes.style();
             let mut confirmation_visible = false;
             terminal.draw(|frame| {
                 if cancellation == Cancellation::Confirming {
@@ -417,6 +420,7 @@ async fn run(
                 event = events.next() => {
                     let Some(Ok(event)) = event else { return Err("Terminal input unavailable"); };
                     if let Event::Key(key) = event {
+                        if themes.key(key) { continue; }
                         if key.kind != KeyEventKind::Press { continue; }
                         if key.code == KeyCode::Char('q') || (key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL)) {
                             return Ok(());

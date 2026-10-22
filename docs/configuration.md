@@ -155,3 +155,8 @@ Textual's presence rule, including an empty value. Native mode currently uses
 nonempty `NO_COLOR` to select terminal foreground/background colors. Labels and
 keyboard help remain necessary; color alone must not convey task state. Full
 cross-client theme and performance parity remains pending.
+
+The native terminal cycles its four baseline palettes with F6: Tokyo Night,
+Nord, Gruvbox and Textual Light. Switching works in the task, inspector, log
+and cancellation views without restarting or changing requests. Nonempty
+`NO_COLOR` keeps terminal foreground and background colors after switching.

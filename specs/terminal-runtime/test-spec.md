@@ -371,3 +371,15 @@ Permitted fallback preserves message identity and the idempotency key.
 | `TUI-RUNTIME-R015.69` | Planned `tests/test_source_quality.py::test_source_quality_69` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.70` | Planned `tests/test_source_quality.py::test_source_quality_entry_wiring` must enter the installed command against an authorized served fixture. |
 | `TUI-RUNTIME-R015.71` | Planned `tests/test_source_quality.py::test_source_quality_served_entry` must enter the installed command against an authorized served fixture. |
+
+### Native runtime palette switching (R008.2.3.2.1)
+
+Pass unmodified F6 press events to the production palette handler and render
+all four views with its style. Check palette order and wraparound, unknown-name
+fallback, nonempty NO_COLOR, and unchanged scroll position. Repeated, released,
+modified and unrelated keys must not change the palette. Switching must not
+change pending reads, task state or modal confirmation; verify these dispatch
+boundaries separately from the palette-handler tests. These focused tests do
+not replace the remaining served parity and performance checks.
+
+- `TUI-RUNTIME-R008.2.3.2.2`: Retain all parent served parity and release performance checks after baseline palette switching.
