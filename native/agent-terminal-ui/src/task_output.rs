@@ -74,6 +74,7 @@ mod tests {
     use super::*;
     use serde_json::json;
 
+    // spec: TUI-RUNTIME-R002.1.3.2.2.2.1
     #[test]
     fn completed_parts_preserve_order_unicode_and_literal_text() {
         let task = json!({"artifacts":[
@@ -88,6 +89,7 @@ mod tests {
         );
     }
 
+    // spec: TUI-RUNTIME-R002.1.3.2.2.2.1
     #[test]
     fn unavailable_and_empty_are_distinct_and_noncompleted_text_is_not_a_reply() {
         for task in [
@@ -120,6 +122,7 @@ mod tests {
         }
     }
 
+    // spec: TUI-RUNTIME-R002.1.3.2.2.2.1
     #[test]
     fn malformed_or_oversized_output_is_refused_without_a_partial_reply() {
         for artifacts in [

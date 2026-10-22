@@ -18,6 +18,7 @@ fn completed(request_id: &str) -> Value {
     })
 }
 
+// spec: TUI-RUNTIME-R002.1.3.2.2.2.1
 #[tokio::test]
 async fn authenticated_submission_and_task_read_keep_the_returned_reply() {
     let submission = TaskSubmission::new("Read the example").unwrap();
@@ -56,6 +57,7 @@ async fn authenticated_submission_and_task_read_keep_the_returned_reply() {
     );
 }
 
+// spec: TUI-RUNTIME-R002.1.3.2.2.2.1
 #[tokio::test]
 async fn foreign_or_invalid_artifacts_cannot_be_returned_for_display() {
     for (path, value) in [

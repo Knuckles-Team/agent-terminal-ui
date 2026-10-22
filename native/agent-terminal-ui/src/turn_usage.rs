@@ -98,6 +98,7 @@ mod tests {
         (task, binding)
     }
 
+    // spec: TUI-RUNTIME-R012.6.1
     #[test]
     fn zero_missing_and_maximum_counts_remain_distinct() {
         let (task, binding) = fixture();
@@ -121,6 +122,7 @@ mod tests {
         }
     }
 
+    // spec: TUI-RUNTIME-R012.6.1
     #[test]
     fn missing_usage_and_empty_counts_never_fabricate_zero() {
         let (mut task, binding) = fixture();
@@ -140,6 +142,7 @@ mod tests {
         assert!(TurnUsage::Unavailable.text().contains("Cost: unavailable"));
     }
 
+    // spec: TUI-RUNTIME-R012.6.1
     #[test]
     fn foreign_or_missing_bindings_refuse_the_whole_usage() {
         for path in [
@@ -174,6 +177,7 @@ mod tests {
         );
     }
 
+    // spec: TUI-RUNTIME-R012.6.1
     #[test]
     fn malformed_counts_refuse_without_partial_values() {
         for invalid in [
