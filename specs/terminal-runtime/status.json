@@ -1542,7 +1542,8 @@
       "title": "The two shared development guards must use their canonical pinned owners and preserve commit and push invocation",
       "delivery_state": "VERIFIED",
       "landed_in": [
-        "0057d3c6b734"
+        "0057d3c6b734",
+        "c8ffb758deb2"
       ],
       "verified_by": [
         "tests/test_shared_hook_consumers.py:9"
