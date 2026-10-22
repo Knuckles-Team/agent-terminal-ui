@@ -131,6 +131,8 @@
     "TUI-RUNTIME-R015.27",
     "TUI-RUNTIME-R015.28",
     "TUI-RUNTIME-R015.29",
+    "TUI-RUNTIME-R015.29.1",
+    "TUI-RUNTIME-R015.29.2",
     "TUI-RUNTIME-R015.30",
     "TUI-RUNTIME-R015.31",
     "TUI-RUNTIME-R015.32",
@@ -1527,6 +1529,28 @@
     {
       "id": "TUI-RUNTIME-R015.29",
       "title": "The repository must validate its pinned formatter and dependency hook versions. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R015.29.1",
+        "TUI-RUNTIME-R015.29.2"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R015.29.1",
+      "title": "The two shared development guards must use their canonical pinned owners and preserve commit and push invocation",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "0057d3c6b734"
+      ],
+      "verified_by": [
+        "tests/test_shared_hook_consumers.py:9"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R015.29.2",
+      "title": "The repository must validate all remaining pinned formatter and dependency hook versions",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
