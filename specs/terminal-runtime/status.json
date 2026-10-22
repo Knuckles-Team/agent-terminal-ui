@@ -928,8 +928,10 @@
     {
       "id": "TUI-RUNTIME-R008.2.3.2.1",
       "title": "Native runtime baseline palette switching",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "bd2d1aa85173"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/presentation.rs:349",
         "native/agent-terminal-ui/src/presentation.rs:385",
