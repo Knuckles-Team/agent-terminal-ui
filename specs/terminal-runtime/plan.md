@@ -901,3 +901,16 @@ AGENT_INCLUDE_COMMITTED_EVENT=true requests that data under the existing caller
 credential. Denial stops the read without downgrade or alternate retrieval. Omitted
 evidence stays unavailable; ordinary permitted artifacts can still display. This
 changes no grant or scope and does not claim terminal-event authority when absent.
+
+## Amendment 2026-10-22: credential-free environment example
+
+TUI-RUNTIME-R015.43 adds a tracked `.env.example` for local onboarding.
+It contains only the loopback URL and supported startup theme defaults.
+The terminal does not load dotenv files; the documentation gives explicit shell
+export steps. Credentials stay outside this tracked example. Remote connections
+still require HTTPS and the caller's existing bearer credential.
+
+The acceptance test parses the example as data and passes
+its values to the production client factory. It rejects missing defaults, remote
+URLs, credentials and executable shell values. This slice changes no runtime
+configuration loader, authentication policy or other source-quality requirement.
