@@ -193,6 +193,8 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R015.27:** Significant terminal functions must identify their owning contracts. Source obligation: `T027`.
 - [ ] **TUI-RUNTIME-R015.28:** The terminal source must pass the configured lint checks. Source obligation: `T028`.
 - [ ] **TUI-RUNTIME-R015.29:** The repository must validate its pinned formatter and dependency hook versions. Source obligation: `T029`.
+- [ ] **TUI-RUNTIME-R015.29.1:** Pin the canonical shared development guards, preserve both stages and verify clean acceptance plus real refusal.
+- [ ] **TUI-RUNTIME-R015.29.2:** Validate all remaining formatter and dependency hook versions; retain the broader R015.29 acceptance obligation.
 - [ ] **TUI-RUNTIME-R015.30:** The terminal CLI must provide help text for its supported arguments. Source obligation: `T030`.
 - [ ] **TUI-RUNTIME-R015.31:** The version configuration must cover every authoritative version mirror. Source obligation: `T031`.
 - [ ] **TUI-RUNTIME-R015.32:** The preserved JSON analysis must remain historical evidence, separate from authoritative version mirrors. Source obligation: `T032`.
