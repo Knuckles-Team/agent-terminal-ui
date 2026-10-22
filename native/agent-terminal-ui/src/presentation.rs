@@ -169,6 +169,7 @@ mod viewport_tests {
             .collect()
     }
 
+    // spec: TUI-RUNTIME-R008.2.3.2.2.3
     #[test]
     fn arrows_scroll_one_wrapped_row_and_restore_it_after_refresh() {
         let status = "界界界界界界\ne\u{301}e\u{301}\nabcdefghijklmnop";
@@ -209,6 +210,7 @@ mod viewport_tests {
         assert_eq!(terminal.backend().buffer()[(9, 1)].symbol(), "界");
     }
 
+    // spec: TUI-RUNTIME-R008.2.3.2.2.3
     #[test]
     fn arrows_clamp_at_both_ends_and_in_empty_viewports() {
         let mut viewport = Viewport::default();

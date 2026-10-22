@@ -56,6 +56,7 @@ fn snapshot() -> Value {
 }
 
 // spec: TUI-RUNTIME-R002.1.2
+// spec: TUI-RUNTIME-R002.1.3.2.2.2.3
 #[tokio::test]
 async fn reads_task_snapshot_over_authenticated_json_rpc() {
     for include_run in [true, false] {
@@ -152,6 +153,7 @@ async fn rejects_malformed_mismatched_and_error_envelopes() {
 }
 
 // spec: TUI-RUNTIME-R002.1.2
+// spec: TUI-RUNTIME-R002.1.3.2.2.2.3
 #[tokio::test]
 async fn rejects_http_failure_redirect_unknown_task_and_invalid_json() {
     for status in [
@@ -191,6 +193,7 @@ async fn bounds_snapshot_response_size() {
 }
 
 // spec: TUI-RUNTIME-R002.1.3.2.2.3
+// spec: TUI-RUNTIME-R002.1.3.2.2.2.3
 #[tokio::test]
 async fn point_read_preserves_identity_and_rejects_retained_binding_mismatch() {
     let mut response = snapshot();
@@ -229,6 +232,7 @@ async fn point_read_preserves_identity_and_rejects_retained_binding_mismatch() {
 }
 
 // spec: TUI-RUNTIME-R002.1.3.2.2.3
+// spec: TUI-RUNTIME-R002.1.3.2.2.2.3
 #[tokio::test]
 async fn point_read_omission_and_refusal_remain_unavailable_over_http() {
     for reason in [None, Some("legacy_unbound"), Some("producer_unavailable")] {

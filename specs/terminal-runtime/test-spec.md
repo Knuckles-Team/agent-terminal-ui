@@ -394,3 +394,21 @@ not replace the remaining served parity and performance checks.
 
 - `TUI-RUNTIME-R012.3.1`: `tests/test_task_history.py` covers bounded task pages, two contexts, fresh-client reply reads, refusal, missing replies and read-only mounted browsing.
 - `TUI-RUNTIME-R012.3.2`: Retain the parent served two-context, prior-turn, restart, continuation and foreign-context acceptance.
+## Bounded native reply and metadata contracts
+
+- `TUI-RUNTIME-R002.1.3.2.2.2.1`: Task output parser, HTTP and production renderer tests cover bounds, malformed parts, unavailable output and clearing.
+- `TUI-RUNTIME-R008.2.3.2.2.3`: Production viewport tests check wrapped row movement, refresh restoration and boundary clamping.
+- `TUI-RUNTIME-R012.6.1`: Usage parser, HTTP and renderer tests cover binding, malformed counters, zero versus missing, valid reply preservation and clearing.
+- `TUI-RUNTIME-R002.1.3.2.2.2.2`: Submission HTTP and argument tests check queue delay beyond the read deadline, configured bounds, unknown timeout and no resend.
+- `TUI-RUNTIME-R002.1.3.2.2.2.3`: Argument and authenticated HTTP tests check default omission, explicit opt-in, unavailable evidence and refusal without retry.
+
+These local contracts do not close full served recovery, presentation parity or usage.read session cost acceptance.
+
+- `TUI-RUNTIME-R002.1.3.2.2.2.4`: Remaining served stream recovery acceptance. Full served receipts remain required; local unary tests cannot close this row.
+- `TUI-RUNTIME-R008.2.3.2.2.4`: Remaining served presentation qualification. Full served parity and release performance receipts remain required.
+- `TUI-RUNTIME-R012.6.2`: Served turn and session token and cost display. A served fixture renders turn and session totals and unavailable values after operation refusal.
+## Shared development guard consumer
+
+| Requirement | Layer and fixture | Expected positive result | Required negative proof |
+|---|---|---|---|
+| TUI-RUNTIME-R015.29.1 | `tests/test_shared_hook_consumers.py` and actual remote pre-commit installs | Exact pins preserve both stages and invocation flags. A clean linked worktree passes. | Altered configuration fails. Real hooks reject legacy markers, canonical edits and foreign Cargo targets. |

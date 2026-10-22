@@ -795,8 +795,7 @@ This feedback repair does not complete R012.2 or qualify served model choice.
 ## Source quality contract
 
 TUI-RUNTIME-R015 preserves unresolved source-quality obligations in this owning specification.
-Each child retains its source mapping in [source history](../../plans/spec-source-history/README.md).
-The byte-preserved records include original unchecked items and historical completion claims.
+Git retains prior spec sources and historical completion claims.
 Those claims supply no current acceptance evidence.
 Each repair must name its production or tooling call path before implementation.
 Each repair must bind a positive test and a counterexample to its child identifier.
@@ -958,3 +957,26 @@ prior user turns, and load prior turns when continuing a context.
 
 R012.3 rolls up the bounded read-only child R012.3.1 and the remaining
 full conversation acceptance R012.3.2. Both are required for parent completion.
+## Native reply and metadata ownership
+
+- `TUI-RUNTIME-R002.1.3.2.2.2.1` owns bounded native unary reply display.
+- `TUI-RUNTIME-R008.2.3.2.2.3` owns native single-row keyboard scrolling.
+- `TUI-RUNTIME-R012.6.1` owns transient native turn usage receipt.
+- `TUI-RUNTIME-R002.1.3.2.2.2.2` owns bounded queued unary submission deadline.
+- `TUI-RUNTIME-R002.1.3.2.2.2.3` owns explicit committed-event read enrichment.
+
+These bounded contracts leave every broader parent acceptance criterion in force.
+## Amendment 2026-10-22: shared development hook owners
+
+TUI-RUNTIME-R015.29 owns development hook dependency validation. R015.29.1
+binds only the two shared guard consumers. R015.29.2 retains validation of all
+remaining formatter and dependency hooks. The terminal
+consumes the no-legacy-concepts hook from pipelines and lane-guard from
+repository-manager at exact revisions. Both hooks run for every commit and push,
+without filenames. Neither owner becomes a runtime dependency. The canonical spec generator uses an exact current revision. This avoids stale
+mutable-reference caches while preserving every existing hook and stage.
+
+The configuration regression tests check these two pins, stages and invocation
+flags, including rejection of altered entries. Real pre-commit runs separately
+check clean linked worktrees and refusal cases. This bounded repair does not
+verify every formatter or dependency hook, or close R015.29 or R015.

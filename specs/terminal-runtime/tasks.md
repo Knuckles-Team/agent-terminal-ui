@@ -193,6 +193,8 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R015.27:** Significant terminal functions must identify their owning contracts. Source obligation: `T027`.
 - [ ] **TUI-RUNTIME-R015.28:** The terminal source must pass the configured lint checks. Source obligation: `T028`.
 - [ ] **TUI-RUNTIME-R015.29:** The repository must validate its pinned formatter and dependency hook versions. Source obligation: `T029`.
+- [ ] **TUI-RUNTIME-R015.29.1:** Pin the canonical shared development guards, preserve both stages and verify clean acceptance plus real refusal.
+- [ ] **TUI-RUNTIME-R015.29.2:** Validate all remaining formatter and dependency hook versions; retain the broader R015.29 acceptance obligation.
 - [ ] **TUI-RUNTIME-R015.30:** The terminal CLI must provide help text for its supported arguments. Source obligation: `T030`.
 - [ ] **TUI-RUNTIME-R015.31:** The version configuration must cover every authoritative version mirror. Source obligation: `T031`.
 - [ ] **TUI-RUNTIME-R015.32:** The preserved JSON analysis must remain historical evidence, separate from authoritative version mirrors. Source obligation: `T032`.
@@ -241,3 +243,12 @@ Record deferred validation as deferred, never passed.
 
 - [x] **TUI-RUNTIME-R012.3.1:** Browse caller-owned tasks and read replies without claiming conversation resume.
 - [ ] **TUI-RUNTIME-R012.3.2:** Qualify complete served context history and model-aware continuation after restart.
+- [ ] `TUI-RUNTIME-R002.1.3.2.2.2.1`: Bounded native unary reply display.
+- [ ] `TUI-RUNTIME-R008.2.3.2.2.3`: Native single-row keyboard scrolling.
+- [ ] `TUI-RUNTIME-R012.6.1`: Transient native turn usage receipt.
+- [ ] `TUI-RUNTIME-R002.1.3.2.2.2.2`: Bounded queued unary submission deadline.
+- [ ] `TUI-RUNTIME-R002.1.3.2.2.2.3`: Explicit committed-event read enrichment.
+
+- [ ] `TUI-RUNTIME-R002.1.3.2.2.2.4`: Remaining served stream recovery acceptance. Full served receipts remain required; local unary tests cannot close this row.
+- [ ] `TUI-RUNTIME-R008.2.3.2.2.4`: Remaining served presentation qualification. Full served parity and release performance receipts remain required.
+- [ ] `TUI-RUNTIME-R012.6.2`: Served turn and session token and cost display. A served fixture renders turn and session totals and unavailable values after operation refusal.
