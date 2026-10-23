@@ -466,9 +466,68 @@ reduced motion, served journeys and release performance. The parent stays open.
 
 | TUI-RUNTIME-R012.4.3.2 | Retained complete acceptance | Planned full command-matrix served fixture covers every command family with zero unserved-route requests. | Remains open until full proof passes |
 
-### Native held-key navigation
 
-TUI-RUNTIME-R008.2.3.2.2.2.2.1 binds the production event filter to viewport
-movement tests. Repeated action keys, modified navigation and release events
-must be rejected; ordinary presses remain accepted. These local tests do not
-prove live backend acceptance or the retained full presentation qualification.
+## TUI-RUNTIME-R012.3.1: Refresh task history
+
+Mounted command tests press R to refresh the first server page. Fresh task
+states replace old rows, prior replies clear, and pagination can reuse the
+new page cursor. Denied and malformed refreshes clear old content; R retries.
+Empty pages remain distinct from failed reads. Repeated R presses during a
+pending read issue no extra request. All calls use tasks/list or tasks/get,
+without changing the active context or resuming a conversation.
+
+Branch evidence: five mounted refresh cases fail at base 9da41811 and pass
+with the shortcut. The history-refresh, task-history and registered-command
+suites pass 113 tests with two workers. All-files pre-commit passes. Canonical
+status records local commit evidence; independent review and merge remain
+pending. This does not close R012.3 conversation resume or live producer proof.
+
+Close-during-refresh regression: a controlled HTTP transport suppresses
+cancellation after Esc, then returns a page or denial. Both paths must leave
+the closed screen's page and reply unchanged, without WorkerFailed or widget
+lookups. The mounted flag alone is insufficient during Textual teardown.
+
+Review correction evidence: both late-completion cases fail at 42f3875 with
+WorkerFailed. They pass with the cancellation guard before page assignment or
+widget updates. The same three focused suites now pass 115 tests with two
+workers. All-files pre-commit passes. Independent re-review remains pending.
+## TUI-RUNTIME-R012.4.2: Usage refresh ordering
+
+A mounted UsageScreen with the real AgentClient and controlled HTTP transport
+must reject late replies from cancelled reads. A newer denial, empty totals,
+unknown totals or measured zero must remain visible after an older success or
+error completes. Unknown values must not become zero. This client fixture does
+not qualify live usage producers or close R012.6.
+
+Local branch validation: all eight race cases fail at base 9da41811 and pass
+with the worker guard. The focused usage, registered-command, current-plan and
+public-run keyboard suites pass 122 tests with two workers. All-files pre-commit
+passes. Generated commit evidence is local until independent review and merge;
+R012.6 and full served command acceptance remain open.
+## TUI-RUNTIME-R012.4.3.3: Unsupported command entry points
+
+`tests/test_unavailable_session_commands.py` mounts the production AgentApp.
+Enter submits /bg, /attach and /fast, including argument variants. Alt+O follows
+the same refusal path as /fast. Require one unavailable warning, no session
+manager access, unchanged identity and queue, no fast-mode flag and no model
+turn. Existing focus and exact-command regressions must remain green.
+This is client fixture evidence, not served scheduling or resume acceptance.
+
+Command inventory at base `9da41811fe661c3920834cbf1313de51a5aeab09`:
+
+- Client controls: help, clear, exit/quit, theme, queue variants, focus,
+  keybindings and export. Focus and exact-command keyboard proofs exist.
+- Served reads and invocation: model, history, fleet, mcp/tools, usage aliases,
+  op/confirm, capability aliases and run aliases. Full mounted command coverage
+  remains open, including inspector entry and refresh against served producers.
+- Explicit refusal: image, skills, prompts, kb, cron, pipeline, mcp:reload;
+  this slice adds truthful bg, attach and fast paths.
+- Retained audit: plan/chat/build, init/review/test/search, compact/diff/recap,
+  memory, agents, goal variants, simplify/add-dir, graph/ask/nl/obs/broker/kvcache,
+  ingest, sdd, impact/codemap/resources, maintenance/config/logs. Existing handler
+  tests do not establish full served acceptance for these families.
+
+Branch validation for R012.4.3.3 passed 179 focused tests and the all-files
+pre-commit gate. The canonical status tool records local commit evidence as
+VERIFIED. This branch receipt is not default-branch delivery or live backend
+acceptance; the task remains pending independent review and merge.
