@@ -100,6 +100,8 @@
     "TUI-RUNTIME-R012.4.2",
     "TUI-RUNTIME-R004.2",
     "TUI-RUNTIME-R012.4.3",
+    "TUI-RUNTIME-R012.4.3.1",
+    "TUI-RUNTIME-R012.4.3.2",
     "TUI-RUNTIME-R010.4.2",
     "TUI-RUNTIME-R002.1.6",
     "TUI-RUNTIME-R002.1.7",
@@ -1304,6 +1306,28 @@
     {
       "id": "TUI-RUNTIME-R012.4.3",
       "title": "Complete served command matrix",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R012.4.3.1",
+        "TUI-RUNTIME-R012.4.3.2"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R012.4.3.1",
+      "title": "Dispatcher signatures and mounted usage aliases",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "b00d64992b30"
+      ],
+      "verified_by": [
+        "tests/test_registered_command_contract.py:18"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R012.4.3.2",
+      "title": "Retain complete served command acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []

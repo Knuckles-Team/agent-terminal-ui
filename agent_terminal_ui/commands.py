@@ -923,7 +923,7 @@ class CommandProcessor:
             return
         self.app.notify(f"Session exported to {path}", severity="information")
 
-    async def cmd_focus(self) -> None:
+    async def cmd_focus(self, args: str = "") -> None:
         """Toggle focus view (fullscreen mode)."""
         self.app.action_toggle_sidebar()
 
