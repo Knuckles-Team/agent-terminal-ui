@@ -492,6 +492,10 @@ async def test_unchanged_working_poll_still_invalidates_foreign_binding(monkeypa
     assert received[-1]["type"] == "error"
     assert received[-1]["public_run_invalid"] == binding()
     assert rpc.await_count == 2
+    admitted = rpc.await_args_list[0]
+    assert admitted.args[0] == "message/send"
+    assert admitted.args[1]["configuration"] == {"blocking": False}
+    assert rpc.await_args_list[1].args == ("tasks/get", {"id": "task-1"})
     await client._http_client.aclose()
 
 
