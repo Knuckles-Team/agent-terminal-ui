@@ -208,7 +208,8 @@
     "TUI-RUNTIME-R008.2.3.2.2.2.2.1",
     "TUI-RUNTIME-R008.2.3.2.2.2.2.2",
     "TUI-RUNTIME-R008.2.3.2.2.2.2.2.1",
-    "TUI-RUNTIME-R008.2.3.2.2.2.2.2.2"
+    "TUI-RUNTIME-R008.2.3.2.2.2.2.2.2",
+    "TUI-RUNTIME-R012.3.1.1"
   ],
   "requirements": [
     {
@@ -2047,17 +2048,21 @@
       "title": "Read caller task history without claiming conversation resume",
       "delivery_state": "VERIFIED",
       "landed_in": [
+        "2423325a6ff1",
         "452ee3eae931",
         "655161ef1a11",
         "9dae309b58c9",
         "c3cdc6c39e94"
       ],
       "verified_by": [
+        "tests/test_history_navigation.py:13",
         "tests/test_history_refresh.py:16",
         "tests/test_task_history.py:100",
         "tests/test_task_history.py:122",
-        "tests/test_task_history.py:165",
-        "tests/test_task_history.py:213"
+        "tests/test_task_history.py:165"
+      ],
+      "rollup_of": [
+        "TUI-RUNTIME-R012.3.1.1"
       ]
     },
     {
@@ -2321,6 +2326,17 @@
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R012.3.1.1",
+      "title": "Return to previous task pages",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "2423325a6ff1"
+      ],
+      "verified_by": [
+        "tests/test_history_navigation.py:13"
+      ]
     }
   ]
 }
