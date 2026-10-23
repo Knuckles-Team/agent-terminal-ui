@@ -2180,7 +2180,8 @@
       "title": "Collapsed public details in both terminals",
       "delivery_state": "VERIFIED",
       "landed_in": [
-        "49404376c22b"
+        "49404376c22b",
+        "4f460e776734"
       ],
       "verified_by": [
         "native/agent-terminal-ui/src/inspector_view.rs:233",
