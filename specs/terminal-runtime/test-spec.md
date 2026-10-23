@@ -465,3 +465,12 @@ R008.2.3.2.2.2.2 retains complete tokens, selection, keyboard parity, no-color,
 reduced motion, served journeys and release performance. The parent stays open.
 
 | TUI-RUNTIME-R012.4.3.2 | Retained complete acceptance | Planned full command-matrix served fixture covers every command family with zero unserved-route requests. | Remains open until full proof passes |
+
+## TUI-RUNTIME-R012.3.1: Refresh task history
+
+Mounted command tests press R to refresh the first server page. Fresh task
+states replace old rows, prior replies clear, and pagination can reuse the
+new page cursor. Denied and malformed refreshes clear old content; R retries.
+Empty pages remain distinct from failed reads. Repeated R presses during a
+pending read issue no extra request. All calls use tasks/list or tasks/get,
+without changing the active context or resuming a conversation.

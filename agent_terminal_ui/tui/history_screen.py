@@ -37,7 +37,11 @@ def task_reply(task: dict[str, Any]) -> str:
 class HistoryScreen(ModalScreen[None]):
     """Browse one task page at a time without resuming or submitting a turn."""
 
-    BINDINGS = [("escape", "close", "Close"), ("n", "next_page", "Next page")]
+    BINDINGS = [
+        ("escape", "close", "Close"),
+        ("n", "next_page", "Next page"),
+        ("r", "refresh_history", "Refresh"),
+    ]
     DEFAULT_CSS = """
     HistoryScreen { align: center middle; }
     #history-dialog { width: 90%; height: 90%; border: thick $primary; padding: 1; }
@@ -58,7 +62,8 @@ class HistoryScreen(ModalScreen[None]):
             yield Label("Task replies only. Prior user turns and resume unavailable.")
             yield DataTable(id="history-table")
             yield Label(
-                "Enter: read reply | N: next page | Esc: close", id="history-page"
+                "Enter: read reply | N: next page | R: refresh | Esc: close",
+                id="history-page",
             )
             with VerticalScroll(id="history-reply-scroll"):
                 yield Static(
@@ -82,15 +87,40 @@ class HistoryScreen(ModalScreen[None]):
                 Text(task["status"]["state"]),
             )
         self.query_one("#history-page", Label).update(
-            "Enter: read reply | N: next page | Esc: close"
+            "Enter: read reply | N: next page | R: refresh | Esc: close"
             if self.page.get("nextCursor")
-            else "Enter: read reply | End of task list | Esc: close"
+            else "Enter: read reply | End of task list | R: refresh | Esc: close"
         )
         self.query_one("#history-reply", Static).update(
             "Select a task to read its reply."
             if self.page["tasks"]
             else "No tasks on this page."
         )
+
+    @work(group="task-history")
+    async def action_refresh_history(self) -> None:
+        """Read the first server page again without retaining stale task details."""
+        if self._reading:
+            return
+        self._reading = True
+        self.page = {"tasks": [], "nextCursor": None}
+        self._seen_cursors.clear()
+        self._render_page()
+        reply = self.query_one("#history-reply", Static)
+        reply.update("Refreshing task history...")
+        self.query_one("#history-page", Label).update(
+            "Refreshing task history | Esc: close"
+        )
+        try:
+            self.page = await self.client.list_history_tasks()
+            self._render_page()
+        except (httpx.HTTPError, A2ATransportError, ValueError):
+            reply.update("Task history unavailable.")
+            self.query_one("#history-page", Label).update(
+                "R: retry refresh | Esc: close"
+            )
+        finally:
+            self._reading = False
 
     @work(group="task-history")
     async def action_next_page(self) -> None:

@@ -272,3 +272,5 @@ Record deferred validation as deferred, never passed.
 - [ ] TUI-RUNTIME-R008.2.3.2.2.2: retain full served parity and release qualification.
 - [x] TUI-RUNTIME-R008.2.3.2.2.2.1: qualify the Python composer-to-fold keyboard route.
 - [ ] TUI-RUNTIME-R008.2.3.2.2.2.2: retain complete presentation and release acceptance.
+
+- [ ] **TUI-RUNTIME-R012.3.1:** Add keyboard refresh of the first task page, pagination reset and recovery after refusal. Keep this increment pending default-branch delivery.

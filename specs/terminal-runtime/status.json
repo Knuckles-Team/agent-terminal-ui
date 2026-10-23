@@ -2044,11 +2044,11 @@
         "9dae309b58c9"
       ],
       "verified_by": [
+        "tests/test_history_refresh.py:16",
         "tests/test_task_history.py:100",
         "tests/test_task_history.py:122",
         "tests/test_task_history.py:165",
-        "tests/test_task_history.py:213",
-        "tests/test_task_history.py:218"
+        "tests/test_task_history.py:213"
       ]
     },
     {

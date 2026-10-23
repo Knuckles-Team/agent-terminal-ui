@@ -30,7 +30,8 @@ subcommands:
 ### Read-only task history
 
 `/history` lists caller-owned Arbora tasks. Press Enter to read a selected
-reply, N for the next server page, or Esc to close. Browsing does not change
+reply or N for the next server page. R refreshes from the first page; Esc closes
+the view. Refresh clears old rows and replies before reading fresh task states. Browsing does not change
 the active conversation or submit work. Missing replies show unavailable.
 This view does not yet provide prior user turns, ordered conversation
 summaries or conversation resume.
