@@ -5,7 +5,7 @@
 | TUI-RUNTIME-R001.1 | Unit command parser plus `httpx.MockTransport`; installed generated registry artifact | Known op and object params produce one versioned request with correct envelope | Empty ID, malformed JSON, array input, unknown op, missing registry file and digest mismatch make zero effect requests |
 | TUI-RUNTIME-R001.2 | Client transport with loopback and remote URLs, fake bearer | Verified caller header reaches remote Arbora only over TLS | Remote HTTP, absent/invalid bearer, credential in exception/log/snapshot all fail |
 | TUI-RUNTIME-R001.3 | A2A fake server that issues a PLAN with binding and expiry | One `/confirm` resumes exactly the issued plan | Tampered op/input/digest/subject, expired plan and replay are rejected before any effect; server also rejects stale lease |
-| TUI-RUNTIME-R001.4 | Mock error envelope, timeout, disconnect and malformed JSON | Typed success renders and chat remains functional | Every failure renders an error, leaves session usable and never reports success |
+| TUI-RUNTIME-R001.4 | Mock error envelope, timeout, disconnect and malformed JSON. | Typed success renders and chat remains functional. | Every failure renders an error. The session stays usable and never reports success. |
 | TUI-RUNTIME-R001.5 | Pending A2A task with `input-required` and approval metadata | Pending request is displayed. No effect is asserted | `approvals.*`, fleet grant, missing signed exchange and wrong pending-call binding are refused. Enabling approval requires separate served receipt |
 | TUI-RUNTIME-R001.6 | Clean Python 3.12 base environment and supported optional-client environment | Base chat works. Compatible optional install enables `/op` | No compatible client yields clear `CLIENT_UNAVAILABLE` and no untyped fallback |
 | TUI-RUNTIME-R001.7 | Route and pilot tests | Legacy screens still render or use served replacement | No `agent_utilities.knowledge_graph` import, duplicate transport or invisible command fallback |
@@ -561,6 +561,24 @@ compatibility before merge. Broader served and release requirements remain open.
 | Native held-key navigation | #113 | 6f655fc3a657241eb5e1ce3625fb4b53cc56408c |
 
 Wheel navigation remains pending main-targeted full/native CI and merge in #114.
+
+### Previous task page navigation
+
+TUI-RUNTIME-R012.3.1.1 extends the read-only Python task browser. Mounted
+HTTP-fixture coverage in `tests/test_history_navigation.py` checks fresh
+forward/back/forward reads, opaque cursor reuse, empty pages, refusal and
+retry, cursor cycles, refresh reset, and duplicate input during reads. The screen discards late
+success and error completions after close, even when the transport suppresses
+cancellation. Active conversation identity remains unchanged.
+
+The initial previous-page regression failed on main: P left task three visible
+instead of rereading task two. These tests use a mock HTTP transport with the
+production client and mounted app. They do not prove live backend acceptance
+or complete history and conversation resume.
+
+Independent review returned GO with no blocking findings and 38 passing history
+tests. The combined history, command and usage suite passed 186 tests with two
+workers. All-file gates passed. Publication remains with the coordinating parent.
 
 ### Native inspector search
 
