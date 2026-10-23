@@ -154,6 +154,30 @@ fn selected_observation(
     selected_task(Ok(task.to_owned()))
 }
 
+fn observation_ready(active: bool, pending: bool, cancellation: Cancellation) -> bool {
+    active && !pending && cancellation != Cancellation::Confirming
+}
+
+fn stop_expired_observation(
+    deadline: Option<tokio::time::Instant>,
+    now: tokio::time::Instant,
+    active: &mut bool,
+    status: &mut String,
+) -> bool {
+    if !observation_expired(deadline, now) {
+        return false;
+    }
+    *active = false;
+    status.push_str(
+        "\n\nAutomatic observation timed out. Remote execution may continue. Press r to refresh.",
+    );
+    true
+}
+
+fn observation_expired(deadline: Option<tokio::time::Instant>, now: tokio::time::Instant) -> bool {
+    deadline.is_some_and(|deadline| now >= deadline)
+}
+
 fn observation_continues(snapshot: &TaskSnapshot, binding: Option<&TaskCorrelation>) -> bool {
     matches!(snapshot.state, TaskState::Submitted | TaskState::Working)
         && binding.is_none_or(|initial| {
@@ -337,6 +361,9 @@ async fn run(
     let no_color = env::var("NO_COLOR").unwrap_or_default();
     let mut themes = ThemeSelection::new(&theme, &no_color);
     let mut submitting = submission.is_some();
+    let automatic_observation = observe || submitting;
+    let observation_deadline = submitting
+        .then(|| tokio::time::Instant::now() + std::time::Duration::from_secs(4 * 60 * 60));
     let loading = if submitting {
         "Submitting Arbora task..."
     } else if task_id.is_some() {
@@ -388,7 +415,7 @@ async fn run(
             tokio::select! {
                 result = &mut request, if pending => {
                     pending = false;
-                    observation_active = observe && matches!(&result,
+                    observation_active = automatic_observation && matches!(&result,
                         Ok(Ok(ReadStatus::Task(snapshot))) if observation_continues(snapshot, binding.as_ref()));
                     let accepted = matches!(&result, Ok(Ok(ReadStatus::Task(snapshot)))
                         if binding.as_ref().is_none_or(|bound: &TaskCorrelation| bound.validate_binding(&snapshot.correlation).is_ok()));
@@ -402,8 +429,10 @@ async fn run(
                     }
                     inspector.task_updated(if accepted { binding.as_ref() } else { None });
                 }
-                _ = observation_tick.tick(), if observation_active && !pending => {
-                    status = "Reading Arbora task...".to_owned();
+                _ = observation_tick.tick(), if observation_ready(observation_active, pending, cancellation) => {
+                    if stop_expired_observation(observation_deadline, tokio::time::Instant::now(), &mut observation_active, &mut status) {
+                        continue;
+                    }
                     let client = client.clone();
                     let task_id = task_id.clone();
                     let read_binding = binding.clone();
@@ -1223,6 +1252,75 @@ mod tests {
             &snapshot,
             Some(&other.correlation)
         ));
+    }
+
+    // spec: TUI-RUNTIME-R012.1.3
+    #[test]
+    fn automatic_observation_preserves_confirmation_and_bounds_waiting() {
+        let now = tokio::time::Instant::now();
+        assert!(!super::observation_expired(None, now));
+        assert!(!super::observation_expired(
+            Some(now + std::time::Duration::from_secs(1)),
+            now
+        ));
+        assert!(super::observation_expired(Some(now), now));
+        let mut active = true;
+        let mut status = "Task ID: task-one".to_owned();
+        assert!(super::stop_expired_observation(
+            Some(now),
+            now,
+            &mut active,
+            &mut status
+        ));
+        assert!(!super::observation_ready(
+            active,
+            false,
+            Cancellation::Ready
+        ));
+        assert!(status.contains("Task ID: task-one"));
+        assert!(status.contains("Remote execution may continue. Press r to refresh."));
+        assert!(super::observation_ready(true, false, Cancellation::Ready));
+        assert!(!super::observation_ready(true, true, Cancellation::Ready));
+        assert!(!super::observation_ready(false, false, Cancellation::Ready));
+        let mut cancellation = Cancellation::Ready;
+        cancellation.arm();
+        assert!(!super::observation_ready(true, false, cancellation));
+        assert_eq!(cancellation, Cancellation::Confirming);
+        cancellation.dismiss();
+        assert!(super::observation_ready(true, false, cancellation));
+    }
+
+    // spec: TUI-RUNTIME-R012.1.3
+    #[test]
+    fn automatic_observation_tracks_terminal_results_without_rebinding() {
+        for terminal in [TaskState::Completed, TaskState::Failed, TaskState::Canceled] {
+            let mut binding = None;
+            let mut cancellation = Cancellation::Unavailable;
+            super::submission_completed(
+                Ok(Ok(task_read("task-one", "context-two", Some("run-three")))),
+                &mut binding,
+                &mut cancellation,
+            );
+            let original = binding.clone();
+            let ReadStatus::Task(mut snapshot) =
+                task_read("task-one", "context-two", Some("run-three"))
+            else {
+                panic!("task fixture required")
+            };
+            snapshot.state = TaskState::Working;
+            assert!(super::observation_continues(&snapshot, binding.as_ref()));
+            snapshot.state = terminal;
+            assert!(!super::observation_continues(&snapshot, binding.as_ref()));
+            let status = super::request_completed(
+                Ok(Ok(ReadStatus::Task(snapshot))),
+                &mut binding,
+                &mut cancellation,
+                false,
+            );
+            assert!(status.contains("Task ID: task-one"));
+            assert_eq!(binding, original);
+            assert_eq!(cancellation, Cancellation::Unavailable);
+        }
     }
 
     #[test]

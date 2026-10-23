@@ -114,10 +114,6 @@ async fn disconnect_and_interrupted_body_recover_only_the_bound_read() {
     let original = snapshot();
     let mut refreshed = original.clone();
     refreshed["result"]["status"]["state"] = json!("completed");
-    refreshed["result"]
-        .as_object_mut()
-        .unwrap()
-        .remove("metadata");
     let (client, server) = serve(vec![
         response(200, original),
         String::new(),
@@ -279,4 +275,22 @@ async fn total_deadline_bounds_unresponsive_reads() {
             .await
             .is_err()
     );
+}
+
+// spec: TUI-RUNTIME-R012.1.3
+#[tokio::test]
+async fn bound_snapshot_cannot_drop_its_admitted_run() {
+    let original = snapshot();
+    let binding = TaskCorrelation::from_task(&original["result"]).unwrap();
+    let mut changed = original;
+    changed["result"]
+        .as_object_mut()
+        .unwrap()
+        .remove("metadata");
+    let (client, server) = serve(vec![response(200, changed)]).await;
+    assert_eq!(
+        client.read_task("task-one", Some(&binding)).await,
+        Err(ReadFailure::Invalid("Task correlation mismatch"))
+    );
+    server.await.unwrap();
 }

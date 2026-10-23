@@ -128,7 +128,7 @@ async fn submits_exact_authenticated_text_with_one_stable_identity() {
                 "jsonrpc": "2.0",
                 "id": identity,
                 "method": "message/send",
-                "params": {"message": {
+                "params": {"configuration": {"blocking": false}, "message": {
                     "kind": "message", "role": "user", "messageId": identity,
                     "parts": [{"kind": "text", "text": "Explain this code\nwith café examples"}]
                 }}

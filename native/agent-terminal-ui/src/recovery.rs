@@ -105,6 +105,9 @@ impl ArboraClient {
         let mut snapshot =
             parse_task_snapshot(task_id, "task-snapshot", &bytes).map_err(ReadFailure::Invalid)?;
         if let Some(binding) = binding {
+            if binding.run_id() != snapshot.correlation.run_id() {
+                return Err(ReadFailure::Invalid("Task correlation mismatch"));
+            }
             binding
                 .validate_binding(&snapshot.correlation)
                 .map_err(ReadFailure::Invalid)?;
