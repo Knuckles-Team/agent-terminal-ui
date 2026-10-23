@@ -2290,8 +2290,10 @@
     {
       "id": "TUI-RUNTIME-R008.2.3.2.2.2.2.2.1",
       "title": "Native mouse-wheel viewport navigation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "3012107de7fb"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/presentation.rs:271",
         "native/agent-terminal-ui/src/public_details_view.rs:326"
