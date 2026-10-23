@@ -3,7 +3,7 @@ use agent_terminal_ui_native::{
     ArboraClient,
     host_logs::{HostLogs, LogBatch, REFUSED, RETENTION_GAP},
 };
-use crossterm::event::KeyCode;
+use crossterm::event::{KeyCode, MouseEvent};
 use ratatui::{
     Frame,
     style::Style,
@@ -121,6 +121,10 @@ impl HostLogView {
         }
         true
     }
+    pub fn mouse(&mut self, event: MouseEvent) -> bool {
+        self.open && self.viewport.mouse(event)
+    }
+
     pub fn draw(&mut self, frame: &mut Frame, style: Style) {
         if self.expires != 0 && !HostLogs::unexpired(self.expires) {
             self.refuse();

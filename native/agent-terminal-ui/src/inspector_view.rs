@@ -5,7 +5,7 @@ use agent_terminal_ui_native::{
     run_inspector::{ReadRefusal, RunInspector},
     run_inspector_client::RunRead,
 };
-use crossterm::event::KeyCode;
+use crossterm::event::{KeyCode, MouseEvent};
 use ratatui::{
     Frame,
     style::Style,
@@ -122,6 +122,10 @@ impl InspectorView {
             ""
         };
         format!("{state}{body}\n\nr / i: refresh | c: cancel local read | Escape: close | q: quit")
+    }
+
+    pub fn mouse(&mut self, event: MouseEvent) -> bool {
+        self.open && self.viewport.mouse(event)
     }
 
     pub fn draw(&mut self, frame: &mut Frame, style: Style, now: Instant) {

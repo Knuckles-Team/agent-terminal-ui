@@ -275,3 +275,6 @@ Record deferred validation as deferred, never passed.
 
 - [x] **TUI-RUNTIME-R008.2.3.2.2.2.2.1:** Route held navigation keys through existing native viewports with repeated-action refusal tests.
 - [ ] **TUI-RUNTIME-R008.2.3.2.2.2.2.2:** Complete retained served presentation and performance qualification.
+
+- [x] **TUI-RUNTIME-R008.2.3.2.2.2.2.2.1:** Route vertical wheel events to the visible native viewport, preserving folds and rejecting modal or modified input.
+- [ ] **TUI-RUNTIME-R008.2.3.2.2.2.2.2.2:** Complete retained full presentation qualification.

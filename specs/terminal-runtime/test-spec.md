@@ -472,3 +472,12 @@ TUI-RUNTIME-R008.2.3.2.2.2.2.1 binds the production event filter to viewport
 movement tests. Repeated action keys, modified navigation and release events
 must be rejected; ordinary presses remain accepted. These local tests do not
 prove live backend acceptance or the retained full presentation qualification.
+
+### Native mouse-wheel navigation
+
+TUI-RUNTIME-R008.2.3.2.2.2.2.2.1 uses the production mouse dispatcher and
+Ratatui buffers to verify that only the visible viewport scrolls and folds retain
+selection and expansion. Viewport tests cover both bounds, empty content,
+refresh and resize retention. Modified and horizontal wheel events are inert;
+cancellation confirmation blocks mouse navigation. No live backend acceptance
+is claimed by these local tests.
