@@ -629,5 +629,9 @@ PYTEST_XDIST_AUTO_NUM_WORKERS=2 pre-commit run --all-files
 Independent review returned GO on scope and tests and reproduced 209 passing
 tests with two workers. R015.46 covers bounded context identifiers only.
 R015.48, R015.51 and R015.52 rely on execution and documentation receipts,
-not artificial test markers. Their generated state may remain LANDED rather
-than VERIFIED. No native build or live service is needed for this batch.
+not artificial test markers. The trailer gate requires bound tests, so these three rows remain open.
+The batch does not add artificial markers to change their generated state. No native build or live service is needed for this batch.
+
+Candidate implementation: `20e00677ac4ccb15d813e4eb9a71a9155d3b8543`.
+Six existing rows qualify through tests: R015.44, .45, .46, .47, .49 and .50.
+R015.48, .51 and .52 retain execution receipts but remain open in the ledger.
