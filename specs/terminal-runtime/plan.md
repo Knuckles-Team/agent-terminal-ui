@@ -987,3 +987,7 @@ Describe existing CLI behavior without changing transport or backend authority.
 R015.30.1 covers Python help and examples. R015.41.1 covers directory overrides.
 R015.42.1 covers theme fallback and unbound log refusal. Keep the remaining
 entry-point, environment inventory and served resume requirements open.
+
+## Amendment: nonblocking unary turns
+
+Consume Arbora ARBORA-A2A-R001.6 through the existing Python polling path. Bind reads to the returned task and bound the observation period. Keep native parity and served streaming acceptance open under TUI-RUNTIME-R012.1.2.
