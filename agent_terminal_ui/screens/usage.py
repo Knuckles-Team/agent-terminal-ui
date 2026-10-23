@@ -10,6 +10,7 @@ from textual.binding import Binding
 from textual.containers import ScrollableContainer
 from textual.screen import Screen
 from textual.widgets import Footer, Header, Label, Static
+from textual.worker import get_current_worker
 
 
 def _fmt_usd(n: float) -> str:
@@ -81,6 +82,7 @@ class UsageScreen(Screen):
     # ── historical (gateway) ───────────────────────────────────────────
     @work(exclusive=True)
     async def refresh_usage(self) -> None:
+        worker = get_current_worker()
         widget = self.query_one("#usage-hist", Static)
         widget.update("Loading usage.read…")
         client = getattr(self.app, "agent_client", None)
@@ -89,6 +91,8 @@ class UsageScreen(Screen):
             return
         try:
             snapshot = await client.get_usage_summary()
+            if worker.is_cancelled or not self.is_mounted:
+                return
             totals = snapshot.get("totals")
             if not isinstance(totals, dict) or not totals:
                 widget.update("usage.read: tenant totals unavailable")
@@ -105,7 +109,8 @@ class UsageScreen(Screen):
                 "\n".join(f"{name}: {value}" for name, value in totals.items())
             )
         except Exception as exc:
-            widget.update(f"usage.read unavailable: {exc}")
+            if not worker.is_cancelled and self.is_mounted:
+                widget.update(f"usage.read unavailable: {exc}")
 
     def action_refresh(self) -> None:
         self._render_live()
