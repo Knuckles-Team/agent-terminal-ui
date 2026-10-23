@@ -160,6 +160,8 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R004.2:** Preserve blocking spec coverage and wire repository checks at their shared-policy stages.
 
 - [ ] **TUI-RUNTIME-R012.4.3:** Complete served command matrix; acceptance remains pending.
+- [x] **TUI-RUNTIME-R012.4.3.1:** Qualify registered signatures, focus dispatch and mounted usage aliases.
+- [ ] **TUI-RUNTIME-R012.4.3.2:** Qualify the retained full served command matrix.
 
 - [ ] **TUI-RUNTIME-R010.4.2:** Live current-plan acceptance; acceptance remains pending.
 

@@ -1030,3 +1030,14 @@ identifier from the other. Native inspector reads retain this same binding.
 R008.2.3.2.2.2 now rolls up the focused keyboard route .1 and complete
 presentation acceptance .2. F8 leaves composer completion and mode keys intact.
 A keyboard test binding does not close the retained complete acceptance row.
+
+## Amendment 2026-10-22: command dispatcher qualification
+
+R012.4.3 remains open through retained full-acceptance child .2. Child .1
+covers dispatcher and usage entry points. The signature matrix covers all
+commands, and `/focus` must accept the dispatcher's argument before toggling
+the sidebar. Mounted `/usage`, `/stats`, `/cost` and `/context` entry points
+must reach only `usage.read`, including one explicit notice on refusal.
+These HTTP fixtures do not qualify the full registered command transport
+matrix or live producer acceptance. Legacy graph, memory, history, model,
+fleet and management paths still need their own served-contract qualification.

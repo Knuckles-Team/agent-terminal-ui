@@ -272,7 +272,7 @@ Renderer tests display literal commit identity and clear it after failed reads. 
 
 | TUI-RUNTIME-R004.2 | `tests/test_precommit_hooks.py::test_layout_and_surface_checks_follow_shared_advisory_policy` and `test_docs_ci_enforces_spec_checks_with_full_history_and_range` | Weekly checks and blocking spec CI cover documentation changes | Missing gate, shallow checkout, absent range or suppressed failure fails |
 
-| TUI-RUNTIME-R012.4.3 | Planned remaining acceptance | Planned full command-matrix served fixture must cover every command family and make zero unserved-route requests. | Parent remains open until this proof passes |
+| TUI-RUNTIME-R012.4.3.1 | Partial dispatcher and usage entry-point coverage | `tests/test_registered_command_contract.py` checks every handler signature, focus dispatch and mounted usage aliases with real HTTP transport fixtures. Full served command-family coverage remains pending. | These fixtures establish only this narrow child, not complete matrix or live producer acceptance |
 
 | TUI-RUNTIME-R010.4.2 | Planned remaining acceptance | Planned served fixture must render the actual current scaffold and refuse missing, stale or other-caller state without reconstruction. | Parent remains open until this proof passes |
 
@@ -463,3 +463,5 @@ does not close the remaining presentation or release-performance criteria.
 
 R008.2.3.2.2.2.2 retains complete tokens, selection, keyboard parity, no-color,
 reduced motion, served journeys and release performance. The parent stays open.
+
+| TUI-RUNTIME-R012.4.3.2 | Retained complete acceptance | Planned full command-matrix served fixture covers every command family with zero unserved-route requests. | Remains open until full proof passes |
