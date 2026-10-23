@@ -117,6 +117,7 @@ Custom pricing can be set via `tracker.set_pricing(model, input, output, cached)
 |----------|---------|---------|
 | `AGENT_URL` | `http://localhost:8000` | Arbora base URL for A2A chat and REST operations. |
 | `AGENT_BEARER_TOKEN` | unset | Caller credential for Arbora; required for remote endpoints. |
+| `AGENT_AUTH_MODE` | `bearer` | Native terminal only. Explicit `none` permits anonymous task operations against loopback Arbora configured for no authentication. Unset the bearer token in this mode. |
 | `AGENT_THEME` | `tokyo-night` | Startup Textual theme. Unknown names fall back to `tokyo-night`. |
 | `TEXTUAL_ANIMATIONS` | `full` | Set to `none` to disable entrance animations (reduced motion). |
 | `AGENT_UTILITIES_DATA_DIR` | platform default | Override the local session data directory. Takes precedence over the configuration-relative fallback. |
@@ -175,3 +176,10 @@ The native terminal cycles its four baseline palettes with F6: Tokyo Night,
 Nord, Gruvbox and Textual Light. Switching works in the task, inspector, log
 and cancellation views without restarting or changing requests. Nonempty
 `NO_COLOR` keeps terminal foreground and background colors after switching.
+
+Native anonymous mode sends no Authorization header and never falls back from
+failed authentication. It permits ordinary task submission, reads, observation
+and cancellation, not authenticated host-log receipts.
+The client accepts only localhost, 127.0.0.1 and [::1] endpoints. It pins
+localhost to 127.0.0.1 and disables proxy routing. Remote connections retain the
+existing HTTPS and bearer requirements.

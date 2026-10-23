@@ -1,4 +1,4 @@
-//! Caller-authenticated Arbora run reads; no local run authority or counters.
+//! Arbora-authorized run reads; no local run authority or counters.
 use crate::run_inspector::{
     AppliedConfig, PlanItem, PlanRefusal, PlanSnapshot, PlanStatus, PlanValidator, ReadRefusal,
     RunInspector, RunProjection,
@@ -75,7 +75,7 @@ impl PlanValidator for SnapshotValidity {
 impl ArboraClient {
     /// Read only after this caller's registry advertises the operation.
     pub async fn get_run(&self, run_id: &str) -> Result<RunRead, ReadRefusal> {
-        if !self.authenticated {
+        if !self.authenticated && self.auth_mode != crate::AuthMode::None {
             return Err(ReadRefusal::Denied);
         }
         if run_id.is_empty() || run_id.chars().count() > 512 || run_id.chars().any(char::is_control)
@@ -469,6 +469,36 @@ mod transport_tests {
             r.to_lowercase()
                 .contains("authorization: bearer fixture-credential")
         }));
+        assert!(requests[1].ends_with("{\"run_id\":\"r\"}"));
+    }
+
+    // spec: TUI-RUNTIME-R002.1.3.3
+    #[tokio::test]
+    async fn anonymous_advertised_read_preserves_run_and_digest() {
+        let body = serde_json::json!({"ok":true,"meta":{"api_version":"v1","registry_digest":"d"},"result":{"value":{"run_id":"r","peak_context_tokens":0,"current_plan":{"availability":"unavailable","snapshot":null}}}});
+        let (endpoint, server) = server(vec![
+            (200, registry(serde_json::json!([{"id":"runs.get"}]))),
+            (200, body),
+        ])
+        .await;
+        let client = ArboraClient::with_auth_mode(&endpoint, None, crate::AuthMode::None).unwrap();
+        let mut inspector = RunInspector::new("r".into());
+        inspector
+            .accept_read(client.get_run("r").await, Instant::now())
+            .unwrap();
+        assert!(
+            inspector
+                .text(Instant::now())
+                .contains("Peak context tokens: 0")
+        );
+        let requests = server.await.unwrap();
+        assert!(requests[0].starts_with("GET /api/v1/registry "));
+        assert!(requests[1].starts_with("POST /api/v1/ops/runs.get "));
+        assert!(
+            requests
+                .iter()
+                .all(|r| { !r.to_lowercase().contains("authorization:") })
+        );
         assert!(requests[1].ends_with("{\"run_id\":\"r\"}"));
     }
 

@@ -262,3 +262,5 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R012.1.2:** Retain native and full served streaming acceptance.
 
 - [ ] **TUI-RUNTIME-R012.1.3:** Validate native nonblocking admission and bounded automatic observation without replay or cancellation interference.
+
+- [ ] TUI-RUNTIME-R002.1.3.3: qualify explicit loopback anonymous native transport with negative credential tests and actual EG/Arbora evidence.

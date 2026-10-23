@@ -1,5 +1,5 @@
 use agent_terminal_ui_native::{
-    ArboraClient, SUBMISSION_UNKNOWN, TaskSnapshot, TaskSubmission,
+    ArboraClient, AuthMode, SUBMISSION_UNKNOWN, TaskSnapshot, TaskSubmission,
     correlation::{TaskCorrelation, TaskState},
 };
 use crossterm::event::{Event, EventStream, KeyCode, KeyEventKind, KeyModifiers};
@@ -532,13 +532,25 @@ async fn run(
 #[tokio::main]
 async fn main() -> ExitCode {
     let endpoint = env::var("AGENT_URL").unwrap_or_else(|_| "http://localhost:8000".to_owned());
-    let token = env::var("AGENT_BEARER_TOKEN").ok();
     let result = async {
+        let token = match env::var("AGENT_BEARER_TOKEN") {
+            Ok(value) => Some(value),
+            Err(env::VarError::NotPresent) => None,
+            Err(env::VarError::NotUnicode(_)) => return Err("Invalid caller credential"),
+        };
+        let mode_value = match env::var("AGENT_AUTH_MODE") {
+            Ok(value) => Some(value),
+            Err(env::VarError::NotPresent) => None,
+            Err(env::VarError::NotUnicode(_)) => {
+                return Err("AGENT_AUTH_MODE must be valid Unicode");
+            }
+        };
+        let auth_mode = AuthMode::parse(mode_value.as_deref())?;
         let task_id = selected_task(env::var("AGENT_TASK_ID"))?;
         let args: Vec<_> = env::args_os().skip(1).collect();
         let observation = selected_observation(&args, task_id.is_some())?;
         let observe = observation.is_some();
-        if observe && token.is_none() {
+        if observe && token.is_none() && auth_mode != AuthMode::None {
             return Err("Observation requires a caller credential");
         }
         let prompt = if observe {
@@ -547,13 +559,13 @@ async fn main() -> ExitCode {
             selected_prompt(&args, task_id.is_some())?
         };
         let task_id = observation.or(task_id);
-        if prompt.is_some() && token.is_none() {
+        if prompt.is_some() && token.is_none() && auth_mode != AuthMode::None {
             return Err("Submission requires a caller credential");
         }
         let submission = prompt.as_deref().map(TaskSubmission::new).transpose()?;
         let timeout = submission_timeout(env::var("AGENT_SUBMISSION_TIMEOUT_SECONDS"))?;
         let include_event = committed_event_reads(env::var("AGENT_INCLUDE_COMMITTED_EVENT"))?;
-        let client = ArboraClient::new(&endpoint, token.as_deref())?
+        let client = ArboraClient::with_auth_mode(&endpoint, token.as_deref(), auth_mode)?
             .with_submission_timeout(timeout)?
             .with_committed_event_reads(include_event);
         run(Arc::new(client), task_id, submission, observe).await

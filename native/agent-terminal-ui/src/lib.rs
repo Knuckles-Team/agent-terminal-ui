@@ -49,16 +49,45 @@ pub struct TaskSnapshot {
     pub usage: turn_usage::TurnUsage,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum AuthMode {
+    #[default]
+    Bearer,
+    None,
+}
+
+impl AuthMode {
+    pub fn parse(value: Option<&str>) -> Result<Self, &'static str> {
+        match value {
+            None | Some("bearer") => Ok(Self::Bearer),
+            Some("none") => Ok(Self::None),
+            _ => Err("AGENT_AUTH_MODE must be bearer or none"),
+        }
+    }
+}
+
 pub struct ArboraClient {
     http: Client,
     card_url: Url,
     authenticated: bool,
+    auth_mode: AuthMode,
     submission_timeout: Duration,
     committed_event_reads: bool,
 }
 
 impl ArboraClient {
     pub fn new(endpoint: &str, token: Option<&str>) -> Result<Self, &'static str> {
+        Self::with_auth_mode(endpoint, token, AuthMode::Bearer)
+    }
+
+    pub fn with_auth_mode(
+        endpoint: &str,
+        token: Option<&str>,
+        auth_mode: AuthMode,
+    ) -> Result<Self, &'static str> {
+        if auth_mode == AuthMode::None && token.is_some() {
+            return Err("Anonymous mode cannot use a caller credential");
+        }
         if endpoint
             .chars()
             .any(|c| c.is_whitespace() || c.is_control() || c == '\\')
@@ -78,6 +107,9 @@ impl ArboraClient {
             return Err("Invalid Arbora endpoint");
         }
         let local = matches!(url.host_str(), Some("localhost" | "127.0.0.1" | "[::1]"));
+        if auth_mode == AuthMode::None && !local {
+            return Err("Anonymous Arbora requires a loopback endpoint");
+        }
         if !local && url.scheme() != "https" {
             return Err("Remote Arbora requires TLS");
         }
@@ -95,7 +127,13 @@ impl ArboraClient {
             headers.insert(header::AUTHORIZATION, value);
         }
         url.set_path("/.well-known/agent-card.json");
-        let http = Client::builder()
+        let mut builder = Client::builder();
+        if auth_mode == AuthMode::None {
+            builder = builder
+                .no_proxy()
+                .resolve("localhost", std::net::SocketAddr::from(([127, 0, 0, 1], 0)));
+        }
+        let http = builder
             .default_headers(headers)
             .redirect(reqwest::redirect::Policy::none())
             .retry(reqwest::retry::never())
@@ -106,6 +144,7 @@ impl ArboraClient {
             http,
             card_url: url,
             authenticated: token.is_some(),
+            auth_mode,
             submission_timeout: Duration::from_secs(300),
             committed_event_reads: false,
         })
@@ -128,7 +167,7 @@ impl ArboraClient {
         &self,
         submission: &TaskSubmission,
     ) -> Result<TaskSnapshot, &'static str> {
-        if !self.authenticated {
+        if !self.authenticated && self.auth_mode != AuthMode::None {
             return Err("Submission requires a caller credential");
         }
         let mut url = self.card_url.clone();
