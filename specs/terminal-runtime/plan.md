@@ -995,3 +995,18 @@ Consume Arbora ARBORA-A2A-R001.6 through the existing Python polling path. Bind 
 ## Amendment: native unary observation
 
 Reuse native task reads and the existing observation interval for admitted submissions. Preserve read-only observer controls and confirmation. The four-hour local bound does not cancel backend execution. Served streaming and crash resume remain open.
+
+## Amendment 2026-10-22: explicit native loopback anonymous tasks
+
+TUI-RUNTIME-R002.1.3.3 adds AGENT_AUTH_MODE=none as an explicit local-only
+opt-in. The default bearer mode retains credential refusals. Anonymous mode
+rejects credentials, remote endpoints and redirects, disables proxies and pins
+localhost to loopback. One central client transports discovery, submission,
+task reads, registry-backed inspector reads and cancellation without an Authorization header. It never retries
+a denied authenticated request anonymously. Observation stays read-only.
+Anonymous task bindings are not signed host receipts.
+Host-log credential checks remain unchanged. Inspector reads retain registry and run binding validation.
+
+Native transport and CLI refusal tests must cover both modes. Actual EG and
+Arbora execution requires separate served evidence. Fixtures cannot promote
+the full native chat, streaming, recovery or identity rollups.

@@ -430,3 +430,12 @@ These tests do not prove model selection, history loading or backend authority.
 `TUI-RUNTIME-R012.1.1`: Protocol fixtures assert configuration.blocking=false, one submission, bound identity, terminal artifacts, failure, cancellation, refusal and timeout. These tests do not prove served streaming or active-crash resume.
 
 `TUI-RUNTIME-R012.1.3`: Native submission protocol checks the nonblocking flag. UI observation tests cover active and terminal snapshots, identity mismatch, deadline expiry and cancellation confirmation. These local tests are not installed-backend acceptance.
+
+## TUI-RUNTIME-R002.1.3.3: anonymous native task transport
+
+- Explicit none mode sends no Authorization header for submit, read and cancel.
+- Default submission and observation without a bearer still make zero requests.
+- None mode rejects a bearer, remote HTTP/HTTPS, URL credentials and invalid modes.
+- Redirects and auth refusals do not trigger retries or downgrade.
+- Anonymous task clients cannot obtain authenticated host-log authority.
+- Observe remains read-only in the actual loopback EG/Arbora/native journey.
