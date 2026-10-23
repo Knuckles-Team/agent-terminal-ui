@@ -300,3 +300,9 @@ session recovery. Retain the incumbent coding terminal until the operator accept
 |---|---|---|
 | `TUI-RUNTIME-R008.2.3.2.2.2.2.2.1` | **Native mouse-wheel viewport navigation.** Unmodified vertical wheel events move one wrapped row in the visible task, inspector or host-log viewport, using existing keyboard scroll bounds and refresh/resize retention. Do not change hidden viewports, fold selection or expansion. Ignore modified wheel events and wheel input during cancellation confirmation. | Production mouse-route, renderer and viewport tests verify active-view isolation, bounds, fold preservation and refusal. Local fixtures do not establish served acceptance. |
 | `TUI-RUNTIME-R008.2.3.2.2.2.2.2.2` | **Retained full presentation qualification.** Preserve every parent criterion beyond wheel navigation: complete tokens, selection, keyboard parity, no-color, reduced motion, scroll retention, served journeys and release performance. | Full served parity and release performance receipts remain required. |
+
+## Native inspector text search
+
+| ID | Requirement | Acceptance evidence |
+|---|---|---|
+| `TUI-RUNTIME-R010.10` | **Search the native inspector's displayed text.** Ctrl+F opens a bounded local query. Match logical lines case-insensitively, reverse the selected line and reveal its first wrapped row. Enter and Shift+Enter cycle matching lines; Backspace edits; Escape closes search before closing the inspector. Typed action letters belong to search, while Ctrl+C still quits. Recompute matches from current display after resize, expiry or refusal; clear search on close or changed task binding. Make no search network requests. | Native production input and renderer tests cover match navigation, Unicode, query bounds, action isolation, expiry/refusal and lifecycle. This local interaction child does not close full served inspector or presentation qualification. |

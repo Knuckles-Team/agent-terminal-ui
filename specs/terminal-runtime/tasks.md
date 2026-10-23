@@ -284,3 +284,5 @@ Record deferred validation as deferred, never passed.
 
 - [x] **TUI-RUNTIME-R008.2.3.2.2.2.2.2.1:** Route vertical wheel events to the visible native viewport, preserving folds and rejecting modal or modified input.
 - [ ] **TUI-RUNTIME-R008.2.3.2.2.2.2.2.2:** Complete retained full presentation qualification.
+
+- [x] **TUI-RUNTIME-R010.10:** Add bounded local native inspector text search with keyboard ownership, matching-line navigation and current-display tests.

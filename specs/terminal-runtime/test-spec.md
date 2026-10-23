@@ -561,3 +561,11 @@ compatibility before merge. Broader served and release requirements remain open.
 | Native held-key navigation | #113 | 6f655fc3a657241eb5e1ce3625fb4b53cc56408c |
 
 Wheel navigation remains pending main-targeted full/native CI and merge in #114.
+
+### Native inspector search
+
+TUI-RUNTIME-R010.10 tests Ctrl+F input ownership before global action letters,
+case-insensitive matching lines, first-row reveal, reverse-video selection,
+forward/backward wraparound and bounded Unicode editing. Recompute results
+from the live inspector text so expired/refused values cannot remain in search.
+Close and binding changes discard the query. No live backend acceptance claim.

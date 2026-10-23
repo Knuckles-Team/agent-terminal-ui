@@ -570,6 +570,7 @@ async fn run(
                     if let Event::Key(key) = event {
                         if themes.key(key) { continue; }
                         if !presentation::accepts_key_event(key) { continue; }
+                        if cancellation != Cancellation::Confirming && !logs.is_open() && inspector.search_key(key) { continue; }
                         if key.code == KeyCode::Char('q') || (key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL)) {
                             return Ok(());
                         }
