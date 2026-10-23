@@ -465,3 +465,11 @@ R008.2.3.2.2.2.2 retains complete tokens, selection, keyboard parity, no-color,
 reduced motion, served journeys and release performance. The parent stays open.
 
 | TUI-RUNTIME-R012.4.3.2 | Retained complete acceptance | Planned full command-matrix served fixture covers every command family with zero unserved-route requests. | Remains open until full proof passes |
+
+## TUI-RUNTIME-R012.4.2: Usage refresh ordering
+
+A mounted UsageScreen with the real AgentClient and controlled HTTP transport
+must reject late replies from cancelled reads. A newer denial, empty totals,
+unknown totals or measured zero must remain visible after an older success or
+error completes. Unknown values must not become zero. This client fixture does
+not qualify live usage producers or close R012.6.

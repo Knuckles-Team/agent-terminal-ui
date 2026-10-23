@@ -1288,7 +1288,7 @@
         "e953bdfc7768"
       ],
       "verified_by": [
-        "tests/test_served_fleet_usage.py:16"
+        "tests/test_served_fleet_usage.py:17"
       ]
     },
     {
