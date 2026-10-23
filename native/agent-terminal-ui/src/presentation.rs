@@ -34,6 +34,22 @@ impl ThemeSelection {
     }
 }
 
+/// Held navigation keys may scroll, but repeated actions must remain inert.
+pub fn accepts_key_event(key: KeyEvent) -> bool {
+    key.kind == KeyEventKind::Press
+        || (key.kind == KeyEventKind::Repeat
+            && key.modifiers.is_empty()
+            && matches!(
+                key.code,
+                KeyCode::Up
+                    | KeyCode::Down
+                    | KeyCode::PageUp
+                    | KeyCode::PageDown
+                    | KeyCode::Home
+                    | KeyCode::End
+            ))
+}
+
 pub fn presentation_style(theme: &str, no_color: &str) -> Style {
     if !no_color.is_empty() {
         return Style::reset();
@@ -54,6 +70,64 @@ mod tests {
     use super::*;
     use crate::draw;
     use ratatui::{Terminal, backend::TestBackend};
+
+    // spec: TUI-RUNTIME-R008.2.3.2.2.2.2.1
+    #[test]
+    fn held_navigation_scrolls_without_repeating_actions() {
+        let mut viewport = Viewport::default();
+        viewport.measure(100, 10);
+        for code in [KeyCode::Down, KeyCode::Down, KeyCode::PageDown] {
+            let key = KeyEvent::new_with_kind(code, KeyModifiers::NONE, KeyEventKind::Repeat);
+            assert!(accepts_key_event(key));
+            assert!(viewport.handle(key.code));
+        }
+        assert_eq!(viewport.offset(), 12);
+        for code in [KeyCode::Up, KeyCode::PageUp, KeyCode::Home, KeyCode::End] {
+            assert!(accepts_key_event(KeyEvent::new_with_kind(
+                code,
+                KeyModifiers::NONE,
+                KeyEventKind::Repeat,
+            )));
+        }
+        for code in [
+            KeyCode::Char('q'),
+            KeyCode::Char('c'),
+            KeyCode::Char('r'),
+            KeyCode::Char('i'),
+            KeyCode::Char('l'),
+            KeyCode::Char('x'),
+            KeyCode::Char('y'),
+            KeyCode::Enter,
+            KeyCode::Char(' '),
+            KeyCode::Tab,
+            KeyCode::BackTab,
+            KeyCode::Esc,
+            KeyCode::F(6),
+        ] {
+            assert!(!accepts_key_event(KeyEvent::new_with_kind(
+                code,
+                KeyModifiers::NONE,
+                KeyEventKind::Repeat,
+            )));
+            assert!(accepts_key_event(KeyEvent::new(code, KeyModifiers::NONE)));
+        }
+        for modifiers in [
+            KeyModifiers::CONTROL,
+            KeyModifiers::ALT,
+            KeyModifiers::SHIFT,
+        ] {
+            assert!(!accepts_key_event(KeyEvent::new_with_kind(
+                KeyCode::Down,
+                modifiers,
+                KeyEventKind::Repeat,
+            )));
+        }
+        assert!(!accepts_key_event(KeyEvent::new_with_kind(
+            KeyCode::Down,
+            KeyModifiers::NONE,
+            KeyEventKind::Release,
+        )));
+    }
 
     fn luminance(color: Color) -> f64 {
         let Color::Rgb(r, g, b) = color else {

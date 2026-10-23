@@ -530,3 +530,10 @@ Branch validation for R012.4.3.3 passed 179 focused tests and the all-files
 pre-commit gate. The canonical status tool records local commit evidence as
 VERIFIED. This branch receipt is not default-branch delivery or live backend
 acceptance; the task remains pending independent review and merge.
+
+### Native held-key navigation
+
+TUI-RUNTIME-R008.2.3.2.2.2.2.1 binds the production event filter to viewport
+movement tests. Repeated action keys, modified navigation and release events
+must be rejected; ordinary presses remain accepted. These local tests do not
+prove live backend acceptance or the retained full presentation qualification.
