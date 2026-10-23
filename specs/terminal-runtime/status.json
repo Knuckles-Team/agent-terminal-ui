@@ -2266,8 +2266,10 @@
     {
       "id": "TUI-RUNTIME-R008.2.3.2.2.2.2.1",
       "title": "Native held-key viewport navigation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "be1eabdd50cc"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/presentation.rs:74"
       ]
