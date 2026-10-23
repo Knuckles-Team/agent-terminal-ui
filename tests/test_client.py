@@ -860,3 +860,140 @@ async def test_unary_task_failure_reports_an_error_and_ends_the_turn():
 
     assert [e["type"] for e in events][-2:] == ["error", "turn_end"]
     assert not any(e["type"] == "text" for e in events)
+
+
+@pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R012.1.1")
+@pytest.mark.parametrize("terminal", ["completed", "failed", "canceled"])
+async def test_nonblocking_turn_binds_task_and_never_replays(terminal):
+    recorder = _Recorder(
+        _unary_server(["submitted", "working", terminal]), serves_card=True
+    )
+    client = AgentClient(base_url="http://localhost:8000")
+    client.poll_interval = 0
+    client._http_client = httpx.AsyncClient(transport=httpx.MockTransport(recorder))
+    events = [event async for event in client.stream("hello")]
+    requests = [json.loads(r.content) for r in recorder.requests if r.method == "POST"]
+    assert requests[0]["params"]["configuration"] == {"blocking": False}
+    assert [r["method"] for r in requests] == ["message/send", "tasks/get", "tasks/get"]
+    assert all(r["params"] == {"id": _TASK} for r in requests[1:])
+    assert events[-1]["type"] == "turn_end"
+    assert events[-1]["state"] == terminal
+    await client._http_client.aclose()
+
+
+@pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R012.1.1")
+@pytest.mark.parametrize("fault", ["id", "contextId", "runId", "denied", "timeout"])
+async def test_nonblocking_poll_refuses_bad_identity_and_unknown_outcomes(fault):
+    calls = []
+
+    def respond(request):
+        body = json.loads(request.content)
+        calls.append(body)
+        task = _task("submitted" if body["method"] == "message/send" else "completed")
+        if body["method"] == "tasks/get":
+            if fault == "denied":
+                return httpx.Response(403, json=_result(task))
+            if fault == "runId":
+                task["metadata"]["arbora"]["runId"] = "foreign"
+            elif fault in {"id", "contextId"}:
+                task[fault] = "foreign"
+        return httpx.Response(200, json=_result(task))
+
+    client = AgentClient(base_url="http://localhost:8000")
+    client._streaming = False
+    client.poll_interval = 0
+    if fault == "timeout":
+        client.poll_timeout = 0
+    client._http_client = httpx.AsyncClient(transport=httpx.MockTransport(respond))
+    events = [event async for event in client.stream("hello")]
+    assert events[-1]["type"] == "error"
+    assert not any(event["type"] in {"text", "turn_end"} for event in events)
+    assert sum(call["method"] == "message/send" for call in calls) == 1
+    assert client.current_task_id == _TASK
+    await client._http_client.aclose()
+
+
+@pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R012.1.1")
+async def test_nonblocking_pending_turn_can_cancel_returned_task():
+    calls = []
+
+    def respond(request):
+        body = json.loads(request.content)
+        calls.append(body)
+        return httpx.Response(
+            200,
+            json=_result(
+                _task("canceled" if body["method"] == "tasks/cancel" else "working")
+            ),
+        )
+
+    client = AgentClient(base_url="http://localhost:8000")
+    client._streaming = False
+    client._http_client = httpx.AsyncClient(transport=httpx.MockTransport(respond))
+    stream = client.stream("hello")
+    await anext(stream)
+    pending = await anext(stream)
+    assert pending["data"]["state"] == "working"
+    canceled = await client.cancel_task()
+    assert canceled["status"]["state"] == "canceled"
+    assert calls[-1]["params"] == {"id": _TASK}
+    await stream.aclose()
+    assert [call["method"] for call in calls] == ["message/send", "tasks/cancel"]
+    await client._http_client.aclose()
+
+
+@pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R012.1.1")
+@pytest.mark.parametrize("outcome", ["empty", "unknown"])
+async def test_nonblocking_submission_never_invents_reply_or_replays(outcome):
+    calls = []
+
+    def respond(request):
+        calls.append(json.loads(request.content))
+        if outcome == "unknown":
+            raise httpx.ReadTimeout("Submission outcome unknown", request=request)
+        return httpx.Response(200, json=_result(_task("completed")))
+
+    client = AgentClient(base_url="http://localhost:8000")
+    client._streaming = False
+    client._current_task_id = "old-task"
+    client._http_client = httpx.AsyncClient(transport=httpx.MockTransport(respond))
+    events = [event async for event in client.stream("hello")]
+    assert len(calls) == 1
+    assert not any(event["type"] == "text" for event in events)
+    if outcome == "unknown":
+        assert events[-1]["type"] == "error"
+        assert client.current_task_id is None
+    else:
+        assert events[-1]["type"] == "turn_end"
+    await client._http_client.aclose()
+
+
+@pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R012.1.1")
+@pytest.mark.parametrize("fault", ["context", "runId", "emptyRunId"])
+async def test_nonblocking_initial_correlation_refuses_before_binding(fault):
+    calls = []
+
+    def respond(request):
+        calls.append(json.loads(request.content))
+        task = _task("working")
+        if fault == "context":
+            task["contextId"] = "a2a-context-" + "f" * 64
+        else:
+            task["metadata"]["arbora"]["runId"] = {} if fault == "runId" else ""
+        return httpx.Response(200, json=_result(task))
+
+    client = AgentClient(base_url="http://localhost:8000")
+    client._streaming = False
+    client._http_client = httpx.AsyncClient(transport=httpx.MockTransport(respond))
+    events = [event async for event in client.stream("hello", session_id=_CONTEXT)]
+    assert [event["type"] for event in events] == ["session_started", "error"]
+    assert client.current_task_id is None
+    with pytest.raises(ValueError, match="no A2A task"):
+        await client.cancel_task()
+    assert len(calls) == 1
+    await client._http_client.aclose()

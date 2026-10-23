@@ -200,6 +200,32 @@ def normalize_a2a_event(
     return events
 
 
+def _poll_binding(task: dict[str, Any]) -> tuple[str, str, str | None]:
+    """Bind unary reads to the task returned by admission."""
+    task_id, context_id = task.get("id"), task.get("contextId")
+    if (
+        task.get("kind") != "task"
+        or not isinstance(task_id, str)
+        or not task_id.strip()
+        or not isinstance(context_id, str)
+        or not context_id.strip()
+    ):
+        raise A2ATransportError({"message": "Invalid task correlation"})
+    status = task.get("status")
+    state = status.get("state") if isinstance(status, dict) else None
+    if not isinstance(state, str) or state not in _FINAL_STATES | {
+        "submitted",
+        "working",
+        "input-required",
+        "auth-required",
+    }:
+        raise A2ATransportError({"message": "Invalid task state"})
+    run_id = _arbora_metadata(task).get("runId")
+    if run_id is not None and (not isinstance(run_id, str) or not run_id.strip()):
+        raise A2ATransportError({"message": "Invalid run correlation"})
+    return task_id, context_id, run_id
+
+
 def _candidate_skills_dirs(workspace_root: Path) -> list[Path]:
     """Directories checked, in order, for a universal-skills tree."""
     return [
@@ -339,6 +365,7 @@ class AgentClient:
         self._pending_plans: dict[str, dict[str, Any]] = {}
         self._streaming: bool | None = None
         self.poll_interval = 0.5
+        self.poll_timeout = 4 * 60 * 60
 
     @property
     def current_session_id(self) -> str | None:
@@ -366,7 +393,9 @@ class AgentClient:
         if not isinstance(frame, dict):
             response.raise_for_status()
             raise A2ATransportError({"message": "A2A response was not an object"})
-        return _frame_result(frame)
+        result = _frame_result(frame)
+        response.raise_for_status()
+        return result
 
     async def _rpc_stream(
         self,
@@ -422,18 +451,44 @@ class AgentClient:
         self, message: dict[str, Any], headers: dict[str, str]
     ) -> AsyncGenerator[dict[str, Any], None]:
         """Yield a unary task as stream results: state changes, then its answer."""
-        task = await self._rpc("message/send", {"message": message}, headers=headers)
-        task_id = task.get("id")
+        task = await self._rpc(
+            "message/send",
+            {"message": message, "configuration": {"blocking": False}},
+            headers=headers,
+        )
+        binding = _poll_binding(task)
+        supplied_context = message.get("contextId", "")
+        # Arbora namespaces new contexts, but must preserve an owned canonical one.
+        if (
+            supplied_context.startswith("a2a-context-")
+            and binding[1] != supplied_context
+        ):
+            raise A2ATransportError({"message": "Task correlation mismatch"})
+        task_id = binding[0]
+        deadline = asyncio.get_running_loop().time() + self.poll_timeout
         last_state = None
         while True:
             state = (task.get("status") or {}).get("state")
-            if state in _FINAL_STATES or state == "input-required" or not task_id:
+            if (
+                state in _FINAL_STATES
+                or state in {"input-required", "auth-required"}
+                or not task_id
+            ):
                 break
             if state != last_state:
                 yield task
                 last_state = state
-            await asyncio.sleep(self.poll_interval)
-            task = await self._rpc("tasks/get", {"id": task_id})
+            remaining = deadline - asyncio.get_running_loop().time()
+            try:
+                async with asyncio.timeout(remaining):
+                    await asyncio.sleep(self.poll_interval)
+                    task = await self._rpc("tasks/get", {"id": task_id})
+            except TimeoutError as exc:
+                raise A2ATransportError(
+                    {"message": "Polling timed out; remote outcome unknown"}
+                ) from exc
+            if _poll_binding(task) != binding:
+                raise A2ATransportError({"message": "Task correlation mismatch"})
         if state == "completed":
             replies = [m for m in task.get("history") or () if m.get("role") == "agent"]
             answers = task.get("artifacts") or replies[-1:]
@@ -614,6 +669,7 @@ class AgentClient:
         """
         session_id = session_id or new_session_id()
         self._current_session_id = session_id
+        self._current_task_id = None
         yield {"type": "session_started", "session_id": session_id}
         if any(
             not isinstance(part, dict)

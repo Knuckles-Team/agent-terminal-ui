@@ -257,3 +257,6 @@ Record deferred validation as deferred, never passed.
 - [ ] `TUI-RUNTIME-R002.1.3.2.2.2.4`: Remaining served stream recovery acceptance. Full served receipts remain required; local unary tests cannot close this row.
 - [ ] `TUI-RUNTIME-R008.2.3.2.2.4`: Remaining served presentation qualification. Full served parity and release performance receipts remain required.
 - [ ] `TUI-RUNTIME-R012.6.2`: Served turn and session token and cost display. A served fixture renders turn and session totals and unavailable values after operation refusal.
+
+- [ ] **TUI-RUNTIME-R012.1.1:** Validate nonblocking Python submission, bounded reads, terminal replies, identity refusal and cancellation without replay.
+- [ ] **TUI-RUNTIME-R012.1.2:** Retain native and full served streaming acceptance.
