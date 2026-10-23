@@ -3,8 +3,7 @@ use agent_terminal_ui_native::{
     correlation::{TaskCorrelation, TaskState},
 };
 use crossterm::event::{
-    DisableMouseCapture, EnableMouseCapture, Event, EventStream, KeyCode, KeyEventKind,
-    KeyModifiers,
+    DisableMouseCapture, EnableMouseCapture, Event, EventStream, KeyCode, KeyModifiers,
 };
 use futures_util::StreamExt;
 use ratatui::{
@@ -550,7 +549,7 @@ async fn run(
                     }
                     if let Event::Key(key) = event {
                         if themes.key(key) { continue; }
-                        if key.kind != KeyEventKind::Press { continue; }
+                        if !presentation::accepts_key_event(key) { continue; }
                         if key.code == KeyCode::Char('q') || (key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL)) {
                             return Ok(());
                         }

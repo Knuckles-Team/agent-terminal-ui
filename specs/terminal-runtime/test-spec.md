@@ -465,3 +465,10 @@ R008.2.3.2.2.2.2 retains complete tokens, selection, keyboard parity, no-color,
 reduced motion, served journeys and release performance. The parent stays open.
 
 | TUI-RUNTIME-R012.4.3.2 | Retained complete acceptance | Planned full command-matrix served fixture covers every command family with zero unserved-route requests. | Remains open until full proof passes |
+
+### Native held-key navigation
+
+TUI-RUNTIME-R008.2.3.2.2.2.2.1 binds the production event filter to viewport
+movement tests. Repeated action keys, modified navigation and release events
+must be rejected; ordinary presses remain accepted. These local tests do not
+prove live backend acceptance or the retained full presentation qualification.
