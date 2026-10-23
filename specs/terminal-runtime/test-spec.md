@@ -579,3 +579,11 @@ or complete history and conversation resume.
 Independent review returned GO with no blocking findings and 38 passing history
 tests. The combined history, command and usage suite passed 186 tests with two
 workers. All-file gates passed. Publication remains with the coordinating parent.
+
+### Native inspector search
+
+TUI-RUNTIME-R010.10 tests Ctrl+F input ownership before global action letters,
+case-insensitive matching lines, first-row reveal, reverse-video selection,
+forward/backward wraparound and bounded Unicode editing. Recompute results
+from the live inspector text so expired/refused values cannot remain in search.
+Close and binding changes discard the query. No live backend acceptance claim.

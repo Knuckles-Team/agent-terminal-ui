@@ -302,3 +302,9 @@ session recovery. Retain the incumbent coding terminal until the operator accept
 | `TUI-RUNTIME-R008.2.3.2.2.2.2.2.2` | **Retained full presentation qualification.** Preserve every parent criterion beyond wheel navigation: complete tokens, selection, keyboard parity, no-color, reduced motion, scroll retention, served journeys and release performance. | Full served parity and release performance receipts remain required. |
 
 | `TUI-RUNTIME-R012.3.1.1` | **Return to previous task pages.** P rereads the previous page through tasks/list with its original opaque cursor. Keep only the current page and navigation cursors. Clear old rows and replies during reads and after failure. Failed reads retain their navigation position for retry. R resets the path. Ignore duplicate navigation while pending and discard late completions after close. This does not provide conversation resume. | Mounted HTTP-fixture tests cover forward/back/forward reads, empty pages, refusal and retry, refresh reset, duplicate input and cancellation-suppressed completions. |
+
+## Native inspector text search
+
+| ID | Requirement | Acceptance evidence |
+|---|---|---|
+| `TUI-RUNTIME-R010.10` | **Search the native inspector's displayed text.** Ctrl+F opens a bounded local query. Match logical lines case-insensitively, reverse the selected line and reveal its first wrapped row. Enter and Shift+Enter cycle matching lines; Backspace edits; Escape closes search before closing the inspector. Typed action letters belong to search, while Ctrl+C still quits. Recompute matches from current display after resize, expiry or refusal; clear search on close or changed task binding. Make no search network requests. | Native production input and renderer tests cover match navigation, Unicode, query bounds, action isolation, expiry/refusal and lifecycle. This local interaction child does not close full served inspector or presentation qualification. |

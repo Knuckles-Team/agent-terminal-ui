@@ -5,10 +5,11 @@ use agent_terminal_ui_native::{
     run_inspector::{ReadRefusal, RunInspector},
     run_inspector_client::RunRead,
 };
-use crossterm::event::{KeyCode, MouseEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers, MouseEvent};
 use ratatui::{
     Frame,
-    style::Style,
+    style::{Modifier, Style},
+    text::Line,
     widgets::{Block, Paragraph, Wrap},
 };
 use std::{sync::Arc, time::Instant};
@@ -23,6 +24,85 @@ pub struct InspectorView {
     request: Option<ReadTask>,
     open: bool,
     viewport: Viewport,
+    search: Option<InspectorSearch>,
+}
+
+#[derive(Default)]
+struct InspectorSearch {
+    query: String,
+    selected: usize,
+    matches: usize,
+    reveal: bool,
+}
+
+impl InspectorSearch {
+    fn edit(&mut self, key: KeyEvent) {
+        match (key.code, key.modifiers) {
+            (KeyCode::Enter, modifiers)
+                if self.matches > 0
+                    && (modifiers.is_empty() || modifiers == KeyModifiers::SHIFT) =>
+            {
+                let step = if modifiers == KeyModifiers::SHIFT {
+                    self.matches - 1
+                } else {
+                    1
+                };
+                self.selected = (self.selected + step) % self.matches;
+            }
+            (KeyCode::Backspace, KeyModifiers::NONE) => {
+                self.query.pop();
+                self.selected = 0;
+            }
+            (KeyCode::Char(ch), modifiers)
+                if (modifiers.is_empty() || modifiers == KeyModifiers::SHIFT)
+                    && !ch.is_control()
+                    && self.query.chars().count() < 128 =>
+            {
+                self.query.push(ch);
+                self.selected = 0;
+            }
+            _ => return,
+        }
+        self.reveal = true;
+    }
+
+    fn lines<'a>(&mut self, text: &'a str) -> (Vec<Line<'a>>, Option<usize>) {
+        let query = self.query.to_lowercase();
+        let matching: Vec<_> = text
+            .lines()
+            .enumerate()
+            .filter(|(_, line)| !query.is_empty() && line.to_lowercase().contains(&query))
+            .map(|(index, _)| index)
+            .collect();
+        self.matches = matching.len();
+        self.selected = self.selected.min(self.matches.saturating_sub(1));
+        let selected = matching.get(self.selected).copied();
+        let lines = text
+            .lines()
+            .enumerate()
+            .map(|(index, line)| {
+                let line = Line::from(line);
+                if Some(index) == selected {
+                    line.style(Style::new().add_modifier(Modifier::REVERSED))
+                } else {
+                    line
+                }
+            })
+            .collect();
+        (lines, selected)
+    }
+
+    fn title(&self) -> String {
+        let position = if self.matches == 0 {
+            0
+        } else {
+            self.selected + 1
+        };
+        format!(
+            "Find: {} [{position}/{}] Enter: next Shift+Enter: previous Esc: close",
+            self.query, self.matches
+        )
+    }
 }
 
 impl InspectorView {
@@ -41,6 +121,7 @@ impl InspectorView {
             self.binding = binding.cloned();
             self.inspector = run.map(|run| RunInspector::new(run.to_owned()));
             self.viewport = Viewport::default();
+            self.search = None;
         }
     }
 
@@ -82,6 +163,7 @@ impl InspectorView {
     pub fn close(&mut self) {
         self.abort();
         self.open = false;
+        self.search = None;
     }
 
     pub async fn complete(&mut self) {
@@ -111,6 +193,29 @@ impl InspectorView {
         true
     }
 
+    /// Search owns typed characters before the application's action shortcuts.
+    pub fn search_key(&mut self, key: KeyEvent) -> bool {
+        if !self.open
+            || key.kind != KeyEventKind::Press
+            || (key.code == KeyCode::Char('c') && key.modifiers == KeyModifiers::CONTROL)
+        {
+            return false;
+        }
+        if key.code == KeyCode::Char('f') && key.modifiers == KeyModifiers::CONTROL {
+            self.search.get_or_insert_with(InspectorSearch::default);
+            return true;
+        }
+        let Some(search) = &mut self.search else {
+            return false;
+        };
+        if key.code == KeyCode::Esc && key.modifiers.is_empty() {
+            self.search = None;
+        } else {
+            search.edit(key);
+        }
+        true
+    }
+
     fn text(&mut self, now: Instant) -> String {
         let body = match &mut self.inspector {
             Some(inspector) => inspector.text(now),
@@ -129,15 +234,38 @@ impl InspectorView {
     }
 
     pub fn draw(&mut self, frame: &mut Frame, style: Style, now: Instant) {
-        let paragraph = Paragraph::new(self.text(now))
-            .style(style)
-            .wrap(Wrap { trim: false });
+        let text = self.text(now);
+        let (lines, selected) = match &mut self.search {
+            Some(search) => search.lines(&text),
+            None => (text.lines().map(Line::from).collect(), None),
+        };
+        let title = self
+            .search
+            .as_ref()
+            .map(InspectorSearch::title)
+            .unwrap_or_else(|| "Ctrl+F: find | PgUp/PgDn Home/End".to_owned());
         let block = Block::bordered()
             .title("Run inspector (read-only)")
-            .title_bottom("PgUp/PgDn Home/End");
+            .title_bottom(title);
         let inner = block.inner(frame.area());
+        let paragraph = Paragraph::new(lines.clone())
+            .style(style)
+            .wrap(Wrap { trim: false });
         self.viewport
             .measure(paragraph.line_count(inner.width), inner.height);
+        if let Some(search) = &mut self.search
+            && std::mem::take(&mut search.reveal)
+            && let Some(index) = selected
+        {
+            let row = if index == 0 {
+                0
+            } else {
+                Paragraph::new(lines[..index].to_vec())
+                    .wrap(Wrap { trim: false })
+                    .line_count(inner.width)
+            };
+            self.viewport.reveal(row, 1);
+        }
         frame.render_widget(
             paragraph.scroll((self.viewport.offset(), 0)).block(block),
             frame.area(),
@@ -214,6 +342,137 @@ mod tests {
             )
             .unwrap();
         view
+    }
+
+    fn search_text(view: &mut InspectorView, value: &str) {
+        assert!(view.search_key(KeyEvent::new(KeyCode::Char('f'), KeyModifiers::CONTROL)));
+        for ch in value.chars() {
+            assert!(view.search_key(KeyEvent::new(KeyCode::Char(ch), KeyModifiers::NONE)));
+        }
+    }
+
+    // spec: TUI-RUNTIME-R010.10
+    #[test]
+    fn inspector_search_reveals_matches_and_preserves_read_only_actions() {
+        let now = Instant::now();
+        let mut view = populated(now);
+        let mut terminal = Terminal::new(TestBackend::new(50, 6)).unwrap();
+        search_text(&mut view, "PRIVATE-PLAN");
+        terminal
+            .draw(|frame| view.draw(frame, Style::reset(), now))
+            .unwrap();
+        assert_eq!(view.search.as_ref().unwrap().matches, 1);
+        assert!(view.viewport.offset() > 0);
+        assert!(
+            terminal
+                .backend()
+                .buffer()
+                .content()
+                .iter()
+                .any(|cell| cell.modifier.contains(Modifier::REVERSED))
+        );
+        assert!(!view.pending());
+        for ch in ['q', 'r', 'i', 'c', 'x', 'y'] {
+            assert!(view.search_key(KeyEvent::new(KeyCode::Char(ch), KeyModifiers::NONE)));
+        }
+        assert!(view.is_open());
+        assert!(!view.pending());
+        assert!(view.text(now).contains("private-plan"));
+        assert!(!view.search_key(KeyEvent::new(KeyCode::Char('c'), KeyModifiers::CONTROL)));
+        assert!(view.search_key(KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE)));
+        assert!(view.search.is_none());
+        assert!(view.is_open());
+        assert!(view.key(KeyCode::Esc, client()));
+        assert!(!view.is_open());
+    }
+
+    // spec: TUI-RUNTIME-R010.10
+    #[test]
+    fn search_cycles_unicode_lines_and_bounds_input() {
+        let mut search = InspectorSearch::default();
+        for ch in "界".chars() {
+            search.edit(KeyEvent::new(KeyCode::Char(ch), KeyModifiers::NONE));
+        }
+        assert_eq!(
+            search
+                .lines(
+                    "first 界
+other
+last 界"
+                )
+                .1,
+            Some(0)
+        );
+        search.edit(KeyEvent::new(KeyCode::Enter, KeyModifiers::SHIFT));
+        assert_eq!(
+            search
+                .lines(
+                    "first 界
+other
+last 界"
+                )
+                .1,
+            Some(2)
+        );
+        search.edit(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+        assert_eq!(
+            search
+                .lines(
+                    "first 界
+other
+last 界"
+                )
+                .1,
+            Some(0)
+        );
+        search.edit(KeyEvent::new(KeyCode::Enter, KeyModifiers::CONTROL));
+        assert_eq!(search.selected, 0);
+        assert_eq!(search.lines("gone").1, None);
+        assert!(search.title().contains("[0/0]"));
+        search.edit(KeyEvent::new(KeyCode::Backspace, KeyModifiers::NONE));
+        assert!(search.query.is_empty());
+        for _ in 0..140 {
+            search.edit(KeyEvent::new(KeyCode::Char('界'), KeyModifiers::NONE));
+        }
+        assert_eq!(search.query.chars().count(), 128);
+    }
+
+    // spec: TUI-RUNTIME-R010.10
+    #[test]
+    fn search_recomputes_after_expiry_refusal_resize_and_run_change() {
+        let now = Instant::now();
+        let mut view = populated(now);
+        let mut terminal = Terminal::new(TestBackend::new(40, 6)).unwrap();
+        search_text(&mut view, "private-plan");
+        terminal
+            .draw(|frame| view.draw(frame, Style::reset(), now))
+            .unwrap();
+        assert_eq!(view.search.as_ref().unwrap().matches, 1);
+        terminal.backend_mut().resize(30, 8);
+        terminal
+            .draw(|frame| view.draw(frame, Style::reset(), now))
+            .unwrap();
+        assert_eq!(view.search.as_ref().unwrap().matches, 1);
+        terminal
+            .draw(|frame| view.draw(frame, Style::reset(), now + Duration::from_secs(2)))
+            .unwrap();
+        assert_eq!(view.search.as_ref().unwrap().matches, 0);
+        view.clear_read();
+        terminal
+            .draw(|frame| view.draw(frame, Style::reset(), now))
+            .unwrap();
+        assert_eq!(view.search.as_ref().unwrap().matches, 0);
+        view.task_updated(Some(&binding(Some("new-run"))));
+        assert!(view.search.is_none());
+        search_text(&mut view, "q");
+        assert!(!view.search_key(KeyEvent::new_with_kind(
+            KeyCode::Char('q'),
+            KeyModifiers::NONE,
+            KeyEventKind::Release
+        )));
+        view.close();
+        assert!(view.search.is_none());
+        assert!(!view.search_key(KeyEvent::new(KeyCode::Char('f'), KeyModifiers::CONTROL)));
     }
 
     // spec: TUI-RUNTIME-R010.9
