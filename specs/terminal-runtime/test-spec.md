@@ -466,6 +466,19 @@ reduced motion, served journeys and release performance. The parent stays open.
 
 | TUI-RUNTIME-R012.4.3.2 | Retained complete acceptance | Planned full command-matrix served fixture covers every command family with zero unserved-route requests. | Remains open until full proof passes |
 
+## TUI-RUNTIME-R012.4.2: Usage refresh ordering
+
+A mounted UsageScreen with the real AgentClient and controlled HTTP transport
+must reject late replies from cancelled reads. A newer denial, empty totals,
+unknown totals or measured zero must remain visible after an older success or
+error completes. Unknown values must not become zero. This client fixture does
+not qualify live usage producers or close R012.6.
+
+Local branch validation: all eight race cases fail at base 9da41811 and pass
+with the worker guard. The focused usage, registered-command, current-plan and
+public-run keyboard suites pass 122 tests with two workers. All-files pre-commit
+passes. Generated commit evidence is local until independent review and merge;
+R012.6 and full served command acceptance remain open.
 ## TUI-RUNTIME-R012.4.3.3: Unsupported command entry points
 
 `tests/test_unavailable_session_commands.py` mounts the production AgentApp.

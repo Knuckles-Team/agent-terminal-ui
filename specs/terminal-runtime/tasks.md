@@ -273,4 +273,5 @@ Record deferred validation as deferred, never passed.
 - [x] TUI-RUNTIME-R008.2.3.2.2.2.1: qualify the Python composer-to-fold keyboard route.
 - [ ] TUI-RUNTIME-R008.2.3.2.2.2.2: retain complete presentation and release acceptance.
 
+- [ ] **TUI-RUNTIME-R012.4.2:** Qualify usage refresh ordering when an old read suppresses cancellation. Retain live usage acceptance under R012.6.
 - [ ] **TUI-RUNTIME-R012.4.3.3:** Refuse unsupported session and fast-mode actions; qualify mounted keyboard routes. Keep pending until default-branch delivery.
