@@ -485,3 +485,8 @@ Close-during-refresh regression: a controlled HTTP transport suppresses
 cancellation after Esc, then returns a page or denial. Both paths must leave
 the closed screen's page and reply unchanged, without WorkerFailed or widget
 lookups. The mounted flag alone is insufficient during Textual teardown.
+
+Review correction evidence: both late-completion cases fail at 42f3875 with
+WorkerFailed. They pass with the cancellation guard before page assignment or
+widget updates. The same three focused suites now pass 115 tests with two
+workers. All-files pre-commit passes. Independent re-review remains pending.
