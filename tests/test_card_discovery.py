@@ -77,6 +77,8 @@ async def test_root_unary_card_sends_once_and_renders_history():
                 "id": "message/send",
                 "result": {
                     "id": "fixture-task",
+                    "contextId": "a2a-context-" + "1" * 64,
+                    "metadata": {"arbora": {"runId": "fixture-task"}},
                     "kind": "task",
                     "status": {"state": "completed"},
                     "history": [
