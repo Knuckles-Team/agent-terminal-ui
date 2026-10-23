@@ -474,3 +474,9 @@ new page cursor. Denied and malformed refreshes clear old content; R retries.
 Empty pages remain distinct from failed reads. Repeated R presses during a
 pending read issue no extra request. All calls use tasks/list or tasks/get,
 without changing the active context or resuming a conversation.
+
+Branch evidence: five mounted refresh cases fail at base 9da41811 and pass
+with the shortcut. The history-refresh, task-history and registered-command
+suites pass 113 tests with two workers. All-files pre-commit passes. Canonical
+status records local commit evidence; independent review and merge remain
+pending. This does not close R012.3 conversation resume or live producer proof.
