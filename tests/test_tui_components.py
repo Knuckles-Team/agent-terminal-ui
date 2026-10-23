@@ -607,16 +607,9 @@ async def test_cmd_export_with_nothing_shown(processor, mock_app, tmp_path, monk
 
 @pytest.mark.asyncio
 async def test_cmd_focus_delegates(processor, mock_app):
-    # ``cmd_focus`` is declared without args (signature bug) — it simply
-    # delegates to ``action_toggle_sidebar``.
-    import inspect
-
-    sig = inspect.signature(processor.cmd_focus)
-    if len(sig.parameters) == 0:
-        await processor.cmd_focus()
-    else:
-        await processor.cmd_focus("")
-    mock_app.action_toggle_sidebar.assert_called_once()
+    mock_app.run_action = AsyncMock(return_value=True)
+    await processor.cmd_focus("")
+    mock_app.run_action.assert_awaited_once_with("screen.toggle_sidebar")
 
 
 # ---------------------------------------------------------------------------
