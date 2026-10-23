@@ -155,6 +155,7 @@ Main-screen bindings (`screens/main.py::BINDINGS`):
 
 | Binding | Action |
 |---|---|
+| `F8` | Switch focus between conversation and composer |
 | `Ctrl+B` | Toggle workflow sidebar |
 | `Ctrl+L` | Clear conversation |
 | `Ctrl+V` | Toggle server-log panel |
@@ -189,3 +190,26 @@ backend. See [Architecture](architecture.md#run-modes).
   [Session Management](session_management.md)).
 - Themes: default `tokyo-night`; switch live with `/theme <name>` across Textual's
   built-in themes, or set the startup theme via `AGENT_THEME`.
+
+### Public run details
+
+A task with a server-provided task, context and run binding has two inline
+sections: Public model summary and Execution trace. Both start collapsed.
+Focus a header and press Enter or Space, or click it, to expand. The first
+expansion reads the authorized runs.events operation. Missing producer support
+or denied reads show unavailable; the client does not invent a summary.
+
+Python preserves each fold during updates and replay. Press r while a detail
+header has focus to reload. Native uses Tab to select a detail header,
+Enter or Space to toggle it, and Escape to leave that selection. Its r key
+keeps the existing task refresh and also reloads public details. Public summaries
+and execution facts stay separate from the answer and from private reasoning.
+Tool output uses the tool_expand setting until an explicit user toggle.
+
+Public details retain at most 1,000 records and 128 KiB of display text.
+The view may omit older records. Refresh replays the authorized history without
+changing the selected fold states. Older backends without a run binding display an
+unavailable placeholder and do not cause a guessed run read.
+
+Mission Control remains on the legacy replay schema. It explicitly refuses the new
+public projection; use these inline sections for that projection.

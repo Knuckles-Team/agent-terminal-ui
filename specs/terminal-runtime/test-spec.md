@@ -78,7 +78,7 @@ No benchmark has run for this definition.
 | Cold process | Start 30 fresh processes per candidate. Report p50/p95 exec-to-first usable frame. Record page-cache conditions separately. | p95 <= 200 ms and no worse than Python |
 | RSS | Record process-tree peak and steady RSS after 60 seconds for identical 1000-line view | steady <= 40 MiB, peak <= 64 MiB and <= Python |
 | Idle CPU | After 30-second settling, measure CPU-time/wall-time over 60 seconds without events | <= 0.5% of one core per client |
-| p95 render | 10,000 events at 100/s; timestamp adapter receipt through frame flush; include resize and key input | p95 <= 50 ms, p99 <= 100 ms; no hidden drops |
+| p95 render | Send 10,000 events at 100/s. Measure adapter receipt to frame flush; include resize and key input. | p95 <= 50 ms, p99 <= 100 ms; no hidden drops |
 | Multiple clients | Repeat with 1, 4 and 16 clients. Use shared and distinct principals. Include a slow reader and a disconnect. | Latency targets hold. No protected data crosses scope. Memory and queue limits hold. |
 
 These are acceptance targets, not measured claims. If hardware cannot meet a
@@ -439,3 +439,27 @@ These tests do not prove model selection, history loading or backend authority.
 - Redirects and auth refusals do not trigger retries or downgrade.
 - Anonymous task clients cannot obtain authenticated host-log authority.
 - Observe remains read-only in the actual loopback EG/Arbora/native journey.
+
+## Collapsed public-detail regression proof
+
+- R012.1.4: mount the actual Conversation and ToolCallBlock. Focus the header,
+  press Enter/Space and click. Stream late and replacement output. Verify
+  visible content and preserved explicit choice for every tool_expand setting.
+- R008.2.3.2.2.1: drive the actual Python and native public event views with the
+  same fixture. Verify default collapse, independent summary/trace labels,
+  keyboard and mouse selection, and replay/reconnect choice retention.
+  Check bounded reads, refusal clearing and suppression of unrecognized/private fields.
+  Run tests/test_native_public_details_pty.py with TUI_NATIVE_TEST_BINARY for
+  real native keyboard, mouse, refresh and quit evidence over local HTTP.
+- R008.2.3.2.2.2 and R012.1.2 retain full served and release qualification.
+
+### Whole-app public-fold keyboard qualification
+
+R008.2.3.2.2.2.1 requires a keyboard route from the composer to the conversation
+without replacing Tab completion or Shift+Tab mode selection. F8 switches focus
+between conversation and composer. Tab reaches public fold titles; Enter and
+Space toggle them. Refresh preserves focus and fold state. This focused check
+does not close the remaining presentation or release-performance criteria.
+
+R008.2.3.2.2.2.2 retains complete tokens, selection, keyboard parity, no-color,
+reduced motion, served journeys and release performance. The parent stays open.

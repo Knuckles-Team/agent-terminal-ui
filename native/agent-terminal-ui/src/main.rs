@@ -2,11 +2,16 @@ use agent_terminal_ui_native::{
     ArboraClient, AuthMode, SUBMISSION_UNKNOWN, TaskSnapshot, TaskSubmission,
     correlation::{TaskCorrelation, TaskState},
 };
-use crossterm::event::{Event, EventStream, KeyCode, KeyEventKind, KeyModifiers};
+use crossterm::event::{
+    DisableMouseCapture, EnableMouseCapture, Event, EventStream, KeyCode, KeyEventKind,
+    KeyModifiers,
+};
 use futures_util::StreamExt;
 use ratatui::{
     Frame,
+    layout::Rect,
     style::Style,
+    text::{Line, Text},
     widgets::{Block, Paragraph, Wrap},
 };
 use std::{env, ffi::OsString, process::ExitCode, sync::Arc};
@@ -15,16 +20,19 @@ mod host_log_view;
 mod inspector_view;
 use host_log_view::HostLogView;
 mod presentation;
+mod public_details_view;
 use inspector_view::InspectorView;
 #[cfg(test)]
 use presentation::presentation_style;
 use presentation::{ThemeSelection, Viewport};
+use public_details_view::PublicDetailsView;
 
 #[cfg(test)]
 fn draw(frame: &mut Frame, status: &str, style: Style) {
     draw_viewport(frame, status, style, &mut Viewport::default(), false);
 }
 
+#[cfg(test)]
 fn draw_viewport(
     frame: &mut Frame,
     status: &str,
@@ -46,6 +54,84 @@ fn draw_viewport(
     let inner = block.inner(frame.area());
     let paragraph = Paragraph::new(text).style(style).wrap(Wrap { trim: false });
     viewport.measure(paragraph.line_count(inner.width), inner.height);
+    frame.render_widget(
+        paragraph.scroll((viewport.offset(), 0)).block(block),
+        frame.area(),
+    );
+}
+
+fn draw_task_viewport(
+    frame: &mut Frame,
+    status: &str,
+    style: Style,
+    viewport: &mut Viewport,
+    read_only: bool,
+    details: &mut PublicDetailsView,
+) {
+    let mut lines: Vec<Line<'static>> = status
+        .lines()
+        .map(|line| Line::from(line.to_owned()))
+        .collect();
+    lines.push(Line::from(""));
+    let headers = details.append_lines(&mut lines, style);
+    let cancel_help = if read_only {
+        "read-only observation"
+    } else {
+        "x: cancel remote task"
+    };
+    lines.push(Line::from(""));
+    lines.push(Line::from(
+        "Tab: select detail | Enter / Space / click: expand or collapse | Escape: leave detail",
+    ));
+    lines.push(Line::from(
+        "Task streaming and approvals remain unavailable.",
+    ));
+    lines.push(Line::from(format!("F6: theme | l: host logs | i: run inspector | r: refresh read | {cancel_help} | c: cancel local request | q / Ctrl+C: quit")));
+    let block = Block::bordered()
+        .title("Arbora")
+        .title_bottom("Up/Down PgUp/PgDn Home/End");
+    let inner = block.inner(frame.area());
+    let paragraph = Paragraph::new(Text::from(lines.clone()))
+        .style(style)
+        .wrap(Wrap { trim: false });
+    viewport.measure(paragraph.line_count(inner.width), inner.height);
+    let positions = headers.map(|header| {
+        header.map(|header| {
+            let start = if header == 0 {
+                0
+            } else {
+                Paragraph::new(Text::from(lines[..header].to_vec()))
+                    .wrap(Wrap { trim: false })
+                    .line_count(inner.width)
+            };
+            let height = Paragraph::new(Text::from(lines[header..=header].to_vec()))
+                .wrap(Wrap { trim: false })
+                .line_count(inner.width);
+            (start, height)
+        })
+    });
+    if let Some(index) = details.take_focus_request()
+        && let Some((start, height)) = positions[index]
+    {
+        viewport.reveal(start, height);
+    }
+    let mut regions = [None; 2];
+    for (index, position) in positions.into_iter().enumerate() {
+        if let Some((start, height)) = position {
+            let offset = usize::from(viewport.offset());
+            let visible_start = start.max(offset);
+            let visible_end = (start + height).min(offset + usize::from(inner.height));
+            if visible_start < visible_end && inner.width > 0 {
+                regions[index] = Some(Rect::new(
+                    inner.x,
+                    inner.y + (visible_start - offset) as u16,
+                    inner.width,
+                    (visible_end - visible_start) as u16,
+                ));
+            }
+        }
+    }
+    details.set_header_regions(regions);
     frame.render_widget(
         paragraph.scroll((viewport.offset(), 0)).block(block),
         frame.area(),
@@ -372,6 +458,10 @@ async fn run(
         "Discovering Arbora..."
     };
     let mut terminal = ratatui::init();
+    if crossterm::execute!(std::io::stdout(), EnableMouseCapture).is_err() {
+        ratatui::restore();
+        return Err("Cannot enable terminal mouse input");
+    }
     let mut events = EventStream::new();
     let mut request = tokio::spawn({
         let client = client.clone();
@@ -395,6 +485,7 @@ async fn run(
     let mut viewport = Viewport::default();
     let mut inspector = InspectorView::default();
     let mut logs = HostLogView::default();
+    let mut details = PublicDetailsView::default();
     let mut redraw = tokio::time::interval(std::time::Duration::from_millis(250));
     redraw.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
     let result = async {
@@ -409,7 +500,7 @@ async fn run(
                 } else if inspector.is_open() {
                     inspector.draw(frame, style, std::time::Instant::now());
                 } else {
-                    draw_viewport(frame, &status, style, &mut viewport, observe);
+                    draw_task_viewport(frame, &status, style, &mut viewport, observe, &mut details);
                 }
             }).map_err(|_| "Cannot draw terminal")?;
             tokio::select! {
@@ -428,6 +519,7 @@ async fn run(
                         status = request_completed(result, &mut binding, &mut cancellation, remote_cancel);
                     }
                     inspector.task_updated(if accepted { binding.as_ref() } else { None });
+                    details.task_updated(if accepted { binding.as_ref() } else { None });
                 }
                 _ = observation_tick.tick(), if observation_ready(observation_active, pending, cancellation) => {
                     if stop_expired_observation(observation_deadline, tokio::time::Instant::now(), &mut observation_active, &mut status) {
@@ -445,9 +537,17 @@ async fn run(
                 }
                 _ = inspector.complete(), if inspector.pending() => {}
                 _ = logs.complete(), if logs.pending() => {}
-                _ = redraw.tick(), if inspector.is_open() || logs.is_open() => { logs.tick(); }
+                _ = details.complete(), if details.pending() => {}
+                _ = redraw.tick(), if inspector.is_open() || logs.is_open() || details.active() => {
+                    logs.tick();
+                    details.tick(client.clone(), std::time::Instant::now());
+                }
                 event = events.next() => {
                     let Some(Ok(event)) = event else { return Err("Terminal input unavailable"); };
+                    if let Event::Mouse(mouse) = event
+                        && cancellation != Cancellation::Confirming && !logs.is_open() && !inspector.is_open() {
+                        details.mouse(mouse);
+                    }
                     if let Event::Key(key) = event {
                         if themes.key(key) { continue; }
                         if key.kind != KeyEventKind::Press { continue; }
@@ -465,6 +565,7 @@ async fn run(
                                 inspector.open(client.clone());
                                 continue;
                             }
+                            if details.key(key) { continue; }
                             if viewport.handle(key.code) { continue; }
                         }
                         match key.code {
@@ -472,6 +573,7 @@ async fn run(
                                 observation_active = false;
                                 request.abort();
                                 inspector.task_updated(None);
+                                details.task_updated(None);
                                 pending = false;
                                 let result = (&mut request).await;
                                 if submitting {
@@ -486,7 +588,11 @@ async fn run(
                                     status = request_completed(result, &mut binding, &mut cancellation, false);
                                 }
                             }
+                            KeyCode::Char('c') if details.pending() => {
+                                details.cancel_read();
+                            }
                             KeyCode::Char('r') if !pending && !submission_unknown => {
+                                details.replay();
                                 status = if task_id.is_some() { "Reading Arbora task..." } else { "Discovering Arbora..." }.to_owned();
                                 let client = client.clone();
                                 let task_id = task_id.clone();
@@ -519,6 +625,8 @@ async fn run(
     request.abort();
     inspector.close();
     logs.close();
+    details.abort();
+    let _ = crossterm::execute!(std::io::stdout(), DisableMouseCapture);
     ratatui::restore();
     if submitting {
         status = submission_completed((&mut request).await, &mut binding, &mut cancellation);

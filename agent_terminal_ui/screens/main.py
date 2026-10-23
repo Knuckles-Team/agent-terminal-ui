@@ -55,6 +55,7 @@ class MainScreen(Screen):
     CSS_PATH = "main.tcss"
 
     BINDINGS = [
+        Binding("f8", "focus_conversation", "Conversation", show=True, priority=True),
         Binding("ctrl+b", "toggle_sidebar", "Sidebar", show=True),
         Binding("ctrl+l", "clear_conversation", "Clear", show=True),
         Binding("ctrl+v", "toggle_logs", "Logs", show=False, priority=True),
@@ -179,6 +180,13 @@ class MainScreen(Screen):
         """
         conversation = self.query_one("#conversation", Conversation)
         event_type = event.get("type")
+        if "public_run_invalid" in event:
+            conversation.invalidate_public_run(event["public_run_invalid"])
+        elif "public_run_binding" in event or "public_task_binding" in event:
+            await conversation.bind_public_run(
+                self.agent_app.agent_client,
+                event.get("public_run_binding") or event["public_task_binding"],
+            )
 
         handler = (
             self._EVENT_HANDLERS.get(event_type)
@@ -367,6 +375,17 @@ class MainScreen(Screen):
             sidebar.focus()
         else:
             self.query_one(InputTextArea).focus()
+
+    def action_focus_conversation(self) -> None:
+        """Switch keyboard focus between the transcript and the composer."""
+        conversation = self.query_one(Conversation)
+        focused = self.app.focused
+        if focused is conversation or (
+            focused is not None and conversation in focused.ancestors
+        ):
+            self.query_one(InputTextArea).focus()
+        else:
+            conversation.focus()
 
     async def action_clear_conversation(self) -> None:
         """Clear the conversation."""

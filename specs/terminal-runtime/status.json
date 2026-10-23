@@ -196,7 +196,12 @@
     "TUI-RUNTIME-R012.1.1",
     "TUI-RUNTIME-R012.1.2",
     "TUI-RUNTIME-R012.1.3",
-    "TUI-RUNTIME-R002.1.3.3"
+    "TUI-RUNTIME-R002.1.3.3",
+    "TUI-RUNTIME-R008.2.3.2.2.1",
+    "TUI-RUNTIME-R008.2.3.2.2.2",
+    "TUI-RUNTIME-R008.2.3.2.2.2.1",
+    "TUI-RUNTIME-R008.2.3.2.2.2.2",
+    "TUI-RUNTIME-R012.1.4"
   ],
   "requirements": [
     {
@@ -447,8 +452,8 @@
         "99b67585d433"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:912",
-        "native/agent-terminal-ui/src/main.rs:949"
+        "native/agent-terminal-ui/src/main.rs:1020",
+        "native/agent-terminal-ui/src/main.rs:1057"
       ]
     },
     {
@@ -597,7 +602,7 @@
         "e8711e7f49bf"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:888",
+        "native/agent-terminal-ui/src/main.rs:996",
         "native/agent-terminal-ui/tests/discovery.rs:110",
         "native/agent-terminal-ui/tests/discovery.rs:29",
         "native/agent-terminal-ui/tests/discovery.rs:50",
@@ -654,10 +659,10 @@
         "9b0dcc67e610"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:599",
-        "native/agent-terminal-ui/src/main.rs:624",
-        "native/agent-terminal-ui/src/main.rs:643",
-        "native/agent-terminal-ui/src/main.rs:670",
+        "native/agent-terminal-ui/src/main.rs:707",
+        "native/agent-terminal-ui/src/main.rs:732",
+        "native/agent-terminal-ui/src/main.rs:751",
+        "native/agent-terminal-ui/src/main.rs:778",
         "native/agent-terminal-ui/tests/submission.rs:140"
       ]
     },
@@ -680,11 +685,11 @@
         "3c592ffc6075"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1041",
-        "native/agent-terminal-ui/src/main.rs:809",
-        "native/agent-terminal-ui/src/main.rs:835",
-        "native/agent-terminal-ui/src/main.rs:851",
-        "native/agent-terminal-ui/src/main.rs:987"
+        "native/agent-terminal-ui/src/main.rs:1095",
+        "native/agent-terminal-ui/src/main.rs:1149",
+        "native/agent-terminal-ui/src/main.rs:917",
+        "native/agent-terminal-ui/src/main.rs:943",
+        "native/agent-terminal-ui/src/main.rs:959"
       ]
     },
     {
@@ -695,10 +700,10 @@
         "b05266d66c30"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1054",
-        "native/agent-terminal-ui/src/main.rs:1071",
-        "native/agent-terminal-ui/src/main.rs:1110",
-        "native/agent-terminal-ui/src/main.rs:1170",
+        "native/agent-terminal-ui/src/main.rs:1162",
+        "native/agent-terminal-ui/src/main.rs:1179",
+        "native/agent-terminal-ui/src/main.rs:1218",
+        "native/agent-terminal-ui/src/main.rs:1278",
         "native/agent-terminal-ui/tests/cancellation.rs:119"
       ]
     },
@@ -922,10 +927,10 @@
         "608e9e9d122b"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1370",
-        "native/agent-terminal-ui/src/presentation.rs:237",
-        "native/agent-terminal-ui/src/presentation.rs:288",
-        "native/agent-terminal-ui/src/presentation.rs:314"
+        "native/agent-terminal-ui/src/main.rs:1478",
+        "native/agent-terminal-ui/src/presentation.rs:251",
+        "native/agent-terminal-ui/src/presentation.rs:302",
+        "native/agent-terminal-ui/src/presentation.rs:328"
       ]
     },
     {
@@ -969,9 +974,9 @@
         "bd2d1aa85173"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/presentation.rs:351",
-        "native/agent-terminal-ui/src/presentation.rs:387",
-        "native/agent-terminal-ui/src/presentation.rs:417"
+        "native/agent-terminal-ui/src/presentation.rs:365",
+        "native/agent-terminal-ui/src/presentation.rs:401",
+        "native/agent-terminal-ui/src/presentation.rs:431"
       ]
     },
     {
@@ -982,7 +987,9 @@
       "verified_by": [],
       "rollup_of": [
         "TUI-RUNTIME-R008.2.3.2.2.3",
-        "TUI-RUNTIME-R008.2.3.2.2.4"
+        "TUI-RUNTIME-R008.2.3.2.2.4",
+        "TUI-RUNTIME-R008.2.3.2.2.1",
+        "TUI-RUNTIME-R008.2.3.2.2.2"
       ]
     },
     {
@@ -1049,11 +1056,11 @@
         "14a4f6e68157"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/run_inspector_client.rs:294",
-        "native/agent-terminal-ui/src/run_inspector_client.rs:332",
-        "native/agent-terminal-ui/src/run_inspector_client.rs:365",
-        "native/agent-terminal-ui/src/run_inspector_client.rs:446",
-        "native/agent-terminal-ui/src/run_inspector_client.rs:505"
+        "native/agent-terminal-ui/src/run_inspector_client.rs:305",
+        "native/agent-terminal-ui/src/run_inspector_client.rs:343",
+        "native/agent-terminal-ui/src/run_inspector_client.rs:376",
+        "native/agent-terminal-ui/src/run_inspector_client.rs:457",
+        "native/agent-terminal-ui/src/run_inspector_client.rs:526"
       ]
     },
     {
@@ -1064,11 +1071,11 @@
         "9c80ba88dbb9"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/inspector_view.rs:209",
-        "native/agent-terminal-ui/src/inspector_view.rs:227",
-        "native/agent-terminal-ui/src/inspector_view.rs:245",
-        "native/agent-terminal-ui/src/inspector_view.rs:288",
-        "native/agent-terminal-ui/src/inspector_view.rs:302"
+        "native/agent-terminal-ui/src/inspector_view.rs:215",
+        "native/agent-terminal-ui/src/inspector_view.rs:252",
+        "native/agent-terminal-ui/src/inspector_view.rs:270",
+        "native/agent-terminal-ui/src/inspector_view.rs:313",
+        "native/agent-terminal-ui/src/inspector_view.rs:327"
       ]
     },
     {
@@ -1118,7 +1125,7 @@
         "faeede3c59e8"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1433",
+        "native/agent-terminal-ui/src/main.rs:1541",
         "native/agent-terminal-ui/tests/task_snapshot.rs:195",
         "native/agent-terminal-ui/tests/task_snapshot.rs:234",
         "native/agent-terminal-ui/tests/task_snapshot.rs:267",
@@ -1149,7 +1156,8 @@
       "rollup_of": [
         "TUI-RUNTIME-R012.1.1",
         "TUI-RUNTIME-R012.1.2",
-        "TUI-RUNTIME-R012.1.3"
+        "TUI-RUNTIME-R012.1.3",
+        "TUI-RUNTIME-R012.1.4"
       ]
     },
     {
@@ -2032,7 +2040,7 @@
         "90fadd31b95d"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:766",
+        "native/agent-terminal-ui/src/main.rs:874",
         "native/agent-terminal-ui/src/task_output.rs:125",
         "native/agent-terminal-ui/src/task_output.rs:77",
         "native/agent-terminal-ui/src/task_output.rs:92",
@@ -2047,8 +2055,8 @@
         "90fadd31b95d"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/presentation.rs:172",
-        "native/agent-terminal-ui/src/presentation.rs:213"
+        "native/agent-terminal-ui/src/presentation.rs:186",
+        "native/agent-terminal-ui/src/presentation.rs:227"
       ]
     },
     {
@@ -2059,7 +2067,7 @@
         "90fadd31b95d"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:713",
+        "native/agent-terminal-ui/src/main.rs:821",
         "native/agent-terminal-ui/src/turn_usage.rs:101",
         "native/agent-terminal-ui/src/turn_usage.rs:125",
         "native/agent-terminal-ui/src/turn_usage.rs:145",
@@ -2074,7 +2082,7 @@
         "90fadd31b95d"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1484",
+        "native/agent-terminal-ui/src/main.rs:1592",
         "native/agent-terminal-ui/tests/submission.rs:232",
         "native/agent-terminal-ui/tests/submission.rs:25",
         "native/agent-terminal-ui/tests/submission.rs:50",
@@ -2089,7 +2097,7 @@
         "90fadd31b95d"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1512",
+        "native/agent-terminal-ui/src/main.rs:1620",
         "native/agent-terminal-ui/tests/task_snapshot.rs:156",
         "native/agent-terminal-ui/tests/task_snapshot.rs:196",
         "native/agent-terminal-ui/tests/task_snapshot.rs:235",
@@ -2147,8 +2155,8 @@
         "8879717e48eb"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1269",
-        "native/agent-terminal-ui/src/main.rs:1305",
+        "native/agent-terminal-ui/src/main.rs:1377",
+        "native/agent-terminal-ui/src/main.rs:1413",
         "native/agent-terminal-ui/tests/recovery.rs:280"
       ]
     },
@@ -2160,11 +2168,60 @@
         "65d859ac8296"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/run_inspector_client.rs:475",
+        "native/agent-terminal-ui/src/run_inspector_client.rs:491",
         "native/agent-terminal-ui/tests/anonymous.rs:107",
         "native/agent-terminal-ui/tests/anonymous.rs:13",
         "native/agent-terminal-ui/tests/anonymous.rs:40",
         "native/agent-terminal-ui/tests/anonymous.rs:84"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R008.2.3.2.2.1",
+      "title": "Collapsed public details in both terminals",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [
+        "native/agent-terminal-ui/src/inspector_view.rs:233",
+        "native/agent-terminal-ui/src/public_details_view.rs:326",
+        "native/agent-terminal-ui/src/public_details_view.rs:387",
+        "native/agent-terminal-ui/src/public_details_view.rs:441",
+        "native/agent-terminal-ui/src/public_details_view.rs:494"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R008.2.3.2.2.2",
+      "title": "Remaining full presentation qualification",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R008.2.3.2.2.2.1",
+        "TUI-RUNTIME-R008.2.3.2.2.2.2"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R008.2.3.2.2.2.1",
+      "title": "Python composer-to-fold keyboard route",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [
+        "tests/test_public_run_keyboard_app.py:13"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R008.2.3.2.2.2.2",
+      "title": "Retained complete presentation acceptance",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R012.1.4",
+      "title": "Mounted tool detail updates",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [
+        "tests/test_tool_call_block_mounted.py:14"
       ]
     }
   ]
