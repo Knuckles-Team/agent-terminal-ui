@@ -142,7 +142,7 @@ impl ArboraClient {
                 "jsonrpc": "2.0",
                 "id": submission.message_id(),
                 "method": "message/send",
-                "params": {"message": {
+                "params": {"configuration": {"blocking": false}, "message": {
                     "kind": "message", "role": "user",
                     "messageId": submission.message_id(),
                     "parts": [{"kind": "text", "text": submission.prompt}],

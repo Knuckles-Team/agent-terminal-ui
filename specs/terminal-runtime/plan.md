@@ -991,3 +991,7 @@ entry-point, environment inventory and served resume requirements open.
 ## Amendment: nonblocking unary turns
 
 Consume Arbora ARBORA-A2A-R001.6 through the existing Python polling path. Bind reads to the returned task and bound the observation period. Keep native parity and served streaming acceptance open under TUI-RUNTIME-R012.1.2.
+
+## Amendment: native unary observation
+
+Reuse native task reads and the existing observation interval for admitted submissions. Preserve read-only observer controls and confirmation. The four-hour local bound does not cancel backend execution. Served streaming and crash resume remain open.

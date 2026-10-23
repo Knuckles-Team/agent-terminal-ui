@@ -428,3 +428,5 @@ These tests do not prove model selection, history loading or backend authority.
 ## Nonblocking unary polling
 
 `TUI-RUNTIME-R012.1.1`: Protocol fixtures assert configuration.blocking=false, one submission, bound identity, terminal artifacts, failure, cancellation, refusal and timeout. These tests do not prove served streaming or active-crash resume.
+
+`TUI-RUNTIME-R012.1.3`: Native submission protocol checks the nonblocking flag. UI observation tests cover active and terminal snapshots, identity mismatch, deadline expiry and cancellation confirmation. These local tests are not installed-backend acceptance.
