@@ -466,7 +466,6 @@ reduced motion, served journeys and release performance. The parent stays open.
 
 | TUI-RUNTIME-R012.4.3.2 | Retained complete acceptance | Planned full command-matrix served fixture covers every command family with zero unserved-route requests. | Remains open until full proof passes |
 
-
 ## TUI-RUNTIME-R012.3.1: Refresh task history
 
 Mounted command tests press R to refresh the first server page. Fresh task
@@ -531,3 +530,10 @@ Branch validation for R012.4.3.3 passed 179 focused tests and the all-files
 pre-commit gate. The canonical status tool records local commit evidence as
 VERIFIED. This branch receipt is not default-branch delivery or live backend
 acceptance; the task remains pending independent review and merge.
+
+### Native held-key navigation
+
+TUI-RUNTIME-R008.2.3.2.2.2.2.1 binds the production event filter to viewport
+movement tests. Repeated action keys, modified navigation and release events
+must be rejected; ordinary presses remain accepted. These local tests do not
+prove live backend acceptance or the retained full presentation qualification.

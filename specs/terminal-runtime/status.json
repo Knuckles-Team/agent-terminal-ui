@@ -204,7 +204,9 @@
     "TUI-RUNTIME-R008.2.3.2.2.2.1",
     "TUI-RUNTIME-R008.2.3.2.2.2.2",
     "TUI-RUNTIME-R012.1.4",
-    "TUI-RUNTIME-R012.4.3.3"
+    "TUI-RUNTIME-R012.4.3.3",
+    "TUI-RUNTIME-R008.2.3.2.2.2.2.1",
+    "TUI-RUNTIME-R008.2.3.2.2.2.2.2"
   ],
   "requirements": [
     {
@@ -2249,7 +2251,11 @@
       "title": "Retained complete presentation acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R008.2.3.2.2.2.2.1",
+        "TUI-RUNTIME-R008.2.3.2.2.2.2.2"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R012.1.4",
@@ -2272,6 +2278,24 @@
       "verified_by": [
         "tests/test_unavailable_session_commands.py:10"
       ]
+    },
+    {
+      "id": "TUI-RUNTIME-R008.2.3.2.2.2.2.1",
+      "title": "Native held-key viewport navigation",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "be1eabdd50cc"
+      ],
+      "verified_by": [
+        "native/agent-terminal-ui/src/presentation.rs:74"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R008.2.3.2.2.2.2.2",
+      "title": "Remaining complete presentation acceptance",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
     }
   ]
 }
