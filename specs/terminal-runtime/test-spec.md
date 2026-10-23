@@ -466,6 +466,30 @@ reduced motion, served journeys and release performance. The parent stays open.
 
 | TUI-RUNTIME-R012.4.3.2 | Retained complete acceptance | Planned full command-matrix served fixture covers every command family with zero unserved-route requests. | Remains open until full proof passes |
 
+## TUI-RUNTIME-R012.3.1: Refresh task history
+
+Mounted command tests press R to refresh the first server page. Fresh task
+states replace old rows, prior replies clear, and pagination can reuse the
+new page cursor. Denied and malformed refreshes clear old content; R retries.
+Empty pages remain distinct from failed reads. Repeated R presses during a
+pending read issue no extra request. All calls use tasks/list or tasks/get,
+without changing the active context or resuming a conversation.
+
+Branch evidence: five mounted refresh cases fail at base 9da41811 and pass
+with the shortcut. The history-refresh, task-history and registered-command
+suites pass 113 tests with two workers. All-files pre-commit passes. Canonical
+status records local commit evidence; independent review and merge remain
+pending. This does not close R012.3 conversation resume or live producer proof.
+
+Close-during-refresh regression: a controlled HTTP transport suppresses
+cancellation after Esc, then returns a page or denial. Both paths must leave
+the closed screen's page and reply unchanged, without WorkerFailed or widget
+lookups. The mounted flag alone is insufficient during Textual teardown.
+
+Review correction evidence: both late-completion cases fail at 42f3875 with
+WorkerFailed. They pass with the cancellation guard before page assignment or
+widget updates. The same three focused suites now pass 115 tests with two
+workers. All-files pre-commit passes. Independent re-review remains pending.
 ## TUI-RUNTIME-R012.4.2: Usage refresh ordering
 
 A mounted UsageScreen with the real AgentClient and controlled HTTP transport
