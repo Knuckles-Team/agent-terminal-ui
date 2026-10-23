@@ -928,7 +928,7 @@ class CommandProcessor:
         await self.app.run_action("screen.toggle_sidebar")
 
     async def cmd_fast(self, args: str) -> None:
-        """Toggle fast mode (Haiku/Flash models). Usage: /fast [on|off]"""
+        """Report unavailable served fast-mode selection."""
         self.app.action_toggle_fast_mode()
 
     async def cmd_keybindings(self, args: str) -> None:
@@ -1128,52 +1128,18 @@ class CommandProcessor:
         )
 
     async def cmd_bg(self, args: str) -> None:
-        """Background the current session. The agent continues working autonomously."""
-        log = self.app.query_one("Conversation")
-        session_id = getattr(self.app, "current_session_id", None)
-        if not session_id:
-            self.app.notify("No active session to background.", severity="warning")
-            return
-
-        # Mark session as backgrounded in session manager
-        if hasattr(self.app, "_session_manager") and self.app._session_manager:
-            conn = self.app._session_manager._get_conn()
-            with contextlib.suppress(Exception):
-                conn.execute(
-                    "UPDATE sessions SET background = 1 WHERE id = ?",
-                    (session_id,),
-                )
-                conn.commit()
-
-        await log.add_info(
-            "⬇️ **Session Backgrounded**\n"
-            "This session will continue running autonomously.\n"
-            "Use `/agents` or press `←` to view all sessions."
-        )
+        """Report unavailable served background execution."""
         self.app.notify(
-            f"Session {session_id[:8]} backgrounded.", severity="information"
+            "/bg unavailable: Arbora background execution is not supported.",
+            severity="warning",
         )
-
-        # Switch to agent view if available
-        if hasattr(self.app, "switch_mode"):
-            self.app.switch_mode("agents")
 
     async def cmd_attach(self, args: str) -> None:
-        """Attach to a specific session. Usage: /attach <session_id>"""
-        session_id = args.strip()
-        if not session_id:
-            self.app.notify(
-                "Usage: /attach <session_id>",
-                severity="warning",
-            )
-            return
+        """Report unavailable served session attachment."""
         self.app.notify(
-            f"Attaching to session {session_id[:8]}...",
-            severity="information",
+            "/attach unavailable: Arbora session attachment is not supported.",
+            severity="warning",
         )
-        # Switch to the specified session
-        if hasattr(self.app, "_switch_session"):
-            await self.app._switch_session(session_id)
 
     async def cmd_simplify(self, args: str) -> None:
         """Analyze code and propose simplifications."""

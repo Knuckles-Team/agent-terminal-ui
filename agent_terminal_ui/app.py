@@ -803,10 +803,11 @@ class AgentApp(App):
         self.notify(f"Extended thinking {status}", severity="information")
 
     def action_toggle_fast_mode(self) -> None:
-        """Toggle fast mode (Alt+O)."""
-        self._fast_mode = not getattr(self, "_fast_mode", False)
-        status = "enabled" if self._fast_mode else "disabled"
-        self.notify(f"Fast mode {status}", severity="information")
+        """Report unavailable served fast-mode selection (Alt+O)."""
+        self.notify(
+            "Fast mode unavailable: Arbora fast-mode selection is not supported.",
+            severity="warning",
+        )
 
     def action_switch_dashboard(self) -> None:
         """Switch to the service dashboard screen (Alt+D)."""

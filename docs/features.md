@@ -27,6 +27,12 @@ subcommands:
 | MCP & tools | `/mcp`, `/mcp:reload`, `/tools`, `/skills`, `/resources` |
 | Ops | `/logs`, `/cron`, `/pipeline`, `/maintenance` |
 
+### Unavailable session and fast-mode actions
+
+`/bg`, `/attach` and `/fast` report unavailable until Arbora serves their
+contracts. They do not change session state, resume a conversation or select
+a model. Alt+O reports the same fast-mode refusal.
+
 ### Read-only task history
 
 `/history` lists caller-owned Arbora tasks. Press Enter to read a selected
@@ -145,7 +151,7 @@ Application bindings (`app.py::BINDINGS`):
 | `Ctrl+R` | Reverse history search |
 | `Alt+P` | Model picker |
 | `Alt+T` | Toggle extended thinking |
-| `Alt+O` | Toggle fast mode |
+| `Alt+O` | Report unavailable fast-mode selection |
 | `Alt+D` | Service dashboard |
 | `Alt+C` | Live capability palette |
 | `Shift+Tab` | Cycle reasoning effort / mode |

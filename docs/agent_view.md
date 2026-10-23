@@ -90,16 +90,9 @@ graph TD
 
 ### Backgrounding Sessions
 
-```bash
-# Background the current session
-/bg
-
-# Start a new session in background
-agent-terminal-ui --bg --prompt "run the test suite"
-
-# Attach to a specific session
-/attach <session_id>
-```
+`/bg` and `/attach <session_id>` report unavailable. They do not persist a
+background flag, continue work autonomously or resume a served session.
+The `--bg` startup flag opens Agent View; it is not proof of remote execution.
 
 ## Components
 
@@ -157,8 +150,8 @@ adding columns needed by Agent View:
 | Command | Description |
 |---------|-------------|
 | `/agents` | Open Agent View dashboard |
-| `/bg` | Background the current session |
-| `/attach <id>` | Attach to a specific session |
+| `/bg` | Report unavailable background execution |
+| `/attach <id>` | Report unavailable session attachment |
 | `/goal <text>` | Start an autonomous goal session |
 
 ## CLI Flags

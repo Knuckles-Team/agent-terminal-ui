@@ -479,3 +479,30 @@ with the worker guard. The focused usage, registered-command, current-plan and
 public-run keyboard suites pass 122 tests with two workers. All-files pre-commit
 passes. Generated commit evidence is local until independent review and merge;
 R012.6 and full served command acceptance remain open.
+## TUI-RUNTIME-R012.4.3.3: Unsupported command entry points
+
+`tests/test_unavailable_session_commands.py` mounts the production AgentApp.
+Enter submits /bg, /attach and /fast, including argument variants. Alt+O follows
+the same refusal path as /fast. Require one unavailable warning, no session
+manager access, unchanged identity and queue, no fast-mode flag and no model
+turn. Existing focus and exact-command regressions must remain green.
+This is client fixture evidence, not served scheduling or resume acceptance.
+
+Command inventory at base `9da41811fe661c3920834cbf1313de51a5aeab09`:
+
+- Client controls: help, clear, exit/quit, theme, queue variants, focus,
+  keybindings and export. Focus and exact-command keyboard proofs exist.
+- Served reads and invocation: model, history, fleet, mcp/tools, usage aliases,
+  op/confirm, capability aliases and run aliases. Full mounted command coverage
+  remains open, including inspector entry and refresh against served producers.
+- Explicit refusal: image, skills, prompts, kb, cron, pipeline, mcp:reload;
+  this slice adds truthful bg, attach and fast paths.
+- Retained audit: plan/chat/build, init/review/test/search, compact/diff/recap,
+  memory, agents, goal variants, simplify/add-dir, graph/ask/nl/obs/broker/kvcache,
+  ingest, sdd, impact/codemap/resources, maintenance/config/logs. Existing handler
+  tests do not establish full served acceptance for these families.
+
+Branch validation for R012.4.3.3 passed 179 focused tests and the all-files
+pre-commit gate. The canonical status tool records local commit evidence as
+VERIFIED. This branch receipt is not default-branch delivery or live backend
+acceptance; the task remains pending independent review and merge.
