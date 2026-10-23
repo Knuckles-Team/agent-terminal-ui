@@ -213,15 +213,15 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R015.41:** The documentation must cover every supported terminal environment variable. Source obligation: `T041`.
 - [ ] **TUI-RUNTIME-R015.42:** The documentation must define AGENT_LOG_FILE and AGENT_THEME behavior. Source obligation: `T042`.
 - [ ] **TUI-RUNTIME-R015.43:** The repository must provide a credential-free environment configuration example. Source obligation: `T043`.
-- [ ] **TUI-RUNTIME-R015.44:** The client must obtain MCP configuration through the currently authorized served contract. Source obligation: `missing-client-methods checkbox 1`.
-- [ ] **TUI-RUNTIME-R015.45:** The client must list MCP tools through the currently authorized served contract. Source obligation: `missing-client-methods checkbox 2`.
-- [ ] **TUI-RUNTIME-R015.46:** The client must list conversation identifiers through the currently authorized served contract. Source obligation: `missing-client-methods checkbox 3`.
-- [ ] **TUI-RUNTIME-R015.47:** The client must follow TUI-RUNTIME-R012.4.2 failure semantics. Authenticated empty results differ from unavailable requests. Source obligation: `missing-client-methods checkbox 4`.
-- [ ] **TUI-RUNTIME-R015.48:** The client changes must pass the configured lint and type hooks. Source obligation: `missing-client-methods checkbox 5`.
-- [ ] **TUI-RUNTIME-R015.49:** The client methods must carry type hints consistent with the existing code style. Source obligation: `missing-client-methods checkbox 6`.
-- [ ] **TUI-RUNTIME-R015.50:** The client tests must prove the three methods satisfy their contract. Source obligation: `missing-client-methods checkbox 7`.
-- [ ] **TUI-RUNTIME-R015.51:** The owning client contract must record the method implementation and its acceptance evidence. Source obligation: `missing-client-methods next step 1`.
-- [ ] **TUI-RUNTIME-R015.52:** The repository must run available client maintenance checks. Source obligation: `missing-client-methods next step 2`.
+- [x] **TUI-RUNTIME-R015.44:** The client must obtain MCP configuration through the currently authorized served contract. Source obligation: `missing-client-methods checkbox 1`.
+- [x] **TUI-RUNTIME-R015.45:** The client must list MCP tools through the currently authorized served contract. Source obligation: `missing-client-methods checkbox 2`.
+- [x] **TUI-RUNTIME-R015.46:** The client must list conversation identifiers through the currently authorized served contract. Source obligation: `missing-client-methods checkbox 3`.
+- [x] **TUI-RUNTIME-R015.47:** The client must follow TUI-RUNTIME-R012.4.2 failure semantics. Authenticated empty results differ from unavailable requests. Source obligation: `missing-client-methods checkbox 4`.
+- [x] **TUI-RUNTIME-R015.48:** The client changes must pass the configured lint and type hooks. Source obligation: `missing-client-methods checkbox 5`.
+- [x] **TUI-RUNTIME-R015.49:** The client methods must carry type hints consistent with the existing code style. Source obligation: `missing-client-methods checkbox 6`.
+- [x] **TUI-RUNTIME-R015.50:** The client tests must prove the three methods satisfy their contract. Source obligation: `missing-client-methods checkbox 7`.
+- [x] **TUI-RUNTIME-R015.51:** The owning client contract must record the method implementation and its acceptance evidence. Source obligation: `missing-client-methods next step 1`.
+- [x] **TUI-RUNTIME-R015.52:** The repository must run available client maintenance checks. Source obligation: `missing-client-methods next step 2`.
 - [ ] **TUI-RUNTIME-R015.53:** The terminal must resolve the remaining theme-switch regression. Source obligation: `missing-client-methods next step 3`.
 - [ ] **TUI-RUNTIME-R015.54:** The terminal must assess the remaining environment-example and tool-guard obligations. Source obligation: `missing-client-methods next step 4`.
 - [ ] **TUI-RUNTIME-R015.55:** The terminal must score at least 80 in project analysis. Source obligation: `CHECKLIST non-FR checkbox 44`.

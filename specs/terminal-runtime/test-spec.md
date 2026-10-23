@@ -343,15 +343,15 @@ Permitted fallback preserves message identity and the idempotency key.
 | `TUI-RUNTIME-R015.41` | Planned `tests/test_source_quality.py::test_source_quality_41` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.42` | Planned `tests/test_source_quality.py::test_source_quality_42` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.43` | `tests/test_source_quality.py::test_source_quality_43` parses the credential-free example and creates the production client with its loopback defaults. Counterexamples with missing values, remote URLs, credentials or shell execution must fail validation. |
-| `TUI-RUNTIME-R015.44` | Planned `tests/test_source_quality.py::test_source_quality_44` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.45` | Planned `tests/test_source_quality.py::test_source_quality_45` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.46` | Planned `tests/test_source_quality.py::test_source_quality_46` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.47` | Planned `tests/test_source_quality.py::test_source_quality_47` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.48` | Planned `tests/test_source_quality.py::test_source_quality_48` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.49` | Planned `tests/test_source_quality.py::test_source_quality_49` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.50` | Planned `tests/test_source_quality.py::test_source_quality_50` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.51` | Planned `tests/test_source_quality.py::test_source_quality_51` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.52` | Planned `tests/test_source_quality.py::test_source_quality_52` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.44` | Production get_mcp_config: authenticated fleet.status success/empty and malformed children; no raw configuration claim. |
+| `TUI-RUNTIME-R015.45` | Production list_mcp_tools: authenticated catalog reads, opaque cursor preservation, bounds, cycles and failure after a partial page. |
+| `TUI-RUNTIME-R015.46` | Production list_history_tasks: task/context identities, caller headers, opaque page reads and identity/bounds refusal. No complete enumeration or resume claim. |
+| `TUI-RUNTIME-R015.47` | Production read failure matrix: empty success differs from denied, unavailable, malformed, disconnected and timed-out reads; active context stays unchanged. |
+| `TUI-RUNTIME-R015.48` | Actual configured all-file hooks, including Ruff and mypy, must pass at the batch candidate; record execution below. |
+| `TUI-RUNTIME-R015.49` | Production signature assertions plus actual configured mypy execution; signature presence alone is not type correctness. |
+| `TUI-RUNTIME-R015.50` | tests/test_client_read_contracts.py exercises all three production read contracts through HTTP fixtures, alongside existing client and mounted tests. |
+| `TUI-RUNTIME-R015.51` | The client maintenance batch receipt below records adapters, tests, completed gates and residual acceptance. |
+| `TUI-RUNTIME-R015.52` | Fresh bounded client and mounted test execution plus configured all-file maintenance gates; record commands and results below. |
 | `TUI-RUNTIME-R015.53` | Planned `tests/test_source_quality.py::test_source_quality_53` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.54` | Planned `tests/test_source_quality.py::test_source_quality_54` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.55` | Planned `tests/test_source_quality.py::test_source_quality_55` must enter the owning path and prove the requirement. |
@@ -587,3 +587,47 @@ case-insensitive matching lines, first-row reveal, reverse-video selection,
 forward/backward wraparound and bounded Unicode editing. Recompute results
 from the live inspector text so expired/refused values cannot remain in search.
 Close and binding changes discard the query. No live backend acceptance claim.
+
+### Client maintenance evidence batch
+
+Base: `76a3655d42fa4d1643187d54a83cc8efd0cbbaf0`. Scope: existing R015.44–52.
+This batch adds no child requirements.
+
+| Adapter | Contract and evidence |
+|---|---|
+| `AgentClient.get_mcp_config` | `fleet.status` returns caller-visible children. Tests distinguish valid empty children from refusal and malformed fields. It does not return raw MCP configuration. |
+| `AgentClient.list_mcp_tools` | `fleet.catalog.list` uses opaque cursors, 100 items per page and at most ten pages. Tests reject partial success after denial, timeout, malformed data or cycles. |
+| `AgentClient.list_history_tasks` | `tasks/list` supplies bounded task pages with context identifiers. Tests retain repeated context IDs, validate identities and preserve active context. The client infers no complete context grouping or enumeration. |
+
+`tests/test_client_read_contracts.py` uses the production client and generated
+Arbora invoker with HTTP fixtures. It preserves the client's configured caller
+header rather than supplying credentials inside the transport handler. The
+fixture returns counterexamples for each read contract. Existing mounted
+history and usage tests cover stale content and asynchronous lifecycle.
+
+R015.46 concerns identifiers available through the current authorized contract.
+R012.3 and R012.3.2 remain open for complete conversation history and resume.
+R012.4.3, R012.6 and installed/live acceptance also remain open. These fixtures
+prove consumer behavior, not backend authorization enforcement or live producers.
+
+Validation: Python 3.14.7, frozen lock dependencies and official `arbora==0.1.7`.
+The following command passed 209 tests with two workers, including 44 new cases:
+
+```bash
+.venv/bin/pytest tests/test_client_read_contracts.py tests/test_client.py tests/test_client_methods.py tests/test_served_fleet_usage.py tests/test_task_history.py tests/test_history_refresh.py tests/test_history_navigation.py -q -n 2
+```
+
+The configured all-file gate runs Ruff, mypy, Vulture, Bandit, canonical spec
+checks and repository maintenance checks. Its first pass found two prose
+issues. Stronger value assertions then exposed a test annotation error.
+The batch fixes these findings without suppression. The final all-file gate passed, including Ruff and mypy:
+
+```bash
+PYTEST_XDIST_AUTO_NUM_WORKERS=2 pre-commit run --all-files
+```
+
+Independent review returned GO on scope and tests and reproduced 209 passing
+tests with two workers. R015.46 covers bounded context identifiers only.
+R015.48, R015.51 and R015.52 rely on execution and documentation receipts,
+not artificial test markers. Their generated state may remain LANDED rather
+than VERIFIED. No native build or live service is needed for this batch.
