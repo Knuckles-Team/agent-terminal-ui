@@ -2327,8 +2327,10 @@
     {
       "id": "TUI-RUNTIME-R010.10",
       "title": "Search the native inspector's displayed text",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "53bb3b5ca03e"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/inspector_view.rs:354",
         "native/agent-terminal-ui/src/inspector_view.rs:389",
