@@ -1286,6 +1286,7 @@
       "delivery_state": "VERIFIED",
       "landed_in": [
         "26659005d190",
+        "d1af8f3a226c",
         "e953bdfc7768"
       ],
       "verified_by": [
@@ -2042,8 +2043,10 @@
       "title": "Read caller task history without claiming conversation resume",
       "delivery_state": "VERIFIED",
       "landed_in": [
+        "452ee3eae931",
         "655161ef1a11",
-        "9dae309b58c9"
+        "9dae309b58c9",
+        "c3cdc6c39e94"
       ],
       "verified_by": [
         "tests/test_history_refresh.py:16",
@@ -2262,8 +2265,10 @@
     {
       "id": "TUI-RUNTIME-R012.4.3.3",
       "title": "Unavailable session and fast-mode commands",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "7957c3d08f87"
+      ],
       "verified_by": [
         "tests/test_unavailable_session_commands.py:10"
       ]
