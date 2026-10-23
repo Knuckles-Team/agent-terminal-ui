@@ -1852,30 +1852,52 @@
     {
       "id": "TUI-RUNTIME-R015.44",
       "title": "The client must obtain MCP configuration through the currently authorized served contract. Touches `agent_terminal_ui/client.py`",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "20e00677ac4c"
+      ],
+      "verified_by": [
+        "tests/test_client_read_contracts.py:269",
+        "tests/test_client_read_contracts.py:78"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.45",
       "title": "The client must list MCP tools through the currently authorized served contract. Touches `agent_terminal_ui/client.py`",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "20e00677ac4c"
+      ],
+      "verified_by": [
+        "tests/test_client_read_contracts.py:206",
+        "tests/test_client_read_contracts.py:297",
+        "tests/test_client_read_contracts.py:86"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.46",
       "title": "The client must list conversation identifiers through the currently authorized served contract. Touches `agent_terminal_ui/client.py`",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "20e00677ac4c"
+      ],
+      "verified_by": [
+        "tests/test_client_read_contracts.py:241",
+        "tests/test_client_read_contracts.py:325",
+        "tests/test_client_read_contracts.py:94"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.47",
       "title": "The client must follow TUI-RUNTIME-R012.4.2 failure semantics. Authenticated empty results differ from unavailable requests. Touches `agent_terminal_ui/client.py`",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "20e00677ac4c"
+      ],
+      "verified_by": [
+        "tests/test_client_read_contracts.py:101",
+        "tests/test_client_read_contracts.py:133"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.48",
@@ -1887,16 +1909,24 @@
     {
       "id": "TUI-RUNTIME-R015.49",
       "title": "The client methods must carry type hints consistent with the existing code style. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "20e00677ac4c"
+      ],
+      "verified_by": [
+        "tests/test_client_read_contracts.py:281"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.50",
       "title": "The client tests must prove the three methods satisfy their contract. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "20e00677ac4c"
+      ],
+      "verified_by": [
+        "tests/test_client_read_contracts.py:19"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.51",
