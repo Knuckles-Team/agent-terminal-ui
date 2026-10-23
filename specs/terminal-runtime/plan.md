@@ -1049,3 +1049,12 @@ The earlier mocked app test missed screen ownership: AgentApp has no sidebar
 action, while MainScreen owns it. R012.4.3.1 now requires real mounted keyboard
 submission, both sidebar transitions and no model-turn admission. Route the
 command through the screen action. This does not close the full command matrix.
+
+
+### Exact command keyboard routing correction
+
+Enter must preserve an exact registered command before considering completion.
+The previous filter excluded exact names, so /queue could become /queue:clear.
+Only a unique partial command may autocomplete. Mounted keyboard tests preserve
+queued messages and prove that ambiguous input selects no command or model turn.
+This extends R012.4.3.1, not full served command-family acceptance.

@@ -97,3 +97,69 @@ async def test_usage_entry_points_reach_only_served_operation(
             assert [(request.method, request.url.path) for request in requests] == [
                 ("POST", "/api/v1/ops/usage.read")
             ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("command", ["/queue", "/queue "])
+@pytest.mark.parametrize("typed", [False, True])
+async def test_exact_queue_command_never_selects_clear(
+    command: str, typed: bool, fake_client: AsyncMock
+) -> None:
+    fake_client.stream = Mock(side_effect=AssertionError("queue must not start a turn"))
+    app = AgentApp(client=fake_client)
+    app._user_message_queue = [{"message": "preserve this queued message"}]
+    async with app.run_test(size=(120, 35)) as pilot:
+        composer = app.screen.query_one(InputTextArea)
+        if typed:
+            await pilot.press(*command)
+            await pilot.pause()
+            await pilot.press("escape")
+            await pilot.pause()
+            composer.focus()
+        else:
+            composer.load_text(command)
+        await pilot.press("enter")
+        await pilot.pause()
+        assert composer.text == ""
+        await pilot.press("enter")
+        await pilot.pause()
+        assert app._user_message_queue == [{"message": "preserve this queued message"}]
+        fake_client.stream.assert_not_called()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("command", ["/c", "/", "/queu"])
+async def test_ambiguous_command_does_not_select_a_sibling(
+    command: str, fake_client: AsyncMock
+) -> None:
+    fake_client.stream = Mock(side_effect=AssertionError("unknown command must not turn"))
+    app = AgentApp(client=fake_client)
+    async with app.run_test(size=(120, 35)) as pilot:
+        composer = app.screen.query_one(InputTextArea)
+        composer.load_text(command)
+        await pilot.press("enter")
+        await pilot.pause()
+        assert composer.text == ""
+        fake_client.stream.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_unique_partial_command_completes_without_submitting(
+    fake_client: AsyncMock,
+) -> None:
+    fake_client.stream = Mock(side_effect=AssertionError("completion must not turn"))
+    app = AgentApp(client=fake_client)
+    async with app.run_test(size=(120, 35)) as pilot:
+        composer = app.screen.query_one(InputTextArea)
+        sidebar = app.screen.query_one("#sidebar")
+        initially_visible = sidebar.display
+        composer.load_text("/foc")
+        await pilot.press("enter")
+        await pilot.pause()
+        assert composer.text == "/focus "
+        assert sidebar.display is initially_visible
+        await pilot.press("enter")
+        await pilot.pause()
+        assert sidebar.display is not initially_visible
+        assert composer.text == ""
+        fake_client.stream.assert_not_called()

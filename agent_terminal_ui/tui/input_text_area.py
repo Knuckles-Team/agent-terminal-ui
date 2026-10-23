@@ -501,14 +501,12 @@ class InputTextArea(TextArea):
         current_text_enter: str = self.text.strip()  # type: ignore[has-type]
         if not current_text_enter.startswith("/") or self._suggestion_overlay:
             return False
-        matches = [
-            cmd
-            for cmd in self._commands.keys()
-            if cmd.startswith(current_text_enter[1:]) and cmd != current_text_enter[1:]
-        ]
-        if not matches:
+        command = current_text_enter[1:]
+        if command in self._commands:
             return False
-        # Autocomplete to the first match
+        matches = [cmd for cmd in self._commands if cmd.startswith(command)]
+        if len(matches) != 1:
+            return False
         self.text = f"/{matches[0]} "
         self.cursor_position = len(self.text)
         return True
