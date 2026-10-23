@@ -537,3 +537,27 @@ TUI-RUNTIME-R008.2.3.2.2.2.2.1 binds the production event filter to viewport
 movement tests. Repeated action keys, modified navigation and release events
 must be rejected; ordinary presses remain accepted. These local tests do not
 prove live backend acceptance or the retained full presentation qualification.
+
+### Native mouse-wheel navigation
+
+TUI-RUNTIME-R008.2.3.2.2.2.2.2.1 uses the production mouse dispatcher and
+Ratatui buffers to verify that only the visible viewport scrolls and folds retain
+selection and expansion. Viewport tests cover both bounds, empty content,
+refresh and resize retention. Modified and horizontal wheel events are inert;
+cancellation confirmation blocks mouse navigation. No live backend acceptance
+is claimed by these local tests.
+
+### Merged delivery receipts
+
+These receipts supersede the earlier branch-pending notes for their narrow
+slices. Each reconciled head passed full CI, native checks and Python 3.12
+compatibility before merge. Broader served and release requirements remain open.
+
+| Slice | PR | Main merge |
+|---|---|---|
+| Command honesty | #110 | 5f78122fa16a35af5592b8cfd36e90318e4ce987 |
+| Usage refresh ordering | #111 | 0118466743c78434120af64aefb1c47ecd47d96f |
+| History refresh and close guards | #112 | 623935149142c8640f62f3290e0d5f0951fd4f32 |
+| Native held-key navigation | #113 | 6f655fc3a657241eb5e1ce3625fb4b53cc56408c |
+
+Wheel navigation remains pending main-targeted full/native CI and merge in #114.

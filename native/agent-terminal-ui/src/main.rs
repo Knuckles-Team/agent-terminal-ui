@@ -3,7 +3,7 @@ use agent_terminal_ui_native::{
     correlation::{TaskCorrelation, TaskState},
 };
 use crossterm::event::{
-    DisableMouseCapture, EnableMouseCapture, Event, EventStream, KeyCode, KeyModifiers,
+    DisableMouseCapture, EnableMouseCapture, Event, EventStream, KeyCode, KeyModifiers, MouseEvent,
 };
 use futures_util::StreamExt;
 use ratatui::{
@@ -135,6 +135,26 @@ fn draw_task_viewport(
         paragraph.scroll((viewport.offset(), 0)).block(block),
         frame.area(),
     );
+}
+
+fn route_mouse(
+    event: MouseEvent,
+    confirming: bool,
+    logs: &mut HostLogView,
+    inspector: &mut InspectorView,
+    viewport: &mut Viewport,
+    details: &mut PublicDetailsView,
+) -> bool {
+    if confirming {
+        return false;
+    }
+    if logs.is_open() {
+        return logs.mouse(event);
+    }
+    if inspector.is_open() {
+        return inspector.mouse(event);
+    }
+    viewport.mouse(event) || details.mouse(event)
 }
 
 fn draw_confirmation(frame: &mut Frame, status: &str, style: Style) -> bool {
@@ -543,9 +563,9 @@ async fn run(
                 }
                 event = events.next() => {
                     let Some(Ok(event)) = event else { return Err("Terminal input unavailable"); };
-                    if let Event::Mouse(mouse) = event
-                        && cancellation != Cancellation::Confirming && !logs.is_open() && !inspector.is_open() {
-                        details.mouse(mouse);
+                    if let Event::Mouse(mouse) = event {
+                        route_mouse(mouse, cancellation == Cancellation::Confirming,
+                            &mut logs, &mut inspector, &mut viewport, &mut details);
                     }
                     if let Event::Key(key) = event {
                         if themes.key(key) { continue; }

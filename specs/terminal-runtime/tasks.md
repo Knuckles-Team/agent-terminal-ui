@@ -273,11 +273,14 @@ Record deferred validation as deferred, never passed.
 - [x] TUI-RUNTIME-R008.2.3.2.2.2.1: qualify the Python composer-to-fold keyboard route.
 - [ ] TUI-RUNTIME-R008.2.3.2.2.2.2: retain complete presentation and release acceptance.
 
-- [ ] **TUI-RUNTIME-R012.3.1:** Add keyboard refresh of the first task page, pagination reset and recovery after refusal. Keep this increment pending default-branch delivery.
+- [x] **TUI-RUNTIME-R012.3.1:** Add keyboard refresh of the first task page, pagination reset and recovery after refusal. Merged through PR #112.
 
-- [ ] **TUI-RUNTIME-R012.3.1:** Guard late refresh success and denial after close. Require mounted cancellation regressions before review.
-- [ ] **TUI-RUNTIME-R012.4.2:** Qualify usage refresh ordering when an old read suppresses cancellation. Retain live usage acceptance under R012.6.
-- [ ] **TUI-RUNTIME-R012.4.3.3:** Refuse unsupported session and fast-mode actions; qualify mounted keyboard routes. Keep pending until default-branch delivery.
+- [x] **TUI-RUNTIME-R012.3.1:** Guard late refresh success and denial after close. Mounted cancellation regressions pass.
+- [x] **TUI-RUNTIME-R012.4.2:** Qualify usage refresh ordering when an old read suppresses cancellation. Retain live usage acceptance under R012.6.
+- [x] **TUI-RUNTIME-R012.4.3.3:** Refuse unsupported session and fast-mode actions; qualify mounted keyboard routes. Merged through PR #110.
 
 - [x] **TUI-RUNTIME-R008.2.3.2.2.2.2.1:** Route held navigation keys through existing native viewports with repeated-action refusal tests.
 - [ ] **TUI-RUNTIME-R008.2.3.2.2.2.2.2:** Complete retained served presentation and performance qualification.
+
+- [x] **TUI-RUNTIME-R008.2.3.2.2.2.2.2.1:** Route vertical wheel events to the visible native viewport, preserving folds and rejecting modal or modified input.
+- [ ] **TUI-RUNTIME-R008.2.3.2.2.2.2.2.2:** Complete retained full presentation qualification.

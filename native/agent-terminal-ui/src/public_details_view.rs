@@ -323,6 +323,131 @@ mod tests {
             .collect()
     }
 
+    // spec: TUI-RUNTIME-R008.2.3.2.2.2.2.2.1
+    #[tokio::test]
+    async fn wheel_routes_only_to_visible_view_and_preserves_folds() {
+        use crate::{HostLogView, InspectorView, route_mouse};
+        let mut details = PublicDetailsView::default();
+        details.task_updated(Some(&binding("run-1")));
+        details.apply(page());
+        details.key(key(KeyCode::Tab));
+        details.key(key(KeyCode::Enter));
+        let folds = details.expanded;
+        let selected = details.selected;
+        let mut viewport = Viewport::default();
+        viewport.measure(100, 5);
+        let mut logs = HostLogView::default();
+        let mut inspector = InspectorView::default();
+        let wheel = MouseEvent {
+            kind: MouseEventKind::ScrollDown,
+            column: 1,
+            row: 1,
+            modifiers: KeyModifiers::NONE,
+        };
+        assert!(route_mouse(
+            wheel,
+            false,
+            &mut logs,
+            &mut inspector,
+            &mut viewport,
+            &mut details
+        ));
+        assert_eq!(viewport.offset(), 1);
+        assert!(!route_mouse(
+            wheel,
+            true,
+            &mut logs,
+            &mut inspector,
+            &mut viewport,
+            &mut details
+        ));
+        assert_eq!(viewport.offset(), 1);
+        let client = Arc::new(ArboraClient::new("http://127.0.0.1:1", None).unwrap());
+        inspector.open(client.clone());
+        let now = Instant::now();
+        let mut terminal = Terminal::new(TestBackend::new(20, 4)).unwrap();
+        terminal
+            .draw(|frame| inspector.draw(frame, Style::reset(), now))
+            .unwrap();
+        let inspector_before = shown(&terminal);
+        assert!(route_mouse(
+            wheel,
+            false,
+            &mut logs,
+            &mut inspector,
+            &mut viewport,
+            &mut details
+        ));
+        terminal
+            .draw(|frame| inspector.draw(frame, Style::reset(), now))
+            .unwrap();
+        let inspector_after = shown(&terminal);
+        assert_ne!(inspector_before, inspector_after);
+        assert_eq!(viewport.offset(), 1);
+        logs.open(client);
+        terminal
+            .draw(|frame| logs.draw(frame, Style::reset()))
+            .unwrap();
+        let logs_before = shown(&terminal);
+        assert!(route_mouse(
+            wheel,
+            false,
+            &mut logs,
+            &mut inspector,
+            &mut viewport,
+            &mut details
+        ));
+        terminal
+            .draw(|frame| logs.draw(frame, Style::reset()))
+            .unwrap();
+        let logs_after = shown(&terminal);
+        assert_ne!(logs_before, logs_after);
+        assert_eq!(viewport.offset(), 1);
+        terminal
+            .draw(|frame| inspector.draw(frame, Style::reset(), now))
+            .unwrap();
+        assert_eq!(shown(&terminal), inspector_after);
+        assert!(!route_mouse(
+            wheel,
+            true,
+            &mut logs,
+            &mut inspector,
+            &mut viewport,
+            &mut details
+        ));
+        for modifiers in [
+            KeyModifiers::CONTROL,
+            KeyModifiers::ALT,
+            KeyModifiers::SHIFT,
+        ] {
+            assert!(!route_mouse(
+                MouseEvent { modifiers, ..wheel },
+                false,
+                &mut logs,
+                &mut inspector,
+                &mut viewport,
+                &mut details
+            ));
+        }
+        terminal
+            .draw(|frame| logs.draw(frame, Style::reset()))
+            .unwrap();
+        assert_eq!(shown(&terminal), logs_after);
+        logs.close();
+        inspector.close();
+        assert!(route_mouse(
+            wheel,
+            false,
+            &mut logs,
+            &mut inspector,
+            &mut viewport,
+            &mut details
+        ));
+        assert_eq!(viewport.offset(), 2);
+        assert_eq!(details.expanded, folds);
+        assert_eq!(details.selected, selected);
+    }
+
     // spec: TUI-RUNTIME-R008.2.3.2.2.1
     #[test]
     fn actual_task_renderer_starts_collapsed_and_keyboard_choices_survive_updates() {

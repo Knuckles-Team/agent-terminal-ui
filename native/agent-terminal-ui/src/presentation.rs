@@ -1,6 +1,6 @@
 //! Native presentation tokens from the existing Textual built-in themes.
 
-use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
+use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers, MouseEvent, MouseEventKind};
 use ratatui::style::{Color, Style};
 
 const THEMES: [&str; 4] = ["tokyo-night", "nord", "gruvbox", "textual-light"];
@@ -223,6 +223,17 @@ impl Viewport {
         self.visible = self.requested.min(self.maximum);
     }
 
+    pub fn mouse(&mut self, event: MouseEvent) -> bool {
+        if !event.modifiers.is_empty() {
+            return false;
+        }
+        match event.kind {
+            MouseEventKind::ScrollUp => self.handle(KeyCode::Up),
+            MouseEventKind::ScrollDown => self.handle(KeyCode::Down),
+            _ => false,
+        }
+    }
+
     pub fn handle(&mut self, key: crossterm::event::KeyCode) -> bool {
         use crossterm::event::KeyCode;
         let page = self.height.max(1);
@@ -255,6 +266,63 @@ mod viewport_tests {
             .iter()
             .map(|cell| cell.symbol())
             .collect()
+    }
+
+    // spec: TUI-RUNTIME-R008.2.3.2.2.2.2.2.1
+    #[test]
+    fn wheel_bounds_refresh_resize_and_ignored_events() {
+        let mut viewport = Viewport::default();
+        let mut event = MouseEvent {
+            kind: MouseEventKind::ScrollDown,
+            column: 2,
+            row: 2,
+            modifiers: KeyModifiers::NONE,
+        };
+        viewport.measure(20, 5);
+        for _ in 0..30 {
+            assert!(viewport.mouse(event));
+        }
+        assert_eq!(viewport.offset(), 15);
+        viewport.measure(1, 5);
+        assert_eq!(viewport.offset(), 0);
+        viewport.measure(20, 5);
+        assert_eq!(viewport.offset(), 15);
+        viewport.measure(20, 10);
+        assert_eq!(viewport.offset(), 10);
+        viewport.measure(20, 5);
+        assert_eq!(viewport.offset(), 15);
+        event.kind = MouseEventKind::ScrollUp;
+        assert!(viewport.mouse(event));
+        assert_eq!(viewport.offset(), 14);
+        for modifiers in [
+            KeyModifiers::SHIFT,
+            KeyModifiers::CONTROL,
+            KeyModifiers::ALT,
+        ] {
+            event.modifiers = modifiers;
+            assert!(!viewport.mouse(event));
+            assert_eq!(viewport.offset(), 14);
+        }
+        event.modifiers = KeyModifiers::NONE;
+        for kind in [
+            MouseEventKind::ScrollLeft,
+            MouseEventKind::ScrollRight,
+            MouseEventKind::Moved,
+            MouseEventKind::Down(crossterm::event::MouseButton::Left),
+        ] {
+            event.kind = kind;
+            assert!(!viewport.mouse(event));
+            assert_eq!(viewport.offset(), 14);
+        }
+        event.kind = MouseEventKind::ScrollUp;
+        for _ in 0..30 {
+            assert!(viewport.mouse(event));
+        }
+        assert_eq!(viewport.offset(), 0);
+        viewport.measure(0, 0);
+        event.kind = MouseEventKind::ScrollDown;
+        assert!(viewport.mouse(event));
+        assert_eq!(viewport.offset(), 0);
     }
 
     // spec: TUI-RUNTIME-R008.2.3.2.2.3
