@@ -1322,7 +1322,7 @@
         "e3680d6a8cad"
       ],
       "verified_by": [
-        "tests/test_registered_command_contract.py:18"
+        "tests/test_registered_command_contract.py:19"
       ]
     },
     {

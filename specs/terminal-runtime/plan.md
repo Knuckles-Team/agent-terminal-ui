@@ -1041,3 +1041,11 @@ must reach only `usage.read`, including one explicit notice on refusal.
 These HTTP fixtures do not qualify the full registered command transport
 matrix or live producer acceptance. Legacy graph, memory, history, model,
 fleet and management paths still need their own served-contract qualification.
+
+
+### Mounted focus dispatch correction
+
+The earlier mocked app test missed screen ownership: AgentApp has no sidebar
+action, while MainScreen owns it. R012.4.3.1 now requires real mounted keyboard
+submission, both sidebar transitions and no model-turn admission. Route the
+command through the screen action. This does not close the full command matrix.

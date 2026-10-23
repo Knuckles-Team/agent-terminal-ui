@@ -2,7 +2,7 @@
 
 import inspect
 from collections.abc import Iterator
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, Mock
 
 import httpx
 import pytest
@@ -14,6 +14,7 @@ from agent_terminal_ui.app import AgentApp
 from agent_terminal_ui.client import AgentClient
 from agent_terminal_ui.commands import CommandProcessor
 from agent_terminal_ui.screens.usage import UsageScreen
+from agent_terminal_ui.tui.input_text_area import InputTextArea
 
 pytestmark = pytest.mark.spec("TUI-RUNTIME-R012.4.3.1")
 
@@ -27,11 +28,25 @@ def test_every_registered_handler_accepts_dispatch_arguments(name: str) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("command", ["/focus", "/focus "])
-async def test_focus_dispatch_toggles_sidebar_without_error(command: str) -> None:
-    app = MagicMock()
-    assert await CommandProcessor(app).process(command)
-    app.action_toggle_sidebar.assert_called_once_with()
-    app.notify.assert_not_called()
+async def test_focus_dispatch_toggles_sidebar_without_error(
+    command: str, fake_client: AsyncMock
+) -> None:
+    fake_client.stream = Mock(side_effect=AssertionError("focus must not start a turn"))
+    app = AgentApp(client=fake_client)
+    async with app.run_test(size=(120, 35)) as pilot:
+        sidebar = app.screen.query_one("#sidebar")
+        composer = app.screen.query_one(InputTextArea)
+        initially_visible = sidebar.display
+        assert app.focused is composer
+        for expected in (not initially_visible, initially_visible):
+            composer.load_text(command)
+            await pilot.press("enter")
+            await pilot.pause()
+            assert sidebar.display is expected
+            assert composer.text == ""
+            assert app.focused is composer
+            fake_client.stream.assert_not_called()
+        assert not app._is_processing
 
 
 @pytest.mark.asyncio
