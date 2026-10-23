@@ -192,7 +192,9 @@
     "TUI-RUNTIME-R002.1.3.2.2.2.3",
     "TUI-RUNTIME-R002.1.3.2.2.2.4",
     "TUI-RUNTIME-R008.2.3.2.2.4",
-    "TUI-RUNTIME-R012.6.2"
+    "TUI-RUNTIME-R012.6.2",
+    "TUI-RUNTIME-R012.1.1",
+    "TUI-RUNTIME-R012.1.2"
   ],
   "requirements": [
     {
@@ -1140,7 +1142,11 @@
       "title": "Live turn rendering",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R012.1.1",
+        "TUI-RUNTIME-R012.1.2"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R012.2",
@@ -2103,6 +2109,28 @@
     {
       "id": "TUI-RUNTIME-R012.6.2",
       "title": "Served turn and session token and cost display",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R012.1.1",
+      "title": "Nonblocking Python unary turns",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "ad7aa10ab43c"
+      ],
+      "verified_by": [
+        "tests/test_client.py:866",
+        "tests/test_client.py:886",
+        "tests/test_client.py:919",
+        "tests/test_client.py:949",
+        "tests/test_client.py:976"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R012.1.2",
+      "title": "Remaining live turn parity",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
