@@ -50,8 +50,8 @@ async def test_start_bg_opens_agent_view(fake_client) -> None:
 
 
 @pytest.mark.asyncio
-async def test_bg_uses_public_current_session_identity() -> None:
-    """Backgrounding should not depend on the removed private _session_id name."""
+async def test_bg_refuses_without_changing_session_state() -> None:
+    """A local session identity does not authorize remote background execution."""
     app = MagicMock()
     app.current_session_id = "session-background"
     app.query_one.return_value = AsyncMock()
@@ -61,8 +61,9 @@ async def test_bg_uses_public_current_session_identity() -> None:
     await CommandProcessor(app).cmd_bg("")
 
     app.notify.assert_called_once()
-    assert "session-" in app.notify.call_args.args[0]
-    app.switch_mode.assert_called_once_with("agents")
+    assert "unavailable" in app.notify.call_args.args[0]
+    app.switch_mode.assert_not_called()
+    app.query_one.assert_not_called()
 
 
 @pytest.mark.asyncio
