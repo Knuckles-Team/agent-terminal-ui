@@ -204,6 +204,7 @@
     "TUI-RUNTIME-R008.2.3.2.2.2.1",
     "TUI-RUNTIME-R008.2.3.2.2.2.2",
     "TUI-RUNTIME-R012.1.4",
+    "TUI-RUNTIME-R012.4.3.3",
     "TUI-RUNTIME-R008.2.3.2.2.2.2.1",
     "TUI-RUNTIME-R008.2.3.2.2.2.2.2",
     "TUI-RUNTIME-R008.2.3.2.2.2.2.2.1",
@@ -1292,7 +1293,7 @@
         "e953bdfc7768"
       ],
       "verified_by": [
-        "tests/test_served_fleet_usage.py:16"
+        "tests/test_served_fleet_usage.py:17"
       ]
     },
     {
@@ -1315,7 +1316,8 @@
       "verified_by": [],
       "rollup_of": [
         "TUI-RUNTIME-R012.4.3.1",
-        "TUI-RUNTIME-R012.4.3.2"
+        "TUI-RUNTIME-R012.4.3.2",
+        "TUI-RUNTIME-R012.4.3.3"
       ]
     },
     {
@@ -2048,11 +2050,11 @@
         "9dae309b58c9"
       ],
       "verified_by": [
+        "tests/test_history_refresh.py:16",
         "tests/test_task_history.py:100",
         "tests/test_task_history.py:122",
         "tests/test_task_history.py:165",
-        "tests/test_task_history.py:213",
-        "tests/test_task_history.py:218"
+        "tests/test_task_history.py:213"
       ]
     },
     {
@@ -2263,6 +2265,15 @@
       ],
       "verified_by": [
         "tests/test_tool_call_block_mounted.py:14"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R012.4.3.3",
+      "title": "Unavailable session and fast-mode commands",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [
+        "tests/test_unavailable_session_commands.py:10"
       ]
     },
     {

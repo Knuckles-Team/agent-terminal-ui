@@ -1,4 +1,5 @@
 """Public generated-client fixtures, not live native service qualification."""
+import asyncio
 import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
@@ -127,3 +128,72 @@ async def test_command_reads_reach_generated_operations(client_factory, command,
     else:
         app.query_one.return_value.add_info.assert_awaited_once()
     await client._http_client.aclose()
+
+
+@pytest.mark.parametrize("latest", ["DENIED", {}, {"tokens": None}, {"tokens": 0}])
+@pytest.mark.parametrize("late_error", [False, True])
+async def test_superseded_usage_read_cannot_replace_newer_result(
+    latest: str | dict[str, int | None], late_error: bool
+) -> None:
+    started = asyncio.Event()
+    cancelled = asyncio.Event()
+    release = asyncio.Event()
+    completed = asyncio.Event()
+    requests: list[httpx.Request] = []
+
+    async def reply(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        call = len(requests)
+        if call == 2:
+            started.set()
+            try:
+                await asyncio.Event().wait()
+            except asyncio.CancelledError:
+                cancelled.set()
+                await release.wait()
+            completed.set()
+            if late_error:
+                raise httpx.ReadError("obsolete read failed", request=request)
+        envelope: dict[str, Any] = {"meta": {"registry_digest": REGISTRY_DIGEST}}
+        if call == 3 and latest == "DENIED":
+            envelope.update(ok=False, error={"code": "DENIED"})
+        else:
+            totals = latest if call == 3 else {"tokens": 42}
+            envelope.update(ok=True, result={"value": {"totals": totals}})
+        return httpx.Response(200, json=envelope)
+
+    client = AgentClient(base_url="http://localhost:8000")
+    await client._http_client.aclose()
+    async with httpx.AsyncClient(transport=httpx.MockTransport(reply)) as transport:
+        client._http_client = transport
+
+        class UsageApp(App):
+            agent_client = client
+
+            def on_mount(self) -> None:
+                self.push_screen(UsageScreen())
+
+        app = UsageApp()
+        async with app.run_test() as pilot:
+            await app.workers.wait_for_complete()
+            widget = app.screen.query_one("#usage-hist", Static)
+            assert "tokens: 42" in str(widget.render())
+            await pilot.press("r")
+            await asyncio.wait_for(started.wait(), timeout=2)
+            await pilot.press("r")
+            await asyncio.wait_for(cancelled.wait(), timeout=2)
+            await pilot.pause()
+            current = str(widget.render())
+            if latest == {"tokens": 0}:
+                assert "tokens: 0" in current
+            else:
+                assert "unavailable" in current
+                assert "tokens: 0" not in current
+            assert "42" not in current
+            release.set()
+            await asyncio.wait_for(completed.wait(), timeout=2)
+            await pilot.pause()
+            assert str(widget.render()) == current
+    assert [(request.method, request.url.path) for request in requests] == [
+        ("POST", "/api/v1/ops/usage.read")
+    ] * 3
