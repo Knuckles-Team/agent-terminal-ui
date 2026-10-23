@@ -50,6 +50,8 @@ def bind(client, error_code, *, result=None, status=200, root_unary=False, mixed
                 "result": {
                     "kind": "task",
                     "id": "unary-task",
+                    "contextId": "a2a-context-" + "1" * 64,
+                    "metadata": {"arbora": {"runId": "unary-task"}},
                     "status": {"state": "completed"},
                     "history": [
                         {"role": "agent", "parts": [{"kind": "text", "text": "answer"}]}
@@ -77,9 +79,9 @@ async def test_explicit_unsupported_before_result_falls_back_once(client, code, 
         "message/send",
     ]
     assert posts[0].headers["Idempotency-Key"] == posts[1].headers["Idempotency-Key"]
-    assert (
-        json.loads(posts[0].content)["params"] == json.loads(posts[1].content)["params"]
-    )
+    streaming = json.loads(posts[0].content)["params"]
+    unary = json.loads(posts[1].content)["params"]
+    assert unary == {**streaming, "configuration": {"blocking": False}}
     assert all(r.headers["Authorization"] == "Bearer fixture-token" for r in requests)
     assert [e["content"] for e in events if e["type"] == "text"] == ["answer"]
 
