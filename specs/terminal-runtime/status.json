@@ -2178,8 +2178,10 @@
     {
       "id": "TUI-RUNTIME-R008.2.3.2.2.1",
       "title": "Collapsed public details in both terminals",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "49404376c22b"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/inspector_view.rs:233",
         "native/agent-terminal-ui/src/public_details_view.rs:326",
@@ -2202,8 +2204,10 @@
     {
       "id": "TUI-RUNTIME-R008.2.3.2.2.2.1",
       "title": "Python composer-to-fold keyboard route",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "49404376c22b"
+      ],
       "verified_by": [
         "tests/test_public_run_keyboard_app.py:13"
       ]
@@ -2218,8 +2222,10 @@
     {
       "id": "TUI-RUNTIME-R012.1.4",
       "title": "Mounted tool detail updates",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "49404376c22b"
+      ],
       "verified_by": [
         "tests/test_tool_call_block_mounted.py:14"
       ]
