@@ -1319,7 +1319,7 @@
       "title": "Dispatcher signatures and mounted usage aliases",
       "delivery_state": "VERIFIED",
       "landed_in": [
-        "b00d64992b30"
+        "e3680d6a8cad"
       ],
       "verified_by": [
         "tests/test_registered_command_contract.py:18"
