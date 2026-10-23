@@ -41,6 +41,7 @@ class HistoryScreen(ModalScreen[None]):
     BINDINGS = [
         ("escape", "close", "Close"),
         ("n", "next_page", "Next page"),
+        ("p", "previous_page", "Previous page"),
         ("r", "refresh_history", "Refresh"),
     ]
     DEFAULT_CSS = """
@@ -54,7 +55,7 @@ class HistoryScreen(ModalScreen[None]):
         super().__init__()
         self.client = client
         self.page = page
-        self._seen_cursors: set[str] = set()
+        self._page_cursors: list[str | None] = [None]
         self._reading = False
 
     def compose(self) -> ComposeResult:
@@ -63,7 +64,8 @@ class HistoryScreen(ModalScreen[None]):
             yield Label("Task replies only. Prior user turns and resume unavailable.")
             yield DataTable(id="history-table")
             yield Label(
-                "Enter: read reply | N: next page | R: refresh | Esc: close",
+                "Enter: read reply | P: previous | N: next page | "
+                "R: refresh | Esc: close",
                 id="history-page",
             )
             with VerticalScroll(id="history-reply-scroll"):
@@ -88,9 +90,10 @@ class HistoryScreen(ModalScreen[None]):
                 Text(task["status"]["state"]),
             )
         self.query_one("#history-page", Label).update(
-            "Enter: read reply | N: next page | R: refresh | Esc: close"
+            "Enter: read reply | P: previous | N: next page | R: refresh | Esc: close"
             if self.page.get("nextCursor")
-            else "Enter: read reply | End of task list | R: refresh | Esc: close"
+            else "Enter: read reply | P: previous | End of task list | "
+            "R: refresh | Esc: close"
         )
         self.query_one("#history-reply", Static).update(
             "Select a task to read its reply."
@@ -106,7 +109,7 @@ class HistoryScreen(ModalScreen[None]):
         worker = get_current_worker()
         self._reading = True
         self.page = {"tasks": [], "nextCursor": None}
-        self._seen_cursors.clear()
+        self._page_cursors = [None]
         self._render_page()
         reply = self.query_one("#history-reply", Static)
         reply.update("Refreshing task history...")
@@ -134,19 +137,39 @@ class HistoryScreen(ModalScreen[None]):
         cursor = self.page.get("nextCursor")
         if self._reading or cursor is None:
             return
-        if cursor in self._seen_cursors:
+        if cursor in self._page_cursors:
             self.notify("Task history pagination unavailable.", severity="warning")
             return
+        await self._read_page(cursor, [*self._page_cursors, cursor])
+
+    @work(group="task-history")
+    async def action_previous_page(self) -> None:
+        """Reread the previous cursor without caching task content."""
+        if self._reading or len(self._page_cursors) < 2:
+            return
+        path = self._page_cursors[:-1]
+        await self._read_page(path[-1], path)
+
+    async def _read_page(self, cursor: str | None, path: list[str | None]) -> None:
+        worker = get_current_worker()
         self._reading = True
-        self.query_one("#history-reply", Static).update("")
+        # Preserve navigation for retry, but erase content before authorization.
+        self.page = {"tasks": [], "nextCursor": self.page.get("nextCursor")}
+        self._render_page()
+        self.query_one("#history-reply", Static).update("Reading task page...")
         try:
             page = await self.client.list_history_tasks(cursor)
-            if page.get("nextCursor") in self._seen_cursors:
+            if worker.is_cancelled or not self.is_mounted:
+                return
+            continuation = page.get("nextCursor")
+            if continuation is not None and continuation in path:
                 raise ValueError("Task history cursor repeated")
-            self._seen_cursors.add(cursor)
+            self._page_cursors = path
             self.page = page
             self._render_page()
         except (httpx.HTTPError, A2ATransportError, ValueError):
+            if worker.is_cancelled or not self.is_mounted:
+                return
             self.query_one("#history-reply", Static).update("Task history unavailable.")
         finally:
             self._reading = False

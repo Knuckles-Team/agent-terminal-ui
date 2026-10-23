@@ -284,3 +284,5 @@ Record deferred validation as deferred, never passed.
 
 - [x] **TUI-RUNTIME-R008.2.3.2.2.2.2.2.1:** Route vertical wheel events to the visible native viewport, preserving folds and rejecting modal or modified input.
 - [ ] **TUI-RUNTIME-R008.2.3.2.2.2.2.2.2:** Complete retained full presentation qualification.
+
+- [x] **TUI-RUNTIME-R012.3.1.1:** Implement and validate previous-page task navigation with fresh reads and safe async lifecycle. Independent review passed; live resume remains open.
