@@ -38,6 +38,7 @@ from agent_terminal_ui.capabilities import (
     RunSummary,
 )
 from agent_terminal_ui.host_logs import HostLogReader as HostLogReader
+from agent_terminal_ui.public_run_events import MAX_SEQUENCE, SCHEMA, identifier
 
 logger = logging.getLogger(__name__)
 
@@ -119,11 +120,15 @@ def _sse_frames(lines: list[str]) -> list[dict[str, Any]]:
     if not data:
         return []
     frame = json.loads(data)
-    return [frame] if isinstance(frame, dict) else []
+    if not isinstance(frame, dict):
+        raise ValueError("A2A frame was not an object")
+    return [frame]
 
 
 def _frame_result(frame: dict[str, Any]) -> dict[str, Any]:
     error = frame.get("error")
+    if error is not None and not isinstance(error, dict):
+        raise A2ATransportError({"message": "A2A error was not an object"})
     if isinstance(error, dict):
         raise A2ATransportError(error, acknowledged="result" in frame)
     result = frame.get("result")
@@ -138,6 +143,16 @@ def _arbora_metadata(result: dict[str, Any]) -> dict[str, Any]:
     return arbora if isinstance(arbora, dict) else {}
 
 
+def _public_run_metadata_matches(result: dict[str, Any], run_id: str) -> bool:
+    metadata = result.get("metadata", {})
+    if not isinstance(metadata, dict):
+        return False
+    arbora = metadata.get("arbora", {})
+    return isinstance(arbora, dict) and (
+        "runId" not in arbora or arbora["runId"] == run_id
+    )
+
+
 def new_session_id() -> str:
     """Mint a new conversation identity (the A2A ``contextId``)."""
     return f"tui-{uuid.uuid4().hex}"
@@ -149,12 +164,7 @@ def _is_approval_operation(op: str) -> bool:
 
 
 def _artifact_events(result: dict[str, Any], session_id: str) -> list[dict[str, Any]]:
-    artifact = result.get("artifact") or {}
-    text = "".join(
-        str(part.get("text") or "")
-        for part in artifact.get("parts") or ()
-        if isinstance(part, dict) and part.get("kind", "text") == "text"
-    )
+    text = _artifact_text(result.get("artifact"))
     if not text:
         return []
     return [
@@ -165,6 +175,79 @@ def _artifact_events(result: dict[str, Any], session_id: str) -> list[dict[str, 
             "task_id": result.get("taskId"),
         }
     ]
+
+
+def _a2a_objects(value: Any, field: str) -> list[dict[str, Any]]:
+    if not isinstance(value, list) or any(not isinstance(item, dict) for item in value):
+        raise ValueError(f"invalid A2A {field}")
+    return value
+
+
+def _artifact_text(artifact: Any) -> str:
+    if not isinstance(artifact, dict):
+        raise ValueError("invalid A2A artifact")
+    parts = _a2a_objects(artifact.get("parts", []), "parts")
+    texts = [
+        part.get("text", "") for part in parts if part.get("kind", "text") == "text"
+    ]
+    if any(not isinstance(text, str) for text in texts):
+        raise ValueError("invalid A2A text")
+    return "".join(texts)
+
+
+def _task_answers(task: dict[str, Any]) -> list[dict[str, Any]]:
+    history_value = task.get("history")
+    artifacts_value = task.get("artifacts")
+    history = _a2a_objects([] if history_value is None else history_value, "history")
+    artifacts = _a2a_objects(
+        [] if artifacts_value is None else artifacts_value, "artifacts"
+    )
+    for item in history + artifacts:
+        _artifact_text(item)
+    return artifacts or [item for item in history if item.get("role") == "agent"][-1:]
+
+
+def _public_task_binding(result: dict[str, Any]) -> dict[str, str] | None:
+    """Identify an unavailable placeholder without inferring a backend run."""
+    kind = result.get("kind")
+    task_key = "id" if kind == "task" else "taskId"
+    task_id = result.get(task_key)
+    context_id = result.get("contextId")
+    status = result.get("status")
+    if (
+        isinstance(kind, str)
+        and kind in {"task", "status-update"}
+        and isinstance(status, dict)
+        and isinstance(status.get("state"), str)
+        and status.get("state")
+        in _FINAL_STATES | {"submitted", "working", "input-required", "auth-required"}
+        and isinstance(task_id, str)
+        and isinstance(context_id, str)
+        and identifier(task_id)
+        and identifier(context_id)
+        and all(key not in result or result[key] == task_id for key in ("id", "taskId"))
+    ):
+        return {"task_id": task_id, "context_id": context_id}
+    return None
+
+
+def _public_run_binding(result: dict[str, Any]) -> dict[str, str] | None:
+    """Keep the server's complete task/context/run binding, never infer a run."""
+    task_binding = _public_task_binding(result)
+    run_id = _arbora_metadata(result).get("runId")
+    if task_binding is not None and isinstance(run_id, str) and identifier(run_id):
+        return {**task_binding, "run_id": run_id}
+    return None
+
+
+def _task_state(result: dict[str, Any]) -> str:
+    status = result.get("status", {})
+    if not isinstance(status, dict):
+        raise ValueError("invalid A2A task status")
+    state = status.get("state", "")
+    if not isinstance(state, str):
+        raise ValueError("invalid A2A task state")
+    return state
 
 
 def normalize_a2a_event(
@@ -181,11 +264,18 @@ def normalize_a2a_event(
     if result.get("kind") == "artifact-update":
         return _artifact_events(result, session_id)
     task_id = result.get("id") or result.get("taskId")
-    state = str((result.get("status") or {}).get("state") or "")
+    state = _task_state(result)
+    if result.get("kind") == "task":
+        _task_answers(result)
     run_id = _arbora_metadata(result).get("runId")
     common: dict[str, Any] = {"session_id": session_id, "task_id": task_id}
     if run_id:
         common["run_id"] = run_id
+    public_binding = _public_run_binding(result)
+    if public_binding is not None:
+        common["public_run_binding"] = public_binding
+    elif task_binding := _public_task_binding(result):
+        common["public_task_binding"] = task_binding
     status = {
         "type": "sideband",
         "data": {"type": "status", "state": state, "task_id": task_id},
@@ -450,7 +540,7 @@ class AgentClient:
     async def _poll_results(
         self, message: dict[str, Any], headers: dict[str, str]
     ) -> AsyncGenerator[dict[str, Any], None]:
-        """Yield a unary task as stream results: state changes, then its answer."""
+        """Yield each bound unary snapshot, then its answer."""
         task = await self._rpc(
             "message/send",
             {"message": message, "configuration": {"blocking": False}},
@@ -466,8 +556,14 @@ class AgentClient:
             raise A2ATransportError({"message": "Task correlation mismatch"})
         task_id = binding[0]
         deadline = asyncio.get_running_loop().time() + self.poll_timeout
-        last_state = None
+        public_binding = None
         while True:
+            if ("taskId" in task and task["taskId"] != task_id) or (
+                public_binding is not None
+                and not _public_run_metadata_matches(task, public_binding["run_id"])
+            ):
+                raise ValueError("A2A polled task binding changed")
+            public_binding = public_binding or _public_run_binding(task)
             state = (task.get("status") or {}).get("state")
             if (
                 state in _FINAL_STATES
@@ -475,9 +571,7 @@ class AgentClient:
                 or not task_id
             ):
                 break
-            if state != last_state:
-                yield task
-                last_state = state
+            yield task
             remaining = deadline - asyncio.get_running_loop().time()
             try:
                 async with asyncio.timeout(remaining):
@@ -490,12 +584,11 @@ class AgentClient:
             if _poll_binding(task) != binding:
                 raise A2ATransportError({"message": "Task correlation mismatch"})
         if state == "completed":
-            replies = [m for m in task.get("history") or () if m.get("role") == "agent"]
-            answers = task.get("artifacts") or replies[-1:]
-            for artifact in answers:
+            for artifact in _task_answers(task):
                 yield {
                     "kind": "artifact-update",
                     "taskId": task_id,
+                    "contextId": task.get("contextId"),
                     "artifact": artifact,
                 }
         yield task
@@ -503,20 +596,87 @@ class AgentClient:
     async def _follow(
         self, method: str, params: dict[str, Any], session_id: str, headers: Any = None
     ) -> AsyncGenerator[dict[str, Any], None]:
-        async for event in self._follow_results(
-            self._rpc_stream(method, params, headers=headers), session_id
-        ):
-            yield event
+        try:
+            async for event in self._follow_results(
+                self._rpc_stream(method, params, headers=headers),
+                session_id,
+                expected_task_id=params.get("id"),
+            ):
+                yield event
+        except (A2ATransportError, httpx.HTTPError, ValueError):
+            if identifier(params.get("id")):
+                yield {
+                    "type": "sideband",
+                    "session_id": session_id,
+                    "data": {"type": "public_details_unavailable"},
+                    "public_run_invalid": {"task_id": params["id"]},
+                }
+            raise
 
     async def _follow_results(
-        self, results: AsyncGenerator[dict[str, Any], None], session_id: str
+        self,
+        results: AsyncGenerator[dict[str, Any], None],
+        session_id: str,
+        *,
+        expected_task_id: str | None = None,
     ) -> AsyncGenerator[dict[str, Any], None]:
+        public_binding: dict[str, str] | None = None
+        binding_invalid = False
         async for result in results:
+            task_key = "id" if result.get("kind") == "task" else "taskId"
+            if expected_task_id is not None and (
+                result.get("kind") not in ("task", "status-update", "artifact-update")
+                or result.get(task_key) != expected_task_id
+                or any(
+                    key in result and result[key] != expected_task_id
+                    for key in ("id", "taskId")
+                )
+            ):
+                raise ValueError("A2A task target mismatch")
             task_id = result.get("id") or result.get("taskId")
+            if public_binding is not None:
+                observed = {
+                    "task_id": task_id,
+                    "context_id": result.get("contextId"),
+                    "run_id": _arbora_metadata(result).get("runId"),
+                }
+                if (
+                    result.get("kind")
+                    not in ("task", "status-update", "artifact-update")
+                    or (
+                        result.get("kind") in ("task", "status-update")
+                        and _public_task_binding(result) is None
+                    )
+                    or not _public_run_metadata_matches(
+                        result, public_binding["run_id"]
+                    )
+                    or result.get(task_key) != public_binding["task_id"]
+                    or result.get("contextId") != public_binding["context_id"]
+                    or any(
+                        key in result and result[key] != public_binding["task_id"]
+                        for key in ("id", "taskId")
+                    )
+                    or any(
+                        value is not None and value != public_binding[key]
+                        for key, value in observed.items()
+                    )
+                ):
+                    binding_invalid = True
+            elif not binding_invalid:
+                public_binding = _public_run_binding(result)
             if task_id:
                 self._current_task_id = str(task_id)
             self._remember_plan(result)
-            for event in normalize_a2a_event(result, session_id):
+            normalized = normalize_a2a_event(result, session_id)
+            if binding_invalid and not normalized:
+                normalized = [
+                    {"type": "sideband", "data": {}, "session_id": session_id}
+                ]
+            for event in normalized:
+                if binding_invalid:
+                    event.pop("public_run_binding", None)
+                    event.pop("public_task_binding", None)
+                    event["public_run_invalid"] = public_binding
                 yield event
             status = result.get("status")
             if isinstance(status, dict) and status.get("state") == "input-required":
@@ -632,6 +792,25 @@ class AgentClient:
             raise ArboraOperationError("INVALID_ENVELOPE")
         return result["value"]
 
+    async def get_public_run_events(
+        self, run_id: str, *, task_id: str, after: int = 0
+    ) -> dict[str, Any]:
+        """Read only the registered, caller-authorized public event projection."""
+        if (
+            not identifier(run_id)
+            or not identifier(task_id)
+            or type(after) is not int
+            or not 0 <= after <= MAX_SEQUENCE
+        ):
+            raise ValueError("invalid public run cursor")
+        result = await self.invoke_op(
+            "runs.events",
+            {"run_id": run_id, "task_id": task_id, "after": after, "limit": 1000},
+        )
+        if not isinstance(result, dict) or not isinstance(result.get("value"), dict):
+            raise ArboraOperationError("INVALID_ENVELOPE")
+        return result["value"]
+
     async def confirm_plan(
         self,
         *,
@@ -698,14 +877,24 @@ class AgentClient:
             },
         }
         headers = {"Idempotency-Key": uuid.uuid4().hex}
+        public_binding = None
         try:
             async for event in self._follow_results(
                 self._conversation_results(message, headers), session_id
             ):
+                if "public_run_binding" in event:
+                    public_binding = event["public_run_binding"]
                 yield event
         except (A2ATransportError, httpx.HTTPError, ValueError) as exc:
             logger.warning("A2A stream failed: %s", exc)
-            yield {"type": "error", "message": str(exc), "session_id": session_id}
+            error: dict[str, Any] = {
+                "type": "error",
+                "message": str(exc),
+                "session_id": session_id,
+            }
+            if public_binding is not None:
+                error["public_run_invalid"] = public_binding
+            yield error
 
     async def _conversation_results(
         self, message: dict[str, Any], headers: dict[str, str]
@@ -1009,7 +1198,13 @@ class AgentClient:
             f"{self.base_url}/api/runs/{encoded}/events",
             params={"after": after, "limit": limit},
         )
-        return RunEventPage.from_payload(self._gateway_body(response))
+        payload = self._gateway_body(response)
+        if isinstance(payload, dict) and payload.get("schema_version") == SCHEMA:
+            raise ValueError(
+                "Public replay requires inline task details; "
+                "Mission Control uses the legacy schema"
+            )
+        return RunEventPage.from_payload(payload)
 
     async def get_event_schema(self) -> dict[str, Any]:
         """Fetch the versioned canonical run-event JSON Schema."""

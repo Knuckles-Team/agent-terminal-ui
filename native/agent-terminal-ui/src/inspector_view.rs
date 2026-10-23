@@ -18,7 +18,7 @@ type ReadTask = JoinHandle<Result<RunRead, ReadRefusal>>;
 
 #[derive(Default)]
 pub struct InspectorView {
-    selected_run: Option<String>,
+    binding: Option<TaskCorrelation>,
     inspector: Option<RunInspector>,
     request: Option<ReadTask>,
     open: bool,
@@ -36,10 +36,10 @@ impl InspectorView {
     /// Only a successful, correlated task read may select a run.
     pub fn task_updated(&mut self, binding: Option<&TaskCorrelation>) {
         let run = binding.and_then(TaskCorrelation::run_id);
-        if run != self.selected_run.as_deref() || binding.is_none() {
+        if binding != self.binding.as_ref() || binding.is_none() {
             self.abort();
-            self.selected_run = run.map(str::to_owned);
-            self.inspector = self.selected_run.clone().map(RunInspector::new);
+            self.binding = binding.cloned();
+            self.inspector = run.map(|run| RunInspector::new(run.to_owned()));
             self.viewport = Viewport::default();
         }
     }
@@ -53,11 +53,17 @@ impl InspectorView {
         if self.pending() {
             return;
         }
-        let Some(run) = self.selected_run.clone() else {
+        let Some(binding) = self.binding.as_ref() else {
             return;
         };
+        let Some(run) = binding.run_id().map(str::to_owned) else {
+            return;
+        };
+        let task = binding.task_id().to_owned();
         self.clear_read();
-        self.request = Some(tokio::spawn(async move { client.get_run(&run).await }));
+        self.request = Some(tokio::spawn(
+            async move { client.get_run(&run, &task).await },
+        ));
     }
 
     fn clear_read(&mut self) {
@@ -222,6 +228,25 @@ mod tests {
         let mut view = populated(now);
         view.task_updated(Some(&binding(Some("run-one"))));
         assert!(view.text(now).contains("private-plan"));
+    }
+
+    // spec: TUI-RUNTIME-R008.2.3.2.2.1
+    #[test]
+    fn same_run_with_a_different_owner_or_context_clears_inspector_values() {
+        let now = Instant::now();
+        for (task, context) in [("work-item:owner", "ctx"), ("task", "other-context")] {
+            let mut view = populated(now);
+            let binding = TaskCorrelation::from_task(&json!({
+                "kind":"task", "id":task, "contextId":context,
+                "status":{"state":"working"},
+                "metadata":{"arbora":{"runId":"run-one"}}
+            }))
+            .unwrap();
+            view.task_updated(Some(&binding));
+            assert!(!view.text(now).contains("private-plan"));
+            assert!(!view.text(now).contains("Peak context tokens: 42"));
+            assert_eq!(view.binding.as_ref().unwrap().task_id(), task);
+        }
     }
 
     // spec: TUI-RUNTIME-R010.9

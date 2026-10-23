@@ -9,13 +9,19 @@ Concept: AU-018 (Structured Conversation Blocks)
 
 from __future__ import annotations
 
+from typing import ClassVar
+
+from rich.markup import escape
 from textual import events, on
 from textual.app import ComposeResult
+from textual.binding import Binding, BindingType
 from textual.containers import VerticalGroup
 from textual.css.query import NoMatches
+from textual.message import Message
 from textual.reactive import var
 from textual.widgets import Markdown, Static
 
+from agent_terminal_ui.display_text import display_text
 from agent_terminal_ui.widgets.utils import get_agent_color
 
 
@@ -23,11 +29,26 @@ class ToolCallHeader(Static):
     """Clickable header for a tool call block."""
 
     ALLOW_SELECT = False
+    can_focus = True
+    BINDINGS: ClassVar[list[BindingType]] = [
+        Binding("enter,space", "toggle_section", "Expand/collapse", show=False),
+    ]
+
+    class Toggle(Message):
+        """An explicit keyboard request to change this fold."""
+
+    def action_toggle_section(self) -> None:
+        self.post_message(self.Toggle())
+
     DEFAULT_CSS = """
     ToolCallHeader {
         width: 1fr;
         height: auto;
         padding: 0 1;
+        &:focus {
+            background: $surface;
+            text-style: bold;
+        }
         &:hover {
             background: $surface;
         }
@@ -116,13 +137,14 @@ class ToolCallBlock(VerticalGroup):
             classes: Optional Textual CSS classes.
         """
         super().__init__(name=name, id=id, classes=classes)
-        self._tool_name = tool_name
-        self._tool_args = tool_args
+        self._tool_name = display_text(tool_name, multiline=False)
+        self._tool_args = display_text(tool_args, multiline=False)
         self._status = status
-        self._agent_name = agent_name
+        self._agent_name = display_text(agent_name, multiline=False)
         self._call_id = call_id
-        self._content = content
-        self._details = details
+        self._content = display_text(content) if content is not None else None
+        self._details = display_text(details) if details is not None else None
+        self._user_toggled = False
         self.has_content = bool(content or details)
 
     @property
@@ -151,12 +173,12 @@ class ToolCallBlock(VerticalGroup):
         agent_prefix = ""
         if self._agent_name != "main":
             color = get_agent_color(self._agent_name)
-            agent_prefix = f"[{color}]({self._agent_name})[/{color}] "
+            agent_prefix = f"[{color}]({escape(self._agent_name)})[/{color}] "
 
         # Tool display
-        tool_display = self._tool_name
+        tool_display = escape(self._tool_name)
         if self._tool_args:
-            tool_display += f" [{self._tool_args}]"
+            tool_display += " " + escape(f"[{self._tool_args}]")
 
         return (
             f"[$text-muted{dim}]{indicator}[/$text-muted{dim}] "
@@ -171,16 +193,45 @@ class ToolCallBlock(VerticalGroup):
 
         yield ToolCallHeader(self._build_header_text(), markup=True)
         with ToolCallContent():
-            if self._content:
-                yield Markdown(self._content)
-            if self._details:
-                yield Static(self._details, classes="tool-details", markup=False)
+            yield Markdown(self._content or "", open_links=False)
+            yield Static(self._details or "", classes="tool-details", markup=False)
 
     def on_mount(self) -> None:
         """Animate the tool call block into view."""
         from agent_terminal_ui.tui.animation import animate_in
 
         animate_in(self)
+        self._sync_content_visibility()
+        self._apply_expansion_policy()
+        self.watch_expanded()
+
+    def _sync_content_visibility(self) -> None:
+        self.query_one(Markdown).display = bool(self._content)
+        self.query_one(".tool-details", Static).display = bool(self._details)
+
+    def _apply_expansion_policy(self) -> None:
+        if self._user_toggled or not self.has_content:
+            return
+        settings = getattr(self.app, "settings", {})
+        mode = settings.get("tool_expand", "on-fail")
+        if (
+            mode == "always"
+            or (mode == "on-fail" and self.status == "failed")
+            or (mode == "on-success" and self.status == "completed")
+        ):
+            self.expanded = True
+
+    def _toggle(self) -> None:
+        if self.has_content:
+            self._user_toggled = True
+            self.expanded = not self.expanded
+        else:
+            self.app.bell()
+
+    @on(ToolCallHeader.Toggle)
+    def _on_header_toggle(self, event: ToolCallHeader.Toggle) -> None:
+        event.stop()
+        self._toggle()
 
     def watch_expanded(self) -> None:
         """React to expansion state changes."""
@@ -196,10 +247,8 @@ class ToolCallBlock(VerticalGroup):
     def _on_header_click(self, event: events.Click) -> None:
         """Toggle expansion when header is clicked."""
         event.stop()
-        if self.has_content:
-            self.expanded = not self.expanded
-        else:
-            self.app.bell()
+        self.query_one(ToolCallHeader).focus()
+        self._toggle()
 
     async def update_tool_call(
         self,
@@ -208,7 +257,7 @@ class ToolCallBlock(VerticalGroup):
         content: str | None = None,
         details: str | None = None,
     ) -> None:
-        """Update the tool call state and recompose.
+        """Update mounted content and status without replacing focused widgets.
 
         Args:
             status: New status value.
@@ -222,12 +271,19 @@ class ToolCallBlock(VerticalGroup):
             self.set_class(status == "pending", "-pending")
 
         if content is not None:
-            self._content = content
-            self.has_content = True
+            self._content = display_text(content)
 
         if details is not None:
-            self._details = details
-            self.has_content = True
+            self._details = display_text(details)
+
+        self.has_content = bool(self._content or self._details)
+        if self.is_mounted:
+            if content is not None:
+                await self.query_one(Markdown).update(self._content or "")
+            if details is not None:
+                self.query_one(".tool-details", Static).update(self._details or "")
+            self._sync_content_visibility()
+            self._apply_expansion_policy()
 
         # Update header
         try:
@@ -235,7 +291,3 @@ class ToolCallBlock(VerticalGroup):
             header.update(self._build_header_text())
         except NoMatches:
             pass
-
-        # Auto-expand on completion/failure if content exists
-        if self.has_content and status in ("completed", "failed"):
-            self.expanded = True

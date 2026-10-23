@@ -74,7 +74,29 @@ impl PlanValidator for SnapshotValidity {
 
 impl ArboraClient {
     /// Read only after this caller's registry advertises the operation.
-    pub async fn get_run(&self, run_id: &str) -> Result<RunRead, ReadRefusal> {
+    pub async fn get_run(&self, run_id: &str, task_id: &str) -> Result<RunRead, ReadRefusal> {
+        if task_id.trim().is_empty()
+            || task_id.chars().count() > 512
+            || task_id.chars().any(char::is_control)
+        {
+            return Err(ReadRefusal::Unavailable);
+        }
+        let value = self
+            .read_run_operation(
+                "runs.get",
+                run_id,
+                serde_json::json!({"run_id": run_id, "task_id": task_id}),
+            )
+            .await?;
+        decode_run(&value, run_id, OffsetDateTime::now_utc(), Instant::now())
+    }
+
+    pub(crate) async fn read_run_operation(
+        &self,
+        operation: &str,
+        run_id: &str,
+        params: Value,
+    ) -> Result<Value, ReadRefusal> {
         if !self.authenticated && self.auth_mode != crate::AuthMode::None {
             return Err(ReadRefusal::Denied);
         }
@@ -96,20 +118,13 @@ impl ArboraClient {
                 .and_then(Value::as_array)
                 .is_some_and(|ops| {
                     ops.iter()
-                        .any(|op| op.get("id").and_then(Value::as_str) == Some("runs.get"))
+                        .any(|op| op.get("id").and_then(Value::as_str) == Some(operation))
                 })
         {
             return Err(ReadRefusal::Unavailable);
         }
-        url.set_path("/api/v1/ops/runs.get");
-        let body = response_json(
-            self.http
-                .post(url)
-                .json(&serde_json::json!({"run_id": run_id}))
-                .send()
-                .await,
-        )
-        .await?;
+        url.set_path(&format!("/api/v1/ops/{operation}"));
+        let body = response_json(self.http.post(url).json(&params).send().await).await?;
         if body
             .pointer("/meta/registry_digest")
             .and_then(Value::as_str)
@@ -119,13 +134,9 @@ impl ArboraClient {
         {
             return Err(ReadRefusal::Unavailable);
         }
-        decode_run(
-            body.pointer("/result/value")
-                .ok_or(ReadRefusal::Unavailable)?,
-            run_id,
-            OffsetDateTime::now_utc(),
-            Instant::now(),
-        )
+        body.pointer("/result/value")
+            .cloned()
+            .ok_or(ReadRefusal::Unavailable)
     }
 }
 
@@ -455,7 +466,7 @@ mod transport_tests {
         let client = ArboraClient::new(&endpoint, Some("fixture-credential")).unwrap();
         let mut inspector = RunInspector::new("r".into());
         inspector
-            .accept_read(client.get_run("r").await, Instant::now())
+            .accept_read(client.get_run("r", "work-item:owner").await, Instant::now())
             .unwrap();
         assert!(
             inspector
@@ -469,7 +480,12 @@ mod transport_tests {
             r.to_lowercase()
                 .contains("authorization: bearer fixture-credential")
         }));
-        assert!(requests[1].ends_with("{\"run_id\":\"r\"}"));
+        let params: Value =
+            serde_json::from_str(requests[1].split_once("\r\n\r\n").unwrap().1).unwrap();
+        assert_eq!(
+            params,
+            serde_json::json!({"run_id":"r","task_id":"work-item:owner"})
+        );
     }
 
     // spec: TUI-RUNTIME-R002.1.3.3
@@ -484,7 +500,7 @@ mod transport_tests {
         let client = ArboraClient::with_auth_mode(&endpoint, None, crate::AuthMode::None).unwrap();
         let mut inspector = RunInspector::new("r".into());
         inspector
-            .accept_read(client.get_run("r").await, Instant::now())
+            .accept_read(client.get_run("r", "work-item:owner").await, Instant::now())
             .unwrap();
         assert!(
             inspector
@@ -499,7 +515,12 @@ mod transport_tests {
                 .iter()
                 .all(|r| { !r.to_lowercase().contains("authorization:") })
         );
-        assert!(requests[1].ends_with("{\"run_id\":\"r\"}"));
+        let params: Value =
+            serde_json::from_str(requests[1].split_once("\r\n\r\n").unwrap().1).unwrap();
+        assert_eq!(
+            params,
+            serde_json::json!({"run_id":"r","task_id":"work-item:owner"})
+        );
     }
 
     // spec: TUI-RUNTIME-R010.8
@@ -508,7 +529,7 @@ mod transport_tests {
         let (endpoint, task) = server(vec![(200, registry(serde_json::json!([])))]).await;
         let client = ArboraClient::new(&endpoint, Some("fixture-credential")).unwrap();
         assert!(matches!(
-            client.get_run("r").await,
+            client.get_run("r", "work-item:owner").await,
             Err(ReadRefusal::Unavailable)
         ));
         assert_eq!(task.await.unwrap().len(), 1);
@@ -520,9 +541,102 @@ mod transport_tests {
         .await;
         let client = ArboraClient::new(&endpoint, Some("fixture-credential")).unwrap();
         assert!(matches!(
-            client.get_run("r").await,
+            client.get_run("r", "work-item:owner").await,
             Err(ReadRefusal::Unavailable)
         ));
         task.await.unwrap();
+    }
+    // spec: TUI-RUNTIME-R008.2.3.2.2.1
+    #[tokio::test]
+    async fn invalid_owner_identifiers_cannot_dispatch_run_reads() {
+        let (endpoint, server) = server(vec![]).await;
+        let client = ArboraClient::new(&endpoint, Some("fixture-credential")).unwrap();
+        for task in ["", " ", "bad\u{1b}", &"x".repeat(513)] {
+            assert!(matches!(
+                client.get_run("r", task).await,
+                Err(ReadRefusal::Unavailable)
+            ));
+            assert!(matches!(
+                client.get_public_run_events("r", task, 0).await,
+                Err(ReadRefusal::Unavailable)
+            ));
+        }
+        assert!(server.await.unwrap().is_empty());
+    }
+
+    // spec: TUI-RUNTIME-R008.2.3.2.2.1
+    #[tokio::test]
+    async fn public_events_use_existing_authorized_operation_transport() {
+        let value: Value = serde_json::from_str(include_str!(
+            "../../../tests/fixtures/public_run_events.json"
+        ))
+        .unwrap();
+        let body = serde_json::json!({"ok":true,"meta":{"api_version":"v1","registry_digest":"d"},"result":{"value":value}});
+        for anonymous in [false, true] {
+            let (endpoint, task) = server(vec![
+                (200, registry(serde_json::json!([{"id":"runs.events"}]))),
+                (200, body.clone()),
+            ])
+            .await;
+            let client = if anonymous {
+                ArboraClient::with_auth_mode(&endpoint, None, crate::AuthMode::None).unwrap()
+            } else {
+                ArboraClient::new(&endpoint, Some("fixture-credential")).unwrap()
+            };
+            let page = client
+                .get_public_run_events("run-1", "work-item:owner", 0)
+                .await
+                .unwrap();
+            assert_eq!(page.events.len(), 5);
+            let requests = task.await.unwrap();
+            assert!(requests[0].starts_with("GET /api/v1/registry "));
+            assert!(requests[1].starts_with("POST /api/v1/ops/runs.events "));
+            assert!(requests.iter().all(|request| {
+                request
+                    .to_lowercase()
+                    .contains("authorization: bearer fixture-credential")
+                    != anonymous
+            }));
+            let params: Value =
+                serde_json::from_str(requests[1].split_once("\r\n\r\n").unwrap().1).unwrap();
+            assert_eq!(
+                params,
+                serde_json::json!({"run_id":"run-1","task_id":"work-item:owner","after":0,"limit":1000})
+            );
+        }
+    }
+
+    // spec: TUI-RUNTIME-R008.2.3.2.2.1
+    #[tokio::test]
+    async fn public_events_refuse_unregistered_denied_and_wrong_digest_reads() {
+        let (endpoint, task) = server(vec![(200, registry(serde_json::json!([])))]).await;
+        let client = ArboraClient::new(&endpoint, Some("fixture-credential")).unwrap();
+        assert!(
+            client
+                .get_public_run_events("run-1", "work-item:owner", 0)
+                .await
+                .is_err()
+        );
+        assert_eq!(task.await.unwrap().len(), 1);
+        for (status, digest) in [(403, "d"), (200, "wrong")] {
+            let body = if status == 403 {
+                serde_json::json!({"ok":false,"meta":{"api_version":"v1","registry_digest":digest},"error":{"code":"ACCESS_DENIED","source":"engine","message":"Engine request refused","retryable":false}})
+            } else {
+                serde_json::json!({"ok":true,"meta":{"api_version":"v1","registry_digest":digest},"result":{"value":{"private":"not rendered"}}})
+            };
+            let (endpoint, task) = server(vec![
+                (200, registry(serde_json::json!([{"id":"runs.events"}]))),
+                (status, body),
+            ])
+            .await;
+            let client = ArboraClient::new(&endpoint, Some("fixture-credential")).unwrap();
+            assert!(
+                client
+                    .get_public_run_events("run-1", "work-item:owner", 0)
+                    .await
+                    .is_err()
+            );
+            task.await.unwrap();
+        }
     }
 }

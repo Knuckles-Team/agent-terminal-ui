@@ -11,16 +11,22 @@ Concept: AU-018 (Structured Conversation Architecture)
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
 from textual.containers import VerticalGroup, VerticalScroll
 from textual.widget import Widget
 from textual.widgets import Static
 
+from agent_terminal_ui.public_run_events import identifier
 from agent_terminal_ui.widgets.agent_response import AgentResponse
+from agent_terminal_ui.widgets.public_run_details import PublicRunDetails
 from agent_terminal_ui.widgets.throbber import Throbber
 from agent_terminal_ui.widgets.tool_call_block import ToolCallBlock
 from agent_terminal_ui.widgets.user_message import UserMessage
+
+if TYPE_CHECKING:
+    from agent_terminal_ui.client import AgentClient
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +89,7 @@ class Conversation(VerticalScroll):
         self._throbber: Throbber | None = None
         self._tool_blocks: dict[str, ToolCallBlock] = {}
         self.transcript: list[tuple[str, str]] = []
+        self._public_details: dict[str, tuple[str, PublicRunDetails]] = {}
 
     def _record(self, role: str, text: str, *, extend: bool = False) -> None:
         """Keep the shown exchange for export; widget pruning does not drop it."""
@@ -190,6 +197,11 @@ class Conversation(VerticalScroll):
             details: Optional detailed output.
         """
         self._finalize_current_response()
+        if call_id and call_id in self._tool_blocks:
+            await self.update_tool_call(
+                call_id, status=status, content=content, details=details
+            )
+            return
         block = ToolCallBlock(
             tool_name,
             tool_args,
@@ -226,6 +238,41 @@ class Conversation(VerticalScroll):
                 status=status, content=content, details=details
             )
             self.scroll_end(animate=False)
+
+    async def bind_public_run(self, client: AgentClient, binding: object) -> None:
+        """Associate public details with the actual task that produced this turn."""
+        if not isinstance(binding, dict) or not all(
+            identifier(binding.get(key)) for key in ("task_id", "context_id")
+        ):
+            return
+        task_id, context_id = binding["task_id"], binding["context_id"]
+        run_id = binding.get("run_id")
+        if run_id is not None and not identifier(run_id):
+            return
+        existing = self._public_details.get(task_id)
+        if existing is not None:
+            context, details = existing
+            if context != context_id:
+                details.invalidate()
+            elif run_id is not None:
+                if details.run_id is None:
+                    details.revalidate()
+                    details.bind_run(run_id)
+                elif details.run_id != run_id:
+                    details.invalidate()
+                else:
+                    details.revalidate()
+            return
+        details = PublicRunDetails(client, run_id, task_id)
+        self._public_details[task_id] = (context_id, details)
+        await self.window.mount(details)
+        self._prune_old_widgets()
+
+    def invalidate_public_run(self, binding: object) -> None:
+        if isinstance(binding, dict) and isinstance(binding.get("task_id"), str):
+            existing = self._public_details.get(binding["task_id"])
+            if existing is not None:
+                existing[1].invalidate()
 
     async def add_info(self, text: str) -> None:
         """Add an informational message to the conversation.
@@ -276,6 +323,7 @@ class Conversation(VerticalScroll):
         """Remove all content from the conversation."""
         self._finalize_current_response()
         self._tool_blocks.clear()
+        self._public_details.clear()
         self.transcript.clear()
         if self._throbber is not None:
             self._throbber.stop()
@@ -293,7 +341,7 @@ class Conversation(VerticalScroll):
     def _max_conversation_widgets(self) -> int:
         """The configured widget-retention cap (default 50)."""
         try:
-            return self.app.settings.get("max_conversation_widgets", 50)
+            return getattr(self.app, "settings", {}).get("max_conversation_widgets", 50)
         except Exception:
             return 50
 
@@ -311,6 +359,9 @@ class Conversation(VerticalScroll):
         for call_id, block in list(self._tool_blocks.items()):
             if block is widget_to_remove:
                 self._tool_blocks.pop(call_id, None)
+        for task_id, (_, details) in list(self._public_details.items()):
+            if details is widget_to_remove:
+                self._public_details.pop(task_id, None)
 
     def _prune_old_widgets(self) -> None:
         """Prune older message widgets to maintain a lightweight DOM."""

@@ -1010,3 +1010,23 @@ Host-log credential checks remain unchanged. Inspector reads retain registry and
 Native transport and CLI refusal tests must cover both modes. Actual EG and
 Arbora execution requires separate served evidence. Fixtures cannot promote
 the full native chat, streaming, recovery or identity rollups.
+
+## 2026-10-22 collapsed public-detail amendment
+
+R008.2.3.2.2 is a rollup of the bounded consumer slice .1 and residual .2.
+R012.1 is a rollup of the mounted tool repair .1 and served residual .2.
+TUI owns fold state, keyboard routing and rendering. Arbora owns the public
+runs.events projection; AU owns lifecycle emission. A summary is shown only
+when that projection explicitly labels model-provided public summary text.
+Execution records are not thoughts. Neither terminal reconstructs private reasoning.
+Local deterministic fixtures do not establish live producer or release acceptance.
+
+Run reads send the authoritative task ID and run ID together. Arbora checks
+the owning WorkItem and its stored run binding. Neither terminal derives one
+identifier from the other. Native inspector reads retain this same binding.
+
+## Amendment 2026-10-22: Python fold keyboard access
+
+R008.2.3.2.2.2 now rolls up the focused keyboard route .1 and complete
+presentation acceptance .2. F8 leaves composer completion and mode keys intact.
+A keyboard test binding does not close the retained complete acceptance row.

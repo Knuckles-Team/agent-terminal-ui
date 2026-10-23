@@ -135,6 +135,20 @@ impl Viewport {
         self.visible
     }
 
+    pub fn reveal(&mut self, row: usize, rows: usize) {
+        if self.height == 0 {
+            return;
+        }
+        let first = row.min(usize::from(u16::MAX)) as u16;
+        let last = first.saturating_add(rows.min(usize::from(self.height)) as u16);
+        if first < self.visible {
+            self.requested = first;
+        } else if last > self.visible.saturating_add(self.height) {
+            self.requested = last.saturating_sub(self.height);
+        }
+        self.visible = self.requested.min(self.maximum);
+    }
+
     pub fn handle(&mut self, key: crossterm::event::KeyCode) -> bool {
         use crossterm::event::KeyCode;
         let page = self.height.max(1);
