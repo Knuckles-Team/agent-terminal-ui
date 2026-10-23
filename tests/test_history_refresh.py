@@ -151,3 +151,55 @@ async def test_pending_refresh_ignores_duplicate_refresh_and_selection() -> None
     finally:
         release.set()
         await client.close()
+
+
+@pytest.mark.parametrize("late_error", [False, True])
+async def test_close_discards_refresh_completion_after_cancel(late_error: bool) -> None:
+    entered = asyncio.Event()
+    cancelled = asyncio.Event()
+    release = asyncio.Event()
+    completed = asyncio.Event()
+    reads = 0
+
+    async def serve(request: httpx.Request) -> httpx.Response:
+        nonlocal reads
+        body = json.loads(request.content)
+        assert body["method"] == "tasks/list"
+        reads += 1
+        if reads == 2:
+            entered.set()
+            try:
+                await asyncio.Event().wait()
+            except asyncio.CancelledError:
+                cancelled.set()
+                await release.wait()
+            completed.set()
+            if late_error:
+                return httpx.Response(403)
+        return response({"tasks": [task(reads)], "nextCursor": None})
+
+    client = await client_for(serve)
+    client._current_session_id = "active-context"
+    try:
+        app = HistoryHost(client)
+        async with app.run_test() as pilot:
+            screen = app.screen
+            assert isinstance(screen, HistoryScreen)
+            await pilot.press("r")
+            await asyncio.wait_for(entered.wait(), timeout=2)
+            reply = screen.query_one("#history-reply", Static)
+            before = str(reply.content)
+            await pilot.press("escape")
+            await asyncio.wait_for(cancelled.wait(), timeout=2)
+            assert app.screen is not screen
+            await pilot.pause()
+            release.set()
+            await asyncio.wait_for(completed.wait(), timeout=2)
+            await pilot.pause()
+            assert screen.page == {"tasks": [], "nextCursor": None}
+            assert str(reply.content) == before
+            assert client.current_session_id == "active-context"
+            assert reads == 2
+    finally:
+        release.set()
+        await client.close()

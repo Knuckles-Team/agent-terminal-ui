@@ -274,3 +274,5 @@ Record deferred validation as deferred, never passed.
 - [ ] TUI-RUNTIME-R008.2.3.2.2.2.2: retain complete presentation and release acceptance.
 
 - [ ] **TUI-RUNTIME-R012.3.1:** Add keyboard refresh of the first task page, pagination reset and recovery after refusal. Keep this increment pending default-branch delivery.
+
+- [ ] **TUI-RUNTIME-R012.3.1:** Guard late refresh success and denial after close. Require mounted cancellation regressions before review.

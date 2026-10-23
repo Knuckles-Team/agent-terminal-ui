@@ -480,3 +480,8 @@ with the shortcut. The history-refresh, task-history and registered-command
 suites pass 113 tests with two workers. All-files pre-commit passes. Canonical
 status records local commit evidence; independent review and merge remain
 pending. This does not close R012.3 conversation resume or live producer proof.
+
+Close-during-refresh regression: a controlled HTTP transport suppresses
+cancellation after Esc, then returns a page or denial. Both paths must leave
+the closed screen's page and reply unchanged, without WorkerFailed or widget
+lookups. The mounted flag alone is insufficient during Textual teardown.

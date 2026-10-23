@@ -9,6 +9,7 @@ from textual.app import ComposeResult
 from textual.containers import Vertical, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import DataTable, Label, Static
+from textual.worker import get_current_worker
 
 from agent_terminal_ui.client import A2ATransportError, AgentClient
 
@@ -102,6 +103,7 @@ class HistoryScreen(ModalScreen[None]):
         """Read the first server page again without retaining stale task details."""
         if self._reading:
             return
+        worker = get_current_worker()
         self._reading = True
         self.page = {"tasks": [], "nextCursor": None}
         self._seen_cursors.clear()
@@ -112,9 +114,14 @@ class HistoryScreen(ModalScreen[None]):
             "Refreshing task history | Esc: close"
         )
         try:
-            self.page = await self.client.list_history_tasks()
+            page = await self.client.list_history_tasks()
+            if worker.is_cancelled or not self.is_mounted:
+                return
+            self.page = page
             self._render_page()
         except (httpx.HTTPError, A2ATransportError, ValueError):
+            if worker.is_cancelled or not self.is_mounted:
+                return
             reply.update("Task history unavailable.")
             self.query_one("#history-page", Label).update(
                 "R: retry refresh | Esc: close"
