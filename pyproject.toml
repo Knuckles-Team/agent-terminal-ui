@@ -58,7 +58,7 @@ where = ["."]
 include = ["agent_terminal_ui*"]
 
 [tool.setuptools.package-data]
-agent_terminal_ui = ["py.typed", "skills/**/*", "screens/*.tcss", "tui/*.tcss"]
+agent_terminal_ui = ["LICENSE", "py.typed", "skills/**/*", "screens/*.tcss", "tui/*.tcss"]
 
 [tool.ruff]
 line-length = 88

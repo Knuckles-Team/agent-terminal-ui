@@ -315,9 +315,24 @@ ID; it does not load prior turns for the model. `--model` is a compatibility
 option ignored by the A2A transport. The server selects the authorized model.
 See [CLI flags](docs/configuration.md#cli-flags) for supported combinations.
 
+### Native terminal
+
+The Rust terminal is a separate executable, not an option of the Python CLI.
+Build and launch it from the repository root with a Rust toolchain:
+
+```bash
+cargo run --locked --manifest-path native/agent-terminal-ui/Cargo.toml
+```
+
+Configure `AGENT_URL` and an existing `AGENT_BEARER_TOKEN` for the default bearer mode.
+For anonymous loopback only, set `AGENT_AUTH_MODE=none` and unset the bearer token.
+The Arbora server must also permit that anonymous mode.
+Python flags do not imply native support. See [Deployment](docs/deployment.md)
+for native setup and the remaining qualification limits.
+
 ### Docker
 
-A slim, runtime-only image (`Dockerfile`, `python:3.13-slim`) ships the frontend
+A slim, runtime-only image (`Dockerfile`, `python:3.14-slim`) ships the frontend
 without test/shell extras or the `agent_utilities` backend. Point it at a shared
 backend with `AGENT_URL`:
 
@@ -405,8 +420,8 @@ the `AGENT_THEME` environment variable.
 
 ### Native turn usage
 
-When Arbora returns a usage receipt bound to the displayed task, context and run,
-the native client shows its reported turn counters. Missing counters stay
+The native client shows turn counters from an Arbora usage receipt.
+The receipt must match the displayed task, context and run. Missing counters stay
 unavailable; a reported zero remains zero. Session totals and costs remain
 unavailable. A later task read without a receipt clears those counters.
 An earlier transient receipt is not durable usage history.
@@ -432,7 +447,10 @@ uvx --from pre-commit==4.6.0 pre-commit run --all-files
 Start at the [Agent Terminal UI documentation](https://knuckles-team.github.io/agent-terminal-ui/).
 It includes [Architecture](https://knuckles-team.github.io/agent-terminal-ui/architecture/),
 [Features](https://knuckles-team.github.io/agent-terminal-ui/features/), and
-[Configuration](https://knuckles-team.github.io/agent-terminal-ui/configuration/) references.
+[Configuration](https://knuckles-team.github.io/agent-terminal-ui/configuration/) references. Source guides: [Architecture](docs/architecture.md),
+[Features](docs/features.md), [Configuration](docs/configuration.md),
+[Session management](docs/session_management.md), [Agent View](docs/agent_view.md),
+and [Goal command](docs/goal_command.md).
 
 ## Contributing
 
@@ -440,4 +458,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and the repository instructions in [AGENT
 
 ## License
 
-Agent Terminal UI is released under the MIT License.
+Agent Terminal UI is released under the [MIT License](agent_terminal_ui/LICENSE).
