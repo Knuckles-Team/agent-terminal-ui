@@ -37,12 +37,14 @@ class SettingsScreen(ModalScreen):
     }
 
     #settings-container {
-        width: 70%;
+        width: 90%;
         max-width: 80;
-        height: 80%;
+        height: 90%;
+        min-height: 10;
+        max-height: 100%;
         background: $surface;
         border: solid $primary;
-        padding: 2;
+        padding: 0 1;
     }
 
     #settings-title {
@@ -50,11 +52,11 @@ class SettingsScreen(ModalScreen):
         text-style: bold;
         text-align: center;
         color: $primary;
-        margin: 0 0 1 0;
+        margin: 0;
     }
 
     #settings-search {
-        margin: 0 0 1 0;
+        margin: 0;
     }
 
     #settings-list {

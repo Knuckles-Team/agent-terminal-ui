@@ -423,6 +423,17 @@ Escape denies pending approvals through the existing callback. The fixture
 checks main-screen shortcuts separately. Transport effects are not qualified.
 Full presentation, native parity and served acceptance remain open.
 
+## Settings and MCP viewport access
+
+`tests/test_settings_mcp_layout.py` records partial R008 accessibility evidence.
+Mounted AgentApp journeys resize from 120x40 to 40x12, 60x20 and back.
+Settings search retains text and focus. Tab reaches the filtered checkbox, and Space persists its changed value.
+The settings screen is mounted directly because no application command exposes it.
+The MCP journey enters `/mcp`, navigates thirty fixture tools, and retains the selected cell inside the resized table.
+Both dialogs keep their controls within their bounds. MCP resize reveals the selected cell after layout settles.
+These fixtures do not qualify live catalog transport, modal Escape ownership, native parity, PTY behavior or release performance.
+R008 and its remaining full presentation acceptance stay open.
+
 ## Python operator documentation
 
 `tests/test_cli_documentation.py` captures actual CLI help and tests dispatch.

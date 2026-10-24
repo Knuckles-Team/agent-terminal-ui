@@ -27,21 +27,24 @@ class MCPScreen(ModalScreen[None]):
     }
 
     #mcp-dialog {
-        width: 80%;
-        height: 70%;
+        width: 90%;
+        height: 90%;
+        min-height: 10;
+        max-height: 100%;
         background: $surface;
         border: thick $primary;
-        padding: 1;
+        padding: 0 1;
     }
 
     #mcp-title {
         text-align: center;
         text-style: bold;
-        margin-bottom: 1;
+        margin-bottom: 0;
     }
 
-    DataTable {
+    #tools-table {
         height: 1fr;
+        min-height: 0;
     }
     """
 
@@ -84,6 +87,11 @@ class MCPScreen(ModalScreen[None]):
                 tool.get("name", "N/A"),
                 tool.get("description", "N/A")[:100],
             )
+
+    def on_resize(self) -> None:
+        """Keep the active table cell visible after the layout settles."""
+        for table in self.query(DataTable):
+            self.call_after_refresh(table.move_cursor)
 
     def action_close(self) -> None:
         """Dismiss the modal screen."""
