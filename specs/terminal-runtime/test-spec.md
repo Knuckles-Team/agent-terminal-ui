@@ -33,6 +33,24 @@ No manual-only proof substitutes for the negative tests. If a live identity prov
 | TUI-RUNTIME-R008.1 | Production native draw function with Ratatui TestBackend | Resize from 100 to 40 columns preserves wrapped discovery status and complete keyboard help; Tokyo Night tokens render | Nonempty NO_COLOR resets foreground and background; unsupported AGENT_THEME falls back without panic |
 | TUI-RUNTIME-R009 | File-level unit test in `tests/test_docs_layout.py` | Four headings present | A missing heading fails |
 
+## Cross-terminal presentation inventory
+
+This inventory binds existing R008 rows without closing full presentation acceptance.
+
+| Existing requirement | Evidence and remaining limits |
+|---|---|
+| R008 keyboard access | `test_presentation_resize.py` verifies sidebar reopening focuses its tabs, arrow navigation, resize and composer return. The baseline targets a non-focusable container. |
+| R008.2.1 baseline tokens | Existing Python contrast tests and native presentation tests check the four baseline palettes. They do not qualify every accent/widget combination. |
+| R008.2.2 viewport behavior | Native production viewport tests retain requested rows through refresh and resize. Mounted Python tests preserve a multiline draft and available reading space. |
+| R008.2 retained parity | `test_presentation_pty.py` tests both production terminals against one loopback task fixture. It checks reading, paging, resize, theme redraw, visible-row retention through switching, color suppression and clean exit. Navigation makes no extra requests. |
+
+The PTY matrix uses 100x30 and 40x16 viewports, with and without nonempty NO_COLOR.
+Python uses the actual module command; native uses an explicitly compiled current binary.
+The fixture serves a unary task and an empty skills list. It is not installed Arbora or live backend qualification.
+The test requires optional pyte and TUI_NATIVE_TEST_BINARY for native cases. Missing prerequisites skip those cases and do not count as passes.
+Python keeps Textual monochrome behavior; native resets foreground/background. Empty NO_COLOR semantics still differ.
+Full selection, all-view contrast, reduced-motion parity, served authentication and release performance remain open.
+
 ## Planned run-surface acceptance
 
 These tests are planned, not execution receipts. Each test must bind its exact requirement ID.

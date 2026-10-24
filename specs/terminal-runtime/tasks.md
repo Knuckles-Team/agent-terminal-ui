@@ -30,7 +30,7 @@
 - [ ] **TUI-RUNTIME-R005:** Docs layout pages
 - [ ] **TUI-RUNTIME-R006:** Pyproject pipelines hook sections
 - [ ] **TUI-RUNTIME-R007:** Release workflow caller
-- [ ] **TUI-RUNTIME-R008:** Theme tokens and no-colour fallback. Python chat and approval modal resize fixes have focused coverage; full presentation acceptance remains open.
+- [ ] **TUI-RUNTIME-R008:** Theme tokens and no-colour fallback. Python modal resize and sidebar focus fixes have focused coverage. A shared Python/native PTY fixture checks bounded presentation; full acceptance remains open.
 - [ ] **TUI-RUNTIME-R008.1:** Wrap native discovery status and help after resize; verify startup palette and NO_COLOR with production renderer tests.
 - [ ] **TUI-RUNTIME-R009:** AGENTS.md headings
 - [ ] **TUI-RUNTIME-R010:** Run harness surface (rollup of 1 to 6)

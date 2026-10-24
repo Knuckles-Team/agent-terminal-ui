@@ -19,7 +19,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
-from textual.widgets import Footer, ProgressBar, RichLog, TabbedContent, TabPane
+from textual.widgets import Footer, ProgressBar, RichLog, TabbedContent, TabPane, Tabs
 
 from agent_terminal_ui.host_logs import RETENTION_GAP
 from agent_terminal_ui.tui.input_text_area import InputTextArea
@@ -379,7 +379,7 @@ class MainScreen(Screen):
         sidebar = self.query_one("#sidebar", Vertical)
         sidebar.display = not sidebar.display
         if sidebar.display:
-            sidebar.focus()
+            sidebar.query_one(Tabs).focus()
         else:
             self.query_one(InputTextArea).focus()
 
