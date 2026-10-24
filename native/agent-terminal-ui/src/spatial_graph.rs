@@ -180,7 +180,12 @@ impl GraphWidget<'_> {
 impl Widget for GraphWidget<'_> {
     fn render(self, area: Rect, buffer: &mut Buffer) {
         buffer.set_style(area, self.style);
-        for &(from, to) in &self.graph.edges {
+        for &(from, to) in self
+            .graph
+            .edges
+            .iter()
+            .filter(|&&(from, to)| from == self.selected || to == self.selected)
+        {
             let (x1, y1) = self.layout.positions[from];
             let (x2, y2) = self.layout.positions[to];
             let (start, end, middle) = (x1 + NODE_WIDTH, x2 - 2, x1 + NODE_WIDTH + 2);
@@ -297,6 +302,58 @@ mod tests {
                 assert!(layout.positions[from].0 < layout.positions[to].0);
             }
         }
+    }
+
+    // spec: TUI-RUNTIME-R010.12.1.1
+    #[test]
+    fn selected_edges_distinguish_crossed_pairs_from_full_dependencies() {
+        let pairs = graph(4, vec![(0, 3), (1, 2)]);
+        let full = graph(4, vec![(0, 2), (0, 3), (1, 2), (1, 3)]);
+        let mut terminal = Terminal::new(TestBackend::new(60, 14)).unwrap();
+        let mut map = SpatialGraph::new(&pairs);
+        terminal
+            .draw(|f| map.draw(f, f.area(), &pairs, 0, Style::reset()))
+            .unwrap();
+        let first = terminal.backend().buffer().clone();
+        let mut map = SpatialGraph::new(&full);
+        terminal
+            .draw(|f| map.draw(f, f.area(), &full, 0, Style::reset()))
+            .unwrap();
+        assert_ne!(&first, terminal.backend().buffer());
+        assert_eq!(first[(COLUMN - 1, 1)].symbol(), " ");
+        assert_eq!(first[(COLUMN - 1, ROW + 1)].symbol(), ">");
+        assert_eq!(terminal.backend().buffer()[(COLUMN - 1, 1)].symbol(), ">");
+        let mut map = SpatialGraph::new(&pairs);
+        terminal
+            .draw(|f| map.draw(f, f.area(), &pairs, 1, Style::reset()))
+            .unwrap();
+        let second = terminal.backend().buffer();
+        assert_eq!(second[(COLUMN - 1, 1)].symbol(), ">");
+        assert_eq!(second[(COLUMN - 1, ROW + 1)].symbol(), " ");
+        assert!(pairs.text(0).contains("Dependents (depends_on): 4: step-3"));
+        assert!(pairs.text(1).contains("Dependents (depends_on): 3: step-2"));
+        assert!(
+            pairs
+                .text(2)
+                .contains("Predecessors (depends_on): 2: step-1")
+        );
+        assert!(
+            pairs
+                .text(3)
+                .contains("Predecessors (depends_on): 1: step-0")
+        );
+        terminal
+            .draw(|f| map.draw(f, f.area(), &pairs, usize::MAX, Style::reset()))
+            .unwrap();
+        assert!(
+            !terminal
+                .backend()
+                .buffer()
+                .content()
+                .iter()
+                .any(|c| c.symbol() == ">")
+        );
+        assert_eq!(pairs.edges, vec![(0, 3), (1, 2)]);
     }
 
     // spec: TUI-RUNTIME-R010.12.1, TUI-RUNTIME-R010.12.1.1, TUI-RUNTIME-R008.3

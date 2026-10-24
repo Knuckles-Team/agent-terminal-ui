@@ -35,7 +35,10 @@ Tab/Shift+Tab select; Home reveals the selected card. Cards shorten long labels;
 returns to full details. Ctrl+F searches the full list. A smaller
 terminal uses the list and returns to the map when enough space is available.
 
-Map edges mean `depends_on`, never child creation. Unobserved means unknown,
+The map displays edges only for the selected step, to avoid ambiguous crossings.
+The list keeps exact predecessor and dependent details for each selected step.
+Edges mean graph-local `depends_on`, left to right, never child creation.
+Unobserved means unknown,
 not pending. The current graph does not provide child transcripts, messaging
 or continuation. Refresh clears the old protected graph and selection before
 loading; close, refusal and changed authority clear derived map state too.

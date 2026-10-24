@@ -408,21 +408,22 @@ impl InspectorView {
         };
         let selected = self.selected_step.unwrap_or(0);
         let outer = Block::bordered()
-            .title("Flat execution DAG (read-only)")
+            .title("Flat execution DAG (read-only; selected edges)")
             .title_bottom("v: full list/details | Ctrl+F: find | g: summary | Esc: close");
         let inner = outer.inner(frame.area());
         frame.render_widget(outer.style(style), frame.area());
         let header = format!(
-            "Run: {} | depends_on: left to right
-Topology: complete | Lifecycle: incomplete; observed prefix only
+            "Run: {}
+Plan-step depends_on: left to right; selected edges only
+Lifecycle: incomplete; observed prefix only
 Arrows: pan | Tab/Shift+Tab: select | Home: focus | F6: theme",
             label(&graph.run_id)
         );
         frame.render_widget(
             Paragraph::new(header).style(style),
-            Rect::new(inner.x, inner.y, inner.width, 3),
+            Rect::new(inner.x, inner.y, inner.width, 4),
         );
-        let map_area = Rect::new(inner.x, inner.y + 3, inner.width, inner.height - 8);
+        let map_area = Rect::new(inner.x, inner.y + 4, inner.width, inner.height - 9);
         spatial.draw(frame, map_area, graph, selected, style);
         let adjacent = |incoming| {
             let nodes: Vec<_> = graph
@@ -940,7 +941,10 @@ last 界"
             })
             .unwrap();
         assert!(view.spatial_visible);
-        assert!(rendered(&terminal).contains("depends_on: left to right"));
+        assert!(
+            rendered(&terminal)
+                .contains("Plan-step depends_on: left to right; selected edges only")
+        );
         assert!(rendered(&terminal).contains("Selected 1: first [running]"));
         assert!(rendered(&terminal).contains("unobserved means unknown"));
         view.key(KeyCode::BackTab, client.clone());

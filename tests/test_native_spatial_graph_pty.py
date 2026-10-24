@@ -50,7 +50,11 @@ def test_native_spatial_map_theme_navigation_search_and_denial(
         def do_GET(self) -> None:
             requests.append((self.path, None, self.headers.get("Authorization")))
             self.respond(
-                {"api_version": "v1", "registry_digest": "map-fixture", "ops": []}
+                {
+                    "api_version": "v1",
+                    "registry_digest": "map-fixture",
+                    "ops": [{"id": "runs.execution_graph"}],
+                }
             )
 
         def do_POST(self) -> None:
@@ -108,6 +112,7 @@ def test_native_spatial_map_theme_navigation_search_and_denial(
         wait_until(lambda: "> 1. first [running]" in shown())
         terminal.send(b"v")
         wait_until(lambda: "Selected 1: first [running]" in shown())
+        assert "selected edges" in shown()
         before = list(requests)
         colors = {
             cell.bg

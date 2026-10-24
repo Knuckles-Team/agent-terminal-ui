@@ -1572,7 +1572,8 @@ source-contract fixture, including non-ASCII and maximum-length Unicode keys.
 The decoder tests cover typed bounds, exact run/root binding and semantic tuple identity.
 They reject duplicate evidence, cycles, unknown fields and raised child capabilities.
 The public-client tests require registry advertisement and matching digests.
-Missing registration makes no POST; malformed and denied responses do not fall back to legacy routes or direct engine calls.
+Missing registration makes no POST.
+Malformed or denied responses do not fall back to legacy routes or direct engine calls.
 
 Inspector TestBackend cases cover the `g` mode switch, Tab selection, 40-column
 scrolling, resize, search isolation, local cancellation and stale replies.
@@ -1619,3 +1620,13 @@ spatial helper and InspectorView tests require compiled native execution.
 denial, no-color and local effect isolation through the compiled entry point.
 The native CI job requires both color cases and both existing PTY journeys
 without skips. These new map cases are authored; execution remains pending.
+
+The spatial view labels its edge filter: only the selected step's incident
+dependencies appear. All nodes and exact adjacency lists remain available.
+A buffer regression distinguishes crossed pairs from the fully connected graph.
+Both previously used identical terminal edge cells.
+
+The selected-edge legend identifies graph-local plan-step `depends_on` direction.
+The crossing regression changes selection and checks exact predecessor/dependent lists.
+It also covers no selected card without invented edges. Held horizontal
+arrows share the navigation-only repeat allowance; action repeats remain ignored.

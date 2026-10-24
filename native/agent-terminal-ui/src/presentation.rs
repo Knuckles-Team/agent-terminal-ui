@@ -43,6 +43,8 @@ pub fn accepts_key_event(key: KeyEvent) -> bool {
                 key.code,
                 KeyCode::Up
                     | KeyCode::Down
+                    | KeyCode::Left
+                    | KeyCode::Right
                     | KeyCode::PageUp
                     | KeyCode::PageDown
                     | KeyCode::Home
@@ -83,7 +85,14 @@ mod tests {
             assert!(viewport.handle(key.code));
         }
         assert_eq!(viewport.offset(), 12);
-        for code in [KeyCode::Up, KeyCode::PageUp, KeyCode::Home, KeyCode::End] {
+        for code in [
+            KeyCode::Up,
+            KeyCode::Left,
+            KeyCode::Right,
+            KeyCode::PageUp,
+            KeyCode::Home,
+            KeyCode::End,
+        ] {
             assert!(accepts_key_event(KeyEvent::new_with_kind(
                 code,
                 KeyModifiers::NONE,
