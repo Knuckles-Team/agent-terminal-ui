@@ -1571,7 +1571,8 @@
       "title": "The README must cover each supported operator entry point. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "VERIFIED",
       "landed_in": [
-        "2f8561f36c43"
+        "2f8561f36c43",
+        "89cf41d65f78"
       ],
       "verified_by": [
         "tests/test_operator_documentation.py:112",
