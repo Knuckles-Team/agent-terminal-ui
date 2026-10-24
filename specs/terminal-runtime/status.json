@@ -1683,9 +1683,16 @@
     {
       "id": "TUI-RUNTIME-R015.30",
       "title": "The terminal CLI must supply help text for its supported arguments. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "2f6d1188fb53",
+        "69072e496e9b"
+      ],
+      "verified_by": [
+        "native/agent-terminal-ui/tests/cli_help.rs:16",
+        "native/agent-terminal-ui/tests/cli_help.rs:50",
+        "tests/test_cli_documentation.py:3"
+      ],
       "rollup_of": [
         "TUI-RUNTIME-R015.30.1",
         "TUI-RUNTIME-R015.30.2"
@@ -1705,8 +1712,10 @@
     {
       "id": "TUI-RUNTIME-R015.30.2",
       "title": "Native CLI -h and --help describe supported arguments and environment settings without connecting or opening a terminal. Help works even when runtime configuration is invalid. Argument values that equal --help remain values; mixed help and operation flags remain invalid. Future argument changes must update this help contract",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "69072e496e9b"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/tests/cli_help.rs:16",
         "native/agent-terminal-ui/tests/cli_help.rs:50"
