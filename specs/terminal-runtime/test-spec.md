@@ -913,3 +913,43 @@ Both original cases fail on untouched main 55c5aad6 at
 `tests/test_registered_command_contract.py:47`: ContentTabs has focus instead
 of InputTextArea. The two new real-client cases reproduce the same failure.
 This command repair does not change sidebar navigation, layout or transport.
+
+### Exact-main qualification at 992a762d
+
+GR1080 tested commit `992a762d2a8002a712cb1601d93003ba6697ee70` in a clean,
+isolated worktree. Its source tree is `27293e499dc77313c2d99b4dad3b2e119590f486`.
+Python 3.14.7 used the prior pinned client/test dependencies in a new environment.
+Arbora 0.1.7 used CI's explicit `--no-deps` installation policy. This does not
+qualify its server dependency graph: full transitive resolution conflicts with
+pinned platformdirs 4.12.2, while agent-utilities requires at least 4.13.3.
+No source dependency or lock changed.
+
+| Check | Result |
+| --- | --- |
+| `PYTHONPATH=. python -m pytest tests -q -n 4 --tb=short` | 1,651 passed, two optional modules skipped, one warning; six snapshots passed. Both prior `/focus` failures pass. |
+| `cargo +1.96.0 test --locked --manifest-path native/agent-terminal-ui/Cargo.toml` with an isolated target directory | 166 passed, none failed or ignored. |
+| `PYTHONPATH=. python -m pytest tests/test_presentation_pty.py tests/test_native_public_details_pty.py -q -ra --tb=short` | Five passed after installing pyte 0.8.2 and wcwidth 0.9.3 and setting `TUI_NATIVE_TEST_BINARY` to the exact-main executable. These cover both initially skipped modules. |
+| `PYTHONPATH=. python -m pytest tests/test_app_workers.py -q -W error::pytest.PytestUnraisableExceptionWarning --tb=short` | 15 passed; the full-run warning did not reproduce. |
+
+The unresolved warning is `PytestUnraisableExceptionWarning` while finalizing
+`Conversation.add_info`, with `KeyError: '__import__'`. Pytest attributed it to
+`test_on_agent_event_received_tool_call_delegated`. The isolated module result
+does not establish its cause or repair; this is not warning-free qualification.
+
+SHA-256 provenance:
+
+| Artifact | Hash |
+| --- | --- |
+| `uv.lock` | `2adcac4001c4b99b7bc5ca0a3197707db179f0028062e07cdb6ace760d7aa460` |
+| Native `Cargo.lock` | `2d41a2016f3574164ef163d8500d6bb71fa9372851d7a8e3081c87dfb2d7e18a` |
+| Installed Arbora `METADATA` | `9157b068e779bcd1850a8dd1f91f1a7d3ba1be4e3153971b9ab8c0522bf05971` |
+| Installed Arbora `RECORD` | `3ea902bc5fccc65c1e5c6c33ca3f9249d9e18980d3fc61d3753a4a4c33f551a8` |
+| Native executable | `41bac7554684012147cc4b2392006e6b541b64de8541e1b8b9de03a465206840` |
+| Evidence bundle | `87b72757ceaa93cd2f22d403d25e39e861c4e84696d9afff79930624b03a0062` |
+
+Library retains `tui-992a762d-qualification.zip`, ID
+`libfile_d7cef34e3c608191b8a0859f9a139326`, version 0. It contains raw results,
+the final dependency freeze, source-file hashes and the warning investigation.
+This receipt supports existing bounded R012.4.3.1 and R012.2.1 evidence without
+changing acceptance status or test markers. It does not prove live producers,
+production identity, full served parity or release performance.
