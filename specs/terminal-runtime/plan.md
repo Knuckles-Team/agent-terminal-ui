@@ -1093,7 +1093,7 @@ The historical count is not a verified current inventory. R015.69 requires recon
 ## Amendment 2026-10-24: responsive MCP reads
 
 R012.4.2 opens the MCP view before fleet reads. A screen-owned worker keeps
-Escape and refresh available, clears old data before retry, and distinguishes
+Escape and refresh available. It clears old data before retry and distinguishes
 failed reads from valid empty results. Closed or superseded reads cannot render
 or start the next request, including when cancellation is suppressed. A changed
 client owner invalidates the read. This client presentation repair does not
@@ -1106,3 +1106,16 @@ content even when it contains `[DONE]`. Only a typed `turn_end` event completes
 the turn and releases queued work or pending approval. Headless output must
 retain this content and later failures. Mounted and headless regressions extend
 the existing owner; served streaming and cancellation remain open under R012.1.2.
+
+
+## Amendment 2026-10-24: historical analysis preservation
+
+R015.32 and R015.33 retain the JSON and Markdown analysis in immutable Git
+history, not in the current source tree or release version configuration.
+The existing Git read path and `.bumpversion.cfg` own this qualification.
+Tests verify the original byte digests and reject modified bytes and version
+registration under either the original or migrated report path.
+A full checkout with missing evidence fails. A shallow checkout or source
+export reports unavailable history explicitly; that skip is not acceptance.
+This work restores no report and treats no historical conclusion as a current finding.
+R015.31 and the quality acceptance v1 rows remain open.
