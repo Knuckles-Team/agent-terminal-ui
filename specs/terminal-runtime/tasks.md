@@ -210,7 +210,7 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R015.38:** Terminal tests must reuse shared fixtures for common setup. Source obligation: `T038`.
 - [ ] **TUI-RUNTIME-R015.39:** Each terminal test must assert its observable result. Source obligation: `T039`.
 - [ ] **TUI-RUNTIME-R015.40:** Terminal tests must reject incorrect values through behavior-specific assertions. Source obligation: `T040`.
-- [ ] **TUI-RUNTIME-R015.41:** The documentation must cover every supported terminal environment variable. Source obligation: `T041`.
+- [x] **TUI-RUNTIME-R015.41:** The documentation covers supported terminal inputs. R015.41.1 covers directories; R015.41.2 covers remaining source reads and dynamic overrides. Source obligation: `T041`.
 - [ ] **TUI-RUNTIME-R015.42:** The documentation must define AGENT_LOG_FILE and AGENT_THEME behavior. Source obligation: `T042`.
 - [ ] **TUI-RUNTIME-R015.43:** The repository must provide a credential-free environment configuration example. Source obligation: `T043`.
 - [x] **TUI-RUNTIME-R015.44:** The client must obtain MCP configuration through the currently authorized served contract. Source obligation: `missing-client-methods checkbox 1`.
