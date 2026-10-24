@@ -211,7 +211,14 @@
     "TUI-RUNTIME-R008.2.3.2.2.2.2.2.2",
     "TUI-RUNTIME-R012.3.1.1",
     "TUI-RUNTIME-R010.10",
-    "TUI-RUNTIME-R016"
+    "TUI-RUNTIME-R016",
+    "TUI-RUNTIME-R010.11",
+    "TUI-RUNTIME-R010.12",
+    "TUI-RUNTIME-R010.13",
+    "TUI-RUNTIME-R010.14",
+    "TUI-RUNTIME-R012.7",
+    "TUI-RUNTIME-R012.8",
+    "TUI-RUNTIME-R012.9"
   ],
   "requirements": [
     {
@@ -518,7 +525,11 @@
         "TUI-RUNTIME-R010.7",
         "TUI-RUNTIME-R010.8",
         "TUI-RUNTIME-R010.9",
-        "TUI-RUNTIME-R010.10"
+        "TUI-RUNTIME-R010.10",
+        "TUI-RUNTIME-R010.11",
+        "TUI-RUNTIME-R010.12",
+        "TUI-RUNTIME-R010.13",
+        "TUI-RUNTIME-R010.14"
       ]
     },
     {
@@ -1172,7 +1183,10 @@
         "TUI-RUNTIME-R012.3",
         "TUI-RUNTIME-R012.4",
         "TUI-RUNTIME-R012.5",
-        "TUI-RUNTIME-R012.6"
+        "TUI-RUNTIME-R012.6",
+        "TUI-RUNTIME-R012.7",
+        "TUI-RUNTIME-R012.8",
+        "TUI-RUNTIME-R012.9"
       ]
     },
     {
@@ -2553,6 +2567,55 @@
         "tests/test_documentation_screenshots.py:12",
         "tests/test_documentation_screenshots.py:40"
       ]
+    },
+    {
+      "id": "TUI-RUNTIME-R010.11",
+      "title": "Consume authoritative execution identity and updates",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R010.12",
+      "title": "Navigate the execution hierarchy and dependency graph",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R010.13",
+      "title": "Inspect a selected node's public records",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R010.14",
+      "title": "Prove the served execution explorer",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R012.7",
+      "title": "Message an active child explicitly",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R012.8",
+      "title": "Continue a completed child separately",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R012.9",
+      "title": "Qualify targeted interaction through the served terminal",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
     }
   ]
 }

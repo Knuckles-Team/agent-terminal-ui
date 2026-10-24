@@ -1,176 +1,56 @@
-# Agent View — Multi-Session Dashboard
+# Agent View and execution inspection
 
-> **Concept:** TUI-20 (Agent View)
-> **Status:** Implemented
-> **Package:** `agent-terminal-ui`
+## Current scope
 
-## Overview
+`/agents` and the `--bg` startup flag open the Python Agent View screen.
+The screen contains session-row and preview components, but production code does
+not populate a served session inventory. Its refresh timer redraws supplied rows;
+it does not discover running agents.
 
-Agent View is a dedicated Textual screen for managing all concurrent agent
-sessions from one place. Inspired by Claude Code's agent view, it provides
-at-a-glance status for every running session, peek-and-reply workflows, and
-background session management.
+The Attach and Reply bindings emit a local selection request. They do not open
+a child-agent conversation or send a message. `/bg` and `/attach <id>`
+report unavailable without changing the active session or starting remote work.
+The startup flags `--bg --prompt "task"` do not establish supported background execution.
 
-## Architecture
+The Swarm `GraphTree` is an unpopulated presentation component. Production code
+does not call `add_agent_node`. Selecting a supplied node opens `ChatModal`, which
+displays supplied messages and has no composer or send action. `WorkflowSidebar`
+is a flat progress list, not an orchestration dependency graph.
 
-```mermaid
-graph TD
-    subgraph "AgentApp"
-        MODES["MODES = {<br/>main: MainScreen<br/>agents: AgentViewScreen<br/>}"]
-        NAV["Navigation<br/>← Agent View<br/>→ Attach Session"]
-    end
+## Expandable public details
 
-    subgraph "AgentViewScreen"
-        HDR["Header Banner"]
-        TBL["Session DataTable<br/>Status | Title | Preview | Active"]
-        PEEK["PeekPanel<br/>Last turn content<br/>+ inline reply"]
-        FTR["Footer (keybindings)"]
-    end
+Python and native consumers support separate, initially collapsed public model
+summary and execution-trace sections when Arbora supplies compatible events.
+The Python composer reaches conversation folds with F8, then Tab; Enter or Space
+toggles the focused fold. Tool blocks also support keyboard and mouse expansion.
+These controls display public projections only, not private model reasoning.
+Their availability does not establish a nested-agent inventory or targeted chat.
 
-    subgraph "BackgroundAgentRunner"
-        BS1["BackgroundSession #1<br/>🟢 Working"]
-        BS2["BackgroundSession #2<br/>🟡 Waiting"]
-        BS3["BackgroundSession #3<br/>✅ Done"]
-    end
+## Planned execution explorer
 
-    subgraph "Persistence"
-        SM["SessionManager<br/>(SQLite v2)"]
-        TM["TaskManager<br/>(Durable Queue)"]
-    end
+The owning [terminal requirements](https://github.com/Knuckles-Team/agent-terminal-ui/blob/main/specs/terminal-runtime/requirements.md)
+keep nested inspection and targeted interaction separate:
 
-    MODES --> NAV
-    NAV -->|"← left"| TBL
-    TBL -->|"highlight"| PEEK
-    PEEK -->|"Enter"| NAV
-    NAV -->|"→ right"| MODES
+- Inspect any producer-exposed execution level through a stable node locator
+  and ancestor breadcrumbs.
+- Select hierarchy or dependency graph nodes, with a keyboard-accessible list
+  for narrow terminals.
+- Expand authorized public summaries, tool activity and conversation history.
+- Message an active child only when the backend supplies its target capability.
+- Continue a completed child through a separate, supported continuation action.
 
-    BS1 --> SM
-    BS2 --> SM
-    BS3 --> SM
-    SM --> TBL
-    BS1 --> TM
-```
+These capabilities are not delivered by the existing Agent View components.
+A graph node or trace span is not automatically a chat destination. Missing
+backend capabilities must remain unavailable, and inspection must not silently
+retarget the current conversation.
 
-## Session Status Indicators
+## Source components
 
-| Icon | Status | Meaning |
-|------|--------|---------|
-| 🟢 | Working | Agent is actively executing |
-| 🟡 | Waiting | Agent needs user input |
-| ✅ | Done | Session completed successfully |
-| ❌ | Failed | Session encountered an error |
-| 🚫 | Cancelled | Session was cancelled by user |
-
-## Session Types
-
-| Icon | Type | Description |
-|------|------|-------------|
-| 💬 | Chat | Regular conversation session |
-| 🎯 | Goal | Autonomous `/goal` session |
-
-## Usage
-
-### Opening Agent View
-
-```
-/agents          # Slash command
-← (left arrow)   # Keyboard shortcut from any session
-```
-
-### Navigation
-
-| Key | Action |
-|-----|--------|
-| `↑` / `↓` | Navigate session list |
-| `Enter` / `→` | Attach to selected session |
-| `n` | Create new session |
-| `d` | Delete/archive selected session |
-| `r` | Reply inline (if session is waiting) |
-| `Escape` | Return to current session |
-
-### Backgrounding Sessions
-
-`/bg` and `/attach <session_id>` report unavailable. They do not persist a
-background flag, continue work autonomously or resume a served session.
-The `--bg` startup flag opens Agent View; it is not proof of remote execution.
-
-## Components
-
-### AgentViewScreen
-
-The main Textual `Screen` that renders the dashboard. Composed of:
-- **Header**: Title banner ("🤖 Agent View — All Sessions")
-- **DataTable**: Scrollable session list with status, title, preview, timing
-- **PeekPanel**: Detail view of the selected session's last response
-- **Footer**: Context-sensitive keybinding hints
-
-### PeekPanel
-
-Shows the last turn of the highlighted session without switching context.
-When a session has `needs_input=True`, the panel shows a reply indicator
-and pressing `r` or `Enter` attaches directly for response.
-
-### BackgroundAgentRunner
-
-Manages sessions running as async workers within the TUI process:
-- Tracks up to 10 concurrent background sessions
-- Persists state after each iteration for crash recovery
-- Buffers output for peek via the Agent View
-- Supports cancel, status query, and cleanup
-
-### AgentSessionRow
-
-In-memory data class powering each table row:
-```python
-class AgentSessionRow:
-    session_id: str
-    title: str
-    status: str       # working | waiting | done | failed
-    last_response: str
-    last_activity: float
-    needs_input: bool
-    background: bool
-    goal_id: str       # Links to GoalNode in KG
-```
-
-## Schema v2 Migration
-
-The `SessionManager` database automatically migrates from v1 → v2 on startup,
-adding columns needed by Agent View:
-
-| Column | Type | Purpose |
-|--------|------|---------|
-| `background` | INTEGER | Whether session is running in background |
-| `needs_input` | INTEGER | Whether session needs user input |
-| `last_response_preview` | TEXT | Truncated last assistant response |
-| `goal_id` | TEXT | Linked GoalNode ID for goal sessions |
-
-## Slash Commands
-
-| Command | Description |
-|---------|-------------|
-| `/agents` | Open Agent View dashboard |
-| `/bg` | Report unavailable background execution |
-| `/attach <id>` | Report unavailable session attachment |
-| `/goal <text>` | Start an autonomous goal session |
-
-## CLI Flags
-
-```bash
-agent-terminal-ui --bg                    # Start in Agent View mode
-agent-terminal-ui --bg --prompt "task"    # Background a specific task
-agent-terminal-ui --override              # Auto-approve mode (for goals)
-```
-
-## Files
-
-| File | Purpose |
-|------|---------|
-| `screens/agent_view.py` | AgentViewScreen + PeekPanel + AgentSessionRow |
-| `screens/agent_view.tcss` | Styling for the Agent View |
-| `background_runner.py` | BackgroundAgentRunner + BackgroundSession |
-| `widgets/goal_status.py` | GoalStatusWidget for inline goal display |
-| `session_manager.py` | Schema v2 migration |
-| `commands.py` | `/agents`, `/bg`, `/attach` registration |
-| `app.py` | MODES + navigation bindings |
-| `terminal_ui.py` | `--bg` CLI flag |
+| File | Current role |
+|------|--------------|
+| `screens/agent_view.py` | Supplied session rows, preview and local selection messages |
+| `widgets/graph_tree.py` | Supplied tree-node presentation |
+| `tui/chat_modal.py` | Read-only display of supplied messages |
+| `widgets/workflow.py` | Flat workflow progress presentation |
+| `commands.py` | `/agents` entry and explicit `/bg` and `/attach` refusals |
+| `background_runner.py` | Local runner component, not a served child-control contract |

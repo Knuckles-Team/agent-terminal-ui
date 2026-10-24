@@ -2,8 +2,8 @@
 
 The release workflow publishes Python packages to PyPI on version tags or manual dispatch.
 An ordinary push to main does not publish a package.
-See [.github/workflows/release.yml](../.github/workflows/release.yml).
-The documentation publishes through [.github/workflows/pages.yml](../.github/workflows/pages.yml).
+See [.github/workflows/release.yml](https://github.com/Knuckles-Team/agent-terminal-ui/blob/main/.github/workflows/release.yml).
+The documentation publishes through [.github/workflows/pages.yml](https://github.com/Knuckles-Team/agent-terminal-ui/blob/main/.github/workflows/pages.yml).
 
 The `Dockerfile` builds a two-stage image on `python:3.14-slim`. Its entry point is `agent-terminal-ui`.
 
