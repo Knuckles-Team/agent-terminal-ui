@@ -635,3 +635,12 @@ The batch does not add artificial markers to change their generated state. No na
 Candidate implementation: `20e00677ac4ccb15d813e4eb9a71a9155d3b8543`.
 Six existing rows qualify through tests: R015.44, .45, .46, .47, .49 and .50.
 R015.48, .51 and .52 retain execution receipts but remain open in the ledger.
+
+## Native CLI help
+
+`TUI-RUNTIME-R015.30.2`: `native/agent-terminal-ui/tests/cli_help.rs` runs the
+actual native executable without a terminal. Both help aliases return the same
+usage, supported flags and environment settings, including with invalid runtime
+configuration. Mixed help/operation flags fail. A prompt value of `--help` still
+reaches submission credential validation. These checks do not claim served
+transport, native release or full terminal cutover qualification.

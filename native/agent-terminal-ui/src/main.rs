@@ -657,8 +657,40 @@ async fn run(
     result
 }
 
+const CLI_HELP: &str = "Arbora native terminal
+
+Usage: agent-terminal-ui-native [--prompt TEXT | --observe-task TASK_ID]
+       agent-terminal-ui-native --help
+
+Options:
+  --prompt TEXT           Submit one text task (1..65536 bytes).
+  --observe-task TASK_ID   Observe an existing task without remote cancellation.
+  -h, --help              Print this help without connecting or opening a terminal.
+
+With no arguments, discover the configured agent or read AGENT_TASK_ID.
+--prompt and --observe-task cannot be combined with each other or AGENT_TASK_ID.
+
+Environment:
+  AGENT_URL                        Endpoint (default: http://localhost:8000).
+  AGENT_BEARER_TOKEN               Caller credential; required for remote access.
+  AGENT_AUTH_MODE                  bearer (default), or none for local loopback.
+  AGENT_TASK_ID                    Existing task to read; does not resume chat.
+  AGENT_SUBMISSION_TIMEOUT_SECONDS Submission timeout, 1..900 (default: 300).
+  AGENT_INCLUDE_COMMITTED_EVENT    Include committed event reads: true or false.
+  AGENT_THEME                      Terminal theme (default: Tokyo Night).
+  NO_COLOR                        Nonempty value disables theme colors.
+
+Remote access requires TLS. Anonymous loopback mode rejects bearer credentials.
+Task streaming and approvals remain unavailable.
+";
+
 #[tokio::main]
 async fn main() -> ExitCode {
+    let args: Vec<_> = env::args_os().skip(1).collect();
+    if matches!(args.as_slice(), [flag] if flag == "--help" || flag == "-h") {
+        print!("{CLI_HELP}");
+        return ExitCode::SUCCESS;
+    }
     let endpoint = env::var("AGENT_URL").unwrap_or_else(|_| "http://localhost:8000".to_owned());
     let result = async {
         let token = match env::var("AGENT_BEARER_TOKEN") {
@@ -675,7 +707,6 @@ async fn main() -> ExitCode {
         };
         let auth_mode = AuthMode::parse(mode_value.as_deref())?;
         let task_id = selected_task(env::var("AGENT_TASK_ID"))?;
-        let args: Vec<_> = env::args_os().skip(1).collect();
         let observation = selected_observation(&args, task_id.is_some())?;
         let observe = observation.is_some();
         if observe && token.is_none() && auth_mode != AuthMode::None {

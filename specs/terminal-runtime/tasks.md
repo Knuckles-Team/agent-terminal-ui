@@ -288,3 +288,5 @@ Record deferred validation as deferred, never passed.
 - [x] **TUI-RUNTIME-R012.3.1.1:** Implement and validate previous-page task navigation with fresh reads and safe async lifecycle. Independent review passed; live resume remains open.
 
 - [x] **TUI-RUNTIME-R010.10:** Add bounded local native inspector text search with keyboard ownership, matching-line navigation and current-display tests.
+
+- [x] **TUI-RUNTIME-R015.30.2:** Implement native CLI help before runtime setup and qualify both help aliases and argument boundaries. Executable regression fails on main and passes with the implementation.
