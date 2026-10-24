@@ -1,9 +1,9 @@
-//! Native presentation tokens from the existing Textual built-in themes.
+//! Native presentation tokens from the existing registered Python themes.
 
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers, MouseEvent, MouseEventKind};
 use ratatui::style::{Color, Style};
 
-const THEMES: [&str; 4] = ["tokyo-night", "nord", "gruvbox", "textual-light"];
+const THEMES: [&str; 5] = ["tokyo-night", "nord", "gruvbox", "textual-light", "canopy"];
 
 pub struct ThemeSelection {
     index: usize,
@@ -58,6 +58,7 @@ pub fn presentation_style(theme: &str, no_color: &str) -> Style {
         "nord" => (0xd8dee9, 0x2e3440),
         "gruvbox" => (0xfbf1c7, 0x282828),
         "textual-light" => (0x1f1f1f, 0xe0e0e0),
+        "canopy" => (0xf1f5eb, 0x121c17),
         _ => (0xa9b1d6, 0x1a1b26),
     };
     Style::new()
@@ -152,6 +153,7 @@ mod tests {
             ("nord", 0xd8dee9, 0x2e3440),
             ("gruvbox", 0xfbf1c7, 0x282828),
             ("textual-light", 0x1f1f1f, 0xe0e0e0),
+            ("canopy", 0xf1f5eb, 0x121c17),
         ] {
             let style = presentation_style(theme, "");
             let fg = Color::from_u32(foreground);
