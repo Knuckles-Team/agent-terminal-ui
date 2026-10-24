@@ -241,11 +241,11 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:421",
-        "tests/test_client.py:441",
-        "tests/test_client.py:460",
-        "tests/test_client.py:503",
-        "tests/test_client.py:536"
+        "tests/test_client.py:540",
+        "tests/test_client.py:560",
+        "tests/test_client.py:579",
+        "tests/test_client.py:622",
+        "tests/test_client.py:655"
       ]
     },
     {
@@ -257,10 +257,10 @@
         "e90084eba29c"
       ],
       "verified_by": [
-        "tests/test_client.py:107",
-        "tests/test_client.py:116",
-        "tests/test_client.py:122",
-        "tests/test_client.py:129",
+        "tests/test_client.py:108",
+        "tests/test_client.py:117",
+        "tests/test_client.py:123",
+        "tests/test_client.py:130",
         "tests/test_headless.py:107"
       ]
     },
@@ -282,9 +282,9 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:209",
-        "tests/test_client.py:221",
-        "tests/test_client.py:245"
+        "tests/test_client.py:210",
+        "tests/test_client.py:222",
+        "tests/test_client.py:246"
       ]
     },
     {
@@ -295,11 +295,11 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:598",
-        "tests/test_client.py:631",
-        "tests/test_client.py:654",
-        "tests/test_client.py:668",
-        "tests/test_client.py:691"
+        "tests/test_client.py:717",
+        "tests/test_client.py:750",
+        "tests/test_client.py:773",
+        "tests/test_client.py:787",
+        "tests/test_client.py:810"
       ]
     },
     {
@@ -311,8 +311,8 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:471",
-        "tests/test_client.py:487",
+        "tests/test_client.py:590",
+        "tests/test_client.py:606",
         "tests/test_commands.py:740"
       ]
     },
@@ -325,7 +325,7 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:752",
+        "tests/test_client.py:871",
         "tests/test_commands.py:771",
         "tests/test_import_guard.py:46",
         "tests/test_import_guard.py:53",
@@ -348,11 +348,11 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:145",
-        "tests/test_client.py:323",
-        "tests/test_client.py:347",
-        "tests/test_client.py:375",
-        "tests/test_client.py:818"
+        "tests/test_client.py:146",
+        "tests/test_client.py:442",
+        "tests/test_client.py:466",
+        "tests/test_client.py:494",
+        "tests/test_client.py:937"
       ],
       "rollup_of": [
         "TUI-RUNTIME-R002.1",
@@ -1276,8 +1276,8 @@
         "4a0636949d36"
       ],
       "verified_by": [
-        "tests/test_client.py:260",
-        "tests/test_client.py:285",
+        "tests/test_client.py:261",
+        "tests/test_client.py:404",
         "tests/test_commands.py:246"
       ]
     },
@@ -1286,7 +1286,13 @@
       "title": "Served image and file admission",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [
+        "tests/test_client.py:298",
+        "tests/test_client.py:322",
+        "tests/test_client.py:350",
+        "tests/test_client.py:369",
+        "tests/test_client.py:388"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R012.6",
@@ -2318,11 +2324,11 @@
         "ad7aa10ab43c"
       ],
       "verified_by": [
-        "tests/test_client.py:866",
-        "tests/test_client.py:886",
-        "tests/test_client.py:919",
-        "tests/test_client.py:949",
-        "tests/test_client.py:976"
+        "tests/test_client.py:1005",
+        "tests/test_client.py:1038",
+        "tests/test_client.py:1068",
+        "tests/test_client.py:1095",
+        "tests/test_client.py:985"
       ]
     },
     {

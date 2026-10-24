@@ -566,7 +566,16 @@ These tests do not prove model selection, history loading or backend authority.
 
 ## Unsupported image input boundary
 
-- `TUI-RUNTIME-R012.5.1`: `tests/test_commands.py::TestImageCommand::test_cmd_image_refuses_without_reading` proves that empty, quoted, missing and malformed paths receive an unsupported notice with no reads or pending-part changes. `tests/test_client.py::test_image_command_refusal_preserves_next_text_submission` uses the real command, application part collector and client to prove the next text turn still submits existing text attachments. `test_non_text_parts_are_refused_before_any_request` rejects typed, legacy untyped, mixed and malformed parts before network access.
+- `TUI-RUNTIME-R012.5.1`: `tests/test_commands.py::TestImageCommand::test_cmd_image_refuses_without_reading` proves that empty, quoted, missing and malformed paths receive an unsupported notice with no reads or pending-part changes. `tests/test_client.py::test_image_command_refusal_preserves_next_text_submission` uses the real command, application part collector and client to prove the next text turn still submits existing text attachments. `test_non_text_parts_are_refused_before_any_request` rejects typed, legacy untyped, mixed and malformed unsupported parts before network access.
+
+### Bounded text-file evidence
+
+`tests/test_text_files.py` covers `/file` staging, names, removal, quoted paths,
+invalid content, regular-file checks, owner changes and queued dispatch.
+`tests/test_client.py` proves exact file payloads through the existing stream and
+poll paths, inclusive limits, zero-request refusal and server upload errors.
+These fixtures extend R012.5.2 without closing its served PNG and pasted-image
+criteria. The attachment rollup remains open.
 - `TUI-RUNTIME-R012.5.2`: Retain the served PNG admission and oversized-file criteria. Refusing every image without reading it is not file-size validation or successful image admission.
 
 ## Nonblocking unary polling

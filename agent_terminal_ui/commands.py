@@ -6,20 +6,30 @@ terminal UI. It allows users to perform administrative tasks like clearing logs,
 browsing history, and managing MCP tools directly from the command line.
 """
 
+import asyncio
+import base64
 import contextlib
 import json
 import logging
+import os
+import shlex
+import stat
 from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any, Never
 
 import httpx
 from rich.console import Group
+from rich.markup import escape
 from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Table
 
-from agent_terminal_ui.client import ArboraOperationError
+from agent_terminal_ui.client import (
+    MAX_INLINE_FILE_BYTES,
+    ArboraOperationError,
+    message_parts,
+)
 from agent_terminal_ui.screens.settings import SettingsScreen
 from agent_terminal_ui.settings import AppSettings
 from agent_terminal_ui.tui.exit_confirm_screen import ExitConfirmScreen
@@ -41,6 +51,28 @@ _LEGACY_COMMAND_ROUTES = {
     "resources": "/api/enhanced/resources",
     "maintenance": "/api/enhanced/maintenance",
 }
+
+
+def _read_text_file(path: Path) -> dict[str, Any]:
+    # Nonblocking open plus descriptor inspection prevents FIFO/device races.
+    descriptor = os.open(path, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW)
+    try:
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            raise ValueError("select a regular local file, not a link or device")
+        with os.fdopen(descriptor, "rb", closefd=False) as source:
+            content = source.read(MAX_INLINE_FILE_BYTES + 1)
+    finally:
+        os.close(descriptor)
+    part = {
+        "kind": "file",
+        "file": {
+            "bytes": base64.b64encode(content).decode("ascii"),
+            "mimeType": "text/plain",
+            "name": path.name,
+        },
+    }
+    message_parts("", [part])
+    return part
 
 
 class CommandProcessor:
@@ -69,6 +101,7 @@ class CommandProcessor:
             "mcp": self.cmd_mcp,
             "history": self.cmd_history,
             "image": self.cmd_image,
+            "file": self.cmd_file,
             "plan": self.cmd_plan,
             "chat": self.cmd_chat,
             "build": self.cmd_build,
@@ -238,6 +271,7 @@ class CommandProcessor:
 
     async def cmd_clear(self, args: str) -> None:
         """Clear the current event log."""
+        self.app.clear_pending_files()
         await self.app.query_one("Conversation").clear_conversation()
 
     async def cmd_exit(self, args: str) -> None:
@@ -298,6 +332,54 @@ class CommandProcessor:
         self.app.notify(
             "Images are not supported by the current Arbora transport.",
             severity="warning",
+        )
+
+    async def cmd_file(self, args: str) -> None:
+        """Stage UTF-8 text: /file PATH; list: /file; remove: /file --clear."""
+        tokens = shlex.split(args)
+        if tokens == ["--clear"]:
+            self.app.clear_pending_files()
+            self.app.notify("Staged text files removed.")
+            return
+        if not tokens:
+            names = [
+                escape(repr(part["file"].get("name", "unnamed")))
+                for part in self.app._pending_parts
+                if part.get("kind") == "file"
+            ]
+            self.app.notify(
+                "Staged text files: " + ", ".join(names)
+                if names
+                else "No text files staged. Use /file PATH."
+            )
+            return
+        if len(tokens) != 1 or "://" in tokens[0]:
+            self.app.notify("Use /file PATH with one local file.", severity="warning")
+            return
+        owner = (self.app._client, self.app.current_session_id)
+        revision = self.app._pending_files_revision
+        try:
+            part = await asyncio.to_thread(_read_text_file, Path(tokens[0]))
+        except (OSError, ValueError) as exc:
+            self.app.notify(f"File not staged: {escape(str(exc))}", severity="warning")
+            return
+        if (
+            owner != (self.app._client, self.app.current_session_id)
+            or revision != self.app._pending_files_revision
+        ):
+            self.app.notify(
+                "File not staged: input or conversation changed.", severity="warning"
+            )
+            return
+        if self.app._pending_parts_owner not in (None, owner):
+            self.app.clear_pending_files()
+        pending = [*self.app._pending_parts, part]
+        message_parts("", pending)
+        self.app._pending_parts = pending
+        self.app._pending_parts_owner = owner
+        self.app.notify(
+            f"Staged {escape(repr(part['file']['name']))} for the next prompt. "
+            "Use /file --clear to remove."
         )
 
     async def cmd_plan(self, args: str) -> None:

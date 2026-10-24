@@ -14,6 +14,8 @@ every task. Graph and operator capabilities use the Arbora REST gateway.
 from __future__ import annotations
 
 import asyncio
+import base64
+import binascii
 import contextlib
 import json
 import logging
@@ -64,6 +66,73 @@ MODE_TASK_IRIS = {
 _FINAL_STATES = frozenset({"completed", "canceled", "failed", "rejected"})
 _FAILED_STATES = frozenset({"failed", "rejected"})
 _STREAM_UNSUPPORTED = frozenset({-32010, -32004, -32601})
+MAX_INLINE_FILE_BYTES = 65_536
+
+
+def _inline_text_file(part: dict[str, Any]) -> tuple[dict[str, Any], str, int]:
+    file = part.get("file")
+    if (
+        set(part) != {"kind", "file"}
+        or not isinstance(file, dict)
+        or set(file) - {"bytes", "mimeType", "name"}
+        or file.get("mimeType") != "text/plain"
+        or not isinstance(file.get("bytes"), str)
+        or not 1 <= len(file["bytes"]) <= 87_384
+        or (
+            file.get("name") is not None
+            and (not isinstance(file["name"], str) or len(file["name"]) > 256)
+        )
+    ):
+        raise ValueError("only inline text/plain files are supported")
+    try:
+        content = base64.b64decode(file["bytes"], validate=True)
+        text = content.decode("utf-8", errors="strict")
+    except (ValueError, binascii.Error, UnicodeError) as exc:
+        raise ValueError("file must contain base64 UTF-8 text") from exc
+    if not content or len(content) > MAX_INLINE_FILE_BYTES:
+        raise ValueError("file must contain 1 to 65,536 bytes")
+    return {"kind": "file", "file": dict(file)}, text, len(content)
+
+
+def message_parts(
+    query: str, parts: list[dict[str, Any]] | None = None
+) -> list[dict[str, Any]]:
+    """Normalize local parts within Arbora's public inline text-file bounds."""
+    if len(parts or []) > 32:
+        raise ValueError("message requires 1 to 32 parts")
+    normalized: list[dict[str, Any]] = []
+    task_text: list[str] = []
+    file_count = file_bytes = 0
+    for part in [{"text": query}, *(parts or [])]:
+        if not isinstance(part, dict):
+            raise ValueError("invalid message part")
+        if part.get("kind") == "file":
+            wire, text, size = _inline_text_file(part)
+            file_count += 1
+            file_bytes += size
+        else:
+            value = part.get("text")
+            if (
+                set(part) - {"type", "kind", "text"}
+                or part.get("type", "text") != "text"
+                or part.get("kind", "text") != "text"
+                or not isinstance(value, str)
+                or len(value) > 65_536
+            ):
+                raise ValueError("invalid or unsupported text part")
+            text = value
+            if not text:
+                continue
+            wire = {"kind": "text", "text": text}
+        normalized.append(wire)
+        task_text.append(text)
+    if file_count > 8 or file_bytes > MAX_INLINE_FILE_BYTES:
+        raise ValueError("message exceeds 8 files or 65,536 attached bytes")
+    if not 1 <= len(normalized) <= 32:
+        raise ValueError("message requires 1 to 32 parts")
+    if len("\n".join(task_text)) > 100_000:
+        raise ValueError("message exceeds 100,000 task-text characters")
+    return normalized
 
 
 class A2ATransportError(RuntimeError):
@@ -842,7 +911,7 @@ class AgentClient:
         ``mode_id`` selects the typed task Arbora routes on
         (:data:`MODE_TASK_IRIS`; unknown modes use ``ask``); routing then selects
         the authorized agent. ``model`` is not part of the A2A contract and is
-        not sent. Only text parts are carried.
+        not sent. Text and bounded inline UTF-8 files are carried.
 
         Yields:
             Normalized event dictionaries, starting with ``session_started``.
@@ -851,24 +920,19 @@ class AgentClient:
         self._current_session_id = session_id
         self._current_task_id = None
         yield {"type": "session_started", "session_id": session_id}
-        if any(
-            not isinstance(part, dict)
-            or set(part) - {"type", "text"}
-            or part.get("type", "text") != "text"
-            or not isinstance(part.get("text"), str)
-            for part in parts or []
-        ):
+        try:
+            normalized = message_parts(query, parts)
+        except ValueError as exc:
             yield {
                 "type": "error",
-                "message": "only text parts are supported by the Arbora A2A transport",
+                "message": str(exc),
                 "session_id": session_id,
             }
             return
-        texts = [query, *((part or {}).get("text", "") for part in parts or [])]
         message = {
             "kind": "message",
             "role": "user",
-            "parts": [{"kind": "text", "text": text} for text in texts if text],
+            "parts": normalized,
             "messageId": uuid.uuid4().hex,
             "contextId": session_id,
             "metadata": {

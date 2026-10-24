@@ -1,6 +1,7 @@
 """Arbora A2A conversation transport of the terminal UI client."""
 
 import ast
+import base64
 import json
 import subprocess
 import sys
@@ -278,6 +279,124 @@ async def test_non_text_parts_are_refused_before_any_request(part):
 
     assert events[-1]["type"] == "error"
     assert recorder.requests == []
+    await client.close()
+
+
+
+def _text_file(content: bytes = b"notes\r\n", name: str = "notes.txt") -> dict[str, Any]:
+    return {
+        "kind": "file",
+        "file": {
+            "bytes": base64.b64encode(content).decode("ascii"),
+            "mimeType": "text/plain",
+            "name": name,
+        },
+    }
+
+
+@pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R012.5.2")
+@pytest.mark.parametrize("streaming", [True, False])
+async def test_inline_text_file_preserves_exact_payload_in_existing_transport(streaming):
+    expected = _text_file("\ufeffhéllo\r\n\x00world\n".encode(), "résumé.txt")
+    body = _sse(_result(_task("completed")))
+    client, recorder = _client(lambda request: httpx.Response(
+        200, content=body if streaming else None,
+        json=None if streaming else _result(_task("completed")),
+    ))
+    client._streaming = streaming
+
+    events = [event async for event in client.stream("read this", parts=[expected])]
+
+    assert not any(event["type"] == "error" for event in events)
+    assert len(recorder.requests) == 1
+    sent = json.loads(recorder.requests[0].content)
+    assert sent["method"] == ("message/stream" if streaming else "message/send")
+    assert sent["params"]["message"]["parts"] == [
+        {"kind": "text", "text": "read this"}, expected,
+    ]
+    await client.close()
+
+
+@pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R012.5.2")
+@pytest.mark.parametrize("part", [
+    {"kind": "file", "file": {"bytes": "%%%", "mimeType": "text/plain"}},
+    {"kind": "file", "file": {"bytes": "YQ==\n", "mimeType": "text/plain"}},
+    {"kind": "file", "file": {"bytes": "é", "mimeType": "text/plain"}},
+    {"kind": "file", "file": {"bytes": "", "mimeType": "text/plain"}},
+    {"kind": "file", "file": {"bytes": "YQ==", "mimeType": "image/png"}},
+    {"kind": "file", "file": {"bytes": "YQ==", "mimeType": "text/plain", "uri": "https://example.test/a.txt"}},
+    {"kind": "file", "file": {"uri": "https://example.test/a.txt", "mimeType": "text/plain"}},
+    {"kind": "file", "file": None},
+    {"kind": "file", "file": {"bytes": 42, "mimeType": "text/plain"}},
+    {"kind": "file", "file": {"bytes": "YQ==", "mimeType": "text/plain", "name": 42}},
+    {"kind": "file", "type": "text", "file": {"bytes": "YQ==", "mimeType": "text/plain"}},
+    _text_file(b"\xff"),
+    _text_file(b"a", "a" * 257),
+    _text_file(b"a" * 65537),
+])
+async def test_invalid_inline_text_file_makes_zero_requests(part):
+    client, recorder = _client(lambda request: httpx.Response(500), serves_card=True)
+
+    events = [event async for event in client.stream("read", parts=[part])]
+
+    assert events[-1]["type"] == "error"
+    assert recorder.requests == []
+    await client.close()
+
+
+@pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R012.5.2")
+@pytest.mark.parametrize("query,parts", [
+    ("read", [_text_file()] * 9),
+    ("read", [_text_file(b"a" * 32769)] * 2),
+    ("a" * 65537, [_text_file()]),
+    ("a" * 65536, [_text_file(b"b" * 34464)]),
+    ("read", [{"text": "a"}] * 31 + [_text_file()]),
+])
+async def test_inline_text_message_bounds_make_zero_requests(query, parts):
+    client, recorder = _client(lambda request: httpx.Response(500), serves_card=True)
+
+    events = [event async for event in client.stream(query, parts=parts)]
+
+    assert events[-1]["type"] == "error"
+    assert recorder.requests == []
+    await client.close()
+
+
+@pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R012.5.2")
+@pytest.mark.parametrize("query,parts", [
+    ("read", [_text_file("é".encode() * 4096)] * 8),
+    ("a" * 65536, [_text_file(b"b" * 34463)]),
+    ("read", [{"text": "a"}] * 30 + [_text_file()]),
+])
+async def test_inline_text_message_inclusive_bounds_are_admitted(query, parts):
+    client, recorder = _client(lambda request: httpx.Response(
+        200, content=_sse(_result(_task("completed"))),
+    ))
+
+    events = [event async for event in client.stream(query, parts=parts)]
+
+    assert not any(event["type"] == "error" for event in events)
+    assert len(recorder.requests) == 1
+    await client.close()
+
+
+@pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R012.5.2")
+async def test_server_upload_refusal_is_not_downgraded_or_retried():
+    client, recorder = _client(lambda request: httpx.Response(400, json={
+        "jsonrpc": "2.0", "id": 1,
+        "error": {"code": -32602, "message": "attachments exceed configured upload size"},
+    }))
+
+    events = [event async for event in client.stream("read", parts=[_text_file()])]
+
+    assert events[-1]["type"] == "error"
+    assert events[-1]["message"] == "attachments exceed configured upload size"
+    assert len(recorder.requests) == 1
     await client.close()
 
 

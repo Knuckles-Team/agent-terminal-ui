@@ -14,7 +14,7 @@ subcommands:
 |------|----------|
 | Core | `/help`, `/clear`, `/exit` (alias `/quit`), `/config`, `/keybindings` |
 | Modes | `/plan`, `/chat`, `/build` |
-| Conversation | `/compact`, `/context`, `/recap`, `/export`, `/diff`, `/focus`, `/fast`, `/image` |
+| Conversation | `/compact`, `/context`, `/recap`, `/export`, `/diff`, `/focus`, `/fast`, `/image`, `/file` |
 | Models & cost | `/model`, `/stats` (alias `/cost`) |
 | Theme | `/theme` |
 | Queue | `/queue`, `/queue:clear`, `/queue:toggle` |
@@ -32,6 +32,19 @@ subcommands:
 `/bg`, `/attach` and `/fast` report unavailable until Arbora serves their
 contracts. They do not change session state, resume a conversation or select
 a model. Alt+O reports the same fast-mode refusal.
+
+### Inline text files
+
+`/file PATH` stages a local UTF-8 text file for the next prompt. Quote paths with
+spaces. `/file` lists staged names; `/file --clear` removes the staged files.
+Staging makes no request. The next prompt sends each file as inline `text/plain`.
+Files retain their base names and bytes. The limit is eight files and 65,536
+total bytes. Empty, invalid UTF-8, oversized and non-regular files are refused.
+The command does not expand shell expressions or fetch URLs.
+The final path component cannot be a symbolic link.
+`/clear` and interruption remove staged files. A client or conversation change
+refuses a staged or queued file turn. The server may enforce a lower upload limit.
+Images and pasted images remain unsupported; `/image` still reports refusal.
 
 ### Read-only task history
 
