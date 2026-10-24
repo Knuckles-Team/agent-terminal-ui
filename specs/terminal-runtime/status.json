@@ -2680,6 +2680,7 @@
       "title": "Implement optional Canopy tokens",
       "delivery_state": "VERIFIED",
       "landed_in": [
+        "5f25c6dfa910",
         "6c1e6f34dc0e"
       ],
       "verified_by": [
@@ -2698,6 +2699,7 @@
       "title": "Implement the bounded spatial flat DAG",
       "delivery_state": "VERIFIED",
       "landed_in": [
+        "5f25c6dfa910",
         "6c1e6f34dc0e"
       ],
       "verified_by": [
