@@ -546,7 +546,10 @@
       "title": "Read-only current plan",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": [],
+      "verified_by": [
+        "native/agent-terminal-ui/src/run_inspector_client.rs:445",
+        "native/agent-terminal-ui/src/run_inspector_client.rs:609"
+      ],
       "rollup_of": [
         "TUI-RUNTIME-R010.4.1",
         "TUI-RUNTIME-R010.4.2"
@@ -907,11 +910,11 @@
         "a1266fbea3b7"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/tests/run_inspector.rs:100",
-        "native/agent-terminal-ui/tests/run_inspector.rs:113",
-        "native/agent-terminal-ui/tests/run_inspector.rs:133",
-        "native/agent-terminal-ui/tests/run_inspector.rs:159",
-        "native/agent-terminal-ui/tests/run_inspector.rs:177"
+        "native/agent-terminal-ui/tests/run_inspector.rs:101",
+        "native/agent-terminal-ui/tests/run_inspector.rs:114",
+        "native/agent-terminal-ui/tests/run_inspector.rs:134",
+        "native/agent-terminal-ui/tests/run_inspector.rs:160",
+        "native/agent-terminal-ui/tests/run_inspector.rs:178"
       ]
     },
     {
@@ -1076,14 +1079,15 @@
       "title": "Native inspector transport boundary",
       "delivery_state": "VERIFIED",
       "landed_in": [
-        "14a4f6e68157"
+        "14a4f6e68157",
+        "c2e571cd0f64"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/run_inspector_client.rs:305",
-        "native/agent-terminal-ui/src/run_inspector_client.rs:343",
-        "native/agent-terminal-ui/src/run_inspector_client.rs:376",
-        "native/agent-terminal-ui/src/run_inspector_client.rs:457",
-        "native/agent-terminal-ui/src/run_inspector_client.rs:526"
+        "native/agent-terminal-ui/src/run_inspector_client.rs:355",
+        "native/agent-terminal-ui/src/run_inspector_client.rs:393",
+        "native/agent-terminal-ui/src/run_inspector_client.rs:426",
+        "native/agent-terminal-ui/src/run_inspector_client.rs:546",
+        "native/agent-terminal-ui/src/run_inspector_client.rs:610"
       ]
     },
     {
@@ -1094,11 +1098,11 @@
         "9c80ba88dbb9"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/inspector_view.rs:478",
-        "native/agent-terminal-ui/src/inspector_view.rs:515",
-        "native/agent-terminal-ui/src/inspector_view.rs:533",
-        "native/agent-terminal-ui/src/inspector_view.rs:576",
-        "native/agent-terminal-ui/src/inspector_view.rs:590"
+        "native/agent-terminal-ui/src/inspector_view.rs:479",
+        "native/agent-terminal-ui/src/inspector_view.rs:516",
+        "native/agent-terminal-ui/src/inspector_view.rs:534",
+        "native/agent-terminal-ui/src/inspector_view.rs:577",
+        "native/agent-terminal-ui/src/inspector_view.rs:591"
       ]
     },
     {
@@ -2282,7 +2286,7 @@
         "65d859ac8296"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/run_inspector_client.rs:491",
+        "native/agent-terminal-ui/src/run_inspector_client.rs:577",
         "native/agent-terminal-ui/tests/anonymous.rs:107",
         "native/agent-terminal-ui/tests/anonymous.rs:13",
         "native/agent-terminal-ui/tests/anonymous.rs:40",
@@ -2299,7 +2303,7 @@
         "4f460e776734"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/inspector_view.rs:496",
+        "native/agent-terminal-ui/src/inspector_view.rs:497",
         "native/agent-terminal-ui/src/public_details_view.rs:451",
         "native/agent-terminal-ui/src/public_details_view.rs:512",
         "native/agent-terminal-ui/src/public_details_view.rs:566",
@@ -2422,9 +2426,9 @@
         "53bb3b5ca03e"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/inspector_view.rs:354",
-        "native/agent-terminal-ui/src/inspector_view.rs:389",
-        "native/agent-terminal-ui/src/inspector_view.rs:440"
+        "native/agent-terminal-ui/src/inspector_view.rs:355",
+        "native/agent-terminal-ui/src/inspector_view.rs:390",
+        "native/agent-terminal-ui/src/inspector_view.rs:441"
       ]
     }
   ]

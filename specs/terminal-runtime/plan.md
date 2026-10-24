@@ -551,8 +551,10 @@ boundary, not a running Arbora server or native query delivery.
 
 ### R010.8 native run reads
 
-The native inspector adapter uses the authenticated registry and registered `runs.get` route.
-It checks the response digest before projecting fields. Plan deadlines use validated UTC expiry and a monotonic clock.
+The native inspector adapter prefers the registered `runs.get` route.
+If the registry only offers `runs.current_plan`, it reads that plan and marks the summary unavailable.
+Both routes receive only the run ID. A failed summary read does not trigger another route.
+The adapter checks credentials, availability and the response digest before projecting fields. Plan deadlines use validated UTC expiry and a monotonic clock.
 The coordinator owns main-loop attachment. AU execution admission and Arbora trace-reader composition remain required for served acceptance.
 
 ### R010.9 native inspector loop attachment

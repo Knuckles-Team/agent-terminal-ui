@@ -255,6 +255,9 @@ and unanswered reconnect state. These fixtures do not prove admission or host ef
 
 R010.8: Native decoder tests preserve measured zero and empty available plans.
 They reject wrong-run, malformed, regressing and expired snapshots. Transport tests require registry membership and matching digests.
+Local HTTP tests cover current-plan-only registries with credentials and explicit no-auth mode.
+They assert run-ID-only requests, unavailable summary fields and no fallback after a failed summary read.
+Malformed or unavailable summaries clear protected values. Plan-only decoder tests cover expiry and empty plans.
 These local tests do not prove a served AU producer or production UI attachment.
 
 R010.9 loop tests cover validated run selection, local cancellation, close, read refusal and idle plan expiry.
