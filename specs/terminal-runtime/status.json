@@ -2702,6 +2702,7 @@
       "title": "Implement the bounded spatial flat DAG",
       "delivery_state": "VERIFIED",
       "landed_in": [
+        "55431e8da128",
         "5f25c6dfa910",
         "6c1e6f34dc0e"
       ],
@@ -2735,7 +2736,7 @@
       "title": "Select a supported native input backend",
       "delivery_state": "VERIFIED",
       "landed_in": [
-        "f0eb8f5ab06e"
+        "55431e8da128"
       ],
       "verified_by": [
         "tests/test_native_execution_graph_contract.py:20"
