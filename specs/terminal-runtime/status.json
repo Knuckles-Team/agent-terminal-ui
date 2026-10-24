@@ -450,12 +450,15 @@
       "landed_in": [
         "070e15682e71",
         "19a5072aed8e",
-        "877a834e65e3"
+        "877a834e65e3",
+        "d9be071196d3",
+        "fc214c63e6fb"
       ],
       "verified_by": [
         "tests/test_exit_confirm_keyboard.py:12",
         "tests/test_modal_keyboard_isolation.py:15",
-        "tests/test_modal_layout.py:14"
+        "tests/test_modal_layout.py:14",
+        "tests/test_settings_mcp_layout.py:16"
       ],
       "rollup_of": [
         "TUI-RUNTIME-R008.1",
