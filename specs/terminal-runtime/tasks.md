@@ -223,7 +223,7 @@ Record deferred validation as deferred, never passed.
 - [x] **TUI-RUNTIME-R015.51:** The owning client contract must record the method implementation and its acceptance evidence. Source obligation: `missing-client-methods next step 1`.
 - [ ] **TUI-RUNTIME-R015.52:** The repository must run available client maintenance checks. Source obligation: `missing-client-methods next step 2`.
 - [x] **TUI-RUNTIME-R015.53:** Restore Alt+Shift+T theme cycling on the main screen. Mounted tests cover every registered theme, wraparound, composer focus and text, and no-color preservation. Source obligation: `missing-client-methods next step 3`.
-- [ ] **TUI-RUNTIME-R015.54:** The terminal must assess the remaining environment-example and tool-guard obligations. Source obligation: `missing-client-methods next step 4`.
+- [x] **TUI-RUNTIME-R015.54:** The terminal must assess the remaining environment-example and tool-guard obligations. Source obligation: `missing-client-methods next step 4`.
 - [ ] **TUI-RUNTIME-R015.55:** The repository must pass project metadata, layout and public-surface checks under quality acceptance v1. Source obligation: `CHECKLIST non-FR checkbox 44`.
 - [ ] **TUI-RUNTIME-R015.56:** Terminal source must meet the shared structural limits under quality acceptance v1. Source obligation: `CHECKLIST non-FR checkbox 45`.
 - [ ] **TUI-RUNTIME-R015.57:** Terminal source and locked dependencies must pass actual security scans under quality acceptance v1. Source obligation: `CHECKLIST non-FR checkbox 46`.

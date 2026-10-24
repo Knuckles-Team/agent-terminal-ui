@@ -474,7 +474,7 @@ Permitted fallback preserves message identity and the idempotency key.
 | `TUI-RUNTIME-R015.51` | The client maintenance batch receipt below records adapters, tests, completed gates and residual acceptance. |
 | `TUI-RUNTIME-R015.52` | Fresh bounded client and mounted test execution plus configured all-file maintenance gates; record commands and results below. |
 | `TUI-RUNTIME-R015.53` | Planned `tests/test_source_quality.py::test_source_quality_53` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.54` | Planned `tests/test_source_quality.py::test_source_quality_54` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.54` | Source-linked assessment below, with the current environment example and production client refusal checked against its claims. Remaining served authority and coding-session requirements stay open. |
 | `TUI-RUNTIME-R015.55` | Run project checks in the quality acceptance v1 matrix. Record the complete tracked-file scope and every finding. See quality acceptance v1 below; this amendment supplies no result receipt. |
 | `TUI-RUNTIME-R015.56` | Measure the full source and test tree against R015.1–R015.7, R015.19–R015.20 and R015.34–R015.35. A changed-file baseline does not prove acceptance. See quality acceptance v1 below; this amendment supplies no result receipt. |
 | `TUI-RUNTIME-R015.57` | Run source, secret and dependency scans. Retain raw reports, database dates and all severities; resolve every actionable finding. See quality acceptance v1 below; this amendment supplies no result receipt. |
@@ -1475,3 +1475,51 @@ mappings from production source and checks their owning table and execution rece
 It rejects missing or wrong mappings, narrowed commands, missing outcomes and false live-proof claims.
 A fresh combined run passed all 11 enforcement and documentation cases without skips in 1.71 seconds.
 R015.29.2, R015.52 and quality acceptance v1 remain open.
+
+## Environment and tool-guard assessment (R015.54)
+
+Source: [missing-client task at b4e5940](https://github.com/Knuckles-Team/agent-terminal-ui/blob/b4e5940acc4b21df406eeb115c0f422b0b084901/plans/spec-source-history/tasks/fix_missing_client_methods.md).
+The original next step is “Consider implementing quick wins (.env.example, tool guards)”.
+It is a suggestion to assess, not a defined guard implementation contract.
+The source does not identify shared development hooks as the intended tool guards.
+
+- Environment example: available under R015.43. The tracked `.env.example`
+  contains only AGENT_URL and AGENT_THEME defaults and no credential. The real
+  environment factory uses the loopback URL without an Authorization header.
+  The file is not loaded automatically; README.md documents explicit export.
+- Runtime tool guards: refusal only. `AgentClient.invoke_op` rejects approvals.*
+  operations with APPROVAL_UNAVAILABLE before transport. `confirm_plan` refuses
+  unsigned confirmation, including with a caller credential. Local danger
+  classification and approval screens are not proof of served authorization.
+- Remaining acceptance: R001.5 verifies pending display and local refusal, not
+  enabled approvals. R001.3 retains signed exact-plan confirmation acceptance.
+  R011.4 and R011.5 retain diff-before-write
+  and command-before-run acceptance. R002.8.4 retains scoped preapproval refusal.
+  This assessment does not close any of these requirements or enable tool effects.
+
+R015.52 remains separate: its source says “Run self-improvement scripts if available”.
+The existing client receipt is not a new execution of that obligation.
+R015.29.1 covers shared development guards separately; it does not resolve the
+source's undefined “tool guards” suggestion.
+
+Assessment qualification used base `8ef729851afc790174422f3f33c04e9aa347d042`
+and Python 3.12.14 with the current checkout explicitly on PYTHONPATH.
+The following fresh bounded run passed 185 tests without skips in 1.95 seconds:
+
+```bash
+python -m pytest tests/test_source_quality.py tests/test_client.py tests/test_commands.py -q -n 2 -p no:randomly
+```
+
+The assessment test reads the original suggestion from full Git history.
+It applies the actual environment example and checks authenticated production
+client refusal with a recording HTTP transport. Five altered assessments reject
+false guard ownership, granted approval, omitted workspace obligations and
+false completion. This is source-fixture evidence, not live authorization proof.
+
+The complete configured commit-stage `pre-commit run --all-files` passed with
+pre-commit 4.7.0 and the pinned pipelines revision
+`a2dd609d494364daf26fdb3b18abbffa10095993`. The first run failed to create uv's
+default tool directory. Existing writable tool and cache locations resolved that error.
+Hook definitions stayed unchanged. The regression rerun passed 185 tests without
+skips in 1.93 seconds. This does not qualify native builds, installed wheels,
+live services or the complete pre-push stage.
