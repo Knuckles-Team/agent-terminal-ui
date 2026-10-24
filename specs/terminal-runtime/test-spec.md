@@ -48,6 +48,30 @@ The combined operator-documentation, installed-entry, source-quality, CLI-docume
 No runtime behavior, package version or dependency changed. R015.10 and R015.12 full documentation accuracy remain open.
 Version-analysis requirements, R015.71 installed served behavior, native and release performance acceptance remain open.
 
+## README navigation and architecture receipt
+
+R015.13 adds navigation to every top-level README section. The existing native usage note now belongs to Usage, not License.
+R015.15 explains the Python entry paths, shared client, A2A task flow and separate Arbora process.
+Source links identify the entry module, application, headless driver, client, screens, widgets and separate Rust implementation.
+Both documentation contracts reject the unchanged README at d6fb8293 because the required sections are absent.
+Four navigation counterexamples reject missing, stale and duplicate targets.
+Five architecture counterexamples reject wrong process boundaries, transport, source paths and implementation claims.
+The source check confirms both Python consumers call the shared client factory.
+
+On GR1080 with Python 3.14.7, this focused suite passed 54 tests:
+
+```bash
+python -m pytest tests/test_readme_navigation.py tests/test_operator_documentation.py tests/test_import_guard.py tests/test_cli_documentation.py tests/test_headless.py -q
+```
+
+Existing subprocess import guards verify that application and headless imports do not load the heavy backend.
+The headless import guard also rejects a Textual import. Existing parser and headless tests cover dispatch, rendering and authentication.
+These checks support the architecture explanation; they do not qualify all advertised features or full native parity.
+R015.16 already has detailed-documentation links and receives no new completion credit.
+R015.10 and R015.12 remain open. Other feature claims and the detailed architecture page still need a separate audit.
+The exact-main qualification receipt from PR 137 remains the broad-suite baseline; this batch does not rerun that suite.
+Its coroutine-finalization warning remains unresolved. Live-service, installed-service and release-performance acceptance remain open.
+
 ## Structure parity rows
 
 | Requirement | Layer and fixture | Expected positive result | Required negative proof |
@@ -361,9 +385,9 @@ Permitted fallback preserves message identity and the idempotency key.
 | `TUI-RUNTIME-R015.10` | Planned `tests/test_source_quality.py::test_source_quality_10` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.11` | `tests/test_operator_documentation.py::test_operator_installation_documentation`; see operator documentation receipt above. |
 | `TUI-RUNTIME-R015.12` | Planned `tests/test_source_quality.py::test_source_quality_12` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.13` | Planned `tests/test_source_quality.py::test_source_quality_13` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.13` | `tests/test_readme_navigation.py::test_readme_navigation_reaches_each_top_level_section` and counterexamples; see README navigation and architecture receipt. |
 | `TUI-RUNTIME-R015.14` | `tests/test_operator_documentation.py::test_locked_install_refuses_a_checkout_without_its_lockfile`; see operator documentation receipt above. |
-| `TUI-RUNTIME-R015.15` | Planned `tests/test_source_quality.py::test_source_quality_15` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.15` | `tests/test_readme_navigation.py::test_readme_explains_frontend_entry_paths_and_served_boundary` and counterexamples; see README navigation and architecture receipt. |
 | `TUI-RUNTIME-R015.16` | Planned `tests/test_source_quality.py::test_source_quality_16` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.17` | `tests/test_operator_documentation.py::test_contributor_guide_tools_commands_and_source_map`; see operator documentation receipt above. |
 | `TUI-RUNTIME-R015.18` | Planned `tests/test_source_quality.py::test_source_quality_18` must enter the owning path and prove the requirement. |
