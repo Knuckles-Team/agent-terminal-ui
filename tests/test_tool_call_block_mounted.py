@@ -132,3 +132,44 @@ async def test_initial_failed_output_honors_policy_and_untrusted_header_is_liter
             str(block.query_one(".tool-details", Static).render())
             == "[bold]details[/bold]"
         )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("field", ["content", "details", "both"])
+@pytest.mark.parametrize(
+    "mode,status",
+    [
+        ("always", "in_progress"),
+        ("on-fail", "failed"),
+        ("on-success", "completed"),
+    ],
+)
+async def test_control_only_initial_output_is_inert_until_visible_content_arrives(
+    field: str, mode: str, status: str
+):
+    app = ToolApp(mode)
+    controls = "\x00\x1b\x07\u202e\u2066\ud800"
+    async with app.run_test() as pilot:
+        conversation = app.query_one(Conversation)
+        await conversation.add_tool_call(
+            "tool",
+            call_id="call",
+            status=status,
+            content=controls if field in ("content", "both") else None,
+            details=controls if field in ("details", "both") else None,
+        )
+        block = app.query_one(ToolCallBlock)
+        header = block.query_one(ToolCallHeader)
+        header.focus()
+        await pilot.pause()
+        assert not block.has_content
+        assert not block.expanded
+        assert not block.query_one(Markdown).display
+        assert not block.query_one(".tool-details", Static).display
+        await pilot.press("enter")
+        assert not block.expanded
+        await conversation.update_tool_call("call", content="Visible result")
+        await pilot.pause()
+        assert block.has_content and block.expanded
+        assert block.query_one(Markdown)._markdown == "Visible result"
+        assert app.focused is header

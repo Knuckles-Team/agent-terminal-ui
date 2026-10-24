@@ -690,3 +690,41 @@ This installed-client result does not make the default pre-push environment gree
 Publication rebase: `d370244d768458262cfc46692152eadd913709a2` adds native CLI help.
 Both appended evidence sections are retained. Python production code is unchanged
 by that upstream change. The full-suite receipt above predates this rebase.
+
+## Empty tool output after display filtering
+
+`TUI-RUNTIME-R012.1.4` determines initial fold availability from filtered content
+and details. Control-only output renders empty and must remain inert. Pressing
+Enter cannot record a user fold choice until visible content exists. Later
+visible output still follows the configured expansion policy and retains focus.
+
+Baseline: `d370244d768458262cfc46692152eadd913709a2` on GR1080.
+The nine cases in
+`tests/test_tool_call_block_mounted.py::test_control_only_initial_output_is_inert_until_visible_content_arrives`
+fail before the production repair. They cover content, details and both fields
+under always, on-fail and on-success policies. The repair passes all 108 tests
+across the mounted tool, public-details and whole-app keyboard suites:
+
+```bash
+python -m pytest tests/test_tool_call_block_mounted.py tests/test_public_run_details.py tests/test_public_run_keyboard_app.py -q -n 2 --timeout=30 --timeout-method=thread
+```
+
+This repairs an existing leaf. It adds no completed requirement and makes no
+served streaming, native presentation or release-performance claim.
+
+
+Full-suite receipt before the publication rebase: Python 3.14.7 with installed
+`arbora==0.1.7` passes 1446 tests, skips one, and passes all six snapshots.
+The command is `python -m pytest tests -q -n 2 --dist loadfile -p no:randomly -m 'not slow' --timeout=60 --tb=short`.
+
+The normal pre-push gate runs with two workers. All hooks except pytest pass.
+Its locked all-extras environment lacks Arbora: 1274 pass, one skips, seven fail,
+and four modules fail collection. The seven failures are in `test_client.py`.
+Collection fails in `test_client_read_contracts.py`, `test_current_plan_view.py`,
+`test_registered_command_contract.py` and `test_served_fleet_usage.py`.
+The same five files on unchanged `d370244` reproduce seven failures and four
+errors, with 74 passes. The repair changes no dependency or hook configuration.
+
+The publication rebase includes merged PR #120 from `5643d81`.
+Both evidence sections and task updates are retained. Full-suite counts above
+predate this rebase; focused presentation tests and commit gates run again.

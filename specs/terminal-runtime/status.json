@@ -2314,7 +2314,8 @@
       "title": "Mounted tool detail updates",
       "delivery_state": "VERIFIED",
       "landed_in": [
-        "49404376c22b"
+        "49404376c22b",
+        "e59e3a013718"
       ],
       "verified_by": [
         "tests/test_tool_call_block_mounted.py:14"
