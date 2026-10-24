@@ -4,7 +4,7 @@
 |---|---|---|---|
 | TUI-RUNTIME-R001.1 | Unit command parser plus `httpx.MockTransport`; installed generated registry artifact | Known op and object params produce one versioned request with correct envelope | Empty ID, malformed JSON, array input, unknown op, missing registry file and digest mismatch make zero effect requests |
 | TUI-RUNTIME-R001.2 | Client transport with loopback and remote URLs, fake bearer | Verified caller header reaches remote Arbora only over TLS | Remote HTTP, absent/invalid bearer, credential in exception/log/snapshot all fail |
-| TUI-RUNTIME-R001.3 | A2A fake server that issues a PLAN with binding and expiry | One `/confirm` resumes exactly the issued plan | Tampered op/input/digest/subject, expired plan and replay are rejected before any effect; server also rejects stale lease |
+| TUI-RUNTIME-R001.3 | A2A fake server issues a PLAN with binding and expiry. | One `/confirm` resumes exactly the issued plan. | Tampered op/input/digest/subject, expired plan and replay fail before effects. The server also rejects stale leases. |
 | TUI-RUNTIME-R001.4 | Mock error envelope, timeout, disconnect and malformed JSON. | Typed success renders and chat remains functional. | Every failure renders an error. The session stays usable and never reports success. |
 | TUI-RUNTIME-R001.5 | Pending A2A task with `input-required` and approval metadata | Pending request is displayed. No effect is asserted | `approvals.*`, fleet grant, missing signed exchange and wrong pending-call binding are refused. Enabling approval requires separate served receipt |
 | TUI-RUNTIME-R001.6 | Clean Python 3.12 base environment and supported optional-client environment | Base chat works. Compatible optional install enables `/op` | No compatible client yields clear `CLIENT_UNAVAILABLE` and no untyped fallback |
@@ -776,3 +776,47 @@ identity instead of expanding to longer siblings. Case-insensitive prefixes and
 aliases select one canonical command consistently across completion and the
 suggestion list. Ambiguous prefixes and argument text are not replaced on Enter.
 These keyboard fixtures do not claim the full served command matrix.
+
+### Mounted command inventory and fleet dispatch
+
+R012.4.2 now routes `/fleet` and `/fleet status` through the generated
+`fleet.status` read. Empty children remain a successful response; malformed
+children and refused reads display one named unavailable notice. The command does
+not invent an approval count. Grant and invalid subcommands refuse before
+transport. `/help` uses the registered TUI handlers and identifies the existing
+unavailable operation families, without importing optional cross-surface help.
+
+`tests/test_mounted_command_matrix.py` drives the actual AgentApp composer with
+a real AgentClient and controlled HTTP responses. Its inventory accounts for
+every registered command. This is client fixture evidence, not a live producer
+or complete subcommand proof for R012.4.3.2; that row stays open.
+
+| Command group | Mounted evidence and limit |
+| --- | --- |
+| help | All registered names, local descriptions and unavailable operation names |
+| fleet | Status success, empty, malformed and refused; invalid arguments and grant do not dispatch |
+| mcp, tools, usage/stats/cost/context | Generated read routes and view entry with empty catalog or tenant totals |
+| history, capability/capabilities, keybindings, run/runs, op | Task-list, catalog, run-list and operation entry; no live mutation or approval claim |
+| plan/chat/build, init/review/test/search, compact/diff/recap, simplify/add-dir, goal | A real client message/send turn and displayed answer; goal is local prompt metadata, not proof of an autonomous backend loop |
+| clear, exit/quit, theme, queue variants, export, focus, fast, agents, logs, goal variants | No command network traffic. Export checks empty-state refusal. |
+| skills, prompts, kb, cron, pipeline, image, bg, attach, mcp:reload, confirm | Explicit refusal or missing-plan notice before command transport |
+
+The 404 fixture records the following legacy routes. These tests record
+migration dependencies, not accepted served behavior. Each family still needs
+an admitted producer contract and command migration or an explicit refusal.
+
+| Commands | Current API dependency |
+| --- | --- |
+| graph, memory | `/api/enhanced/graph/stats`, `/api/enhanced/graph/nodes`; memory mutations also use `/api/enhanced/graph/memory/{id}` |
+| ask, nl, obs, broker, kvcache | `/api/graph/ask-data`, `/api/graph/nl-query`, `/api/graph/promql`, `/api/graph/traces`, `/api/graph/broker`, `/api/graph/kvcache` |
+| ingest | `/api/enhanced/extract/submit`, `/api/enhanced/extract/stream/{job_id}`, `/api/enhanced/extract/jsonl/{job_id}` |
+| sdd | `/api/enhanced/sdd/constitution`, `/api/enhanced/sdd/specs`, `/api/enhanced/sdd/plans`, `/api/enhanced/sdd/tasks` |
+| impact, codemap | `/api/enhanced/graph/impact/{symbol}`, `/api/codemap` |
+| resources, maintenance, config | `/api/enhanced/resources`, `/api/enhanced/resources/spawn`, `/api/enhanced/maintenance/status`, `/api/enhanced/maintenance/trigger`, `/api/enhanced/config/backend` |
+| model | `/models`; current client masks a failed list as empty, so unavailable-versus-empty acceptance is not established |
+
+App startup separately requests `/api/enhanced/helpers/list_skills`. Command
+request assertions start after startup settles and do not certify zero legacy
+requests for the whole application. Transport, startup and backend changes are
+outside this command batch. Full subcommand coverage, live producer acceptance,
+autonomous goals, served model selection and complete R012.4.3.2 remain open.

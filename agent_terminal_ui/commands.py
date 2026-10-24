@@ -202,20 +202,11 @@ class CommandProcessor:
 
     async def cmd_help(self, args: str) -> None:
         """Show available commands and their descriptions."""
-        # CONCEPT:AU-ECO.messaging.shared-by-every-messaging
-        # Cross-surface descriptions come from the one agent-utilities command
-        # registry; TUI-only commands fall back to their handler docstring.
-        try:
-            from agent_utilities.messaging.commands import command_specs
-
-            registry = {
-                c["command"]: c["description"] for c in command_specs("terminal")
-            }
-        except Exception:  # noqa: BLE001 — registry optional; never break /help
-            registry = {}
         help_text = "[bold blue]Available Commands:[/bold blue]\n"
         for cmd in sorted(self.commands.keys()):
-            doc = registry.get(cmd) or self.commands[cmd].__doc__ or "No description"
+            doc = self.commands[cmd].__doc__ or "No description"
+            if operation := _UNAVAILABLE_COMMANDS.get(cmd):
+                doc = f"Unavailable: Arbora does not serve {operation}."
             help_text += f"- [bold]/{cmd}[/bold]: {doc}\n"
 
         await self.app.query_one("Conversation").add_info(help_text)
@@ -572,48 +563,26 @@ class CommandProcessor:
             return
         await conversation.add_info(json.dumps(result, indent=2, default=str))
 
-    @staticmethod
-    def _fleet_lines(topology: Any, approvals: list[dict[str, Any]]) -> list[str]:
-        """Format the fleet topology and pending-approval summary lines."""
-        lines = ["[bold blue]Fleet Supervisor[/bold blue]"]
-        if topology:
-            lines.append("[bold]Topology[/bold]")
-            lines.extend(f"- {key}: {value}" for key, value in topology.items())
-        lines.append(f"[bold]Pending approvals:[/bold] {len(approvals)}")
-        for approval in approvals:
-            approval_id = approval.get("id") or approval.get("approval_id") or "?"
-            action = approval.get("action", "")
-            target = approval.get("target") or approval.get("subject") or ""
-            lines.append(f"- {approval_id}: {action} {target}".rstrip())
-        return lines
-
-    async def _fleet_overview(self, conversation: Any, client: Any) -> None:
-        """Render fleet topology plus the pending-approval queue."""
-        try:
-            topology = await client.get_fleet_topology()
-            approvals = await client.get_fleet_approvals()
-        except Exception as exc:
-            await conversation.add_info(f"[red]Fleet unavailable: {exc}[/red]")
-            return
-        await conversation.add_info("\n".join(self._fleet_lines(topology, approvals)))
-
     async def cmd_fleet(self, args: str) -> None:
-        """Show fleet topology and pending approvals."""
-        conversation = self.app.query_one("Conversation")
-        client = getattr(self.app, "agent_client", None)
-        if client is None:
-            await conversation.add_info(
-                "[yellow]Fleet view requires an agent backend connection.[/yellow]"
-            )
-            return
-
+        """Read caller-visible fleet.status. Usage: /fleet [status]"""
         parts = args.strip().split()
         if parts and parts[0] == "grant":
             self.app.notify(
                 "Approval operations require the web console", severity="warning"
             )
             return
-        await self._fleet_overview(conversation, client)
+        if parts not in ([], ["status"]):
+            self.app.notify("Usage: /fleet [status]", severity="warning")
+            return
+        conversation = self.app.query_one("Conversation")
+        try:
+            status = await self.app.agent_client.get_mcp_config()
+        except (ArboraOperationError, httpx.HTTPError) as exc:
+            await conversation.add_info(f"[red]fleet.status unavailable: {exc}[/red]")
+            return
+        await conversation.add_info(
+            Panel(Syntax(json.dumps(status, indent=2), "json"), title="Fleet status")
+        )
 
     async def cmd_model(self, args: str) -> None:
         """Inspect registry details; model selection is unavailable.
