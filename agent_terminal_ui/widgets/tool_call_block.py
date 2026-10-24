@@ -145,7 +145,7 @@ class ToolCallBlock(VerticalGroup):
         self._content = display_text(content) if content is not None else None
         self._details = display_text(details) if details is not None else None
         self._user_toggled = False
-        self.has_content = bool(content or details)
+        self.has_content = bool(self._content or self._details)
 
     @property
     def status(self) -> str:

@@ -690,3 +690,24 @@ This installed-client result does not make the default pre-push environment gree
 Publication rebase: `d370244d768458262cfc46692152eadd913709a2` adds native CLI help.
 Both appended evidence sections are retained. Python production code is unchanged
 by that upstream change. The full-suite receipt above predates this rebase.
+
+## Empty tool output after display filtering
+
+`TUI-RUNTIME-R012.1.4` determines initial fold availability from filtered content
+and details. Control-only output renders empty and must remain inert. Pressing
+Enter cannot record a user fold choice until visible content exists. Later
+visible output still follows the configured expansion policy and retains focus.
+
+Baseline: `d370244d768458262cfc46692152eadd913709a2` on GR1080.
+The nine cases in
+`tests/test_tool_call_block_mounted.py::test_control_only_initial_output_is_inert_until_visible_content_arrives`
+fail before the production repair. They cover content, details and both fields
+under always, on-fail and on-success policies. The repair passes all 108 tests
+across the mounted tool, public-details and whole-app keyboard suites:
+
+```bash
+python -m pytest tests/test_tool_call_block_mounted.py tests/test_public_run_details.py tests/test_public_run_keyboard_app.py -q -n 2 --timeout=30 --timeout-method=thread
+```
+
+This repairs an existing leaf. It adds no completed requirement and makes no
+served streaming, native presentation or release-performance claim.
