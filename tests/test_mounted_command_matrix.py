@@ -331,6 +331,7 @@ async def test_mounted_read_entry_points(command, paths, screen):
 
 LOCAL_COMMANDS = [
     "clear",
+    "file",
     "exit",
     "quit",
     "theme",
