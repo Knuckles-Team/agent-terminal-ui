@@ -834,6 +834,6 @@ autonomous goals, served model selection and complete R012.4.3.2 remain open.
 Supported-read failure qualification extends the same command matrix. Mounted
 fleet, MCP, tools, history, usage, capability and run commands receive HTTP 403
 or a read timeout. Each displays unavailable, sends no fallback request and
-permits a later `/help`. View cases use their public close actions; one Esc
-press did not close those views in this fixture. Keyboard closure remains a
-separate gap. These cases add validation, not new implementation or completion.
+permits a later `/help`. Usage now owns Escape locally, so one press restores the composer after
+success, denial or timeout. Capability and run cases use public close actions;
+their keyboard closure belongs to the separate modal keyboard repair. These cases add validation, not new implementation or completion.

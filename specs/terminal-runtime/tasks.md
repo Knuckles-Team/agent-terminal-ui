@@ -294,4 +294,4 @@ Record deferred validation as deferred, never passed.
 - [x] **TUI-RUNTIME-R001.1:** Reject non-JSON numeric constants before client dispatch and parse whitespace-separated operation arguments. Focused dispatcher regressions cover refusal and recovery; the full generated-registry and transport acceptance remains separate.
 - [x] **TUI-RUNTIME-R012.4.3.1:** Preserve exact names during Tab completion and align Enter, Tab and suggestion matching across casing and aliases. Mounted command tests cover these paths; full served matrix acceptance remains pending.
 
-- [ ] **TUI-RUNTIME-R012.4.2:** Review mounted `/fleet [status]` dispatch through fleet.status and truthful local help. Command inventory records legacy dependencies; complete R012.4.3.2 acceptance remains open.
+- [ ] **TUI-RUNTIME-R012.4.2:** Review mounted `/fleet [status]` dispatch through fleet.status, truthful local help and usage Escape ownership. Command inventory records legacy dependencies; complete R012.4.3.2 acceptance remains open.
