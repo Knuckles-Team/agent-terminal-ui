@@ -1523,3 +1523,30 @@ default tool directory. Existing writable tool and cache locations resolved that
 Hook definitions stayed unchanged. The regression rerun passed 185 tests without
 skips in 1.93 seconds. This does not qualify native builds, installed wheels,
 live services or the complete pre-push stage.
+
+## Nested execution explorer acceptance
+
+All tests below are planned; this specification change supplies no runtime acceptance.
+Retain all earlier source receipts and outstanding served, native and release gates.
+
+| Requirement | Planned proving test | Required counterexamples |
+|---|---|---|
+| TUI-RUNTIME-R010.11 | `tests/test_execution_explorer_contract.py::test_snapshot_identity_and_recovery` | Root task versus step ID, replay-v1 preservation, shared run IDs, foreign owners, unknown versions, replay gaps and stale snapshots. |
+| TUI-RUNTIME-R010.12 | `tests/test_execution_explorer.py::test_nested_navigation` | Parent/child/grandchild, fan-in dependencies, invalid locator, narrow viewport and missing ancestor. |
+| TUI-RUNTIME-R010.13 | `tests/test_execution_explorer.py::test_public_records_and_folds` | Unavailable transcript, repeated and late tool events, private fields, denied refresh and changed node binding. |
+| TUI-RUNTIME-R010.14 | `tests/test_execution_explorer_served.py::test_nested_graph_journey` | Real nested producer, reconnect, concurrent branches, cancellation and two-principal isolation. |
+| TUI-RUNTIME-R012.7 | `tests/test_execution_explorer_controls.py::test_active_child_target` | Wrong target, disabled capability, stale state, duplicate submit and unknown outcome after connection loss. |
+| TUI-RUNTIME-R012.8 | `tests/test_execution_explorer_controls.py::test_completed_child_continuation` | Unsupported history, still-active child, unbound continuation and root-chat fallback. |
+| TUI-RUNTIME-R012.9 | `tests/test_execution_explorer_served.py::test_targeted_child_controls` | Child completion during review, revoked access, cancellation race and sibling isolation. |
+
+The served fixture must actually spawn parent, child and grandchild executions through Agent Utilities and Arbora.
+It must include two parallel children and an explicit fan-in dependency.
+A tree drawn from fabricated events or a screenshot is not producer proof.
+Run identical topology and control scenarios through the Python and native production terminals.
+Record producer and consumer revisions, distribution versions, schema digest, node identities and per-run replay cursors.
+Verify keyboard-only navigation, node selection, public folds, locator reopen and return to the original composer at 40 columns.
+Verify one active-child message reaches only the chosen child, not its parent, grandchild or siblings.
+Complete that child, invoke the separate continuation action and verify the producer-returned continuation identity.
+Disconnect after submission; reconcile without duplicate delivery or a fabricated success.
+Revoke access after successful display and verify stale records and actions disappear.
+Cancel the selected authorized target; verify acknowledgement, eventual state and the producer-defined impact on related executions.

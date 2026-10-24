@@ -186,18 +186,15 @@ The full command, keyboard shortcut, and module reference lives in
 - **Linked tasks** -- jobs can reference durable task IDs
 - **Job lifecycle** -- running -> completed/failed/cancelled with cleanup
 
-#### Agent View - Multi-Session Dashboard (TUI-20)
-- **Session dashboard** -- at-a-glance view of all concurrent agent sessions with status indicators
-- **Peek panel** -- preview the last response of any session without switching context
-- **Inline reply** -- respond to waiting sessions directly from the dashboard
-- **Background sessions** -- send any session to the background with `/bg`
-- **Session types** -- distinguishes Chat and Goal sessions with visual indicators
-- **Auto-refresh** -- session statuses update every 2 seconds
+#### Agent View and execution inspection (TUI-20)
+- **Agent View** opens with `/agents` or `--bg`, but has no production served-session inventory.
+- **Preview components** display supplied rows; their Attach and Reply bindings do not send child-agent messages.
+- **Public details** support summary, trace and tool folds when compatible events are available.
+- **Background and attachment** remain unavailable through `/bg` and `/attach`.
+- **Nested execution and dependency navigation** remain specified, not delivered by the Swarm tree or flat workflow list.
 
-#### Background Agent Runner (TUI-21)
-- **Async workers** -- up to 10 concurrent background agent sessions
-- **State persistence** -- session state survives TUI restarts via TaskManager
-- **Crash recovery** -- interrupted sessions are marked as failed on restart
+See [Agent View](docs/agent_view.md) for the current boundary and planned explorer.
+The local background-runner component does not establish served child execution or restart recovery.
 
 #### Autonomous Goal Loop (AU-ORCH.session.durable-session-autonomous-goal)
 - **`/goal` command** -- define an objective and let the agent work autonomously
@@ -263,9 +260,9 @@ The full command, keyboard shortcut, and module reference lives in
   - `/goal:status` -- show current goal progress
   - `/goal:cancel` -- cancel the active goal
   - `/goal:history` -- browse past goals from the Knowledge Graph
-  - `/agents` -- open the Agent View multi-session dashboard
-  - `/bg` -- background the current session
-  - `/attach <id>` -- attach to a specific session
+  - `/agents` -- open the Agent View presentation screen
+  - `/bg` -- report unavailable background execution
+  - `/attach <id>` -- report unavailable session attachment
 
 #### Input Prefixes
 - **`!`** -- Direct Bash execution (e.g., `!ls -la`)
@@ -372,7 +369,7 @@ lightweight frontends against it.
 - **Tab** -- Navigate between focusable elements
 - **Esc Esc** -- Rewind/Undo (experimental)
 - **Left Arrow** -- Switch to Agent View dashboard
-- **Right Arrow / Enter** -- Attach to selected session (from Agent View)
+- **Right Arrow / Enter** -- Request selection of a supplied Agent View row; served attachment is unavailable
 
 ### Message Queuing
 
