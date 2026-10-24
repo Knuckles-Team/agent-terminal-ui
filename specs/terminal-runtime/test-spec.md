@@ -685,3 +685,8 @@ The full suite also ran with the existing installed `arbora==0.1.7` client
 environment on GR1080: 1444 passed, one skipped, and all six snapshots passed.
 The command was `python -m pytest tests -q -n 2 --dist loadfile -p no:randomly -m 'not slow' --timeout=60 --tb=short`.
 This installed-client result does not make the default pre-push environment green.
+
+
+Publication rebase: `d370244d768458262cfc46692152eadd913709a2` adds native CLI help.
+Both appended evidence sections are retained. Python production code is unchanged
+by that upstream change. The full-suite receipt above predates this rebase.
