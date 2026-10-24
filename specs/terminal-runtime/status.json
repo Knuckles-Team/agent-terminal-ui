@@ -1959,7 +1959,7 @@
       "title": "The terminal must resolve the remaining theme-switch regression. Alt+Shift+T cycles registered Textual themes from the main screen without changing composer text or focus. Preserve no-color mode",
       "delivery_state": "VERIFIED",
       "landed_in": [
-        "8d02f1d78a0a"
+        "5a0e96ad3e4b"
       ],
       "verified_by": [
         "tests/test_theme_keyboard.py:10"
