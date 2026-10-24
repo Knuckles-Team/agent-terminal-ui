@@ -1976,8 +1976,8 @@
         "e82e2fe60e0e"
       ],
       "verified_by": [
-        "tests/test_source_quality.py:28",
-        "tests/test_source_quality.py:45"
+        "tests/test_source_quality.py:31",
+        "tests/test_source_quality.py:48"
       ]
     },
     {
@@ -2097,7 +2097,10 @@
       "title": "The terminal must assess the remaining environment-example and tool-guard obligations. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [
+        "tests/test_source_quality.py:116",
+        "tests/test_source_quality.py:84"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.55",

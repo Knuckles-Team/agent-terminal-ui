@@ -1208,3 +1208,14 @@ Export SVGs at compact and wide sizes to stable documentation paths. The command
 must support a read-only freshness check. Tests must verify repeatable output and
 that capture does not read private sessions or contact a live service. Label all
 images as demo captures, not native-terminal or live-service qualification.
+
+## Amendment 2026-10-24: environment and tool-guard assessment
+
+R015.54 assesses the two suggestions in the archived missing-client task.
+Its original next step says “Consider implementing quick wins (.env.example, tool guards)”.
+This is an assessment, not acceptance of an unspecified new guard implementation.
+The source does not define “tool guards” or identify shared development hooks.
+Use the existing runtime approval and coding-session requirements for remaining
+permission work; do not infer a new local grant path.
+Record current environment behavior, runtime refusal evidence and the unresolved
+served approval and workspace-effect obligations in the owning test specification.
