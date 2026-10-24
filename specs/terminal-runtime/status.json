@@ -237,8 +237,8 @@
       "title": "Known op and object params produce one versioned request with correct envelope",
       "delivery_state": "VERIFIED",
       "landed_in": [
-        "658a95e36821",
-        "d309979d133f"
+        "d309979d133f",
+        "e08e2f53aadf"
       ],
       "verified_by": [
         "tests/test_client.py:421",
