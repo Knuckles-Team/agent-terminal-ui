@@ -452,8 +452,8 @@ Permitted fallback preserves message identity and the idempotency key.
 | `TUI-RUNTIME-R015.29` | Planned `tests/test_source_quality.py::test_source_quality_29` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.30` | Planned `tests/test_source_quality.py::test_source_quality_30` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.31` | Partial Python bump and native consistency checks in `tests/test_package_metadata.py`; native version-configuration coverage remains open. |
-| `TUI-RUNTIME-R015.32` | Planned `tests/test_source_quality.py::test_source_quality_32` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.33` | Planned `tests/test_source_quality.py::test_source_quality_33` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.32` | `tests/test_historical_analysis.py` verifies the original JSON report bytes in immutable Git history and refuses changed bytes or release-mirror registration. Full Git history is required for preservation acceptance. |
+| `TUI-RUNTIME-R015.33` | `tests/test_historical_analysis.py` verifies the original Markdown report bytes in immutable Git history and refuses changed bytes or release-mirror registration. Full Git history is required for preservation acceptance. |
 | `TUI-RUNTIME-R015.34` | Planned `tests/test_source_quality.py::test_source_quality_34` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.35` | Planned `tests/test_source_quality.py::test_source_quality_35` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.36` | Planned `tests/test_source_quality.py::test_source_quality_36` must enter the owning path and prove the requirement. |
@@ -1296,13 +1296,13 @@ not qualify served streaming, native parity or full mounted cancellation.
 
 ## Operator current-main reconciliation
 
-The operator branch now preserves main `2ebf9ae587ad171dd859b4425d65f9f999c03eb6`.
+The operator reconciliation preserved main `2ebf9ae587ad171dd859b4425d65f9f999c03eb6`.
 Only appended plan and test-spec sections conflicted; both sides were retained.
-Runtime files match that main exactly. Operator tests and the four qualified criteria are unchanged.
+Runtime files matched that main exactly. Operator tests and the four qualified criteria were unchanged.
 The combined operator, environment, CLI, MCP responsiveness, completion and headless checks passed 169 tests.
 This includes the actual installed entry tests against a newly built wheel.
 Its SHA-256 is `11effa2a8e9b582d192fac25bba72a385121207e177cee4e2d2d03f25baee2f9`.
-All packaged Python, TCSS and license bytes match this union checkout.
+All packaged Python, TCSS and license bytes matched that union checkout.
 The earlier full-suite receipt remains evidence for its recorded baseline, not a new full-union run.
 
 ### Python status usage regression
@@ -1324,3 +1324,57 @@ The status and main-screen SVG snapshots record the corrected layout.
 Keyboard tests toggle the sidebar and server log at 120, 80 and 60 columns.
 The existing eight-row server log still overflows a 40-column, 12-row terminal.
 This slice does not qualify that combination or full presentation acceptance.
+
+## Historical analysis preservation receipt (R015.32 and R015.33)
+
+Base: `2ebf9ae587ad171dd859b4425d65f9f999c03eb6`. The analysis remains in
+Git history at `17e010c140395735bef41dba5a896ea0000ac99e`, before its
+intentional removal from the source tree. This work restores no archived report.
+The original `.specify/reports/` files at
+`6177f2913c08859ba5e2af27b019d1c3fcf56f95` have the same byte digests.
+
+| Preserved report | SHA-256 |
+|---|---|
+| [JSON analysis](https://github.com/Knuckles-Team/agent-terminal-ui/blob/17e010c140395735bef41dba5a896ea0000ac99e/plans/spec-source-history/analysis/results.json) | `28ecaab72f6eedf75d3df249e5f05052dfb05472a32d36dc987e49dcd506521f` |
+| [Markdown analysis](https://github.com/Knuckles-Team/agent-terminal-ui/blob/17e010c140395735bef41dba5a896ea0000ac99e/plans/spec-source-history/analysis/code_enhancement_report.md) | `2ba4a62a4333f2dc616e7b1315e5a28e982ba224db4929489a3acac1a22074f6` |
+
+Run from a full Git checkout:
+
+```bash
+python -m pytest tests/test_historical_analysis.py -q -p no:randomly
+```
+
+Python 3.12.14 and pytest 9.1.1: 12 passed, no skips. The tests read the
+actual Git blobs, reject altered bytes, inspect `.bumpversion.cfg`, and
+reject registrations under either historical report directory. A temporary
+full repository with missing evidence fails. A shallow clone or source
+export explicitly skips unavailable history; that result is not preservation
+acceptance. The current-version separation checks still run in those layouts.
+The shared gate workflow at `a2dd609d494364daf26fdb3b18abbffa10095993`
+uses `fetch-depth: 0`. A future shallow CI checkout must not treat the
+unavailable-history skip as accepted preservation.
+
+This evidence qualifies historical preservation only. It makes no current
+quality claim from old scores, findings or version strings. R015.31 still
+requires complete version ownership; R015.64 and the other quality acceptance
+v1 rows retain their full gates. No release version or dependency changed.
+
+The configured `pre-commit run --all-files` passed, including lint, types,
+specification checks and the version dry run. The focused historical,
+environment-example and shared-hook suite passed 33 tests without skips.
+Full Python, native and installed qualification were outside this slice.
+
+
+## Historical analysis current-main reconciliation
+
+This reconciliation preserves main `472d0b28f60f631a184abdf4986aebacb5cf5550`
+and the original historical-preservation tests. Only specification tables and
+appended sections conflicted. Both source sets remain unchanged.
+The operator amendment now points to the separate R015.32 and R015.33
+qualification, and their task checkboxes reflect the completed preservation
+checks. R015.31 remains open for complete native version-configuration coverage.
+
+The historical, package-metadata, environment-example and shared-hook tests
+passed 44 cases without skips on this union. Earlier test and wheel receipts
+retain their recorded baselines; this reconciliation makes no new installed,
+native or full-suite acceptance claim.
