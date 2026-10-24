@@ -1089,3 +1089,18 @@ The versioned contract uses the repository revision and resolved shared-gate rev
 A future rubric change requires another dated amendment and a new contract version.
 Historic analysis remains source history, not a current scan or an authoritative version mirror.
 The historical count is not a verified current inventory. R015.69 requires reconciliation rather than invented missing findings.
+
+## Amendment 2026-10-24: truthful Python status usage
+
+R012.6.2 owns this display correction. The Python status line starts with
+the label "usage unavailable" when both fields lack measurements. Missing, null
+and invalid values clear prior
+measurements; supplied zero remains zero. Validate token and cost fields
+separately. This changes presentation only, with no new usage producer or
+inferred turn or session totals. Served usage.read and full cost acceptance
+remain open.
+
+The status bar reserves content height below its border. Its segments use
+content widths, and usage wraps in the remaining space. Model and processing
+labels stay on one bounded line. MainScreen places the composer and status
+in normal vertical flow above the footer, not on the same docked edge.

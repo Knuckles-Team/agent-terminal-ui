@@ -1216,3 +1216,23 @@ R015.67 requires all domain criteria and the complete inventory, without averagi
 R015.68 requires seventeen independent receipts with no omitted domain or evidence gap.
 R015.69 requires no unresolved actionable finding and a complete historical-to-current reconciliation.
 These clauses do not assert a new finding count, GPA or letter grade.
+
+### Python status usage regression
+
+R012.6.2 has supporting coverage in `tests/test_status_line_usage.py`.
+Mounted text distinguishes unavailable fields from supplied zero, preserves
+valid token or cost values independently, and clears prior measurements.
+Null, boolean, negative, non-finite and wrong-type values must not crash.
+Usage and turn-end event routes exercise the real mounted main screen.
+These display tests do not qualify served turn or session totals or costs;
+R012.6.2 remains open.
+
+`tests/test_status_line_layout.py` captures visible compositor text after
+resize between 120, 80, 60 and 40 columns, including a 12-row terminal.
+Idle and active states retain draft text and composer focus. Geometry checks
+keep the conversation, composer, status and footer separate and on screen.
+The status and main-screen SVG snapshots record the corrected layout.
+
+Keyboard tests toggle the sidebar and server log at 120, 80 and 60 columns.
+The existing eight-row server log still overflows a 40-column, 12-row terminal.
+This slice does not qualify that combination or full presentation acceptance.

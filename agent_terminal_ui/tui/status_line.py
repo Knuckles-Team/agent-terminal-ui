@@ -8,6 +8,8 @@ Uses Textual design tokens for consistent theming.
 Concept: AU-018 (TUI Status Line)
 """
 
+import math
+
 from textual.app import ComposeResult
 from textual.containers import Horizontal
 from textual.widgets import Static
@@ -24,7 +26,7 @@ class StatusLine(Horizontal):
     DEFAULT_CSS = """
     StatusLine {
         dock: bottom;
-        height: 1;
+        height: auto;
         margin: 0;
         padding: 0;
         background: $surface;
@@ -32,6 +34,7 @@ class StatusLine(Horizontal):
     }
 
     StatusLine Static {
+        width: auto;
         padding: 0 1;
     }
 
@@ -41,14 +44,19 @@ class StatusLine(Horizontal):
     }
 
     #status-model {
+        max-width: 15%;
+        height: 1;
         color: $text-muted;
     }
 
     #status-tokens {
+        width: 1fr;
         color: $text-muted;
     }
 
     #status-thinking {
+        max-width: 15%;
+        height: 1;
         color: $warning;
     }
     """
@@ -75,7 +83,11 @@ class StatusLine(Horizontal):
         yield Static(" │ ", id="status-separator-2", markup=True)
 
         # Token segment
-        yield Static("[dim]0 tokens[/dim]", id="status-tokens", markup=True)
+        yield Static(
+            "[dim]usage unavailable[/dim]",
+            id="status-tokens",
+            markup=True,
+        )
 
     def set_mode(self, mode: str) -> None:
         """Update the displayed operational mode.
@@ -109,23 +121,34 @@ class StatusLine(Horizontal):
         else:
             thinking_widget.update("")
 
-    def update_usage(self, usage: dict) -> None:
-        """Update the displayed token count and cost.
+    def update_usage(self, usage: object) -> None:
+        """Replace token and cost measurements, preserving unavailable fields.
 
         Args:
             usage: A dictionary containing 'total_tokens' and 'estimated_cost_usd'.
         """
-        tokens = usage.get("total_tokens", 0)
-        cost = usage.get("estimated_cost_usd", 0.0)
-        tokens_widget = self.query_one("#status-tokens", Static)
+        values = usage if isinstance(usage, dict) else {}
+        tokens = values.get("total_tokens")
+        cost = values.get("estimated_cost_usd")
+        tokens_text = "tokens unavailable"
+        cost_text = "cost unavailable"
 
-        # Format large numbers with K suffix
-        if tokens >= 1000:
-            tokens_str = f"{tokens / 1000:.1f}K"
-        else:
-            tokens_str = str(tokens)
+        if not isinstance(tokens, int) or not _is_valid_usage_number(tokens):
+            tokens = None
+        if not _is_valid_usage_number(cost):
+            cost = None
+        if tokens is not None:
+            tokens_str = f"{tokens / 1000:.1f}K" if tokens >= 1000 else str(tokens)
+            tokens_text = f"{tokens_str} tokens"
+        if cost is not None:
+            cost_text = f"${cost:.4f}"
 
-        tokens_widget.update(f"[dim]{tokens_str} tokens (${cost:.4f})[/dim]")
+        usage_text = (
+            f"{tokens_text} ({cost_text})"
+            if tokens is not None or cost is not None
+            else "usage unavailable"
+        )
+        self.query_one("#status-tokens", Static).update(f"[dim]{usage_text}[/dim]")
 
     def update_model(self, model_name: str) -> None:
         """Update the displayed model name.
@@ -137,3 +160,13 @@ class StatusLine(Horizontal):
         # Clean up model name for display
         display_name = model_name.replace("gpt-", "").replace("claude-", "")
         model_widget.update(f"[dim]{display_name}[/dim]")
+
+
+def _is_valid_usage_number(value: object) -> bool:
+    """Accept only nonnegative finite numbers that the formatter can represent."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    try:
+        return value >= 0 and math.isfinite(value)
+    except OverflowError:
+        return False
