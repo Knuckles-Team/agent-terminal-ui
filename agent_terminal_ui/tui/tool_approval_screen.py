@@ -70,7 +70,7 @@ class ToolApprovalScreen(ModalScreen[ToolApprovalResult]):
     }
 
     #tool-list {
-        height: auto;
+        height: 1fr;
         max-height: 15;
     }
 
@@ -266,8 +266,16 @@ class ToolCallItem(Horizontal):
         header = formatter.format_call_header(self.event)
         yield Static(header, classes="tool-header")
         yield Button(
-            "\u2713", variant="success", id=f"accept-{self.call_id}", classes="tool-btn"
+            "\u2713",
+            variant="success",
+            id=f"accept-{self.call_id}",
+            classes="tool-btn",
+            compact=True,
         )
         yield Button(
-            "\u2717", variant="error", id=f"reject-{self.call_id}", classes="tool-btn"
+            "\u2717",
+            variant="error",
+            id=f"reject-{self.call_id}",
+            classes="tool-btn",
+            compact=True,
         )

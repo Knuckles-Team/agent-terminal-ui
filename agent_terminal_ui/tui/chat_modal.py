@@ -22,17 +22,20 @@ class ChatModal(ModalScreen[None]):
 
     #chat-dialog {
         width: 80;
+        max-width: 100%;
         height: 80%;
+        min-height: 10;
+        max-height: 100%;
         background: $surface;
         border: tall $primary;
-        padding: 1 2;
+        padding: 0 1;
     }
 
     #chat-title {
         text-align: center;
         text-style: bold;
         color: $primary;
-        margin-bottom: 1;
+        margin-bottom: 0;
         width: 100%;
     }
 
@@ -40,11 +43,11 @@ class ChatModal(ModalScreen[None]):
         height: 1fr;
         border: solid $border;
         background: $background;
-        padding: 1;
+        padding: 0 1;
     }
 
     #close-btn {
-        margin-top: 1;
+        margin-top: 0;
         align-horizontal: center;
     }
     """
