@@ -179,6 +179,8 @@ class AgentApp(App):
         self._current_session_id: str | None = None
         self._last_run_id: str | None = None
         self._pending_parts: list[dict[str, Any]] = []
+        self._pending_parts_owner: tuple[AgentClient, str | None] | None = None
+        self._pending_files_revision = 0
         self._current_model: str | None = None
 
         # Message queue support
@@ -258,6 +260,7 @@ class AgentApp(App):
 
     async def on_unmount(self) -> None:
         """Clean up resources on unmount."""
+        self.clear_pending_files()
         if self.host_log_subscription is not None:
             await self.host_log_subscription.stop()
         if self._owns_client and self._client is not None:
@@ -281,6 +284,7 @@ class AgentApp(App):
             "message": message,
             "parts": parts or [],
             "timestamp": time.time(),
+            "attachment_owner": (self._client, self.current_session_id),
         }
         self._user_message_queue.append(queue_item)
         logger.info(
@@ -335,10 +339,12 @@ class AgentApp(App):
         without actually applying `pattern`/`replacement` -- an existing
         quirk carried over verbatim from before this method was split up.
         """
-        if not self._user_message_queue:
+        if not self._user_message_queue or parts:
             return None
 
         last_item = self._user_message_queue[-1]
+        if last_item["parts"]:
+            return None
         last_message = last_item["message"]
 
         for pattern, replacement in self._COMBINATION_PATTERNS:
@@ -376,11 +382,15 @@ class AgentApp(App):
         if main_screen:
             main_screen.start_processing()
 
+        attachment_kwargs: dict[str, Any] = {}
+        if any(part.get("kind") == "file" for part in parts):
+            attachment_kwargs["attachment_owner"] = next_item.get("attachment_owner")
         self._run_agent_turn(
             message,
             parts=parts,
             mode_id=self._agent_mode,
             model=self._current_model,
+            **attachment_kwargs,
         )
 
     # ── Input Handling ──
@@ -425,13 +435,29 @@ class AgentApp(App):
         )
         await conversation.add_info(markup)
 
-    def _collect_pending_parts(self, value: str) -> list[dict[str, Any]]:
-        """Consume any pending multi-modal parts, appending the text part."""
-        parts: list[dict[str, Any]] = []
-        if hasattr(self, "_pending_parts") and self._pending_parts:
-            parts = self._pending_parts
-            parts.append({"text": value})
-            self._pending_parts = []
+    def clear_pending_files(self) -> None:
+        """Remove staged files without discarding unrelated pending text."""
+        self._pending_parts = [
+            part for part in self._pending_parts if part.get("kind") != "file"
+        ]
+        self._pending_parts_owner = None
+        self._pending_files_revision += 1
+
+    def _collect_pending_parts(self, value: str) -> list[dict[str, Any]] | None:
+        """Consume pending parts; the transport already includes the prompt."""
+        if any(part.get("kind") == "file" for part in self._pending_parts) and (
+            self._pending_parts_owner != (self._client, self.current_session_id)
+        ):
+            self.clear_pending_files()
+            self.notify(
+                "Files removed: conversation changed. Attach again before sending.",
+                severity="warning",
+            )
+            return None
+        parts = self._pending_parts
+        self._pending_parts = []
+        self._pending_parts_owner = None
+        self._pending_files_revision += 1
         return parts
 
     async def _handle_bash_prefix(self, value: str) -> bool:
@@ -450,14 +476,16 @@ class AgentApp(App):
 
     async def _handle_queued_submission(self, value: str) -> None:
         """Combine with, or append to, the pending-message queue."""
-        combined = self._try_combine_queries(value)
+        parts = self._collect_pending_parts(value)
+        if parts is None:
+            return
+        combined = self._try_combine_queries(value, parts)
         if combined:
             self._user_message_queue[-1]["message"] = combined
             await self._notify_conversation(
                 f"[dim italic]Combined queued message: {combined[:100]}...[/dim italic]"
             )
         else:
-            parts = self._collect_pending_parts(value)
             self._add_to_queue(value, parts)
             await self._notify_conversation(
                 f"[dim italic]Queued message ({len(self._user_message_queue)} "
@@ -468,6 +496,10 @@ class AgentApp(App):
 
     async def _submit_new_message(self, value: str) -> None:
         """Display and dispatch a brand-new (non-queued) user message."""
+        parts = self._collect_pending_parts(value)
+        if parts is None:
+            return
+        owner = (self._client, self.current_session_id)
         main_screen = self._get_main_screen()
         if main_screen:
             await main_screen.add_user_message(value)
@@ -475,11 +507,13 @@ class AgentApp(App):
 
         self.query_one(InputTextArea).clear()
 
-        parts = self._collect_pending_parts(value)
-
         self._is_processing = True
         self._run_agent_turn(
-            value, parts=parts, mode_id=self._agent_mode, model=self._current_model
+            value,
+            parts=parts,
+            attachment_owner=owner,
+            mode_id=self._agent_mode,
+            model=self._current_model,
         )
 
     async def _submit_prompt(self, prompt: str) -> None:
@@ -502,6 +536,7 @@ class AgentApp(App):
         parts: list[dict[str, Any]] | None = None,
         mode_id: str = "ask",
         model: str | None = None,
+        attachment_owner: tuple[AgentClient, str | None] | None = None,
     ) -> None:
         """Stream events through the default normalized protocol adapter.
 
@@ -510,7 +545,20 @@ class AgentApp(App):
             parts: Optional list of multi-modal parts.
             mode_id: The interactive mode requested.
             model: Optional model identifier.
+            attachment_owner: Client and context that accepted staged files.
         """
+        if any(part.get("kind") == "file" for part in parts or []) and (
+            attachment_owner != (self._client, self.current_session_id)
+        ):
+            self.post_message(
+                AgentEventReceived(
+                    {
+                        "type": "error",
+                        "message": "File turn refused: conversation changed.",
+                    }
+                )
+            )
+            return
         async for event in self._client.stream(
             query,
             session_id=self._current_session_id,
@@ -712,6 +760,7 @@ class AgentApp(App):
         except Exception:  # nosec B110
             pass
 
+        self.clear_pending_files()
         if self._is_processing:
             self.workers.cancel_all()
             self._is_processing = False

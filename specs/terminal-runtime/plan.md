@@ -1136,6 +1136,25 @@ content widths, and usage wraps in the remaining space. Model and processing
 labels stay on one bounded line. MainScreen places the composer and status
 in normal vertical flow above the footer, not on the same docked edge.
 
+## Amendment 2026-10-24: bounded inline text files
+
+R012.5.2 admits a partial text-file slice through the existing Python A2A
+client. Arbora accepts inline base64 UTF-8 text with media type `text/plain`.
+Preserve each filename and encoded payload. Reject invalid base64, invalid UTF-8,
+URI parts and images before any request. The public bounds are eight files,
+65,536 decoded file bytes, 32 parts and 100,000 task-text characters.
+Each text part is at most 65,536 characters. Arbora retains its configured upload
+limit and admission authority. The client does not fetch attachment URLs.
+Transport fixtures cover exact payloads, rejection and refusal propagation.
+This does not close R012.5.2: PNG admission and pasted images remain unserved.
+R012.5.1 keeps image refusal; supported inline text files are no longer refused.
+The `/file PATH` command stages a local regular file for the next prompt.
+`/file` lists staged names and `/file --clear` removes them without a request.
+No shell expansion or URL read is allowed. Read at most 65,537 bytes, then
+check the aggregate staged limits. Bind files to the client and context through
+queued dispatch. A changed owner refuses the turn before network access.
+Clear staged files with `/clear` or interruption. Send the prompt exactly once.
+
 ## Amendment 2026-10-24: historical analysis preservation
 
 R015.32 and R015.33 retain the JSON and Markdown analysis in immutable Git
