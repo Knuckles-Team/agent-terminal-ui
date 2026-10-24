@@ -76,7 +76,7 @@ Route every feature with the [ecosystem boundaries standard](https://github.com/
 - **cost_tracker.py** (TUI-10) -- Per-turn cost tracking with pricing registry
 - **danger.py** (TUI-11) -- Extended with ApprovalPolicy/ApprovalEngine
 - **shell.py** (TUI-12) -- Extended with JobRecord/JobCenter
-- **screens/agent_view.py** (TUI-20) -- Agent View multi-session dashboard with peek panel
+- **screens/agent_view.py** (TUI-20) -- Supplied session-row and preview components; no production served-session inventory
 - **background_runner.py** (TUI-21) -- Background session runner for detached async agents
 - **widgets/goal_status.py** (AU-ORCH.session.durable-session-autonomous-goal) -- Live goal progress widget
 - **headless.py** -- `HeadlessRunner` + `StreamSink` + `RenderSink` protocol for the no-widget-tree `--headless` run path (lazy-imported from `terminal_ui.py`)
@@ -88,7 +88,7 @@ Route every feature with the [ecosystem boundaries standard](https://github.com/
 
 - `--prompt TEXT` -- Inject an initial task on launch. Auto-submitted via `on_mount` once the TUI is ready.
 - `--override` -- Yolo mode. Auto-approves all pending tool calls, bypassing `ToolApprovalScreen`.
-- `--bg` -- Start in Agent View (background mode). Launches session as background worker.
+- `--bg` -- Open Agent View. This flag does not establish background execution or a served child session.
 - `--headless` -- Run `--prompt` without the TUI, streaming output to stdout (`headless.py`: `HeadlessRunner` + `StreamSink`). No Textual is imported, so a headless instance stays light (~30MB) -- the substrate for many concurrent non-interactive sessions against one shared backend. Requires `--prompt`; optional `--model`.
 
 ## Detailed Documentation

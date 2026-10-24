@@ -157,7 +157,7 @@ a placeholder.
 | `goal.py` | Dependency-free `GoalSpec` parser for the `/goal` command (no backend import). |
 | `screens/main.py` | Primary conversation screen and layout (`main.tcss`). |
 | `screens/dashboard.py` | Alt+D service dashboard, fed over HTTP. |
-| `screens/agent_view.py` | Multi-session dashboard (Agent View). |
+| `screens/agent_view.py` | Supplied session-row presentation; no production served inventory. |
 | `widgets/conversation.py` | Structured message container with widget pruning. |
 | `widgets/user_message.py`, `agent_response.py`, `tool_call_block.py`, `throbber.py` | Conversation message blocks. |
 | `widgets/workflow.py` | Dynamic workflow sidebar with phase labels and completion markers. |

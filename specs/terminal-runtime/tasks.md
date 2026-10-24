@@ -302,3 +302,16 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R012.4.1:** Review named pre-transport refusal for legacy config, resources and maintenance commands.
 
 - [ ] **TUI-RUNTIME-R012.4.3.1:** Review composer-focus restoration after `/focus` while preserving Ctrl+B sidebar keyboard navigation.
+
+## Nested execution explorer
+
+Complete producer contracts and released client availability before consumer effects.
+Existing inspection, presentation and daily-workflow obligations remain open where their evidence is incomplete.
+
+- [ ] **TUI-RUNTIME-R010.11:** Validate authoritative node bindings, snapshots and ordered updates in both clients.
+- [ ] **TUI-RUNTIME-R010.12:** Wire hierarchy, dependency navigation, locators and narrow-screen keyboard access.
+- [ ] **TUI-RUNTIME-R010.13:** Reuse public detail folds for node-bound records and transcripts.
+- [ ] **TUI-RUNTIME-R010.14:** Qualify nested production journeys against the released producer.
+- [ ] **TUI-RUNTIME-R012.7:** Wire explicitly targeted active-child messaging with capability refusal.
+- [ ] **TUI-RUNTIME-R012.8:** Wire completed-child continuation as a separate producer-owned action.
+- [ ] **TUI-RUNTIME-R012.9:** Qualify targeted delivery, continuation, reconnect and cancellation through both terminals.

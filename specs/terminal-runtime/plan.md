@@ -1208,3 +1208,85 @@ Export SVGs at compact and wide sizes to stable documentation paths. The command
 must support a read-only freshness check. Tests must verify repeatable output and
 that capture does not read private sessions or contact a live service. Label all
 images as demo captures, not native-terminal or live-service qualification.
+
+## Amendment 2026-10-24: nested execution explorer
+
+### Existing scope and reuse
+
+R010 owns run inspection; R012 owns conversational actions.
+R008.2.3.2.2.1 and R012.1.4 retain their delivered public-summary and tool-fold behavior.
+Those consumer tests do not establish nested execution, a served dependency graph or child messaging.
+`GraphTree` currently has no production `add_agent_node` caller.
+`AgentViewScreen` receives no production session inventory, and `ChatModal` has no composer or send action.
+`WorkflowSidebar` presents a flat list, not dependency edges.
+The `/bg` and `/attach` refusals remain until their upstream contracts qualify.
+This amendment introduces no runtime change or release claim.
+
+### Producer contract
+
+Depends-on: [Execution projections](https://github.com/Knuckles-Team/arbora/blob/main/specs/hosted-api-operations/spec.md), [Served child controls](https://github.com/Knuckles-Team/arbora/blob/main/specs/dependency-ordered-release/spec.md)
+
+The owning rows are `ARBORA-OPS-R021.4.8`, `ARBORA-OPS-R021.4.9`, `ARBORA-RELEASE-R003.4.12` and `ARBORA-RELEASE-R003.4.13`.
+Use their released generated schema, not a client-authored operation or guessed payload.
+Preserve existing public replay v1 semantics and decoder invariants.
+Version or capability-negotiate graph, lineage and transcript projections separately; refuse unsupported versions without reinterpreting old events.
+The request `task_id` identifies the root WorkItem/A2A task.
+The event `task_id` identifies a run-local step and must never replace that root identifier.
+The producer defines each node key as `(run_id, node_kind, local_id)`.
+A node key, trace reference, plan identifier or agent name grants no chat authority.
+The producer supplies the owner binding and any conversation or target binding separately.
+Current shared child `run_id` values alone do not distinguish executions or prove a child mailbox.
+
+Snapshots carry a schema version, covered cursor, completeness and explicit edge kinds.
+Nested runs use per-run cursor maps, not an invented global order.
+Apply updates only within their validated snapshot and owner binding.
+Recover gaps through the producer's resnapshot path; never infer missing nodes or lifecycle transitions.
+Label partial, unavailable, denied and available-empty graphs distinctly.
+Bound rendered nodes and records through producer pagination and local viewport limits.
+A truncated graph must disclose its partial scope.
+
+### Production attachment points
+
+| Existing path | Planned extension |
+|---|---|
+| `commands.py:1117` `cmd_agents` -> `AgentViewScreen` | Open the served execution explorer rather than claim a local session inventory. |
+| `screens/main.py:96` -> `GraphTree`; `app.py:975` -> `ChatModal` | Replace supplied-message inspection with validated node selection and public record reads. |
+| `client.py:802` `invoke_op`; `client.py:865` `get_public_run_events` | Consume registered graph, record and control contracts through the same transport. |
+| `native/agent-terminal-ui/src/main.rs:459` -> `inspector_view.rs:236` `draw` | Render the same contract, identity checks and accessible navigation without another execution model. |
+
+These are planned attachments, not claims that production callers already reach the new behavior.
+The existing generated-client admission remains authoritative.
+No direct engine access, local agent runner, scheduler, mailbox or transcript store is added.
+
+### Navigation and public detail
+
+Display hierarchy edges labelled `spawned_child` separately from dependency edges labelled `depends_on`.
+A shared dependency may have more than one incoming edge without acquiring invented spawn parents.
+Node selection opens details. An explicit chat action selects a target only after capability validation.
+Keep the root conversation draft intact while inspecting children.
+A typed locator contains the root binding and node key, never transcript text or credentials.
+Reopening must reauthorize the locator before reading protected details.
+Breadcrumbs follow explicit hierarchy edges; dependency navigation retains a separate return path.
+Support keyboard selection, ancestor return and a searchable adjacency list without relying on color or mouse input.
+At 40 columns, the list and detail views must retain all navigation and control actions.
+Retain focus, scroll and fold choice through resize and valid replay.
+
+Public records may include model summaries, permitted tool arguments/results and user-visible conversation turns.
+Raw tool arguments/results are not public unless the producer explicitly marks their visibility.
+Display each record under its producer-issued node and event identity.
+Absent transcript capability means unavailable history, not an empty successful conversation.
+Unknown fields and private reasoning must not appear.
+Render untrusted control sequences inertly through the existing literal-display safeguards.
+
+### Targeted actions and failure states
+
+`can_read_events`, `can_read_transcript`, `can_message_active` and `can_continue_completed` default to false.
+Capabilities describe availability; the backend must authorize every request again.
+`Message active child` and `Continue completed child` are distinct actions with distinct producer bindings.
+Never pass a step ID, span ID or graph key as the existing root `task_id` argument.
+A continuation returns its own authoritative identity and history relationship without rewriting the completed child.
+Unsupported actions display an explicit reason and make zero effect requests.
+Retire target reviews after selection, principal, lifecycle or capability changes.
+A lost response remains unknown; reconnect must reconcile the original operation before any retry.
+Cancellation uses only an admitted cancellation target and reports acknowledgement separately from terminal state.
+The backend defines cancellation scope; the client must not infer recursive cancellation from a drawn subtree.
