@@ -820,3 +820,10 @@ request assertions start after startup settles and do not certify zero legacy
 requests for the whole application. Transport, startup and backend changes are
 outside this command batch. Full subcommand coverage, live producer acceptance,
 autonomous goals, served model selection and complete R012.4.3.2 remain open.
+
+Supported-read failure qualification extends the same command matrix. Mounted
+fleet, MCP, tools, history, usage, capability and run commands receive HTTP 403
+or a read timeout. Each displays unavailable, sends no fallback request and
+permits a later `/help`. View cases use their public close actions; one Esc
+press did not close those views in this fixture. Keyboard closure remains a
+separate gap. These cases add validation, not new implementation or completion.

@@ -384,3 +384,56 @@ def test_inventory_accounts_for_every_registered_command():
         "help fleet skills prompts kb cron pipeline image bg attach mcp:reload confirm".split()
     )
     assert names == set(CommandProcessor(object()).commands)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("failure", ["denied", "timeout"])
+@pytest.mark.parametrize(
+    "command,path,status_selector",
+    [
+        ("fleet", "/api/v1/ops/fleet.status", None),
+        ("mcp", "/api/v1/ops/fleet.status", None),
+        ("tools", "/api/v1/ops/fleet.catalog.list", None),
+        ("history", "/a2a", None),
+        ("usage", "/api/v1/ops/usage.read", "#usage-hist"),
+        ("capabilities", "/api/capabilities", "#capability-palette-status"),
+        ("run", "/api/runs", "#run-browser-status"),
+    ],
+)
+async def test_supported_read_failure_keeps_composer_usable(
+    failure, command, path, status_selector, monkeypatch
+):
+    requests = []
+
+    def reply(request):
+        requests.append(request.url.path)
+        if failure == "timeout":
+            raise httpx.ReadTimeout("fixture timeout", request=request)
+        return httpx.Response(403, json={"detail": "fixture denied"})
+
+    async with mounted(reply) as (app, pilot):
+        requests.clear()
+        notices = []
+        original = app.notify
+
+        def notify(text, **kwargs):
+            notices.append(str(text))
+            return original(text, **kwargs)
+
+        monkeypatch.setattr(app, "notify", notify)
+        await submit(app, pilot, f"/{command}")
+        assert requests == [path]
+        rendered = (
+            str(app.screen.query_one(status_selector).render())
+            if status_selector
+            else info(app) + "\n".join(notices)
+        )
+        assert "unavailable" in rendered.lower()
+        assert not any("Error executing" in notice for notice in notices)
+        if status_selector:
+            await app.screen.run_action("go_back" if command == "usage" else "close")
+            await pilot.pause()
+        await submit(app, pilot, "/help")
+        assert "Available Commands" in info(app)
+        assert requests == [path]
+        assert not app._is_processing
