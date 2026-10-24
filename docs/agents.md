@@ -6,8 +6,8 @@
 - Three `AgentClient` methods are called by `commands.py` but not defined on the client: `get_mcp_config()`, `list_mcp_tools()`, `list_chats()`. Invoking `/mcp`, `/history`, or `/export` raises `AttributeError` at runtime.
 - `commands.py` references `self.app.current_session_id` and `self.app.agent_client`, but `app.py` exposes these as `_current_session_id` and `_client`. Access raises `AttributeError`.
 
-**P3-HIGH**:
-- `tests/test_enhanced_features.py::TestKeyboardShortcuts::test_theme_switch_shortcut` is failing (103 of 104 tests pass).
+The theme keyboard regression is covered by `tests/test_theme_keyboard.py`.
+Alt+Shift+T cycles registered themes while retaining composer focus and text.
 
 ## Recent Changes
 

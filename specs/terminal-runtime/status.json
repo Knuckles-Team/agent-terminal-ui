@@ -1956,10 +1956,14 @@
     },
     {
       "id": "TUI-RUNTIME-R015.53",
-      "title": "The terminal must resolve the remaining theme-switch regression. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "title": "The terminal must resolve the remaining theme-switch regression. Alt+Shift+T cycles registered Textual themes from the main screen without changing composer text or focus. Preserve no-color mode",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "5a0e96ad3e4b"
+      ],
+      "verified_by": [
+        "tests/test_theme_keyboard.py:10"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.54",

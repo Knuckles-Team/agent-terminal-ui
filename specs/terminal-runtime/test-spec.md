@@ -636,6 +636,14 @@ Candidate implementation: `20e00677ac4ccb15d813e4eb9a71a9155d3b8543`.
 Six existing rows qualify through tests: R015.44, .45, .46, .47, .49 and .50.
 R015.48, .51 and .52 retain execution receipts but remain open in the ledger.
 
+## Theme keyboard regression (R015.53)
+
+`tests/test_theme_keyboard.py::test_theme_shortcut_cycles_without_changing_composer`
+presses Alt+Shift+T through the mounted AgentApp. It checks every registered theme
+and wraparound, unchanged composer text and focus, and preserved no-color mode.
+Both parameter cases fail on main at `52bc92d5` because the binding is absent.
+This fixture does not qualify full native presentation or served performance.
+
 ## Native CLI help
 
 `TUI-RUNTIME-R015.30.2`: `native/agent-terminal-ui/tests/cli_help.rs` runs the

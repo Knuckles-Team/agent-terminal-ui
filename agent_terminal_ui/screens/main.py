@@ -56,6 +56,7 @@ class MainScreen(Screen):
 
     BINDINGS = [
         Binding("f8", "focus_conversation", "Conversation", show=True, priority=True),
+        Binding("alt+shift+t", "cycle_theme", "Theme", show=False, priority=True),
         Binding("ctrl+b", "toggle_sidebar", "Sidebar", show=True),
         Binding("ctrl+l", "clear_conversation", "Clear", show=True),
         Binding("ctrl+v", "toggle_logs", "Logs", show=False, priority=True),
@@ -366,6 +367,12 @@ class MainScreen(Screen):
         await conversation.add_user_message(content)
 
     # ── Actions ──
+
+    def action_cycle_theme(self) -> None:
+        """Cycle registered themes without moving keyboard focus."""
+        themes = list(self.app.available_themes)
+        current = themes.index(self.app.theme)
+        self.app.theme = themes[(current + 1) % len(themes)]
 
     def action_toggle_sidebar(self) -> None:
         """Toggle sidebar visibility."""
