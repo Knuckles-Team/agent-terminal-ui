@@ -274,7 +274,7 @@ Renderer tests display literal commit identity and clear it after failed reads. 
 
 | TUI-RUNTIME-R012.4.3.1 | Partial dispatcher and usage entry-point coverage | `tests/test_registered_command_contract.py` checks every handler signature and real mounted AgentApp keyboard focus dispatch. Focus commands start no model turn. Exact command names survive Enter unchanged; ambiguous prefixes cannot select a sibling. A unique partial name completes before submission. Mounted usage aliases use real HTTP transport fixtures. Full served command-family coverage remains pending. | These fixtures establish only this narrow child, not complete matrix or live producer acceptance |
 
-| TUI-RUNTIME-R010.4.2 | Planned remaining acceptance | Planned served fixture must render the actual current scaffold and refuse missing, stale or other-caller state without reconstruction. | Parent remains open until this proof passes |
+| TUI-RUNTIME-R010.4.2 | Planned remaining acceptance | Planned served fixture must render the current scaffold and refuse missing, stale or other-caller state without reconstruction. | Parent remains open until this proof passes |
 
 R002.1.3.2.2.3 HTTP acceptance also exercises legacy omission, both unavailable
 reasons, null or incomplete data, unknown refusal reasons, invented cursors and
@@ -644,6 +644,18 @@ usage, supported flags and environment settings, including with invalid runtime
 configuration. Mixed help/operation flags fail. A prompt value of `--help` still
 reaches submission credential validation. These checks do not claim served
 transport, native release or full terminal cutover qualification.
+
+## Exit-modal keyboard access
+
+Partial evidence for TUI-RUNTIME-R008.2.3.2.2.2.2.2.2:
+`tests/test_exit_confirm_keyboard.py` checks all four arrow keys, cyclic focus,
+Space activation exactly once, and the production Ctrl+D cancellation path.
+Space, Enter and N preserve the unfinished composer text and restore focus.
+The arrow and Space cases fail before the handler repair. This bounded change
+does not close full keyboard parity, native presentation, served journeys or
+release performance acceptance. The owning requirement remains open.
+The application priority Escape/rewind binding still intercepts modal Escape.
+That separate application binding conflict is not repaired by this widget change.
 
 ## Public detail malformed-binding regression
 

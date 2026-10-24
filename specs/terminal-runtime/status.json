@@ -447,7 +447,9 @@
       "title": "Terminal theme tokens and accessibility are a stated contract",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": [],
+      "verified_by": [
+        "tests/test_exit_confirm_keyboard.py:12"
+      ],
       "rollup_of": [
         "TUI-RUNTIME-R008.1",
         "TUI-RUNTIME-R008.2"

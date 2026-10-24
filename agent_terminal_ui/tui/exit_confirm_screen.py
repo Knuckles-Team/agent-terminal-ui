@@ -31,15 +31,16 @@ class ClickableLabel(Label):
 
     def on_key(self, event: events.Key) -> None:
         """Handle key events for keyboard navigation."""
-        if event.key == "enter":
+        if event.key in {"enter", "space"}:
             self.post_message(self.Clicked(self))
-            event.prevent_default()
-        elif event.key == "tab":
-            # Let tab handle focus navigation normally
-            pass
-        elif event.key in ["up", "down", "left", "right"]:
-            # Let arrow keys handle focus navigation normally
-            pass
+        elif event.key in {"right", "down"}:
+            self.screen.focus_next()
+        elif event.key in {"left", "up"}:
+            self.screen.focus_previous()
+        else:
+            return
+        event.prevent_default()
+        event.stop()
 
 
 class ExitConfirmScreen(ModalScreen[bool]):
