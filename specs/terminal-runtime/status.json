@@ -224,7 +224,10 @@
     "TUI-RUNTIME-R008.3.1",
     "TUI-RUNTIME-R008.3.2",
     "TUI-RUNTIME-R010.12.1.1",
-    "TUI-RUNTIME-R010.12.1.2"
+    "TUI-RUNTIME-R010.12.1.2",
+    "TUI-RUNTIME-R008.4",
+    "TUI-RUNTIME-R008.4.1",
+    "TUI-RUNTIME-R008.4.2"
   ],
   "requirements": [
     {
@@ -478,7 +481,8 @@
       "rollup_of": [
         "TUI-RUNTIME-R008.1",
         "TUI-RUNTIME-R008.2",
-        "TUI-RUNTIME-R008.3"
+        "TUI-RUNTIME-R008.3",
+        "TUI-RUNTIME-R008.4"
       ]
     },
     {
@@ -527,8 +531,7 @@
         "c35cb5a545cf"
       ],
       "verified_by": [
-        "tests/test_native_execution_graph_contract.py:17",
-        "tests/test_native_public_details_pty.py:248"
+        "tests/test_native_execution_graph_contract.py:33"
       ],
       "rollup_of": [
         "TUI-RUNTIME-R010.1",
@@ -2712,6 +2715,35 @@
     {
       "id": "TUI-RUNTIME-R010.12.1.2",
       "title": "Qualify the spatial flat DAG",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R008.4",
+      "title": "Preserve native input across resize",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R008.4.1",
+        "TUI-RUNTIME-R008.4.2"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R008.4.1",
+      "title": "Select a supported native input backend",
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "f0eb8f5ab06e"
+      ],
+      "verified_by": [
+        "tests/test_native_execution_graph_contract.py:20"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R008.4.2",
+      "title": "Qualify native resize/input delivery",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []

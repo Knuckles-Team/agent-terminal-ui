@@ -1630,3 +1630,18 @@ The selected-edge legend identifies graph-local plan-step `depends_on` direction
 The crossing regression changes selection and checks exact predecessor/dependent lists.
 It also covers no selected card without invented edges. Held horizontal
 arrows share the navigation-only repeat allowance; action repeats remain ignored.
+
+
+## Native resize/input readiness acceptance
+
+R008.4 requires keys queued with resize to arrive without another key.
+Keep the existing unfenced resize, End and Tab assertion. Add a bounded
+controlled case that pauses the child, queues resize and navigation, then
+resumes it. The expected selection must appear without sentinel input.
+Always resume or reap the child during cleanup and retain termios checks.
+
+The first Canopy hosted run passed 184 native tests and Clippy but failed the
+ordinary rapid assertion. A prior graph run passed, so that result was intermittent.
+[Crossterm issue 1126](https://github.com/crossterm-rs/crossterm/issues/1126)
+describes the matching readiness failure. Older-binary diagnostics are not
+current acceptance. R008.4.2 requires repeated compiled runs after the correction.

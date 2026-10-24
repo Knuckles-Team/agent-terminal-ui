@@ -113,6 +113,7 @@ def test_native_spatial_map_theme_navigation_search_and_denial(
         terminal.send(b"v")
         wait_until(lambda: "Selected 1: first [running]" in shown())
         assert "selected edges" in shown()
+        assert "Plan-step depends_on: predecessor -> dependent" in shown()
         before = list(requests)
         colors = {
             cell.bg

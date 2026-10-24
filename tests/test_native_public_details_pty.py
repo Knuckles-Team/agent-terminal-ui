@@ -9,7 +9,8 @@ import subprocess
 import threading
 import time
 from collections import deque
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
@@ -75,7 +76,27 @@ class NativeTerminal:
 
     def send(self, keys: bytes) -> None:
         self.trace.append(("send", keys))
-        os.write(self.master, keys)
+        assert os.write(self.master, keys) == len(keys), "Incomplete PTY input write"
+
+    @contextmanager
+    def stopped(self) -> Iterator[None]:
+        """Queue concurrent readiness without letting the child drain either input."""
+        self.trace.append(("stop", self.process.pid))
+        os.kill(self.process.pid, signal.SIGSTOP)
+        try:
+
+            def child_stopped() -> bool:
+                pid, status = os.waitpid(self.process.pid, os.WUNTRACED | os.WNOHANG)
+                return pid == self.process.pid and os.WIFSTOPPED(status)
+
+            self.wait_until(child_stopped)
+            yield
+        finally:
+            self.trace.append(("continue", self.process.pid))
+            try:
+                os.kill(self.process.pid, signal.SIGCONT)
+            except ProcessLookupError:
+                pass
 
     def wait_until(self, predicate: Callable[[], bool]) -> None:
         deadline = time.monotonic() + 10
@@ -245,7 +266,13 @@ def test_native_inline_folds_keyboard_mouse_refresh_and_quit_do_not_write_tasks(
         thread.join(timeout=5)
 
 
-@pytest.mark.spec("TUI-RUNTIME-R010", "TUI-RUNTIME-R010.11", "TUI-RUNTIME-R010.12")
+@pytest.mark.spec(
+    "TUI-RUNTIME-R010",
+    "TUI-RUNTIME-R010.11",
+    "TUI-RUNTIME-R010.12",
+    "TUI-RUNTIME-R008.4",
+    "TUI-RUNTIME-R008.4.1",
+)
 def test_native_graph_real_binding_navigation_resize_refresh_denial_and_quit():
     value = json.loads(
         (
@@ -341,6 +368,40 @@ def test_native_graph_real_binding_navigation_resize_refresh_denial_and_quit():
     server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
+    environment = {
+        **os.environ,
+        "AGENT_URL": f"http://127.0.0.1:{server.server_port}",
+        "AGENT_TASK_ID": value["task_id"],
+        "AGENT_AUTH_MODE": "none",
+    }
+    environment.pop("AGENT_BEARER_TOKEN", None)
+    binary = os.environ["TUI_NATIVE_TEST_BINARY"]
+    try:
+        help_result = subprocess.run(
+            [binary, "--help"],
+            input=b"",
+            capture_output=True,
+            env=environment,
+            start_new_session=True,
+            timeout=5,
+        )
+        assert help_result.returncode == 0 and b"Usage:" in help_result.stdout
+        no_terminal = subprocess.run(
+            [binary],
+            input=b"q",
+            capture_output=True,
+            env=environment,
+            start_new_session=True,
+            timeout=5,
+        )
+        assert no_terminal.returncode != 0
+        assert b"\x1b[?1049h" not in no_terminal.stdout
+        assert not requests
+    except BaseException:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+        raise
     terminal = NativeTerminal(server, requests, value["task_id"])
     shown = terminal.shown
     wait_until = terminal.wait_until
@@ -412,6 +473,30 @@ def test_native_graph_real_binding_navigation_resize_refresh_denial_and_quit():
         terminal.resize(40, 100)
         wait_until(lambda: "Predecessors (depends_on): 2: left, 3: right" in shown())
         assert "> 4. join [unobserved]" in shown()
+        assert len(graph_reads()) == 1
+
+        # Both readiness sources must survive the same batch, without another key
+        # waking stranded input. Keep the ordinary rapid sequence above as well.
+        for _ in range(3):
+            for keys in ((b"\x1b[F\t",), (b"\x1b[F", b"\t")):
+                with terminal.stopped():
+                    terminal.resize(24, 40, wait_for_frame=False)
+                    for key in keys:
+                        terminal.send(key)
+                wait_until(
+                    lambda: (
+                        "> 1. first [running]" in shown()
+                        and "> 4. join [unobserved]" not in shown()
+                        and terminal.screen.display[0].endswith("┐")
+                    )
+                )
+                terminal.send(b"\x1b[Z")
+                wait_until(lambda: "> 4. join [unobserved]" in shown())
+                terminal.resize(40, 100)
+                wait_until(
+                    lambda: "Predecessors (depends_on): 2: left, 3: right" in shown()
+                )
+                assert "> 4. join [unobserved]" in shown()
         assert len(graph_reads()) == 1
 
         terminal.send(b"r")

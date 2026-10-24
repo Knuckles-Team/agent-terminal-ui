@@ -414,7 +414,7 @@ impl InspectorView {
         frame.render_widget(outer.style(style), frame.area());
         let header = format!(
             "Run: {}
-Plan-step depends_on: left to right; selected edges only
+Plan-step depends_on: predecessor -> dependent; selected edges only
 Lifecycle: incomplete; observed prefix only
 Arrows: pan | Tab/Shift+Tab: select | Home: focus | F6: theme",
             label(&graph.run_id)
@@ -943,7 +943,7 @@ last 界"
         assert!(view.spatial_visible);
         assert!(
             rendered(&terminal)
-                .contains("Plan-step depends_on: left to right; selected edges only")
+                .contains("Plan-step depends_on: predecessor -> dependent; selected edges only")
         );
         assert!(rendered(&terminal).contains("Selected 1: first [running]"));
         assert!(rendered(&terminal).contains("unobserved means unknown"));

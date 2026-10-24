@@ -2,6 +2,7 @@
 
 import json
 import re
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -11,7 +12,22 @@ NATIVE = ROOT / "native/agent-terminal-ui"
 
 
 def fixture():
-    return json.loads((NATIVE / "tests/fixtures/execution_graph_contract.json").read_text())
+    return json.loads(
+        (NATIVE / "tests/fixtures/execution_graph_contract.json").read_text()
+    )
+
+
+@pytest.mark.spec("TUI-RUNTIME-R008.4.1")
+def test_native_graph_input_uses_level_triggered_supported_backend():
+    manifest = tomllib.loads((NATIVE / "Cargo.toml").read_text())
+    dependencies = manifest["dependencies"]
+    assert dependencies["crossterm"]["version"] == "0.28"
+    assert set(dependencies["crossterm"]["features"]) == {
+        "event-stream",
+        "use-dev-tty",
+        "libc",
+    }
+    assert dependencies["ratatui"]["version"] == "0.29"
 
 
 @pytest.mark.spec("TUI-RUNTIME-R010", "TUI-RUNTIME-R010.11")
@@ -32,11 +48,16 @@ def test_native_graph_source_limits_match_producer_fixture():
     }
     for name, limit in limits.items():
         assert re.search(rf"pub const {name}: (?:usize|u64) = {limit};", source)
-    assert limits == {"MAX_NODES": 64, "MAX_EDGES": 2016, "MAX_EVENTS": 1000, "MAX_KEY_CHARS": 16384}
-    assert '.read_run_operation(' in source
+    assert limits == {
+        "MAX_NODES": 64,
+        "MAX_EDGES": 2016,
+        "MAX_EVENTS": 1000,
+        "MAX_KEY_CHARS": 16384,
+    }
+    assert ".read_run_operation(" in source
     assert '"runs.execution_graph"' in source
-    assert '.get_run(' not in source
-    assert '.http.' not in source
+    assert ".get_run(" not in source
+    assert ".http." not in source
 
 
 @pytest.mark.spec("TUI-RUNTIME-R010.11")
@@ -62,7 +83,12 @@ def test_native_producer_fixture_preserves_semantic_tuple_and_root_identity(fiel
         assert edge["kind"] == "depends_on"
         assert tuple(json.loads(edge["source"])) in identities
         assert tuple(json.loads(edge["target"])) in identities
-    for capability in ("can_read_transcript", "can_message_active", "can_continue_completed", "supports_spawned_children"):
+    for capability in (
+        "can_read_transcript",
+        "can_message_active",
+        "can_continue_completed",
+        "supports_spawned_children",
+    ):
         assert snapshot[capability] is False
     if field == "max_unicode_value":
         assert len(value["run_id"]) == 512
