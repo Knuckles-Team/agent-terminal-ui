@@ -20,6 +20,7 @@ mod inspector_view;
 use host_log_view::HostLogView;
 mod presentation;
 mod public_details_view;
+mod spatial_graph;
 use inspector_view::InspectorView;
 #[cfg(test)]
 use presentation::presentation_style;

@@ -56,6 +56,7 @@ from agent_terminal_ui.screens.agent_view import AgentViewScreen
 from agent_terminal_ui.screens.main import MainScreen
 
 # TUI component imports (still needed for some actions)
+from agent_terminal_ui.themes import CANOPY
 from agent_terminal_ui.tui.chat_modal import ChatModal
 from agent_terminal_ui.tui.exit_confirm_screen import ExitConfirmScreen
 from agent_terminal_ui.tui.input_text_area import InputTextArea
@@ -163,7 +164,7 @@ class AgentApp(App):
         """Initialize the Agent application and its internal state.
 
         Args:
-            theme_name: The Textual built-in theme name (default: tokyo-night).
+            theme_name: The registered Textual theme name (default: tokyo-night).
             initial_prompt: An optional prompt to execute immediately on startup.
             auto_approve: If True, bypass tool approval modals and auto-accept.
             start_bg: If True, start in Agent View (background mode).
@@ -191,6 +192,7 @@ class AgentApp(App):
         self.auto_approve = auto_approve
         self._start_bg = start_bg
 
+        self.register_theme(CANOPY)
         self.theme = (
             theme_name if theme_name in self.available_themes else "tokyo-night"
         )

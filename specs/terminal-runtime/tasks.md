@@ -315,3 +315,19 @@ Existing inspection, presentation and daily-workflow obligations remain open whe
 - [ ] **TUI-RUNTIME-R012.7:** Wire explicitly targeted active-child messaging with capability refusal.
 - [ ] **TUI-RUNTIME-R012.8:** Wire completed-child continuation as a separate producer-owned action.
 - [ ] **TUI-RUNTIME-R012.9:** Qualify targeted delivery, continuation, reconnect and cancellation through both terminals.
+
+## Canopy presentation slice
+
+- [ ] **TUI-RUNTIME-R008.3:** Add and qualify the optional Canopy palette in both existing theme systems. Preserve all existing presentation obligations.
+- [ ] **TUI-RUNTIME-R010.12.1:** Add and qualify a bounded spatial flat-DAG view. Retain full R010.12 hierarchy and R010.14 served acceptance.
+
+- [ ] **TUI-RUNTIME-R008.3.1:** Review the optional palette source and local mounted evidence.
+- [ ] **TUI-RUNTIME-R008.3.2:** Complete compiled and installed Canopy qualification without skips.
+- [ ] **TUI-RUNTIME-R010.12.1.1:** Review the spatial layout, controls and authored native tests.
+- [x] **TUI-RUNTIME-R010.12.1.2:** Complete exact-source native and real PTY spatial qualification.
+
+
+## Native resize/input readiness
+
+- [ ] **TUI-RUNTIME-R008.4.1:** Select the existing supported input backend and lock its dependency closure. Bind source checks and the controlled regression.
+- [x] **TUI-RUNTIME-R008.4.2:** Repeat exact compiled rapid and controlled resize/input journeys. Preserve all existing PTY assertions and terminal restoration.

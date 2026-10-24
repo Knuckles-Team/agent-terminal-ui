@@ -1358,3 +1358,42 @@ parameters, anonymous reads and no effect or fallback requests.
 
 This is compiled client/terminal proof, not a production Arbora service or
 released-stack receipt. Nested execution and broad acceptance rows remain open.
+
+## Amendment 2026-10-24: Canopy and spatial flat-DAG presentation
+
+Extend existing theme registration and native presentation tokens. Canopy is an
+explicit option, not a replacement default. Adapt the nature palette to opaque
+terminal colors and stable borders. Do not add blur, transparency or animation.
+
+Add a small presentation-only layout for the validated flat ExecutionGraph.
+Use deterministic dependency layers and source order within each layer. Reuse
+InspectorView, its selected step and its authority and lifecycle guards. Keep
+the full accessible list as the default; a local key selects the spatial view.
+Narrow terminals and text search use the list. Selection focus and bounded pan
+make large graphs readable without physics or persistent background updates.
+
+The map adds no producer, transport, child interaction or dependency changes.
+The readiness amendment below changes only the native input backend closure.
+Keep R008, R010.12 and R010.14 open. Local fixtures do not prove compiled
+PTY behavior, served hierarchy parity or release performance.
+
+Separate source implementation from compiled acceptance in child rows.
+R008.3.2 and R010.12.1.2 retain every pending parent criterion. Generated
+source bindings are not evidence that a native executable or PTY test ran.
+
+
+## Amendment 2026-10-24: resize/input readiness
+
+The first Canopy hosted run passed 184 native tests and Clippy, but failed the
+existing rapid resize/navigation PTY assertion. A previous run had passed it.
+This intermittent result does not establish reliable input delivery.
+
+[Crossterm issue 1126](https://github.com/crossterm-rs/crossterm/issues/1126)
+describes lost readiness after simultaneous resize and terminal input.
+Use the existing version's supported `use-dev-tty` backend, not a renderer or
+application-input workaround. Keep the locked closure and terminal ownership
+explicit. Preserve the ordinary rapid assertion and add a bounded controlled
+case that queues resize and input together. Send no sentinel to release input.
+
+R008.4.1 records the source correction. R008.4.2 requires repeated current
+compiled PTY evidence. An older executable is useful only for diagnosis.

@@ -201,7 +201,7 @@ async def test_theme_tokens_and_no_color_fallback(monkeypatch):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("theme_name", ["tokyo-night", "nord", "gruvbox", "textual-light"])
+@pytest.mark.parametrize("theme_name", ["tokyo-night", "nord", "gruvbox", "textual-light", "canopy"])
 async def test_baseline_theme_tokens_meet_text_contrast(theme_name):
     from textual.color import Color
 

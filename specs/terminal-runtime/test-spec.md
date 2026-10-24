@@ -130,7 +130,7 @@ No application runtime behavior or user configuration changed.
 | TUI-RUNTIME-R006 | File-level unit test in `tests/test_precommit_hooks.py` | Both sections present | A missing section fails |
 | TUI-RUNTIME-R007 | File-level unit test in `tests/test_docs_layout.py` | Workflow calls pipelines at main | A SHA pin fails |
 | TUI-RUNTIME-R008 | File-level unit test in `tests/test_app_handlers.py` | Default theme and no-colour fallback hold | An unknown theme name falls back, not crashes |
-| TUI-RUNTIME-R008.1 | Production native draw function with Ratatui TestBackend | Resize from 100 to 40 columns preserves wrapped discovery status and complete keyboard help; Tokyo Night tokens render | Nonempty NO_COLOR resets foreground and background; unsupported AGENT_THEME falls back without panic |
+| TUI-RUNTIME-R008.1 | Production native draw function with Ratatui TestBackend. | Resize from 100 to 40 columns preserves wrapped discovery status and complete keyboard help. Tokyo Night tokens render. | Nonempty NO_COLOR resets foreground and background. Unsupported AGENT_THEME falls back without panic. |
 | TUI-RUNTIME-R009 | File-level unit test in `tests/test_docs_layout.py` | Four headings present | A missing heading fails |
 
 ## Cross-terminal presentation inventory
@@ -1572,7 +1572,8 @@ source-contract fixture, including non-ASCII and maximum-length Unicode keys.
 The decoder tests cover typed bounds, exact run/root binding and semantic tuple identity.
 They reject duplicate evidence, cycles, unknown fields and raised child capabilities.
 The public-client tests require registry advertisement and matching digests.
-Missing registration makes no POST; malformed and denied responses do not fall back to legacy routes or direct engine calls.
+Missing registration makes no POST.
+Malformed or denied responses do not fall back to legacy routes or direct engine calls.
 
 Inspector TestBackend cases cover the `g` mode switch, Tab selection, 40-column
 scrolling, resize, search isolation, local cancellation and stale replies.
@@ -1598,3 +1599,68 @@ used as a root task. Each screen expectation and held response has a bounded wai
 
 The fixture qualifies the compiled terminal and public client path only. It does
 not replace native-service, released producer/SDK or nested-agent acceptance.
+
+## Canopy and spatial presentation acceptance
+
+R008.3 requires explicit Canopy selection, unchanged defaults, all existing
+theme cycles, no-color rules, resize and a 4.5:1 text contrast floor. Exercise
+the mounted Python app and native TestBackend, then the compiled entry point.
+
+R010.12.1 requires stable chain, diamond, disconnected and maximum-size layout;
+pan bounds; selection focus; map/list switching; narrow and search fallback;
+literal hostile labels; redraw stability; and clearing after denial, close,
+refresh or changed binding. Existing transport guards and effect-key isolation
+remain required. Compiled PTY and served qualification are separate gates.
+
+The optional entry-point matrix in `tests/test_entry_environment_pty.py` includes
+Canopy startup and no-color cases for both clients. Supply a wheel installation
+and a matching compiled executable; skips do not establish acceptance. The
+spatial helper and InspectorView tests require compiled native execution.
+`tests/test_native_spatial_graph_pty.py` covers resize, selection, pan, search,
+denial, no-color and local effect isolation through the compiled entry point.
+The native CI job requires both color cases and both existing PTY journeys
+without skips. See the compiled qualification receipt below.
+
+The spatial view labels its edge filter: only the selected step's incident
+dependencies appear. All nodes and exact adjacency lists remain available.
+A buffer regression distinguishes crossed pairs from the fully connected graph.
+Both previously used identical terminal edge cells.
+
+The selected-edge legend identifies graph-local plan-step `depends_on` direction.
+The crossing regression changes selection and checks exact predecessor/dependent lists.
+It also covers no selected card without invented edges. Held horizontal
+arrows share the navigation-only repeat allowance; action repeats remain ignored.
+
+
+## Native resize/input readiness acceptance
+
+R008.4 requires keys queued with resize to arrive without another key.
+Keep the existing unfenced resize, End and Tab assertion. Add a bounded
+controlled case that pauses the child, queues resize and navigation, then
+resumes it. The expected selection must appear without sentinel input.
+Always resume or reap the child during cleanup and retain termios checks.
+
+The first Canopy hosted run passed 184 native tests and Clippy but failed the
+ordinary rapid assertion. A prior graph run passed, so that result was intermittent.
+[Crossterm issue 1126](https://github.com/crossterm-rs/crossterm/issues/1126)
+describes the matching readiness failure. Older-binary diagnostics are not
+current acceptance. R008.4.2 requires repeated compiled runs after the correction.
+
+
+## Canopy compiled qualification receipt (2026-10-24)
+
+Source [8a05dc0](https://github.com/Knuckles-Team/agent-terminal-ui/commit/8a05dc0bd03beb6034ec8ab2bc244bff8cf7ac6b)
+passed [native job 121002855836](https://github.com/Knuckles-Team/agent-terminal-ui/actions/runs/40137776795/job/121002855836):
+185 native tests, Clippy, checkout build and all four required PTY cases.
+No required PTY case skipped. The original rapid resize assertion and six
+controlled combined/split readiness cycles passed without sentinel input.
+Both Canopy color modes passed map/list, selection, resize, focus, search,
+denial and effect-isolation checks. Native buffer tests covered bounds,
+hostile labels and the selected-edge crossing regression.
+
+This qualifies R010.12.1.2 and R008.4.2 for the tested Linux checkout.
+The prior head 6d44a03 failed three PTY cases in run 40134463396.
+Keep that intermittent input failure and fixture error in the evidence history.
+The receipt update also captures real terminal cells and observed colors in
+bounded PTY output. Inspect those screens and repeat the compiled gate before merge.
+Installed palette, cross-terminal, served hierarchy and release qualification remain open.

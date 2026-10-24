@@ -5,7 +5,9 @@ edition = "2024"
 publish = false
 
 [dependencies]
-crossterm = { version = "0.28", features = ["event-stream"] }
+# Level-triggered input keeps keys queued alongside resize readable (crossterm#1126).
+# The 0.28 event-stream backend also needs libc with use-dev-tty (crossterm#935).
+crossterm = { version = "0.28", features = ["event-stream", "use-dev-tty", "libc"] }
 futures-util = "0.3"
 getrandom = "0.2"
 ratatui = { version = "0.29", features = ["unstable-rendered-line-info"] }
