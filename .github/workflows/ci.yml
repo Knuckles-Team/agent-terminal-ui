@@ -107,5 +107,5 @@ jobs:
           set -euo pipefail
           uv sync --frozen --extra test --python 3.14
           uv run --frozen --no-sync python -c 'import os, pathlib, pty, termios, pyte; binary = pathlib.Path(os.environ["TUI_NATIVE_TEST_BINARY"]); assert binary.is_file() and os.access(binary, os.X_OK)'
-          uv run --frozen --no-sync pytest tests/test_native_public_details_pty.py tests/test_native_spatial_graph_pty.py -q --no-cov --junitxml="$PTY_RESULTS"
+          uv run --frozen --no-sync pytest tests/test_native_public_details_pty.py tests/test_native_spatial_graph_pty.py -q -rP --no-cov --junitxml="$PTY_RESULTS"
           uv run --frozen --no-sync python -c 'import os, xml.etree.ElementTree as ET; cases = ET.parse(os.environ["PTY_RESULTS"]).findall(".//testcase"); assert len(cases) == 4 and all(case.find(tag) is None for case in cases for tag in ("skipped", "failure", "error")), "All four required PTY cases must pass without skips"'

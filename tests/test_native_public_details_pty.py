@@ -266,12 +266,14 @@ def test_native_inline_folds_keyboard_mouse_refresh_and_quit_do_not_write_tasks(
         thread.join(timeout=5)
 
 
+# spec: TUI-RUNTIME-R008.4.2
 @pytest.mark.spec(
     "TUI-RUNTIME-R010",
     "TUI-RUNTIME-R010.11",
     "TUI-RUNTIME-R010.12",
     "TUI-RUNTIME-R008.4",
     "TUI-RUNTIME-R008.4.1",
+    "TUI-RUNTIME-R008.4.2",
 )
 def test_native_graph_real_binding_navigation_resize_refresh_denial_and_quit():
     value = json.loads(

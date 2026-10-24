@@ -1619,7 +1619,7 @@ spatial helper and InspectorView tests require compiled native execution.
 `tests/test_native_spatial_graph_pty.py` covers resize, selection, pan, search,
 denial, no-color and local effect isolation through the compiled entry point.
 The native CI job requires both color cases and both existing PTY journeys
-without skips. These new map cases are authored; execution remains pending.
+without skips. See the compiled qualification receipt below.
 
 The spatial view labels its edge filter: only the selected step's incident
 dependencies appear. All nodes and exact adjacency lists remain available.
@@ -1645,3 +1645,22 @@ ordinary rapid assertion. A prior graph run passed, so that result was intermitt
 [Crossterm issue 1126](https://github.com/crossterm-rs/crossterm/issues/1126)
 describes the matching readiness failure. Older-binary diagnostics are not
 current acceptance. R008.4.2 requires repeated compiled runs after the correction.
+
+
+## Canopy compiled qualification receipt (2026-10-24)
+
+Source [8a05dc0](https://github.com/Knuckles-Team/agent-terminal-ui/commit/8a05dc0bd03beb6034ec8ab2bc244bff8cf7ac6b)
+passed [native job 121002855836](https://github.com/Knuckles-Team/agent-terminal-ui/actions/runs/40137776795/job/121002855836):
+185 native tests, Clippy, checkout build and all four required PTY cases.
+No required PTY case skipped. The original rapid resize assertion and six
+controlled combined/split readiness cycles passed without sentinel input.
+Both Canopy color modes passed map/list, selection, resize, focus, search,
+denial and effect-isolation checks. Native buffer tests covered bounds,
+hostile labels and the selected-edge crossing regression.
+
+This qualifies R010.12.1.2 and R008.4.2 for the tested Linux checkout.
+The prior head 6d44a03 failed three PTY cases in run 40134463396.
+Keep that intermittent input failure and fixture error in the evidence history.
+The receipt update also captures real terminal cells and observed colors in
+bounded PTY output. Inspect those screens and repeat the compiled gate before merge.
+Installed palette, cross-terminal, served hierarchy and release qualification remain open.

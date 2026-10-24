@@ -17,6 +17,7 @@ pytestmark = [
         "TUI-RUNTIME-R008.3.1",
         "TUI-RUNTIME-R010.12.1",
         "TUI-RUNTIME-R010.12.1.1",
+        "TUI-RUNTIME-R010.12.1.2",
     ),
     pytest.mark.skipif(
         not os.environ.get("TUI_NATIVE_TEST_BINARY"),
@@ -25,6 +26,7 @@ pytestmark = [
 ]
 
 
+# spec: TUI-RUNTIME-R010.12.1.2
 @pytest.mark.parametrize("no_color", [False, True])
 def test_native_spatial_map_theme_navigation_search_and_denial(
     no_color: bool,
@@ -102,6 +104,23 @@ def test_native_spatial_map_theme_navigation_search_and_denial(
     thread.start()
     terminal = NativeTerminal(server, requests, value["task_id"], no_color=no_color)
     shown, wait_until = terminal.shown, terminal.wait_until
+
+    def capture_screen(stage: str) -> None:
+        cells = [
+            cell for line in terminal.screen.buffer.values() for cell in line.values()
+        ]
+        evidence = {
+            "mode": "no-color" if no_color else "canopy",
+            "stage": stage,
+            "columns": terminal.screen.columns,
+            "lines": terminal.screen.lines,
+            "foregrounds": sorted({cell.fg for cell in cells}),
+            "backgrounds": sorted({cell.bg for cell in cells}),
+            "reversed_cells": sum(cell.reverse for cell in cells),
+            "screen": shown(),
+        }
+        print("TUI_SPATIAL_SCREEN " + json.dumps(evidence, ensure_ascii=False))
+
     try:
         wait_until(lambda: "Bound map task" in shown())
         terminal.send(b"i")
@@ -121,6 +140,11 @@ def test_native_spatial_map_theme_navigation_search_and_denial(
             for cell in line.values()
         }
         assert ("121c17" in colors) is not no_color
+        capture_screen("selected-first")
+        terminal.send(b"\x1b[Z")
+        wait_until(lambda: "Selected 4: join [unobserved]" in shown())
+        assert "Predecessors: 2, 3 | Dependents: none" in shown()
+        capture_screen("selected-join")
         terminal.send(b"\x1b[17~")  # F6 cycles Canopy back to the unchanged default.
         if not no_color:
             wait_until(
@@ -130,9 +154,6 @@ def test_native_spatial_map_theme_navigation_search_and_denial(
                     for cell in line.values()
                 )
             )
-        terminal.send(b"\x1b[Z")
-        wait_until(lambda: "Selected 4: join [unobserved]" in shown())
-        assert "Predecessors: 2, 3 | Dependents: none" in shown()
         terminal.resize(16, 40)
         wait_until(lambda: "4. join [unobserved]" in shown())
         assert "Run inspector (read-only)" in shown()

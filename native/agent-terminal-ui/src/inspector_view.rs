@@ -923,6 +923,7 @@ last 界"
     }
 
     // spec: TUI-RUNTIME-R010.12.1, TUI-RUNTIME-R010.12.1.1, TUI-RUNTIME-R008.3
+    // spec: TUI-RUNTIME-R010.12.1.2
     #[test]
     fn spatial_map_keeps_selection_and_list_search_across_resize_and_themes() {
         let mut view = graph_view();

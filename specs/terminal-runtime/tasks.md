@@ -324,10 +324,10 @@ Existing inspection, presentation and daily-workflow obligations remain open whe
 - [ ] **TUI-RUNTIME-R008.3.1:** Review the optional palette source and local mounted evidence.
 - [ ] **TUI-RUNTIME-R008.3.2:** Complete compiled and installed Canopy qualification without skips.
 - [ ] **TUI-RUNTIME-R010.12.1.1:** Review the spatial layout, controls and authored native tests.
-- [ ] **TUI-RUNTIME-R010.12.1.2:** Complete exact-source native and real PTY spatial qualification.
+- [x] **TUI-RUNTIME-R010.12.1.2:** Complete exact-source native and real PTY spatial qualification.
 
 
 ## Native resize/input readiness
 
 - [ ] **TUI-RUNTIME-R008.4.1:** Select the existing supported input backend and lock its dependency closure. Bind source checks and the controlled regression.
-- [ ] **TUI-RUNTIME-R008.4.2:** Repeat exact compiled rapid and controlled resize/input journeys. Preserve all existing PTY assertions and terminal restoration.
+- [x] **TUI-RUNTIME-R008.4.2:** Repeat exact compiled rapid and controlled resize/input journeys. Preserve all existing PTY assertions and terminal restoration.

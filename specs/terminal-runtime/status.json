@@ -2601,12 +2601,16 @@
       "id": "TUI-RUNTIME-R010.12",
       "title": "Navigate the execution hierarchy and dependency graph",
       "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "landed_in": [
+        "55431e8da128",
+        "5f25c6dfa910",
+        "6c1e6f34dc0e"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/execution_graph.rs:362",
         "native/agent-terminal-ui/src/execution_graph.rs:405",
-        "native/agent-terminal-ui/src/inspector_view.rs:1009",
-        "native/agent-terminal-ui/src/inspector_view.rs:1065",
+        "native/agent-terminal-ui/src/inspector_view.rs:1010",
+        "native/agent-terminal-ui/src/inspector_view.rs:1066",
         "tests/test_execution_graph.py:22"
       ],
       "rollup_of": [
@@ -2667,7 +2671,11 @@
       "id": "TUI-RUNTIME-R010.12.1",
       "title": "Add a bounded read-only spatial flat DAG",
       "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "landed_in": [
+        "55431e8da128",
+        "5f25c6dfa910",
+        "6c1e6f34dc0e"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/inspector_view.rs:925",
         "native/agent-terminal-ui/src/spatial_graph.rs:272",
@@ -2718,13 +2726,21 @@
       "title": "Qualify the spatial flat DAG",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [
+        "native/agent-terminal-ui/src/inspector_view.rs:926",
+        "native/agent-terminal-ui/src/spatial_graph.rs:272",
+        "native/agent-terminal-ui/src/spatial_graph.rs:307",
+        "native/agent-terminal-ui/src/spatial_graph.rs:359",
+        "tests/test_native_spatial_graph_pty.py:29"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R008.4",
       "title": "Preserve native input across resize",
       "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "landed_in": [
+        "55431e8da128"
+      ],
       "verified_by": [],
       "rollup_of": [
         "TUI-RUNTIME-R008.4.1",
@@ -2747,7 +2763,9 @@
       "title": "Qualify native resize/input delivery",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [
+        "tests/test_native_public_details_pty.py:269"
+      ]
     }
   ]
 }
