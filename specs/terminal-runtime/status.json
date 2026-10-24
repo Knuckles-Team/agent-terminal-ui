@@ -1198,6 +1198,7 @@
       "title": "Legacy model-read boundary regression coverage",
       "delivery_state": "VERIFIED",
       "landed_in": [
+        "0025336ad1ca",
         "1be704079a25",
         "3ea65009beab"
       ],
