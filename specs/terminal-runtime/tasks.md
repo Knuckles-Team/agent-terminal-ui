@@ -180,9 +180,9 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R015.10:** Documentation examples must match the tested terminal behavior. Source obligation: `T010`.
 - [x] **TUI-RUNTIME-R015.11:** The README must explain the terminal purpose and installation. Source obligation: `T011`.
 - [ ] **TUI-RUNTIME-R015.12:** The README must cover each supported operator entry point. Source obligation: `T012`.
-- [ ] **TUI-RUNTIME-R015.13:** The README must provide navigation for its documented sections. Source obligation: `T013`.
+- [x] **TUI-RUNTIME-R015.13:** The README must provide navigation for its documented sections. Source obligation: `T013`.
 - [x] **TUI-RUNTIME-R015.14:** The README must provide reproducible installation instructions. Source obligation: `T014`.
-- [ ] **TUI-RUNTIME-R015.15:** The README must explain the terminal architecture. Source obligation: `T015`.
+- [x] **TUI-RUNTIME-R015.15:** The README must explain the terminal architecture. Source obligation: `T015`.
 - [ ] **TUI-RUNTIME-R015.16:** The README must link its detailed documentation. Source obligation: `T016`.
 - [x] **TUI-RUNTIME-R015.17:** The contributor guide must describe tools, commands and source structure. Source obligation: `T017`.
 - [ ] **TUI-RUNTIME-R015.18:** The repository must declare its license in a tracked license file. Source obligation: `T018`.

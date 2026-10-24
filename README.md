@@ -30,6 +30,19 @@
   <a href="https://knuckles-team.github.io/agent-terminal-ui/configuration/">Configuration</a>
 </p>
 
+## Contents
+
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Key Capabilities](#key-capabilities)
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Development](#development)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Overview
 
 Built with [Textual](https://textual.textualize.io/).
@@ -39,6 +52,30 @@ Arbora runs separately from this frontend.
 
 > [!NOTE]
 > This library is in early development and subject to change.
+
+## Architecture
+
+The Python console entry point selects interactive, headless or task-observer execution.
+Interactive mode creates the Textual application. Headless mode creates no Textual widget tree.
+Both paths use AgentClient for served requests. Arbora runs in a separate process.
+
+| Component | Responsibility |
+|---|---|
+| [terminal_ui.py](agent_terminal_ui/terminal_ui.py) | Selects the entry path and validates arguments. |
+| [app.py](agent_terminal_ui/app.py) | Coordinates interactive screens, input and client events. |
+| [headless.py](agent_terminal_ui/headless.py) | Runs prompts or observes tasks and renders output without Textual. |
+| [client.py](agent_terminal_ui/client.py) | Adapts A2A tasks and served operations into frontend results. |
+| [screens/](agent_terminal_ui/screens/) and [widgets/](agent_terminal_ui/widgets/) | Present state and collect operator input. |
+
+The client uses A2A JSON-RPC at `/a2a` and streams task events when the server supports streaming.
+Otherwise, it submits with `message/send` and polls with `tasks/get`.
+`--observe-task` reads an existing task without submitting a new prompt.
+The client factory reads `AGENT_URL` and optional `AGENT_BEARER_TOKEN` for both Python entry paths.
+The frontend does not import the heavy `agent_utilities` backend.
+
+The [native terminal](native/agent-terminal-ui/) is a separate Rust implementation with its own entry point.
+Shared product goals do not establish complete Python/native parity.
+Full live-service and performance qualification remains separate from source and fixture tests.
 
 ## Key Capabilities
 
@@ -366,6 +403,14 @@ include **nord**, **gruvbox**, **dracula**, **monokai**, **textual-dark**, and
 Switch themes live with the `/theme <name>` command, or set the startup theme via
 the `AGENT_THEME` environment variable.
 
+### Native turn usage
+
+When Arbora returns a usage receipt bound to the displayed task, context and run,
+the native client shows its reported turn counters. Missing counters stay
+unavailable; a reported zero remains zero. Session totals and costs remain
+unavailable. A later task read without a receipt clears those counters.
+An earlier transient receipt is not durable usage history.
+
 ## Development
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, focused tests, repository gates and source structure.
@@ -396,11 +441,3 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and the repository instructions in [AGENT
 ## License
 
 Agent Terminal UI is released under the MIT License.
-
-### Native turn usage
-
-When Arbora returns a usage receipt bound to the displayed task, context and run,
-the native client shows its reported turn counters. Missing counters stay
-unavailable; a reported zero remains zero. Session totals and costs remain
-unavailable. A later task read without a receipt clears those counters.
-An earlier transient receipt is not durable usage history.
