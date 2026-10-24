@@ -118,11 +118,11 @@ Custom pricing can be set via `tracker.set_pricing(model, input, output, cached)
 | `AGENT_URL` | `http://localhost:8000` | Arbora base URL for A2A chat and REST operations. |
 | `AGENT_BEARER_TOKEN` | unset | Caller credential for Arbora; required for remote endpoints. |
 | `AGENT_AUTH_MODE` | `bearer` | Native terminal only. Explicit `none` permits anonymous task operations against loopback Arbora configured for no authentication. Unset the bearer token in this mode. |
-| `AGENT_THEME` | `tokyo-night` | Startup Textual theme. Unknown names fall back to `tokyo-night`. |
+| `AGENT_THEME` | `tokyo-night` | Startup theme for Python and native. Unknown names fall back to `tokyo-night`. |
 | `TEXTUAL_ANIMATIONS` | `full` | Set to `none` to disable entrance animations (reduced motion). |
 | `AGENT_UTILITIES_DATA_DIR` | platform default | Override the local session data directory. Takes precedence over the configuration-relative fallback. |
 | `AGENT_UTILITIES_CONFIG_DIR` | platform default | Override the settings directory. Without a data override, local session data uses its sibling `share/agent-utilities` directory. |
-| `AGENT_LOG_FILE` | ignored | Never opened by the main screen. `/logs` and Ctrl+V require an authenticated host reader. |
+| `AGENT_LOG_FILE` | ignored | Never opened by the main screen or native terminal. Log views require an authenticated host reader. |
 | `AGENT_TASK_ID` | unset | Native only. Read an existing task; does not resume chat. Reject empty, control-containing or over-512-byte identifiers. |
 | `AGENT_SUBMISSION_TIMEOUT_SECONDS` | `300` | Native only. Decimal seconds from 1 to 900; invalid values fail startup. No automatic resubmission. |
 | `AGENT_INCLUDE_COMMITTED_EVENT` | `false` | Native only. Accept exactly `true` or `false`; request committed-event evidence without granting access. |
@@ -134,6 +134,21 @@ Custom pricing can be set via `tracker.set_pricing(model, input, output, cached)
 The `/op` command needs Python 3.12 or newer and the Arbora distribution
 containing the generated client. Without it, `/op` refuses with
 `CLIENT_UNAVAILABLE`; basic A2A chat remains available. The package requires Python 3.12 or newer.
+
+## Theme and log entry points
+
+Python startup accepts the registered Textual themes.
+Native themes: `tokyo-night`, `nord`, `gruvbox`, `textual-light`.
+Both use `tokyo-night` when AGENT_THEME is unset or unknown.
+Alt+Shift+T cycles Python themes; F6 cycles native themes.
+NO_COLOR disables Python colors when present, including an empty value.
+Native colors are disabled only when NO_COLOR is nonempty.
+
+AGENT_LOG_FILE does not grant filesystem access in either terminal.
+Python `/logs` and Ctrl+V require an authenticated host reader.
+Native `l` opens the host-log view and also requires authenticated host access.
+Without that access, both display refusal and never open the given local path.
+No-color mode does not change this access rule.
 
 ## Dynamic setting overrides
 

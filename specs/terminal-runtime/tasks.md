@@ -211,7 +211,7 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R015.39:** Each terminal test must assert its observable result. Source obligation: `T039`.
 - [ ] **TUI-RUNTIME-R015.40:** Terminal tests must reject incorrect values through behavior-specific assertions. Source obligation: `T040`.
 - [x] **TUI-RUNTIME-R015.41:** The documentation covers supported terminal inputs. R015.41.1 covers directories; R015.41.2 covers remaining source reads and dynamic overrides. Source obligation: `T041`.
-- [ ] **TUI-RUNTIME-R015.42:** The documentation must define AGENT_LOG_FILE and AGENT_THEME behavior. Source obligation: `T042`.
+- [x] **TUI-RUNTIME-R015.42:** The documentation must define AGENT_LOG_FILE and AGENT_THEME behavior. Source obligation: `T042`.
 - [ ] **TUI-RUNTIME-R015.43:** The repository must provide a credential-free environment configuration example. Source obligation: `T043`.
 - [x] **TUI-RUNTIME-R015.44:** The client must obtain MCP configuration through the currently authorized served contract. Source obligation: `missing-client-methods checkbox 1`.
 - [x] **TUI-RUNTIME-R015.45:** The client must list MCP tools through the currently authorized served contract. Source obligation: `missing-client-methods checkbox 2`.
@@ -247,7 +247,8 @@ Record deferred validation as deferred, never passed.
 
 - [ ] TUI-RUNTIME-R015.30.1: qualify truthful Python help and operator examples.
 - [ ] TUI-RUNTIME-R015.41.1: qualify configuration and data directory documentation.
-- [ ] TUI-RUNTIME-R015.42.1: qualify theme and unbound log documentation.
+- [x] TUI-RUNTIME-R015.42.1: qualify theme and unbound log documentation.
+- [x] TUI-RUNTIME-R015.42.2: qualify published theme and log behavior through installed Python and compiled native entry points.
 - [x] **TUI-RUNTIME-R012.3.1:** Browse caller-owned tasks and read replies without claiming conversation resume.
 - [ ] **TUI-RUNTIME-R012.3.2:** Qualify complete served context history and model-aware continuation after restart.
 - [ ] `TUI-RUNTIME-R002.1.3.2.2.2.1`: Bounded native unary reply display.
