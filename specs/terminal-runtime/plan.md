@@ -954,8 +954,8 @@ The selected task is read again before its reply is displayed. Its identity
 must match the selected row. Pagination preserves server order and opaque
 cursors; the client does not infer the newest context. The view is read-only.
 No conversation selection, persisted transcript or model-memory claim is made.
-R012.3 still requires the producer to expose ordered context summaries and
-prior user turns, and load prior turns when continuing a context.
+R012.3 still requires ordered context summaries and prior user turns from the producer.
+The producer must load prior turns when continuing a context.
 
 R012.3 rolls up the bounded read-only child R012.3.1 and the remaining
 full conversation acceptance R012.3.2. Both are required for parent completion.
@@ -1089,3 +1089,12 @@ The versioned contract uses the repository revision and resolved shared-gate rev
 A future rubric change requires another dated amendment and a new contract version.
 Historic analysis remains source history, not a current scan or an authoritative version mirror.
 The historical count is not a verified current inventory. R015.69 requires reconciliation rather than invented missing findings.
+
+## Amendment 2026-10-24: responsive MCP reads
+
+R012.4.2 opens the MCP view before fleet reads. A screen-owned worker keeps
+Escape and refresh available, clears old data before retry, and distinguishes
+failed reads from valid empty results. Closed or superseded reads cannot render
+or start the next request, including when cancellation is suppressed. A changed
+client owner invalidates the read. This client presentation repair does not
+close served model choice, conversation resume or per-session usage acceptance.
