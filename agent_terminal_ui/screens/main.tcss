@@ -9,9 +9,7 @@
 /* ── Layout ── */
 
 MainScreen {
-    layout: grid;
-    grid-size: 1;
-    grid-rows: auto 1fr auto auto auto;
+    layout: vertical;
 }
 
 /* ── Server Log (hidden by default) ── */
@@ -115,7 +113,6 @@ WorkflowSidebar .phase-label {
 
 #prompt-container {
     height: auto;
-    dock: bottom;
     background: $surface;
     border-top: solid $primary 30%;
     padding: 0;
@@ -149,8 +146,8 @@ InputTextArea:focus {
 /* ── Status Line ── */
 
 StatusLine {
-    dock: bottom;
-    height: 1;
+    dock: none;
+    height: auto;
     margin: 0;
     padding: 0;
     background: $surface;

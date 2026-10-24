@@ -1120,3 +1120,18 @@ content even when it contains `[DONE]`. Only a typed `turn_end` event completes
 the turn and releases queued work or pending approval. Headless output must
 retain this content and later failures. Mounted and headless regressions extend
 the existing owner; served streaming and cancellation remain open under R012.1.2.
+
+## Amendment 2026-10-24: truthful Python status usage
+
+R012.6.2 owns this display correction. The Python status line starts with
+the label "usage unavailable" when both fields lack measurements. Missing, null
+and invalid values clear prior
+measurements; supplied zero remains zero. Validate token and cost fields
+separately. This changes presentation only, with no new usage producer or
+inferred turn or session totals. Served usage.read and full cost acceptance
+remain open.
+
+The status bar reserves content height below its border. Its segments use
+content widths, and usage wraps in the remaining space. Model and processing
+labels stay on one bounded line. MainScreen places the composer and status
+in normal vertical flow above the footer, not on the same docked edge.

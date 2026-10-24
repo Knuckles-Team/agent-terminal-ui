@@ -1304,3 +1304,23 @@ This includes the actual installed entry tests against a newly built wheel.
 Its SHA-256 is `11effa2a8e9b582d192fac25bba72a385121207e177cee4e2d2d03f25baee2f9`.
 All packaged Python, TCSS and license bytes match this union checkout.
 The earlier full-suite receipt remains evidence for its recorded baseline, not a new full-union run.
+
+### Python status usage regression
+
+R012.6.2 has supporting coverage in `tests/test_status_line_usage.py`.
+Mounted text distinguishes unavailable fields from supplied zero, preserves
+valid token or cost values independently, and clears prior measurements.
+Null, boolean, negative, non-finite and wrong-type values must not crash.
+Usage and turn-end event routes exercise the real mounted main screen.
+These display tests do not qualify served turn or session totals or costs;
+R012.6.2 remains open.
+
+`tests/test_status_line_layout.py` captures visible compositor text after
+resize between 120, 80, 60 and 40 columns, including a 12-row terminal.
+Idle and active states retain draft text and composer focus. Geometry checks
+keep the conversation, composer, status and footer separate and on screen.
+The status and main-screen SVG snapshots record the corrected layout.
+
+Keyboard tests toggle the sidebar and server log at 120, 80 and 60 columns.
+The existing eight-row server log still overflows a 40-column, 12-row terminal.
+This slice does not qualify that combination or full presentation acceptance.
