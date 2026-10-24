@@ -449,7 +449,8 @@
       "delivery_state": "SPECIFIED",
       "landed_in": [
         "070e15682e71",
-        "19a5072aed8e"
+        "19a5072aed8e",
+        "877a834e65e3"
       ],
       "verified_by": [
         "tests/test_exit_confirm_keyboard.py:12",
