@@ -954,8 +954,8 @@ The selected task is read again before its reply is displayed. Its identity
 must match the selected row. Pagination preserves server order and opaque
 cursors; the client does not infer the newest context. The view is read-only.
 No conversation selection, persisted transcript or model-memory claim is made.
-R012.3 still requires the producer to expose ordered context summaries and
-prior user turns, and load prior turns when continuing a context.
+R012.3 still requires ordered context summaries and prior user turns from the producer.
+The producer must load prior turns when continuing a context.
 
 R012.3 rolls up the bounded read-only child R012.3.1 and the remaining
 full conversation acceptance R012.3.2. Both are required for parent completion.
@@ -1103,3 +1103,20 @@ Check denied reads separately from authenticated completed tasks with no output.
 This is installed-client evidence, not live Arbora or native parity acceptance.
 R015.32 and R015.33 remain open. The historical analysis artifacts are not in
 this checkout. This batch does not recreate or alter historical evidence.
+
+## Amendment 2026-10-24: responsive MCP reads
+
+R012.4.2 opens the MCP view before fleet reads. A screen-owned worker keeps
+Escape and refresh available, clears old data before retry, and distinguishes
+failed reads from valid empty results. Closed or superseded reads cannot render
+or start the next request, including when cancellation is suppressed. A changed
+client owner invalidates the read. This client presentation repair does not
+close served model choice, conversation resume or per-session usage acceptance.
+
+## Amendment 2026-10-24: literal completion markers
+
+R012.1.1 owns Python reply and terminal-state handling. Normalized text remains
+content even when it contains `[DONE]`. Only a typed `turn_end` event completes
+the turn and releases queued work or pending approval. Headless output must
+retain this content and later failures. Mounted and headless regressions extend
+the existing owner; served streaming and cancellation remain open under R012.1.2.

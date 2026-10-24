@@ -217,9 +217,10 @@ class TestMCPCommand:
         """Test the mcp command opens MCP screen."""
         await command_processor.cmd_mcp("")
 
-        mock_app._client.get_mcp_config.assert_called_once()
-        mock_app._client.list_mcp_tools.assert_called_once()
+        mock_app._client.get_mcp_config.assert_not_called()
+        mock_app._client.list_mcp_tools.assert_not_called()
         mock_app.push_screen.assert_called_once()
+        assert mock_app.push_screen.call_args.args[0].client is mock_app._client
 
 
 class TestHistoryCommand:

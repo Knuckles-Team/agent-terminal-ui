@@ -24,9 +24,6 @@ from agent_terminal_ui.client import (
     client_from_environment,
 )
 
-# Events that end a turn (mirrors screens/main.py handling).
-_DONE_MARKER = "[DONE]"
-
 
 @runtime_checkable
 class RenderSink(Protocol):
@@ -132,9 +129,6 @@ class HeadlessRunner:
 
         if event_type in ("text", "text_delta"):
             content = event.get("content", "")
-            if _DONE_MARKER in content:
-                self._sink.turn_end()
-                return True
             self._sink.agent_text(content)
         elif event_type == "tool_call":
             data = event.get("data", {})

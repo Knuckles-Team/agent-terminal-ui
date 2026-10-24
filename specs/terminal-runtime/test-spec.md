@@ -1271,3 +1271,36 @@ Native skips and the warning remain qualification gaps, not passing evidence.
 The native instructions now state the default bearer mode and explicit anonymous loopback configuration.
 After this wording change, 36 operator checks passed and the wheel was rebuilt.
 The runtime source and license bytes did not change.
+
+## MCP loading and retry evidence (2026-10-24)
+
+`tests/test_mcp_responsiveness.py` qualifies client presentation for R012.4.2.
+Mounted AgentApp commands open a loading view before the first read and restore
+composer focus on Escape. Retry clears previous rows; typed failures remain
+unavailable, distinct from valid empty results. Late success and failure cannot
+replace a newer refresh or continue after a client-owner change. Cancellation
+suppression cannot reopen a closed screen. The command starts no model turn.
+`tests/test_served_fleet_usage.py` checks mounted MCP dispatch through real
+generated-client transport fixtures. These checks do not close model admission,
+conversation resume, or served session and turn usage acceptance.
+
+## Literal completion-marker regression
+
+`TUI-RUNTIME-R012.1.1`: `tests/test_turn_completion.py` feeds A2A-normalized
+artifacts and typed terminal states into the mounted app and headless runner.
+Exact, embedded and split `[DONE]` text must remain content. Mounted checks
+preserve processing and queued work until terminal delivery, then dispatch once.
+Pending approval still precedes the queue. Headless checks retain later text
+and failures, and stop at typed completion or cancellation. These fixtures do
+not qualify served streaming, native parity or full mounted cancellation.
+
+## Operator current-main reconciliation
+
+The operator branch now preserves main `2ebf9ae587ad171dd859b4425d65f9f999c03eb6`.
+Only appended plan and test-spec sections conflicted; both sides were retained.
+Runtime files match that main exactly. Operator tests and the four qualified criteria are unchanged.
+The combined operator, environment, CLI, MCP responsiveness, completion and headless checks passed 169 tests.
+This includes the actual installed entry tests against a newly built wheel.
+Its SHA-256 is `11effa2a8e9b582d192fac25bba72a385121207e177cee4e2d2d03f25baee2f9`.
+All packaged Python, TCSS and license bytes match this union checkout.
+The earlier full-suite receipt remains evidence for its recorded baseline, not a new full-union run.

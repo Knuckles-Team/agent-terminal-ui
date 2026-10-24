@@ -10,9 +10,12 @@ from arbora.client._generated_models import REGISTRY_DIGEST
 from textual.app import App
 from textual.widgets import Static
 
+from agent_terminal_ui.app import AgentApp
 from agent_terminal_ui.client import AgentClient, ArboraOperationError
 from agent_terminal_ui.commands import CommandProcessor
 from agent_terminal_ui.screens.usage import UsageScreen
+from agent_terminal_ui.tui.input_text_area import InputTextArea
+from agent_terminal_ui.tui.mcp_screen import MCPScreen
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.spec("TUI-RUNTIME-R012.4.2")]
 
@@ -102,31 +105,39 @@ async def test_usage_clears_previous_metrics_on_refusal(client_factory):
 
 @pytest.mark.parametrize("command", ["mcp", "tools"])
 @pytest.mark.parametrize("refused", [False, True])
-async def test_command_reads_reach_generated_operations(client_factory, command, refused):
+async def test_command_reads_reach_generated_operations(client_factory, command, refused, fake_client):
     values: list[Any] = ["UNAVAILABLE"] if refused else (
         [{"children": {"visible": {}}}, {"items": [], "next_cursor": None}]
         if command == "mcp" else [{"items": [], "next_cursor": None}]
     )
     client, requests = client_factory(values)
-    app = MagicMock()
-    app._client = client
-    app.query_one.return_value.add_info = AsyncMock()
-    processor = CommandProcessor(app)
     if command == "mcp":
-        await processor.cmd_mcp("")
+        fake_client.get_mcp_config = client.get_mcp_config
+        fake_client.list_mcp_tools = client.list_mcp_tools
+        app = AgentApp(client=fake_client)
+        async with app.run_test() as pilot:
+            app.screen.query_one(InputTextArea).load_text("/mcp")
+            await pilot.press("enter")
+            await pilot.pause()
+            assert isinstance(app.screen, MCPScreen)
+            status = str(app.screen.query_one("#mcp-status", Static).content)
+            assert ("unavailable" in status) is refused
+            if not refused:
+                assert app.screen.mcp_config["children"] == {"visible": {}}
+            await pilot.press("escape")
     else:
-        await processor.cmd_tools_only("")
+        app = MagicMock()
+        app._client = client
+        app.query_one.return_value.add_info = AsyncMock()
+        await CommandProcessor(app).cmd_tools_only("")
+        if refused:
+            app.notify.assert_called_once()
+            assert "unavailable" in app.notify.call_args[0][0]
+            app.query_one.return_value.add_info.assert_not_awaited()
+        else:
+            app.query_one.return_value.add_info.assert_awaited_once()
+    assert requests
     assert all(request.url.path.startswith("/api/v1/ops/fleet.") for request in requests)
-    if refused:
-        app.notify.assert_called_once()
-        assert "unavailable" in app.notify.call_args[0][0]
-        app.push_screen.assert_not_called()
-        app.query_one.return_value.add_info.assert_not_awaited()
-    elif command == "mcp":
-        app.push_screen.assert_called_once()
-        assert app.push_screen.call_args.args[0].mcp_config["children"] == {"visible": {}}
-    else:
-        app.query_one.return_value.add_info.assert_awaited_once()
     await client._http_client.aclose()
 
 
