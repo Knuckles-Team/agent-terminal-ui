@@ -8,6 +8,7 @@ import signal
 import subprocess
 import threading
 import time
+from collections import deque
 from collections.abc import Callable
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -38,6 +39,7 @@ class NativeTerminal:
         task_id: str = OWNER_TASK_ID,
     ) -> None:
         self.requests = requests
+        self.trace: deque[tuple[str, object]] = deque(maxlen=64)
         self.master, slave = pty.openpty()
         termios.tcsetwinsize(slave, (40, 100))
         self.original_terminal = termios.tcgetattr(slave)
@@ -70,6 +72,7 @@ class NativeTerminal:
         return "\n".join(self.screen.display)
 
     def send(self, keys: bytes) -> None:
+        self.trace.append(("send", keys))
         os.write(self.master, keys)
 
     def wait_until(self, predicate: Callable[[], bool]) -> None:
@@ -81,18 +84,32 @@ class NativeTerminal:
                 pytest.fail(f"Native process exited early: {self.process.returncode}")
             if select.select([self.master], [], [], 0.05)[0]:
                 raw = os.read(self.master, 65536)
+                self.trace.append(("read", raw[-4096:]))
                 if b"\x1b[6n" in raw:
                     self.send(b"\x1b[1;1R")
                 self.stream.feed(self.decoder.decode(raw))
         pytest.fail(
             f"Terminal expectation timed out:\n{self.shown()}"
             f"\nRequests: {self.requests}"
+            f"\nPTY events: {list(self.trace)}"
         )
 
-    def resize(self, rows: int, columns: int) -> None:
+    def resize(self, rows: int, columns: int, *, wait_for_frame: bool = True) -> None:
+        self.trace.append(("resize", (rows, columns)))
         self.screen.resize(lines=rows, columns=columns)
         termios.tcsetwinsize(self.master, (rows, columns))
         os.kill(self.process.pid, signal.SIGWINCH)
+        if not wait_for_frame:
+            return
+        # pyte clips the old frame on resize; its copied footer is not a redraw.
+        self.wait_until(
+            lambda: (
+                self.screen.display[0].startswith("┌")
+                and self.screen.display[0].endswith("┐")
+                and self.screen.display[-1].startswith("└")
+                and self.screen.display[-1].endswith("┘")
+            )
+        )
 
     def quit(self) -> None:
         self.send(b"q")
@@ -374,6 +391,20 @@ def test_native_graph_real_binding_navigation_resize_refresh_denial_and_quit():
         assert "Continue completed child: unavailable" in shown()
         terminal.send(b"\t")
         wait_until(lambda: "> 1. first [running]" in shown())
+        terminal.send(b"\x1b[Z")
+        wait_until(lambda: "> 4. join [unobserved]" in shown())
+        terminal.resize(40, 100)
+        wait_until(lambda: "Predecessors (depends_on): 2: left, 3: right" in shown())
+        assert "> 4. join [unobserved]" in shown()
+        # Keep the original rapid sequence covered independently of the frame fence.
+        terminal.resize(24, 40, wait_for_frame=False)
+        terminal.send(b"\x1b[F\t")
+        wait_until(
+            lambda: (
+                "> 1. first [running]" in shown()
+                and terminal.screen.display[0].endswith("┐")
+            )
+        )
         terminal.send(b"\x1b[Z")
         wait_until(lambda: "> 4. join [unobserved]" in shown())
         terminal.resize(40, 100)
