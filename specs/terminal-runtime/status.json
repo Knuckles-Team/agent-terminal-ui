@@ -1929,9 +1929,16 @@
     {
       "id": "TUI-RUNTIME-R015.42",
       "title": "The documentation must define AGENT_LOG_FILE and AGENT_THEME behavior. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "2f6d1188fb53",
+        "71e9ba4185f9"
+      ],
+      "verified_by": [
+        "tests/test_cli_documentation.py:5",
+        "tests/test_entry_environment_documentation.py:10",
+        "tests/test_entry_environment_pty.py:24"
+      ],
       "rollup_of": [
         "TUI-RUNTIME-R015.42.1",
         "TUI-RUNTIME-R015.42.2"
@@ -1951,8 +1958,10 @@
     {
       "id": "TUI-RUNTIME-R015.42.2",
       "title": "Retain theme and log documentation acceptance for native and installed entry points",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "71e9ba4185f9"
+      ],
       "verified_by": [
         "tests/test_entry_environment_documentation.py:10",
         "tests/test_entry_environment_pty.py:24"
