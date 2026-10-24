@@ -17,6 +17,7 @@ import asyncio
 import contextlib
 import json
 import logging
+import math
 import os
 import re
 import sys
@@ -1213,29 +1214,47 @@ class AgentClient:
         return payload if isinstance(payload, dict) else {}
 
     async def list_configured_models(self) -> dict[str, Any]:
-        """Fetch the configured LLM model registry from the backend.
+        """Read legacy registry metadata without masking failed reads as empty.
 
-        Hits the core ``GET /models`` endpoint exposed by
-        ``agent_utilities.server``. The response has the shape
-        ``{"models": [...], "default_id": "..."}`` where each model is a
-        serialized ``ModelDefinition`` (id, name, provider, tier, tags,
-        cost, is_default, ...).
-
-        Returns:
-            The raw registry payload. On any network or parse error, an
-            empty ``{"models": [], "default_id": None}`` is returned so
-            callers can render a graceful empty-state.
+        This is not models.list admission or server-side model selection.
+        HTTP errors and invalid registry shapes propagate to the command view.
         """
-        try:
-            response = await self._http_client.get(f"{self.base_url}/models")
-            response.raise_for_status()
-            data = response.json()
-            if isinstance(data, dict):
-                return data
-            return {"models": [], "default_id": None}
-        except Exception as e:
-            logger.error(f"Failed to fetch model registry: {e}")
-            return {"models": [], "default_id": None}
+        response = await self._http_client.get(f"{self.base_url}/models")
+        response.raise_for_status()
+        data = response.json()
+        if (
+            not isinstance(data, dict)
+            or not isinstance(data.get("models"), list)
+            or any(
+                not isinstance(model, dict) or not isinstance(model.get("id"), str)
+                for model in data["models"]
+            )
+            or not isinstance(data.get("default_id"), (str, type(None)))
+        ):
+            raise ValueError("Invalid model registry")
+        for model in data["models"]:
+            tags = model.get("tags")
+            if tags is not None and (
+                not isinstance(tags, list)
+                or any(not isinstance(tag, str) for tag in tags)
+            ):
+                raise ValueError("Invalid model tags")
+            cost = model.get("cost")
+            if cost is None:
+                continue
+            if not isinstance(cost, dict):
+                raise ValueError("Invalid model cost")
+            for key in ("input", "output"):
+                value = cost.get(key, 0)
+                if isinstance(value, bool) or not isinstance(value, (int, float)):
+                    raise ValueError("Invalid model cost")
+                try:
+                    finite = math.isfinite(float(value))
+                except OverflowError as exc:
+                    raise ValueError("Invalid model cost") from exc
+                if not finite:
+                    raise ValueError("Invalid model cost")
+        return data
 
     async def list_tools(self) -> list[dict[str, Any]]:
         """Fetch the loaded skills and tools from the backend Knowledge Graph.

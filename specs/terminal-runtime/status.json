@@ -1198,9 +1198,13 @@
       "title": "Legacy model-read boundary regression coverage",
       "delivery_state": "VERIFIED",
       "landed_in": [
+        "0025336ad1ca",
+        "1be704079a25",
         "3ea65009beab"
       ],
       "verified_by": [
+        "tests/test_mounted_command_matrix.py:489",
+        "tests/test_mounted_command_matrix.py:584",
         "tests/test_tui_widgets.py:877",
         "tests/test_tui_widgets.py:914"
       ]
@@ -1240,9 +1244,11 @@
       "title": "Unavailable management commands make no requests",
       "delivery_state": "VERIFIED",
       "landed_in": [
+        "1be704079a25",
         "b0cc25d210bc"
       ],
       "verified_by": [
+        "tests/test_mounted_command_matrix.py:551",
         "tests/test_unavailable_commands.py:12"
       ]
     },
@@ -1344,6 +1350,7 @@
       "title": "Dispatcher signatures and mounted usage aliases",
       "delivery_state": "VERIFIED",
       "landed_in": [
+        "1be704079a25",
         "33e68ece1844",
         "6743e92fa6dd",
         "c5e545f7cea6",
@@ -1351,6 +1358,7 @@
       ],
       "verified_by": [
         "tests/test_command_completion_contract.py:9",
+        "tests/test_mounted_command_matrix.py:448",
         "tests/test_registered_command_contract.py:19"
       ]
     },

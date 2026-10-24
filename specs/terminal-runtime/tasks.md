@@ -295,3 +295,7 @@ Record deferred validation as deferred, never passed.
 - [x] **TUI-RUNTIME-R012.4.3.1:** Preserve exact names during Tab completion and align Enter, Tab and suggestion matching across casing and aliases. Mounted command tests cover these paths; full served matrix acceptance remains pending.
 
 - [ ] **TUI-RUNTIME-R012.4.2:** Review mounted `/fleet [status]` dispatch through fleet.status, truthful local help and usage Escape ownership. Command inventory records legacy dependencies; complete R012.4.3.2 acceptance remains open.
+
+- [ ] **TUI-RUNTIME-R012.4.3.1:** Review local settings command entry and mounted edit, persistence, close and reopen evidence.
+- [ ] **TUI-RUNTIME-R012.2.1:** Review distinct model-read failures and genuine empty-registry behavior. Governed model choice remains open.
+- [ ] **TUI-RUNTIME-R012.4.1:** Review named pre-transport refusal for legacy config, resources and maintenance commands.

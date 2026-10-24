@@ -20,6 +20,8 @@ from rich.syntax import Syntax
 from rich.table import Table
 
 from agent_terminal_ui.client import A2ATransportError, ArboraOperationError
+from agent_terminal_ui.screens.settings import SettingsScreen
+from agent_terminal_ui.settings import AppSettings
 from agent_terminal_ui.tui.exit_confirm_screen import ExitConfirmScreen
 
 logger = logging.getLogger(__name__)
@@ -31,6 +33,13 @@ _UNAVAILABLE_COMMANDS = {
     "kb": "kb.list",
     "cron": "cron.calendar",
     "pipeline": "pipeline.status",
+}
+
+
+_LEGACY_COMMAND_ROUTES = {
+    "config": "/api/enhanced/config/backend",
+    "resources": "/api/enhanced/resources",
+    "maintenance": "/api/enhanced/maintenance",
 }
 
 
@@ -53,6 +62,7 @@ class CommandProcessor:
         self._pending_op_plans: dict[str, tuple[str, dict[str, Any]]] = {}
         self.commands: dict[str, Callable[..., Awaitable[None]]] = {
             "help": self.cmd_help,
+            "settings": self.cmd_settings,
             "clear": self.cmd_clear,
             "exit": self.cmd_exit,
             "quit": self.cmd_exit,  # Alias for exit
@@ -163,6 +173,12 @@ class CommandProcessor:
 
     async def _run_registered_command(self, cmd_name: str, args: str) -> None:
         """Invoke a locally registered command, surfacing failures as notices."""
+        if route := _LEGACY_COMMAND_ROUTES.get(cmd_name):
+            self.app.notify(
+                f"/{cmd_name} unavailable: no admitted adapter for legacy {route}.",
+                severity="warning",
+            )
+            return
         unavailable = _UNAVAILABLE_COMMANDS.get(cmd_name)
         if unavailable is not None:
             self.app.notify(
@@ -207,9 +223,18 @@ class CommandProcessor:
             doc = self.commands[cmd].__doc__ or "No description"
             if operation := _UNAVAILABLE_COMMANDS.get(cmd):
                 doc = f"Unavailable: Arbora does not serve {operation}."
+            if route := _LEGACY_COMMAND_ROUTES.get(cmd):
+                doc = f"Unavailable: no admitted adapter for legacy {route}."
             help_text += f"- [bold]/{cmd}[/bold]: {doc}\n"
 
         await self.app.query_one("Conversation").add_info(help_text)
+
+    async def cmd_settings(self, args: str) -> None:
+        """Edit saved local settings. Usage: /settings"""
+        if args.strip():
+            self.app.notify("Usage: /settings", severity="warning")
+            return
+        self.app.push_screen(SettingsScreen(AppSettings()))
 
     async def cmd_clear(self, args: str) -> None:
         """Clear the current event log."""
@@ -598,10 +623,16 @@ class CommandProcessor:
         subcommand = tokens[0].lower() if tokens else "list"
         value = tokens[1].strip() if len(tokens) > 1 else ""
 
-        if subcommand in ("", "list"):
-            await self._model_list()
-        elif subcommand == "show":
-            await self._model_show()
+        if subcommand in ("", "list", "show"):
+            try:
+                if subcommand == "show":
+                    await self._model_show()
+                else:
+                    await self._model_list()
+            except (httpx.HTTPError, ValueError):
+                await self.app.query_one("Conversation").add_info(
+                    "[yellow]Model registry unavailable: /models read failed.[/yellow]"
+                )
         elif subcommand == "set":
             await self._model_set(value)
         else:
