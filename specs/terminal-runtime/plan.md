@@ -1166,3 +1166,19 @@ A full checkout with missing evidence fails. A shallow checkout or source
 export reports unavailable history explicitly; that skip is not acceptance.
 This work restores no report and treats no historical conclusion as a current finding.
 R015.31 and the quality acceptance v1 rows remain open.
+
+
+## Amendment 2026-10-24: entry-point theme and log documentation
+
+R015.42.2 compares the installed Python console entry and compiled native
+terminal with their published environment documentation. Both read AGENT_THEME
+at startup, fall back to tokyo-night for unknown names, and ignore
+AGENT_LOG_FILE. Document each terminal's no-color semantics and theme controls.
+Native palettes remain the four existing baseline themes.
+
+Real PTYs must prove startup colors, fallback and no-color output. Open the
+log view without host admission and check refusal. A filesystem-open probe
+must confirm that neither process opens the given sentinel log path.
+Use a wheel whose package bytes match the current source.
+Use a native binary whose build receipt matches the unchanged native tree. Missing optional
+artifacts skip these tests and do not establish acceptance.

@@ -1387,3 +1387,44 @@ The historical, package-metadata, environment-example and shared-hook tests
 passed 44 cases without skips on this union. Earlier test and wheel receipts
 retain their recorded baselines; this reconciliation makes no new installed,
 native or full-suite acceptance claim.
+
+
+## Installed and native environment documentation (R015.42.2)
+
+Base: `b04b208155a1f33b30b70df71c55c768c7502add`. This slice changes tests
+and documentation only. It corrects the Python-only description of AGENT_THEME
+and distinguishes the entry points' theme controls and NO_COLOR semantics.
+
+`tests/test_entry_environment_pty.py` starts the real installed Python console
+script and compiled native terminal outside the source checkout. Four known
+palettes and an unknown name prove startup selection and tokyo-night fallback.
+Absent, empty and nonempty NO_COLOR values distinguish Python presence semantics
+from native nonempty-value semantics. Each case opens the log view without
+host admission. Both terminals refuse and make no host-log transport request.
+
+A Linux inotify probe watches a sentinel path supplied through AGENT_LOG_FILE.
+Neither process opens the file during startup, refusal or exit. A separate
+counterexample deliberately opens the file and proves that the probe detects it.
+The tests also reject sentinel disclosure in terminal output.
+`tests/test_entry_environment_documentation.py` checks the published claims
+and native theme inventory, rejecting missing palettes and incorrect behavior.
+
+The installed wheel comes from tracked source at the base above.
+Wheel SHA-256: `3f90a423d61de012479b0c651a691ca0186974a4bfb53b6e198f2f9809e392c0`.
+The isolated installation retains its dependencies; only that wheel changed.
+All 76 packaged files match both the wheel and current source bytes.
+The wheel build retains the existing setuptools license-deprecation warnings.
+This slice makes no package-build warning-free acceptance claim.
+
+The native tree is unchanged: `94fa72719ebf0e02b526ef91e778f85c7a674289`.
+The preserved executable matches the earlier Rust 1.96.0 build receipt.
+Its SHA-256 is `0cf20785126130a59200fd3dc88c8162915437bae214922c44e33f0d350ccdcb`.
+No native source changed and no native rebuild was needed.
+
+With TUI_TEST_INSTALLED_ENV and TUI_NATIVE_TEST_BINARY supplied, the entry
+module passed 15 tests without skips on Linux, Python 3.12.14 and pytest 9.1.1.
+The documentation module passed eight tests, including seven counterexamples.
+Missing artifacts or Linux/PTY dependencies skip entry qualification and give
+no acceptance evidence. Documentation checks remain available independently.
+This does not qualify served theme parity, authorized host-log production,
+complete native performance or the full quality acceptance v1 domains.

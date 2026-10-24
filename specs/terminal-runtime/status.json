@@ -1953,7 +1953,10 @@
       "title": "Retain theme and log documentation acceptance for native and installed entry points",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [
+        "tests/test_entry_environment_documentation.py:10",
+        "tests/test_entry_environment_pty.py:24"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.43",
