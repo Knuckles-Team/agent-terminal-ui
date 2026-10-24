@@ -432,7 +432,8 @@ A focused field near the end of the unfiltered form remains visible after resize
 The settings screen is mounted directly because no application command exposes it.
 The MCP journey enters `/mcp`, navigates thirty fixture tools, and retains the selected cell inside the resized table.
 Both dialogs keep their controls within their bounds. MCP resize reveals the selected cell after layout settles.
-These fixtures do not qualify live catalog transport, modal Escape ownership, native parity, PTY behavior or release performance.
+Escape restores composer focus. Reopening settings retains the saved value; reopening MCP handles an empty catalog.
+These fixtures do not qualify live catalog transport, native parity, PTY behavior or release performance.
 R008 and its remaining full presentation acceptance stay open.
 
 ## Python operator documentation

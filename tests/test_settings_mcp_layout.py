@@ -24,6 +24,8 @@ async def test_settings_search_and_control_survive_resize(
     settings = AppSettings(tmp_path / "settings.toml")
     app = AgentApp(client=fake_client)
     async with app.run_test(size=SIZES[0]) as pilot:
+        composer = app.screen.query_one(InputTextArea)
+        composer.load_text("Unfinished settings prompt")
         await app.push_screen(SettingsScreen(settings))
         screen = app.screen
         search = screen.query_one("#settings-search", Input)
@@ -48,6 +50,15 @@ async def test_settings_search_and_control_survive_resize(
         await pilot.press("tab", "tab", "space")
         assert settings.get("sidebar_visible") is not original
         assert AppSettings(tmp_path / "settings.toml").get("sidebar_visible") is not original
+        await pilot.press("escape")
+        assert app.screen is not screen
+        assert app.focused is composer
+        assert composer.text == "Unfinished settings prompt"
+        await app.push_screen(SettingsScreen(AppSettings(tmp_path / "settings.toml")))
+        restored = next(item for item in app.screen.query(Checkbox) if item.name == "sidebar_visible")
+        assert restored.value is not original
+        await pilot.press("escape")
+        assert app.focused is composer
 
 
 @pytest.mark.asyncio
@@ -78,6 +89,20 @@ async def test_mcp_table_keeps_selected_row_visible_after_resize(fake_client: As
             assert table.scroll_y <= table.cursor_row < table.scroll_y + table.content_region.height - 1
         await pilot.press("up")
         assert table.cursor_row == 28
+        await pilot.press("escape")
+        assert app.screen is not screen
+        assert app.focused is composer
+        assert composer.text == ""
+        fake_client.list_mcp_tools.return_value = []
+        composer.load_text("/mcp")
+        await pilot.press("enter")
+        await pilot.pause()
+        assert isinstance(app.screen, MCPScreen)
+        assert app.screen.query_one(DataTable).row_count == 0
+        await pilot.resize_terminal(40, 12)
+        await pilot.press("escape")
+        assert app.focused is composer
+        assert not isinstance(app.screen, MCPScreen)
 
 
 @pytest.mark.asyncio
@@ -97,3 +122,5 @@ async def test_settings_active_field_remains_visible_during_resize(
             area = screen.query_one("#settings-list", VerticalScroll)
             assert app.focused is field
             assert area.content_region.contains_region(field.region)
+        await pilot.press("escape")
+        assert app.screen is not screen
