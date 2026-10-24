@@ -5,6 +5,7 @@ use std::time::{Duration, Instant};
 fn projection() -> RunProjection {
     RunProjection {
         run_id: "run-1".into(),
+        summary_available: true,
         peak_context_tokens: Some(0),
         context_budget_tokens: None,
         cost_usd: Some(0.0),

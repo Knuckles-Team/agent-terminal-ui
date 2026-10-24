@@ -59,6 +59,7 @@ pub struct AppliedConfig {
 #[derive(Clone, Debug)]
 pub struct RunProjection {
     pub run_id: String,
+    pub summary_available: bool,
     pub peak_context_tokens: Option<u64>,
     pub context_budget_tokens: Option<u64>,
     pub cost_usd: Option<f64>,
@@ -151,6 +152,9 @@ impl RunInspector {
             lines.push("Run inspector unavailable".into());
             return lines.join("\n");
         };
+        if !run.summary_available {
+            lines.push("Run summary unavailable; current-plan read only".into());
+        }
         lines.extend([
             format!("Peak context tokens: {}", number(run.peak_context_tokens)),
             format!(

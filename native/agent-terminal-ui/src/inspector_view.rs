@@ -322,6 +322,7 @@ mod tests {
             .accept(
                 Ok(RunProjection {
                     run_id: "run-one".into(),
+                    summary_available: true,
                     peak_context_tokens: Some(42),
                     context_budget_tokens: None,
                     cost_usd: Some(0.0),
