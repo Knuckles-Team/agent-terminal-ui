@@ -1090,6 +1090,20 @@ A future rubric change requires another dated amendment and a new contract versi
 Historic analysis remains source history, not a current scan or an authoritative version mirror.
 The historical count is not a verified current inventory. R015.69 requires reconciliation rather than invented missing findings.
 
+## Operator and package qualification (2026-10-24)
+
+R015.12 and R015.16 require README entry-point coverage and valid local links.
+R015.18 validates the tracked MIT license without changing its terms.
+R015.31 covers the Python distribution, concept registry and lockfile version
+with the configured bumper. Native manifest and lock versions agree, but the
+bumper does not cover them. R015.31 remains open for full version configuration.
+Use only a dry run; do not change versions, tags or releases for this proof.
+R015.71 starts the installed task observer against a loopback HTTP fixture.
+Check denied reads separately from authenticated completed tasks with no output.
+This is installed-client evidence, not live Arbora or native parity acceptance.
+R015.32 and R015.33 remain open. The historical analysis artifacts are not in
+this checkout. This batch does not recreate or alter historical evidence.
+
 ## Amendment 2026-10-24: responsive MCP reads
 
 R012.4.2 opens the MCP view before fleet reads. A screen-owned worker keeps

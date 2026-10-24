@@ -1,5 +1,6 @@
 """Operator installation and contributor documentation contracts."""
 
+import ast
 import os
 import re
 import shutil
@@ -88,3 +89,51 @@ def test_locked_install_refuses_a_checkout_without_its_lockfile(tmp_path: Path) 
     )
     assert result.returncode != 0
     assert "lockfile" in result.stderr.lower()
+
+
+def check_operator_entries(readme: str) -> None:
+
+    source = ast.parse((ROOT / "agent_terminal_ui/terminal_ui.py").read_text())
+    flags = {node.args[0].value for node in ast.walk(source)
+             if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+             and node.func.attr == "add_argument" and node.args
+             and isinstance(node.args[0], ast.Constant)
+             and isinstance(node.args[0].value, str)}
+    usage = readme.split("## Usage\n", 1)[1].split("\n## ", 1)[0]
+    assert all(f"`{flag}`" in usage or f" {flag} " in usage for flag in flags)
+    assert "\nagent-terminal-ui\n" in usage
+    assert "agent-terminal-ui --headless --prompt" in usage
+    assert "agent-terminal-ui --observe-task TASK_ID" in usage
+    assert "cargo run --locked --manifest-path native/agent-terminal-ui/Cargo.toml" in usage
+    assert "docker run --rm -e AGENT_URL=" in usage
+    assert "`AGENT_AUTH_MODE=none` and unset the bearer token" in usage
+
+
+@pytest.mark.spec("TUI-RUNTIME-R015.12")
+def test_readme_operator_entry_points() -> None:
+    check_operator_entries((ROOT / "README.md").read_text())
+
+
+@pytest.mark.spec("TUI-RUNTIME-R015.12")
+@pytest.mark.parametrize("entry", ["--observe-task", "--mode", "cargo run", "docker run", "--headless", "AGENT_AUTH_MODE=none"])
+def test_readme_rejects_missing_operator_entries(entry: str) -> None:
+    with pytest.raises(AssertionError):
+        check_operator_entries((ROOT / "README.md").read_text().replace(entry, "missing-entry"))
+
+
+def check_documentation_links(readme: str) -> None:
+    links = set(re.findall(r"\]\((docs/[^)#]+)(?:#[^)]*)?\)", readme))
+    assert {f"docs/{name}.md" for name in ("architecture", "features", "configuration", "session_management", "agent_view", "goal_command")} <= links
+    assert all((ROOT / link).is_file() for link in links)
+
+
+@pytest.mark.spec("TUI-RUNTIME-R015.16")
+def test_readme_links_existing_detailed_documentation() -> None:
+    check_documentation_links((ROOT / "README.md").read_text())
+
+
+@pytest.mark.spec("TUI-RUNTIME-R015.16")
+@pytest.mark.parametrize("old,new", [("docs/configuration.md", "docs/missing.md"), ("docs/goal_command.md", "https://example.invalid/goal")])
+def test_readme_rejects_broken_or_missing_documentation_links(old: str, new: str) -> None:
+    with pytest.raises(AssertionError):
+        check_documentation_links((ROOT / "README.md").read_text().replace(old, new))
