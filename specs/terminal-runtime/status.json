@@ -447,7 +447,7 @@
       "title": "Terminal theme tokens and accessibility are a stated contract",
       "delivery_state": "SPECIFIED",
       "landed_in": [
-        "fb71e74c9edf"
+        "818929331249"
       ],
       "verified_by": [
         "tests/test_exit_confirm_keyboard.py:12"
