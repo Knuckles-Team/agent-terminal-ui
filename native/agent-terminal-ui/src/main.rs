@@ -509,6 +509,7 @@ async fn run(
     redraw.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
     let result = async {
         loop {
+            inspector.client_updated(&client);
             let style = themes.style();
             let mut confirmation_visible = false;
             terminal.draw(|frame| {

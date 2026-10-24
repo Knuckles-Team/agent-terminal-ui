@@ -1301,3 +1301,60 @@ Retire target reviews after selection, principal, lifecycle or capability change
 A lost response remains unknown; reconnect must reconcile the original operation before any retry.
 Cancellation uses only an admitted cancellation target and reports acknowledgement separately from terminal state.
 The backend defines cancellation scope; the client must not infer recursive cancellation from a drawn subtree.
+
+## Amendment: bounded flat native graph (2026-10-24)
+
+This source-only slice contributes to R010.11 and R010.12 without closing them.
+Reuse the native inspector and its registry-backed run transport. The `g` key
+switches between the run summary and an independent `runs.execution_graph` read.
+A validated task, context and run binding and an immutable client identity scope
+each read. Refresh, close, refusal and binding changes clear graph data and node
+selection. Abort outstanding reads and reject stale generations.
+
+Admit only `arbora-execution-graph-v1`, with the producer's bounded flat plan
+steps, dependency edges and public event evidence. Parse the JSON tuple keys by
+value so Unicode escaping does not change identity. Reject private fields,
+duplicate identities or evidence, cycles, dangling edges and raised child
+capabilities. Display one row per step, separate predecessor and dependent lists,
+and explicit incomplete lifecycle coverage. Tab and Shift+Tab select steps;
+existing scroll and search controls remain available at 40 columns.
+
+Use the actual producer schema and Unicode and diamond fixtures in native tests.
+Loopback transport tests exercise the real public client and registry refusal;
+TestBackend tests cover input, resizing and protected-state invalidation. Native
+compilation, Clippy and a compiled terminal journey remain required before native
+qualification. These tests do not prove nested execution, transcripts, child
+messaging, a released producer, or the held release prerequisite.
+
+## Amendment: bounded flat Python graph (2026-10-24)
+
+R010.11 and R010.12 start with `/run graph <run_id> [task_id]` in the Python terminal.
+The command requires an explicit run ID. Only Arbora can resolve an omitted root task ID.
+The existing generated client reads `runs.execution_graph` with schema `arbora-execution-graph-v1`.
+Display each declared plan step once, with explicit predecessor-to-dependent edges and keyboard selection.
+Display the observed lifecycle prefix, cursor, unobserved steps and unavailable child actions.
+Clear protected data before refresh, after refusal and when client, context or selection changes.
+Do not infer child agents, transcripts, root identities or lifecycle completion from this flat graph.
+Python mounted source-contract tests qualify this consumer slice, not installed producer support or served acceptance.
+Native graph source is present in the companion amendment.
+Native compilation, Rust tests and Clippy passed in hosted CI on `612def9`.
+Compiled-terminal qualification still requires the exact-checkout PTY journey below.
+Nested execution, public records and released-stack proof remain open.
+This slice leaves existing `/run` behavior and its separate canonical-read migration unchanged.
+
+## Amendment: compiled-native flat graph journey (2026-10-24)
+
+Extend the existing native public-details PTY harness for R010.11 and R010.12.
+The native CI job builds its checkout, then runs both terminal journeys with that
+explicit executable. Pin the terminal decoder in the test extra and locked environment.
+Missing prerequisites, an absent executable or a skipped journey fail the job.
+
+Use a bounded synthetic loopback Arbora fixture and the actual producer diamond.
+Read a real task correlation before opening `i`, then `g`. Check one row per step,
+predecessors, dependents, evidence, keyboard selection and 40-column resizing.
+Hold a refresh until old graph data and selection clear, then test denied reads,
+close/reopen and quit with terminal restoration. Assert exact root-bound graph
+parameters, anonymous reads and no effect or fallback requests.
+
+This is compiled client/terminal proof, not a production Arbora service or
+released-stack receipt. Nested execution and broad acceptance rows remain open.

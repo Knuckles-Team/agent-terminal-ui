@@ -1,5 +1,6 @@
 pub mod coding_approval;
 pub mod correlation;
+pub mod execution_graph;
 pub mod host_logs;
 pub mod public_run_events;
 pub mod recovery;

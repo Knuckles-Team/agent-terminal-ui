@@ -306,8 +306,19 @@ class CommandProcessor:
         opener(initial_query=args.strip())
 
     async def cmd_run(self, args: str) -> None:
-        """Browse a run or read its plan: /run [run_id] or /run plan <run_id>."""
+        """Browse a run, read its plan, or inspect its flat execution graph."""
         parts = args.strip().split(maxsplit=1)
+        if parts and parts[0] == "graph":
+            identities = parts[1].split() if len(parts) == 2 else []
+            if not 1 <= len(identities) <= 2:
+                self.app.notify(
+                    "Usage: /run graph <run_id> [task_id]", severity="warning"
+                )
+                return
+            self.app.open_execution_graph(
+                identities[0], task_id=identities[1] if len(identities) == 2 else None
+            )
+            return
         if parts and parts[0] == "plan":
             if len(parts) != 2 or not parts[1].strip():
                 self.app.notify("Usage: /run plan <run_id>", severity="warning")
