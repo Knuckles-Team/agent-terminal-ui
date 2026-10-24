@@ -2032,8 +2032,10 @@
     {
       "id": "TUI-RUNTIME-R015.48",
       "title": "The client changes must pass the configured lint and type hooks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "eada67552847"
+      ],
       "verified_by": [
         "tests/test_client_maintenance_gates.py:10"
       ]
@@ -2063,8 +2065,10 @@
     {
       "id": "TUI-RUNTIME-R015.51",
       "title": "The owning client contract must record the method implementation and its acceptance evidence. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "eada67552847"
+      ],
       "verified_by": [
         "tests/test_client_maintenance_documentation.py:11"
       ]
