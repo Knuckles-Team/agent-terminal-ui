@@ -736,3 +736,13 @@ errors, with 74 passes. The repair changes no dependency or hook configuration.
 The publication rebase includes merged PR #120 from `5643d81`.
 Both evidence sections and task updates are retained. Full-suite counts above
 predate this rebase; focused presentation tests and commit gates run again.
+
+## Operation argument parsing
+
+`TUI-RUNTIME-R001.1`: `tests/test_op_command_parsing.py` enters the production
+dispatcher. Spaces, tabs and line breaks separate the operation and JSON without
+changing string values. Malformed objects, nested NaN or Infinity constants and
+non-object JSON cause one warning and zero client calls. A later valid command
+still works. Missing IDs refuse; omitted parameters remain an empty object.
+These tests use a client double and do not qualify generated registry validation,
+versioned transport or served effects.

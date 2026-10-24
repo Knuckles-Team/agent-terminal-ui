@@ -290,3 +290,5 @@ Record deferred validation as deferred, never passed.
 - [x] **TUI-RUNTIME-R010.10:** Add bounded local native inspector text search with keyboard ownership, matching-line navigation and current-display tests.
 
 - [x] **TUI-RUNTIME-R015.30.2:** Implement native CLI help before runtime setup and qualify both help aliases and argument boundaries. Executable regression fails on main and passes with the implementation.
+
+- [x] **TUI-RUNTIME-R001.1:** Reject non-JSON numeric constants before client dispatch and parse whitespace-separated operation arguments. Focused dispatcher regressions cover refusal and recovery; the full generated-registry and transport acceptance remains separate.
