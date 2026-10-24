@@ -389,7 +389,7 @@ not replace the remaining served parity and performance checks.
 | Requirement | Layer and fixture | Expected positive result | Required negative proof |
 |---|---|---|---|
 | TUI-RUNTIME-R012.2 | Rollup of R012.2.1 and R012.2.2 | Both legacy client regression coverage and governed served model choice meet their child criteria | Legacy reads and selection refusal alone cannot close model-choice acceptance |
-| TUI-RUNTIME-R012.2.1 | `tests/test_tui_widgets.py::TestModelConfiguration::test_model_registry_metadata_crosses_client_boundary` and `test_model_registry_failure_does_not_reuse_or_route`; real AgentClient with HTTP transport fixtures | Registry metadata, including tiers and the default, survives an authenticated GET /models unchanged | After success, missing route, denied route, invalid JSON, non-object response and timeout each return no models, with no stale data or alternate requests |
+| TUI-RUNTIME-R012.2.1 | `tests/test_tui_widgets.py::TestModelConfiguration::test_model_registry_metadata_crosses_client_boundary` and `test_model_registry_failure_does_not_reuse_or_route`; Real AgentClient with HTTP fixtures. | Registry metadata survives authenticated GET /models unchanged. | After success, missing or denied routes, invalid JSON, non-object responses and timeouts raise errors. No stale data or alternate requests. |
 | TUI-RUNTIME-R012.2.2 | Planned served fixture through the model picker, /model and the real client; actual models.list operation from ARBORA-A2A-R016.6 | Discover profiles, send arboraModelProfile preference and display the producer-selected profile from task metadata | When Arbora does not honour the preference, display its different selected profile without local model routing. Legacy reads and selection refusal are not evidence for this child |
 
 - `TUI-RUNTIME-R012.3.1`: `tests/test_task_history.py` covers bounded task pages, two contexts, fresh-client reply reads, refusal, missing replies and read-only mounted browsing.
@@ -835,8 +835,8 @@ an admitted producer contract and command migration or an explicit refusal.
 | ingest | `/api/enhanced/extract/submit`, `/api/enhanced/extract/stream/{job_id}`, `/api/enhanced/extract/jsonl/{job_id}` |
 | sdd | `/api/enhanced/sdd/constitution`, `/api/enhanced/sdd/specs`, `/api/enhanced/sdd/plans`, `/api/enhanced/sdd/tasks` |
 | impact, codemap | `/api/enhanced/graph/impact/{symbol}`, `/api/codemap` |
-| resources, maintenance, config | `/api/enhanced/resources`, `/api/enhanced/resources/spawn`, `/api/enhanced/maintenance/status`, `/api/enhanced/maintenance/trigger`, `/api/enhanced/config/backend` |
-| model | `/models`; current client masks a failed list as empty, so unavailable-versus-empty acceptance is not established |
+| resources, maintenance, config | Command dispatch now refuses these legacy families before any request; admitted management adapters remain unavailable |
+| model | `/models`; failed reads now remain unavailable, distinct from a successful empty registry. Served models.list admission remains open |
 
 App startup separately requests `/api/enhanced/helpers/list_skills`. Command
 request assertions start after startup settles and do not certify zero legacy
@@ -851,3 +851,25 @@ permits a later `/help`. Usage now owns Escape locally, so one press restores th
 success, denial or timeout. After the modal keyboard repair merges, capability and run cases also press
 Escape. Success and failed-read paths restore composer focus and accept `/help`.
 This integrates the existing modal fix without changing its source. These cases add validation, not new implementation or completion.
+
+
+### Local settings entry and legacy management boundaries
+
+R012.4.3.1 gains `/settings`, which opens the existing SettingsScreen. Mounted
+command tests search, toggle a checkbox, close with Escape and reopen persisted
+settings. This proves local saved settings access, not application-wide live
+application of every setting. No backend request comes from this command.
+
+R012.2.1 distinguishes failed `/models` reads from a successful empty registry.
+Missing or denied routes, timeout, invalid JSON and invalid registry shapes
+raise errors in the direct client projection. The command displays one named
+unavailable result for list and detail reads. Metadata remains unchanged on
+success. R012.2.2 models.list, profile admission and selected-profile display
+remain open; the installed registry does not expose models.list.
+
+R012.4.1 now refuses config, resources and maintenance command families before
+legacy REST dispatch. Notices name their existing route family, without
+inventing operation identifiers. Listing and mutation journeys both make zero
+command requests. Direct legacy client wrappers are not migrated or qualified.
+Graph, memory, ingest and SDD migrations and full R012.4.3.2 acceptance remain
+open. The existing app startup skills request is outside this command slice.

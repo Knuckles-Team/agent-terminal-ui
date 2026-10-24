@@ -168,9 +168,6 @@ LEGACY_CASES = [
     ("sdd specs", "/api/enhanced/sdd/specs"),
     ("impact symbol", "/api/enhanced/graph/impact/symbol"),
     ("codemap fixture", "/api/codemap"),
-    ("resources", "/api/enhanced/resources"),
-    ("maintenance", "/api/enhanced/maintenance/status"),
-    ("config", "/api/enhanced/config/backend"),
     ("model", "/models"),
 ]
 
@@ -388,7 +385,7 @@ def test_inventory_accounts_for_every_registered_command():
     names.update(command.split()[0] for command, _ in LEGACY_CASES)
     names.update(command.split()[0] for command, _, _ in READ_CASES)
     names.update(
-        "help fleet skills prompts kb cron pipeline image bg attach mcp:reload confirm".split()
+        "help settings config resources maintenance fleet skills prompts kb cron pipeline image bg attach mcp:reload confirm".split()
     )
     assert names == set(CommandProcessor(object()).commands)
 
@@ -445,3 +442,132 @@ async def test_supported_read_failure_keeps_composer_usable(
         assert "Available Commands" in info(app)
         assert requests == [path]
         assert not app._is_processing
+
+
+@pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R012.4.3.1")
+async def test_settings_command_edits_saved_settings_and_reopens(tmp_path, monkeypatch):
+    from textual.widgets import Checkbox, Input
+    from agent_terminal_ui import settings
+    from agent_terminal_ui.screens.settings import SettingsScreen
+
+    path = tmp_path / "settings.toml"
+    monkeypatch.setattr(settings, "DEFAULT_SETTINGS_FILE", path)
+    monkeypatch.setattr(settings, "load_agent_utilities_config", lambda: {})
+    requests = []
+
+    def reply(request):
+        requests.append(request.url.path)
+        return httpx.Response(404)
+
+    async with mounted(reply) as (app, pilot):
+        requests.clear()
+        await submit(app, pilot, "/settings")
+        assert isinstance(app.screen, SettingsScreen)
+        search = app.screen.query_one("#settings-search", Input)
+        search.focus()
+        await pilot.press(*"sidebar", "tab", "tab")
+        checkbox = app.focused
+        assert isinstance(checkbox, Checkbox)
+        previous = checkbox.value
+        await pilot.press("space", "escape")
+        await pilot.pause()
+        assert app.focused is app.screen.query_one(InputTextArea)
+        assert settings.AppSettings(path).get("sidebar_visible") is not previous
+        await submit(app, pilot, "/settings")
+        checkbox = next(
+            w for w in app.screen.query(Checkbox) if w.name == "sidebar_visible"
+        )
+        assert checkbox.value is not previous
+        await pilot.press("escape")
+        await submit(app, pilot, "/help")
+        assert "/settings" in info(app)
+        assert requests == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R012.2.1")
+@pytest.mark.parametrize("command", ["model", "model list", "model show"])
+@pytest.mark.parametrize(
+    "failure",
+    ["missing", "denied", "timeout", "invalid-json", "non-object", "bad-models"],
+)
+async def test_model_read_failure_is_not_an_empty_registry(command, failure):
+    requests = []
+
+    def reply(request):
+        requests.append(request.url.path)
+        if failure == "timeout":
+            raise httpx.ReadTimeout("fixture timeout", request=request)
+        if failure == "invalid-json":
+            return httpx.Response(200, content=b"invalid")
+        if failure == "non-object":
+            return httpx.Response(200, json=[])
+        if failure == "bad-models":
+            return httpx.Response(200, json={"models": ["invalid"]})
+        return httpx.Response(404 if failure == "missing" else 403)
+
+    async with mounted(reply) as (app, pilot):
+        requests.clear()
+        await submit(app, pilot, f"/{command}")
+        rendered = info(app)
+        assert "Model registry unavailable" in rendered
+        assert "No models configured" not in rendered
+        assert "No model details" not in rendered
+        assert requests == ["/models"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R012.4.1")
+@pytest.mark.parametrize(
+    "command,route",
+    [
+        ("config", "/api/enhanced/config/backend"),
+        ("config set token secret", "/api/enhanced/config/backend"),
+        ("resources", "/api/enhanced/resources"),
+        ("resources spawn {}", "/api/enhanced/resources"),
+        ("maintenance", "/api/enhanced/maintenance"),
+        ("maintenance run cleanup", "/api/enhanced/maintenance"),
+    ],
+)
+async def test_legacy_management_refuses_before_dispatch(command, route, monkeypatch):
+    requests = []
+
+    def reply(request):
+        requests.append(request.url.path)
+        return httpx.Response(404)
+
+    async with mounted(reply) as (app, pilot):
+        requests.clear()
+        notices = []
+        monkeypatch.setattr(
+            app, "notify", lambda message, **kwargs: notices.append(message)
+        )
+        await submit(app, pilot, f"/{command}")
+        assert len(notices) == 1
+        assert "unavailable" in notices[0]
+        assert route in notices[0]
+        assert requests == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R012.2.1")
+@pytest.mark.parametrize(
+    "models", [[], [{"id": "fixture-model", "name": "Fixture model"}]]
+)
+async def test_model_registry_empty_and_populated_remain_successful(models):
+    requests = []
+
+    def reply(request):
+        requests.append(request.url.path)
+        return httpx.Response(200, json={"models": models, "default_id": None})
+
+    async with mounted(reply) as (app, pilot):
+        requests.clear()
+        await submit(app, pilot, "/model list")
+        rendered = info(app)
+        assert "Model registry unavailable" not in rendered
+        assert ("No models configured" in rendered) is (not models)
+        if models:
+            assert "fixture-model" in rendered
+        assert requests == ["/models"]

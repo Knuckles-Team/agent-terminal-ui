@@ -918,7 +918,7 @@ class TestModelConfiguration:
     async def test_model_registry_failure_does_not_reuse_or_route(
         self, failure: str
     ) -> None:
-        """A failed read returns no models, even after a successful read."""
+        """A failed read stays unavailable, even after a successful read."""
         requests: list[httpx.Request] = []
         payload = {"default_id": "fast", "models": [{"id": "fast", "tier": "light"}]}
 
@@ -939,9 +939,8 @@ class TestModelConfiguration:
         client._http_client = httpx.AsyncClient(transport=httpx.MockTransport(respond))
         try:
             assert await client.list_configured_models() == payload
-            assert await client.list_configured_models() == {
-                "models": [], "default_id": None
-            }
+            with pytest.raises((httpx.HTTPError, ValueError)):
+                await client.list_configured_models()
         finally:
             await client.close()
 
