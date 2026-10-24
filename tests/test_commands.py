@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from agent_terminal_ui.client import _load_skill_entry
+from agent_terminal_ui.tui.history_screen import HistoryScreen
 
 
 def _mock_skills_from_dir(skills_dir: Path) -> list[dict[str, Any]]:
@@ -229,8 +230,12 @@ class TestHistoryCommand:
         """Test the history command opens history screen."""
         await command_processor.cmd_history("")
 
-        mock_app._client.list_history_tasks.assert_called_once()
+        mock_app._client.list_history_tasks.assert_not_called()
         mock_app.push_screen.assert_called_once()
+        screen = mock_app.push_screen.call_args.args[0]
+        assert isinstance(screen, HistoryScreen)
+        assert screen.client is mock_app._client
+        assert screen.page == {"tasks": [], "nextCursor": None}
 
 
 class TestImageCommand:

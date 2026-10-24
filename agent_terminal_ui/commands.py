@@ -19,7 +19,7 @@ from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Table
 
-from agent_terminal_ui.client import A2ATransportError, ArboraOperationError
+from agent_terminal_ui.client import ArboraOperationError
 from agent_terminal_ui.screens.settings import SettingsScreen
 from agent_terminal_ui.settings import AppSettings
 from agent_terminal_ui.tui.exit_confirm_screen import ExitConfirmScreen
@@ -302,12 +302,7 @@ class CommandProcessor:
         """Browse caller-owned task replies without changing conversations."""
         from agent_terminal_ui.tui.history_screen import HistoryScreen
 
-        try:
-            page = await self.app._client.list_history_tasks()
-        except (httpx.HTTPError, A2ATransportError, ValueError):
-            self.app.notify("Task history unavailable.", severity="warning")
-            return
-        self.app.push_screen(HistoryScreen(self.app._client, page))
+        self.app.push_screen(HistoryScreen(self.app._client))
 
     async def cmd_image(self, args: str) -> None:
         """Refuse image input until the transport supports file-part admission."""

@@ -114,8 +114,10 @@ async def test_owner_unknown_and_unavailable_refuse_without_context_change(code)
     app = MagicMock()
     app._client = client
     await CommandProcessor(app).cmd_history("")
-    app.notify.assert_called_once_with("Task history unavailable.", severity="warning")
-    app.push_screen.assert_not_called()
+    app.notify.assert_not_called()
+    app.push_screen.assert_called_once()
+    assert isinstance(app.push_screen.call_args.args[0], HistoryScreen)
+    assert len(calls) == 1
     await client.close()
 
 
