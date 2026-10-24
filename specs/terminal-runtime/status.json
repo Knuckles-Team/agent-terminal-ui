@@ -1571,7 +1571,7 @@
       "title": "The README must cover each supported operator entry point. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "VERIFIED",
       "landed_in": [
-        "4328638a7bec"
+        "2f8561f36c43"
       ],
       "verified_by": [
         "tests/test_operator_documentation.py:111",
@@ -1620,7 +1620,7 @@
       "title": "The README must link its detailed documentation. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "VERIFIED",
       "landed_in": [
-        "4328638a7bec"
+        "2f8561f36c43"
       ],
       "verified_by": [
         "tests/test_operator_documentation.py:129",
@@ -1644,7 +1644,7 @@
       "title": "The repository must declare its license in a tracked license file. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "VERIFIED",
       "landed_in": [
-        "4328638a7bec"
+        "2f8561f36c43"
       ],
       "verified_by": [
         "tests/test_package_metadata.py:24",
@@ -2179,7 +2179,7 @@
       "title": "A served integration test must launch the installed command and observe client behavior after source-quality repairs. It must distinguish a denied request from an authenticated empty result",
       "delivery_state": "VERIFIED",
       "landed_in": [
-        "4328638a7bec"
+        "2f8561f36c43"
       ],
       "verified_by": [
         "tests/test_installed_operator_entry.py:87"
