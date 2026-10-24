@@ -268,7 +268,7 @@ Record deferred validation as deferred, never passed.
 - [ ] TUI-RUNTIME-R002.1.3.3: qualify explicit loopback anonymous native transport with negative credential tests and actual EG/Arbora evidence.
 
 - [x] TUI-RUNTIME-R012.1.4: repair and test mounted tool fold updates.
-- [x] TUI-RUNTIME-R008.2.3.2.2.1: implement and test public summary/trace folds in both terminals.
+- [x] TUI-RUNTIME-R008.2.3.2.2.1: implement and test public summary/trace folds in both terminals. Refuse malformed replacement context/run bindings for displayed tasks and require exact revalidation.
 - [ ] TUI-RUNTIME-R008.2.3.2.2.2: retain full served parity and release qualification.
 - [x] TUI-RUNTIME-R008.2.3.2.2.2.1: qualify the Python composer-to-fold keyboard route.
 - [ ] TUI-RUNTIME-R008.2.3.2.2.2.2: retain complete presentation and release acceptance.

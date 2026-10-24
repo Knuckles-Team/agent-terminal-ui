@@ -244,10 +244,12 @@ class Conversation(VerticalScroll):
         if not isinstance(binding, dict) or not all(
             identifier(binding.get(key)) for key in ("task_id", "context_id")
         ):
+            self.invalidate_public_run(binding)
             return
         task_id, context_id = binding["task_id"], binding["context_id"]
         run_id = binding.get("run_id")
         if run_id is not None and not identifier(run_id):
+            self.invalidate_public_run(binding)
             return
         existing = self._public_details.get(task_id)
         if existing is not None:
