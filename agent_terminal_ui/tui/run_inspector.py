@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-import json
 from datetime import UTC, datetime, timedelta
 from typing import ClassVar
 
 from rich.markup import escape
-from rich.syntax import Syntax
+from rich.text import Text
 from textual.app import ComposeResult
 from textual.binding import Binding, BindingType
 from textual.containers import Horizontal, Vertical, VerticalScroll
@@ -18,12 +17,17 @@ from textual.widgets import Button, DataTable, Input, ListItem, ListView, Static
 
 from agent_terminal_ui.capabilities import (
     RunCatalog,
-    RunEvent,
-    RunEventPage,
-    RunReplayGap,
     RunSummary,
 )
 from agent_terminal_ui.client import AgentClient
+from agent_terminal_ui.display_text import display_text
+from agent_terminal_ui.public_run_events import (
+    MAX_EVENTS,
+    MAX_VIEW_BYTES,
+    PublicRunEvent,
+    PublicRunPage,
+    PublicRunSummary,
+)
 
 
 class RunBrowserScreen(ModalScreen[None]):
@@ -211,7 +215,11 @@ class RunBrowserScreen(ModalScreen[None]):
         if index is None or index >= len(self.filtered):
             return
         self.app.push_screen(
-            RunInspectorScreen(self.client, self.filtered[index].run_id)
+            RunInspectorScreen(
+                self.client,
+                self.filtered[index].run_id,
+                context_id=getattr(self.app, "current_session_id", None),
+            )
         )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -225,7 +233,7 @@ class RunBrowserScreen(ModalScreen[None]):
 
 
 class RunInspectorScreen(ModalScreen[None]):
-    """Mission Control view for replaying and following one canonical run."""
+    """Bounded overview and public event replay from canonical run operations."""
 
     BINDINGS: ClassVar[list[BindingType]] = [
         Binding("r", "replay", "Replay", show=False),
@@ -233,7 +241,6 @@ class RunInspectorScreen(ModalScreen[None]):
         Binding("escape", "close", "Close", show=False),
     ]
     FOLLOW_POLL_INTERVAL = 1.0
-    PAGE_LIMIT = 1_000
 
     DEFAULT_CSS = """
     RunInspectorScreen {
@@ -290,36 +297,41 @@ class RunInspectorScreen(ModalScreen[None]):
         client: AgentClient,
         run_id: str,
         *,
+        context_id: str | None,
+        task_id: str | None = None,
         poll_interval: float = FOLLOW_POLL_INTERVAL,
     ) -> None:
         super().__init__()
-        self.client = client
-        self.run_id = run_id
+        self.client, self.run_id, self.task_id = client, run_id, task_id
         self.poll_interval = max(0.01, poll_interval)
-        self.summary: RunSummary | None = None
-        self.events: list[RunEvent] = []
+        self.summary: PublicRunSummary | None = None
+        self.events: list[PublicRunEvent] = []
         self.next_after = 0
         self.following = False
         self.terminal_event_type: str | None = None
-        self.replay_gaps: list[RunReplayGap] = []
-        self._seen_sequences: set[int] = set()
         self._follow_generation = 0
+        self._owner_context = context_id
+        self._owner_invalidated = False
 
     def compose(self) -> ComposeResult:
         with Vertical(id="run-inspector-dialog"):
             yield Static(
-                f"Mission Control: {escape(self.run_id)}",
+                f"Run inspection: {display_text(self.run_id, multiline=False)}",
                 id="run-inspector-title",
+                markup=False,
             )
-            yield Static("Starting live follow...", id="run-inspector-status")
-            yield Static("", id="run-inspector-summary")
-            yield Static("", id="run-inspector-gap")
+            yield Static(
+                "Reading authorized run...", id="run-inspector-status", markup=False
+            )
+            yield Static(
+                "Run overview unavailable", id="run-inspector-summary", markup=False
+            )
+            yield Static("", id="run-inspector-gap", markup=False)
             yield DataTable(
                 id="run-inspector-events", cursor_type="row", zebra_stripes=True
             )
             yield Static(
-                "Select an event to inspect its canonical payload.",
-                id="run-inspector-payload",
+                "Select a public event.", id="run-inspector-payload", markup=False
             )
             with Horizontal(id="run-inspector-actions"):
                 yield Button("Replay from start", id="run-inspector-replay")
@@ -328,263 +340,239 @@ class RunInspectorScreen(ModalScreen[None]):
                 yield Button("Close", id="run-inspector-close")
 
     def on_mount(self) -> None:
-        table = self.query_one("#run-inspector-events", DataTable)
-        table.add_columns("Seq", "Timestamp", "Type", "Source")
+        self.query_one("#run-inspector-events", DataTable).add_columns(
+            "Seq", "Task", "Type"
+        )
         self._start_follow(reset=True)
 
-    def action_close(self) -> None:
+    def _same_owner(self) -> bool:
+        return (
+            not self._owner_invalidated
+            and getattr(self.app, "agent_client", self.client) is self.client
+            and getattr(self.app, "current_session_id", None) == self._owner_context
+        )
+
+    def _stop(self) -> None:
         self._follow_generation += 1
         self.following = False
+        self.workers.cancel_group(self, "run-inspector-follow")
+
+    def _owner_lost(self) -> None:
+        if not self._owner_invalidated:
+            self._owner_invalidated = True
+            self._stop()
+            self._clear_protected()
+            self.query_one("#run-inspector-status", Static).update(
+                "Run inspection unavailable: connection or context changed. "
+                "Close and reopen."
+            )
+            self._sync_follow_controls()
+
+    def on_idle(self) -> None:
+        if self.is_mounted and not self._same_owner():
+            self._owner_lost()
+
+    def _current(self, generation: int) -> bool:
+        if not self.is_mounted or generation != self._follow_generation:
+            return False
+        if not self._same_owner():
+            self._owner_lost()
+            return False
+        return True
+
+    def action_close(self) -> None:
+        self._stop()
+        self._clear_protected()
         self.dismiss()
+
+    def on_unmount(self) -> None:
+        self._stop()
+        self._clear_protected(render=False)
 
     def action_replay(self) -> None:
         self._start_follow(reset=True)
 
     def action_toggle_follow(self) -> None:
+        if not self._current(self._follow_generation):
+            return
         if self.terminal_event_type is not None:
             return
         if self.following:
-            self._follow_generation += 1
-            self.following = False
+            self._stop()
             self.query_one("#run-inspector-status", Static).update(
-                f"[yellow]Live follow paused.[/yellow] "
-                f"[dim]Cursor: {self.next_after}; the run is not marked terminal.[/dim]"
+                f"Live follow paused at cursor {self.next_after}; "
+                "no terminal event asserted."
             )
             self._sync_follow_controls()
-            return
-        self._start_follow(reset=False)
+        else:
+            self._start_follow(reset=False)
 
-    def _start_follow(self, *, reset: bool) -> None:
-        self._follow_generation += 1
-        generation = self._follow_generation
+    def _start_follow(self, *, reset: bool, once: bool = False) -> None:
+        self._stop()
+        if reset:
+            self._clear_protected()
+        if not self._same_owner():
+            self._owner_lost()
+            return
+        self.following = True
+        self.query_one("#run-inspector-status", Static).update(
+            "Reading authorized run..."
+        )
+        self._sync_follow_controls()
         self.run_worker(
-            self._follow(reset=reset, generation=generation),
+            self._follow(self._follow_generation, once=once),
             group="run-inspector-follow",
             exclusive=True,
-            name="follow canonical run events",
         )
 
-    def _reset_replay(self) -> None:
-        self.events = []
+    def _clear_protected(self, *, render: bool = True) -> None:
+        self.summary = None
+        self.events.clear()
         self.next_after = 0
         self.terminal_event_type = None
-        self.replay_gaps = []
-        self._seen_sequences = set()
-        self.query_one("#run-inspector-events", DataTable).clear()
-        self.query_one("#run-inspector-gap", Static).update("")
-        self.query_one("#run-inspector-payload", Static).update(
-            "Select an event to inspect its canonical payload."
-        )
+        if render:
+            self.query_one("#run-inspector-events", DataTable).clear()
+            self.query_one("#run-inspector-summary", Static).update(
+                "Run overview unavailable"
+            )
+            self.query_one("#run-inspector-gap", Static).update("")
+            self.query_one("#run-inspector-payload", Static).update(
+                "Public event details unavailable."
+            )
 
-    async def _follow(self, *, reset: bool, generation: int) -> None:
-        if reset:
-            self._reset_replay()
-        self.following = True
-        self._sync_follow_controls()
+    async def _follow(self, generation: int, *, once: bool) -> None:
         try:
-            while (
-                self.following
-                and generation == self._follow_generation
-                and self.terminal_event_type is None
-            ):
-                has_more = await self._poll_once()
-                if self.terminal_event_type is not None:
+            while self._current(generation) and self.following:
+                more = await self._poll_once(generation)
+                if (
+                    not self._current(generation)
+                    or not self.following
+                    or self.terminal_event_type
+                    or once
+                ):
                     break
-                # Drain retained backlog immediately; wait only at its live edge.
-                await asyncio.sleep(0 if has_more else self.poll_interval)
+                await asyncio.sleep(0 if more else self.poll_interval)
         finally:
-            if generation == self._follow_generation:
+            if self._current(generation):
                 self.following = False
-            if self.is_mounted and generation == self._follow_generation:
                 self._sync_follow_controls()
 
-    async def _poll_once(self) -> bool:
+    async def _poll_once(self, generation: int) -> bool:
+        if not self._current(generation):
+            return False
         after = self.next_after
-        summary_error: str | None = None
-        event_error: str | None = None
-
         try:
-            self.summary = await self.client.get_run_summary(self.run_id)
-        except Exception as exc:
-            self.summary = None
-            summary_error = f"{type(exc).__name__}: {exc}"
-
-        try:
-            page = await self.client.get_run_events(
-                self.run_id, after=after, limit=self.PAGE_LIMIT
+            summary = await self.client.get_run_summary(
+                self.run_id, task_id=self.task_id
             )
-        except Exception as exc:
-            page = None
-            event_error = f"{type(exc).__name__}: {exc}"
-
-        if page is not None:
+            if not self._current(generation):
+                return False
+            value = await self.client.get_public_run_events(
+                self.run_id, task_id=summary.task_id, after=after
+            )
+            if not self._current(generation):
+                return False
+            page = PublicRunPage.parse(value, self.run_id, after)
             self._apply_page(page)
+            self.summary, self.task_id = summary, summary.task_id
+        except Exception:
+            if self._current(generation):
+                self._clear_protected()
+                self.following = False
+                self.query_one("#run-inspector-status", Static).update(
+                    "Run inspection unavailable: unsupported, refused or invalid "
+                    "runs.get/events read. "
+                    "Press R to retry. /run plan remains a separate read."
+                )
+            return False
+        self.query_one("#run-inspector-summary", Static).update(
+            f"Run: {summary.run_id} · Task: {summary.task_id} · "
+            f"Status: {summary.status}\n"
+            "Applied configuration, context budget, cost and terminal reason: "
+            "unavailable."
+        )
+        status = (
+            f"Public terminal event: {self.terminal_event_type}. Follow stopped."
+            if self.terminal_event_type
+            else (
+                f"Public events: {len(self.events)} retained · "
+                f"cursor {self.next_after}."
+            )
+        )
+        self.query_one("#run-inspector-status", Static).update(status)
+        return page.has_more
 
-        self._render_summary(summary_error)
-        self._render_follow_status(event_error)
-        self._sync_follow_controls()
-        return bool(page and page.has_more and page.events)
-
-    def _apply_page(self, page: RunEventPage) -> None:
-        gap = page.replay_gap
-        if gap is not None and gap not in self.replay_gaps:
-            self.replay_gaps.append(gap)
-            self._render_replay_gaps()
-
-        new_events: list[RunEvent] = []
-        for event in sorted(page.events, key=lambda item: item.sequence):
-            if event.sequence in self._seen_sequences:
-                continue
-            self._seen_sequences.add(event.sequence)
-            new_events.append(event)
-
-        self.events.extend(new_events)
-        sequences = [event.sequence for event in new_events]
-        self.next_after = max([self.next_after, page.next_after, *sequences])
+    def _apply_page(self, page: PublicRunPage) -> None:
+        retained_ids = {event.event_id for event in self.events}
+        if (
+            page.next_after < self.next_after
+            or (page.events and page.events[0].sequence != self.next_after + 1)
+            or any(event.event_id in retained_ids for event in page.events)
+        ):
+            raise ValueError("public replay regressed or repeated an event")
+        self.events.extend(page.events)
+        self.events = self.events[-MAX_EVENTS:]
+        size = sum(len(event.text.encode()) for event in self.events)
+        while self.events and size > MAX_VIEW_BYTES:
+            size -= len(self.events.pop(0).text.encode())
+        self.next_after = page.next_after
+        if page.terminal:
+            self.terminal_event_type = next(
+                (event.kind for event in reversed(self.events) if event.terminal),
+                "server-reported terminal state",
+            )
         table = self.query_one("#run-inspector-events", DataTable)
-        for event in new_events:
+        table.clear()
+        for event in self.events:
             table.add_row(
                 str(event.sequence),
-                event.timestamp[:19] or "-",
-                event.type,
-                event.source,
+                Text(event.task_id),
+                Text(event.kind),
                 key=str(event.sequence),
             )
-            if self.terminal_event_type is None and event.is_terminal:
-                self.terminal_event_type = event.type
-
-    def _render_replay_gaps(self) -> None:
-        messages = "\n".join(gap.message for gap in self.replay_gaps[-3:])
+        omitted = bool(self.events and self.events[0].sequence > 1)
         self.query_one("#run-inspector-gap", Static).update(
-            f"[yellow]{escape(messages)}[/yellow]"
+            "Earlier events omitted from this bounded view." if omitted else ""
         )
-
-    def _render_follow_status(self, event_error: str | None) -> None:
-        status = self.query_one("#run-inspector-status", Static)
-        if self.terminal_event_type is not None:
-            status.update(
-                "[green]Canonical terminal event reached:[/green] "
-                f"[bold]{escape(self.terminal_event_type)}[/bold]. "
-                f"[dim]Follow stopped at cursor {self.next_after}.[/dim]"
-            )
-            return
-        if event_error:
-            mode = (
-                "Live follow degraded; retrying."
-                if self.following
-                else "Replay poll failed; follow remains paused."
-            )
-            status.update(
-                f"[yellow]{mode}[/yellow] "
-                f"[dim]{escape(event_error)} · cursor {self.next_after}; "
-                "the run is not marked terminal.[/dim]"
-            )
-            return
-        if not self.events:
-            qualifier = (
-                "Waiting for the first replayable event."
-                if self.summary is not None
-                else "Run summary unavailable; retrying the bounded event window."
-            )
-            mode = "Live follow active." if self.following else "Replay poll complete."
-            status.update(f"[cyan]{mode}[/cyan] [dim]{escape(qualifier)}[/dim]")
-            return
-        latest = self.events[-1].type
-        progress = (
-            " · graph/output progress; awaiting a run terminal event"
-            if latest in {"graph_complete", "final_output"}
-            else ""
-        )
-        mode = "Live follow active." if self.following else "Replay poll complete."
-        status.update(
-            f"[cyan]{mode}[/cyan] "
-            f"[green]{len(self.events)} deduplicated events.[/green] "
-            f"[dim]Cursor: {self.next_after} · latest: {escape(latest)}"
-            f"{progress}[/dim]"
+        self.query_one("#run-inspector-payload", Static).update(
+            "Select a public event."
         )
 
     def _sync_follow_controls(self) -> None:
         follow = self.query_one("#run-inspector-follow", Button)
-        poll = self.query_one("#run-inspector-more", Button)
-        if self.terminal_event_type is not None:
-            follow.label = "Run terminal"
-            follow.disabled = True
-            poll.disabled = True
-        elif self.following:
-            follow.label = "Pause follow"
-            follow.disabled = False
-            poll.disabled = True
-        else:
-            follow.label = "Resume follow"
-            follow.disabled = False
-            poll.disabled = False
-
-    def _render_summary(self, error: str | None) -> None:
-        widget = self.query_one("#run-inspector-summary", Static)
-        if self.summary is None:
-            message = "Run summary unavailable"
-            if error:
-                message += f": {error}"
-            widget.update(f"[yellow]{escape(message)}[/yellow]")
-            return
-        summary = self.summary
-        truncation = (
-            " · [yellow]bounded history truncated[/yellow]" if summary.truncated else ""
+        follow.label = "Pause follow" if self.following else "Resume follow"
+        follow.disabled = (
+            self._owner_invalidated or self.terminal_event_type is not None
         )
-        widget.update(
-            f"Status: {escape(summary.status)} · "
-            f"Session: {escape(summary.session_id or 'not reported')} · "
-            f"Events: {summary.event_count} · "
-            f"Sequences: {summary.first_sequence}-{summary.last_sequence} · "
-            f"Last type: {escape(summary.last_event_type or 'unknown')}"
-            f"{truncation}"
+        self.query_one("#run-inspector-more", Button).disabled = (
+            self.following or follow.disabled
         )
-
-    def _show_payload(self, row_index: int) -> None:
-        if row_index < 0 or row_index >= len(self.events):
-            return
-        event = self.events[row_index]
-        payload = {
-            "schema_version": event.schema_version,
-            "event_id": event.event_id,
-            "sequence": event.sequence,
-            "timestamp": event.timestamp,
-            "type": event.type,
-            "run_id": event.run_id,
-            "session_id": event.session_id,
-            "trace_id": event.trace_id,
-            "correlation_id": event.correlation_id,
-            "parent_event_id": event.parent_event_id,
-            "source": event.source,
-            "payload": event.payload,
-        }
-        self.query_one("#run-inspector-payload", Static).update(
-            Syntax(
-                json.dumps(payload, indent=2, sort_keys=True, default=str),
-                "json",
-                word_wrap=True,
-            )
-        )
+        self.query_one(
+            "#run-inspector-replay", Button
+        ).disabled = self._owner_invalidated
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        self._show_payload(event.cursor_row)
-
-    def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
-        self._show_payload(event.cursor_row)
+        if not self._current(self._follow_generation):
+            return
+        if (
+            event.data_table.id == "run-inspector-events"
+            and 0 <= event.cursor_row < len(self.events)
+        ):
+            self.query_one("#run-inspector-payload", Static).update(
+                self.events[event.cursor_row].text
+            )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "run-inspector-close":
             self.action_close()
+        elif not self._current(self._follow_generation):
+            return
         elif event.button.id == "run-inspector-replay":
             self.action_replay()
         elif event.button.id == "run-inspector-follow":
             self.action_toggle_follow()
         elif event.button.id == "run-inspector-more":
-            self.run_worker(
-                self._poll_once(),
-                group="run-inspector-follow",
-                exclusive=True,
-            )
+            self._start_follow(reset=False, once=True)
 
 
 def current_plan_display(

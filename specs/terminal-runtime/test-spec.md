@@ -564,6 +564,26 @@ It rejects invalid observer combinations and checks documented directory precede
 Existing theme fallback and mounted log refusal tests remain behavior evidence.
 These tests do not prove model selection, history loading or backend authority.
 
+## Canonical run-inspection consumer evidence
+
+`tests/test_run_inspector_contract.py` enters the generated `runs.get` and
+`runs.events` paths through the real client and mounted inspector. It covers
+strict overview identity, old-client refusal, exact requests, literal payloads
+and bounded replay. It also covers denial clearing and stale reads after
+refresh, close or owner changes. Owner changes before mount issue no request. Row and follow
+events before idle clear paused or completed views. The command matrix covers
+explicit run aliases and no-ID refusal without legacy requests.
+`/run plan` retains its separate tests.
+Current-contract transport cases inject two schema lookups from the pinned
+`tests/fixtures/public_run_operations.json` fixture. Its source is Arbora
+`45b8d1d8bae4e3621f9432030769803a659671fc`. The installed invoker, digest check
+and HTTP transport remain unchanged. This seam does not alter the production
+SDK or its operation enum. Separate tests use the untouched installed SDK to
+verify missing operations refuse before HTTP. Those tests skip when the local
+SDK already includes the operations; skips are not old-release acceptance.
+This is partial evidence for R010.1, R010.6 and R012.4.3.2. Full harness fields,
+released-stack and live producer acceptance remain open.
+
 ## Unsupported image input boundary
 
 - `TUI-RUNTIME-R012.5.1`: `tests/test_commands.py::TestImageCommand::test_cmd_image_refuses_without_reading` proves that empty, quoted, missing and malformed paths receive an unsupported notice with no reads or pending-part changes. `tests/test_client.py::test_image_command_refusal_preserves_next_text_submission` uses the real command, application part collector and client to prove the next text turn still submits existing text attachments. `test_non_text_parts_are_refused_before_any_request` rejects typed, legacy untyped, mixed and malformed unsupported parts before network access.
