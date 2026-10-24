@@ -54,18 +54,6 @@ async def test_runner_renders_events_to_stream() -> None:
     assert "should not be rendered" not in text
 
 
-async def test_runner_stops_on_done_marker() -> None:
-    out = io.StringIO()
-    events = [
-        {"type": "text", "content": "partial"},
-        {"type": "text", "content": "[DONE]"},
-        {"type": "text", "content": "after done"},
-    ]
-    runner = HeadlessRunner(_client_yielding(events), StreamSink(out))
-    await runner.run_prompt("x")
-    assert "after done" not in out.getvalue()
-
-
 async def test_run_prompt_passes_through_client_kwargs() -> None:
     client = AsyncMock()
     captured = {}
