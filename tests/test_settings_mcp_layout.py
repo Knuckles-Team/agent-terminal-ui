@@ -78,3 +78,22 @@ async def test_mcp_table_keeps_selected_row_visible_after_resize(fake_client: As
             assert table.scroll_y <= table.cursor_row < table.scroll_y + table.content_region.height - 1
         await pilot.press("up")
         assert table.cursor_row == 28
+
+
+@pytest.mark.asyncio
+async def test_settings_active_field_remains_visible_during_resize(
+    fake_client: AsyncMock, tmp_path: Path,
+) -> None:
+    app = AgentApp(client=fake_client)
+    async with app.run_test(size=SIZES[0]) as pilot:
+        await app.push_screen(SettingsScreen(AppSettings(tmp_path / "settings.toml")))
+        screen = app.screen
+        field = next(item for item in screen.query(Input) if item.name == "max_log_lines")
+        field.focus()
+        await pilot.pause()
+        for width, height in SIZES:
+            await pilot.resize_terminal(width, height)
+            await pilot.pause()
+            area = screen.query_one("#settings-list", VerticalScroll)
+            assert app.focused is field
+            assert area.content_region.contains_region(field.region)

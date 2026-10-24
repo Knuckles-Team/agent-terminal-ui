@@ -168,6 +168,11 @@ class SettingsScreen(ModalScreen):
 
         yield Footer()
 
+    def on_resize(self) -> None:
+        """Keep the active settings control visible after reflow."""
+        if self.focused is not None and self.focused.has_class("setting-input"):
+            self.call_after_refresh(self.focused.scroll_visible, animate=False)
+
     @on(Input.Changed, "#settings-search")
     def _on_search(self, event: Input.Changed) -> None:
         """Filter settings by search query."""
