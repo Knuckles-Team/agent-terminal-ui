@@ -1576,9 +1576,14 @@
     {
       "id": "TUI-RUNTIME-R015.13",
       "title": "The README must supply navigation for its documented sections. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "1b2bed32b207"
+      ],
+      "verified_by": [
+        "tests/test_readme_navigation.py:26",
+        "tests/test_readme_navigation.py:31"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.14",
@@ -1596,9 +1601,14 @@
     {
       "id": "TUI-RUNTIME-R015.15",
       "title": "The README must explain the terminal architecture. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "1b2bed32b207"
+      ],
+      "verified_by": [
+        "tests/test_readme_navigation.py:74",
+        "tests/test_readme_navigation.py:79"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.16",
