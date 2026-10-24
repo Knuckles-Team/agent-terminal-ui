@@ -880,8 +880,8 @@ class TestModelConfiguration:
         payload = {
             "default_id": "heavy",
             "models": [
-                {"id": "fast", "tier": "light", "model_id": "example-fast"},
-                {"id": "heavy", "tier": "heavy", "model_id": "example-heavy"},
+                {"id": "fast", "tier": "light", "model_id": "example-fast", "tags": None, "cost": None},
+                {"id": "heavy", "tier": "heavy", "model_id": "example-heavy", "tags": ["code"], "cost": {"input": 1.25, "output": 2, "unit": "USD"}, "vendor_metadata": {"future": True}},
             ],
         }
         requests: list[httpx.Request] = []

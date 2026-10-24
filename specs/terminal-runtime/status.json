@@ -1203,7 +1203,7 @@
       ],
       "verified_by": [
         "tests/test_mounted_command_matrix.py:489",
-        "tests/test_mounted_command_matrix.py:554",
+        "tests/test_mounted_command_matrix.py:584",
         "tests/test_tui_widgets.py:877",
         "tests/test_tui_widgets.py:914"
       ]
@@ -1247,7 +1247,7 @@
         "b0cc25d210bc"
       ],
       "verified_by": [
-        "tests/test_mounted_command_matrix.py:521",
+        "tests/test_mounted_command_matrix.py:551",
         "tests/test_unavailable_commands.py:12"
       ]
     },

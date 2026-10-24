@@ -17,6 +17,7 @@ import asyncio
 import contextlib
 import json
 import logging
+import math
 import os
 import re
 import sys
@@ -1231,6 +1232,28 @@ class AgentClient:
             or not isinstance(data.get("default_id"), (str, type(None)))
         ):
             raise ValueError("Invalid model registry")
+        for model in data["models"]:
+            tags = model.get("tags")
+            if tags is not None and (
+                not isinstance(tags, list)
+                or any(not isinstance(tag, str) for tag in tags)
+            ):
+                raise ValueError("Invalid model tags")
+            cost = model.get("cost")
+            if cost is None:
+                continue
+            if not isinstance(cost, dict):
+                raise ValueError("Invalid model cost")
+            for key in ("input", "output"):
+                value = cost.get(key, 0)
+                if isinstance(value, bool) or not isinstance(value, (int, float)):
+                    raise ValueError("Invalid model cost")
+                try:
+                    finite = math.isfinite(float(value))
+                except OverflowError as exc:
+                    raise ValueError("Invalid model cost") from exc
+                if not finite:
+                    raise ValueError("Invalid model cost")
         return data
 
     async def list_tools(self) -> list[dict[str, Any]]:

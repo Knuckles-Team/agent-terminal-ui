@@ -490,7 +490,22 @@ async def test_settings_command_edits_saved_settings_and_reopens(tmp_path, monke
 @pytest.mark.parametrize("command", ["model", "model list", "model show"])
 @pytest.mark.parametrize(
     "failure",
-    ["missing", "denied", "timeout", "invalid-json", "non-object", "bad-models"],
+    [
+        "missing",
+        "denied",
+        "timeout",
+        "invalid-json",
+        "non-object",
+        "bad-models",
+        "bad-cost",
+        "bad-tags",
+        "bad-input-cost",
+        "bad-output-cost",
+        "nonfinite-cost",
+        "huge-cost",
+        "bool-cost",
+        "bad-tags-container",
+    ],
 )
 async def test_model_read_failure_is_not_an_empty_registry(command, failure):
     requests = []
@@ -505,6 +520,21 @@ async def test_model_read_failure_is_not_an_empty_registry(command, failure):
             return httpx.Response(200, json=[])
         if failure == "bad-models":
             return httpx.Response(200, json={"models": ["invalid"]})
+        malformed_fields: dict[str, dict[str, Any]] = {
+            "bad-cost": {"cost": "bad"},
+            "bad-tags": {"tags": [1]},
+            "bad-input-cost": {"cost": {"input": "bad"}},
+            "bad-output-cost": {"cost": {"output": None}},
+            "nonfinite-cost": {"cost": {"input": float("nan")}},
+            "huge-cost": {"cost": {"output": 10**400}},
+            "bool-cost": {"cost": {"input": True}},
+            "bad-tags-container": {"tags": "tag"},
+        }
+        if failure in malformed_fields:
+            model = {"id": "x", **malformed_fields[failure]}
+            return httpx.Response(
+                200, content=json.dumps({"models": [model], "default_id": "x"})
+            )
         return httpx.Response(404 if failure == "missing" else 403)
 
     async with mounted(reply) as (app, pilot):

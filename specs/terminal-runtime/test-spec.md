@@ -873,3 +873,8 @@ inventing operation identifiers. Listing and mutation journeys both make zero
 command requests. Direct legacy client wrappers are not migrated or qualified.
 Graph, memory, ingest and SDD migrations and full R012.4.3.2 acceptance remain
 open. The existing app startup skills request is outside this command slice.
+
+Model-shape review adds mounted regressions for consumed cost and tags fields.
+Cost must be a mapping with finite numeric input/output values when supplied.
+Tags must be a list of strings when supplied. Invalid fields produce the named
+unavailable result for all three registry-read forms. Unrelated metadata is preserved.
