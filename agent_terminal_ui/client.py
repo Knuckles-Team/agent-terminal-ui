@@ -25,6 +25,7 @@ import re
 import sys
 import uuid
 from collections.abc import AsyncGenerator, Mapping
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote, urlsplit
@@ -39,6 +40,11 @@ from agent_terminal_ui.capabilities import (
     RunCatalog,
     RunEventPage,
     RunSummary,
+)
+from agent_terminal_ui.execution_graph import (
+    GRAPH_SCHEMA,
+    ExecutionGraph,
+    graph_identifier,
 )
 from agent_terminal_ui.host_logs import HostLogReader as HostLogReader
 from agent_terminal_ui.public_run_events import MAX_SEQUENCE, SCHEMA, identifier
@@ -861,6 +867,35 @@ class AgentClient:
         if not isinstance(result, dict) or not isinstance(result.get("value"), dict):
             raise ArboraOperationError("INVALID_ENVELOPE")
         return result["value"]
+
+    @property
+    def read_scope(self) -> tuple[str, int, str]:
+        """Bind protected views to a connection without exposing credentials."""
+        return (
+            self.base_url,
+            id(self._http_client),
+            sha256(
+                json.dumps(self._http_client.headers.multi_items()).encode()
+            ).hexdigest(),
+        )
+
+    async def get_execution_graph(
+        self, run_id: str, *, task_id: str | None = None
+    ) -> ExecutionGraph:
+        """Read one explicit run's authorized, flat plan-step graph."""
+        if not graph_identifier(run_id) or (
+            task_id is not None and not graph_identifier(task_id)
+        ):
+            raise ValueError(
+                "an explicit run ID and optional root task ID are required"
+            )
+        params = {"run_id": run_id, "schema_version": GRAPH_SCHEMA}
+        if task_id is not None:
+            params["task_id"] = task_id
+        result = await self.invoke_op("runs.execution_graph", params)
+        if not isinstance(result, dict):
+            raise ArboraOperationError("INVALID_ENVELOPE")
+        return ExecutionGraph.parse(result.get("value"), run_id, task_id)
 
     async def get_public_run_events(
         self, run_id: str, *, task_id: str, after: int = 0

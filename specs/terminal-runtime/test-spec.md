@@ -820,8 +820,8 @@ transport, native release or full terminal cutover qualification.
 ## Exit-modal keyboard access
 
 Partial evidence for TUI-RUNTIME-R008.2.3.2.2.2.2.2.2:
-`tests/test_exit_confirm_keyboard.py` checks all four arrow keys, cyclic focus,
-Space activation exactly once, and the production Ctrl+D cancellation path.
+`tests/test_exit_confirm_keyboard.py` checks all four arrow keys and cyclic focus.
+It checks Space activation exactly once and the production Ctrl+D cancellation path.
 Space, Enter and N preserve the unfinished composer text and restore focus.
 The arrow and Space cases fail before the handler repair. This bounded change
 does not close full keyboard parity, native presentation, served journeys or
@@ -1550,3 +1550,35 @@ Complete that child, invoke the separate continuation action and verify the prod
 Disconnect after submission; reconcile without duplicate delivery or a fabricated success.
 Revoke access after successful display and verify stale records and actions disappear.
 Cancel the selected authorized target; verify acknowledgement, eventual state and the producer-defined impact on related executions.
+
+### Flat graph source-contract evidence
+
+`tests/test_execution_graph.py` covers the bounded Python slice of R010.11 and R010.12.
+It mounts the production screen through the command and application entry, with the real client and transport.
+Only the graph schema lookup uses the pinned source fixture; the installed invoker and digest check remain active.
+Coverage includes a 40-column diamond, shared dependencies, keyboard selection, resize and close.
+Negative tests cover identity, topology, evidence, bounds, refusal, credential/context changes and late results.
+The missing-operation regression makes zero network requests, without a fallback or skip.
+Actual installed-SDK qualification remains separate from this source fixture.
+These mounted Python tests do not close R010.11 through R010.14.
+Native source is present; its tests, compilation, Clippy and compiled-terminal qualification remain unrun.
+Nested and released-stack acceptance also remain required.
+
+## Native flat graph source-contract coverage
+
+The native execution graph module and loopback test file use the actual Arbora
+source-contract fixture, including non-ASCII and maximum-length Unicode keys.
+The decoder tests cover typed bounds, exact run/root binding and semantic tuple identity.
+They reject duplicate evidence, cycles, unknown fields and raised child capabilities.
+The public-client tests require registry advertisement and matching digests.
+Missing registration makes no POST; malformed and denied responses do not fall back to legacy routes or direct engine calls.
+
+Inspector TestBackend cases cover the `g` mode switch, Tab selection, 40-column
+scrolling, resize, search isolation, local cancellation and stale replies.
+A deterministic test cancels the awaiting completion future, then resumes its retained read handle. Each
+read is scoped to the full task correlation, immutable client and generation.
+Python source-contract tests check fixture provenance and schema limits only;
+they do not run native code. Native tests, Clippy and the actual compiled
+terminal journey remain unrun for this source-only candidate. R010.11 through
+R010.14 and R012.7 through R012.9 remain open. No older native binary qualifies
+this new graph source, and the held release prerequisite is unchanged.

@@ -2,6 +2,7 @@ use crate::presentation::Viewport;
 use agent_terminal_ui_native::{
     ArboraClient,
     correlation::TaskCorrelation,
+    execution_graph::ExecutionGraph,
     run_inspector::{ReadRefusal, RunInspector},
     run_inspector_client::RunRead,
 };
@@ -16,12 +17,27 @@ use std::{sync::Arc, time::Instant};
 use tokio::task::JoinHandle;
 
 type ReadTask = JoinHandle<Result<RunRead, ReadRefusal>>;
+type GraphReadTask = JoinHandle<(GraphScope, Result<ExecutionGraph, ReadRefusal>)>;
+
+struct GraphScope {
+    binding: TaskCorrelation,
+    client: Arc<ArboraClient>,
+    generation: u64,
+}
 
 #[derive(Default)]
 pub struct InspectorView {
     binding: Option<TaskCorrelation>,
     inspector: Option<RunInspector>,
     request: Option<ReadTask>,
+    graph_request: Option<GraphReadTask>,
+    client: Option<Arc<ArboraClient>>,
+    generation: u64,
+    graph_mode: bool,
+    graph: Option<ExecutionGraph>,
+    graph_refusal: Option<ReadRefusal>,
+    selected_step: Option<usize>,
+    reveal_step: bool,
     open: bool,
     viewport: Viewport,
     search: Option<InspectorSearch>,
@@ -110,7 +126,7 @@ impl InspectorView {
         self.open
     }
     pub fn pending(&self) -> bool {
-        self.request.is_some()
+        self.request.is_some() || self.graph_request.is_some()
     }
 
     /// Only a successful, correlated task read may select a run.
@@ -125,12 +141,47 @@ impl InspectorView {
         }
     }
 
+    /// An immutable client owns endpoint and credential identity for the read.
+    pub fn client_updated(&mut self, client: &Arc<ArboraClient>) {
+        if self
+            .client
+            .as_ref()
+            .is_some_and(|current| !Arc::ptr_eq(current, client))
+        {
+            self.abort();
+            self.search = None;
+            self.viewport = Viewport::default();
+        }
+        self.client = Some(client.clone());
+    }
+
     pub fn open(&mut self, client: Arc<ArboraClient>) {
         self.open = true;
         self.refresh(client);
     }
 
     fn refresh(&mut self, client: Arc<ArboraClient>) {
+        self.client_updated(&client);
+        if self.graph_mode {
+            self.abort();
+            let Some(binding) = self
+                .binding
+                .clone()
+                .filter(|binding| binding.run_id().is_some())
+            else {
+                return;
+            };
+            let scope = GraphScope {
+                binding,
+                client: client.clone(),
+                generation: self.generation,
+            };
+            self.graph_request = Some(tokio::spawn(async move {
+                let result = client.get_execution_graph(&scope.binding).await;
+                (scope, result)
+            }));
+            return;
+        }
         if self.pending() {
             return;
         }
@@ -148,12 +199,20 @@ impl InspectorView {
     }
 
     fn clear_read(&mut self) {
+        self.graph = None;
+        self.selected_step = None;
+        self.reveal_step = false;
+        self.graph_refusal = None;
         if let Some(inspector) = &mut self.inspector {
             let _ = inspector.accept_read(Err(ReadRefusal::Unavailable), Instant::now());
         }
     }
 
     fn abort(&mut self) {
+        self.generation = self.generation.wrapping_add(1);
+        if let Some(request) = self.graph_request.take() {
+            request.abort();
+        }
         if let Some(request) = self.request.take() {
             request.abort();
         }
@@ -163,10 +222,36 @@ impl InspectorView {
     pub fn close(&mut self) {
         self.abort();
         self.open = false;
+        self.graph_mode = false;
         self.search = None;
     }
 
     pub async fn complete(&mut self) {
+        if let Some(request) = self.graph_request.as_mut() {
+            let reply = request.await;
+            self.graph_request = None;
+            self.clear_read();
+            if let Ok((scope, result)) = reply
+                && self.open
+                && self.graph_mode
+                && scope.generation == self.generation
+                && self.binding.as_ref() == Some(&scope.binding)
+                && self
+                    .client
+                    .as_ref()
+                    .is_some_and(|client| Arc::ptr_eq(client, &scope.client))
+            {
+                match result {
+                    Ok(graph) => {
+                        self.graph = Some(graph);
+                        self.selected_step = Some(0);
+                        self.reveal_step = true;
+                    }
+                    Err(error) => self.graph_refusal = Some(error),
+                }
+            }
+            return;
+        }
         let result = match self.request.as_mut() {
             Some(request) => request.await.unwrap_or(Err(ReadRefusal::Unavailable)),
             None => return,
@@ -182,8 +267,28 @@ impl InspectorView {
         if !self.open {
             return false;
         }
+        self.client_updated(&client);
         match key {
             KeyCode::Esc => self.close(),
+            KeyCode::Char('g') => {
+                self.abort();
+                self.graph_mode = !self.graph_mode;
+                self.search = None;
+                self.viewport = Viewport::default();
+                self.refresh(client);
+            }
+            KeyCode::Tab | KeyCode::BackTab if self.graph_mode => {
+                if let Some(graph) = &self.graph {
+                    let step = if key == KeyCode::BackTab {
+                        graph.nodes.len() - 1
+                    } else {
+                        1
+                    };
+                    self.selected_step =
+                        Some((self.selected_step.unwrap_or(0) + step) % graph.nodes.len());
+                    self.reveal_step = true;
+                }
+            }
             KeyCode::Char('c') => self.abort(),
             KeyCode::Char('r') | KeyCode::Char('i') => self.refresh(client),
             _ => {
@@ -217,16 +322,40 @@ impl InspectorView {
     }
 
     fn text(&mut self, now: Instant) -> String {
-        let body = match &mut self.inspector {
-            Some(inspector) => inspector.text(now),
-            None => "Run inspector unavailable: no validated run binding".to_owned(),
+        let body = if self.graph_mode {
+            match &self.graph {
+                Some(graph) => graph.text(self.selected_step.unwrap_or(0)),
+                None if self
+                    .binding
+                    .as_ref()
+                    .and_then(TaskCorrelation::run_id)
+                    .is_none() =>
+                {
+                    "Execution graph unavailable: no validated run binding".to_owned()
+                }
+                None if self.graph_refusal == Some(ReadRefusal::Denied) => {
+                    "Execution graph denied; protected data cleared".to_owned()
+                }
+                None => "Execution graph unavailable".to_owned(),
+            }
+        } else {
+            match &mut self.inspector {
+                Some(inspector) => inspector.text(now),
+                None => "Run inspector unavailable: no validated run binding".to_owned(),
+            }
         };
         let state = if self.pending() {
-            "Reading run...\n"
+            if self.graph_mode {
+                "Reading execution graph...\n"
+            } else {
+                "Reading run...\n"
+            }
         } else {
             ""
         };
-        format!("{state}{body}\n\nr / i: refresh | c: cancel local read | Escape: close | q: quit")
+        format!(
+            "{state}{body}\n\ng: graph / summary\nr / i: refresh | c: cancel local read\nEscape: close | q: quit"
+        )
     }
 
     pub fn mouse(&mut self, event: MouseEvent) -> bool {
@@ -235,9 +364,27 @@ impl InspectorView {
 
     pub fn draw(&mut self, frame: &mut Frame, style: Style, now: Instant) {
         let text = self.text(now);
+        let graph_row = if self.graph_mode {
+            text.lines().position(|line| line.starts_with("> "))
+        } else {
+            None
+        };
         let (lines, selected) = match &mut self.search {
             Some(search) => search.lines(&text),
-            None => (text.lines().map(Line::from).collect(), None),
+            None => (
+                text.lines()
+                    .enumerate()
+                    .map(|(index, line)| {
+                        let line = Line::from(line);
+                        if Some(index) == graph_row {
+                            line.style(Style::new().add_modifier(Modifier::REVERSED))
+                        } else {
+                            line
+                        }
+                    })
+                    .collect(),
+                None,
+            ),
         };
         let title = self
             .search
@@ -264,6 +411,15 @@ impl InspectorView {
                     .wrap(Wrap { trim: false })
                     .line_count(inner.width)
             };
+            self.viewport.reveal(row, 1);
+        }
+        if std::mem::take(&mut self.reveal_step)
+            && self.search.is_none()
+            && let Some(index) = graph_row
+        {
+            let row = Paragraph::new(lines[..index].to_vec())
+                .wrap(Wrap { trim: false })
+                .line_count(inner.width);
             self.viewport.reveal(row, 1);
         }
         frame.render_widget(
@@ -536,6 +692,7 @@ last 界"
     async fn keys_own_one_read_and_close_cancel_and_drop_abort_it() {
         for key in [Some(KeyCode::Esc), Some(KeyCode::Char('c')), None] {
             let mut view = populated(Instant::now());
+            let client = client();
             let (send, receive) = std::sync::mpsc::channel::<()>();
             view.request = Some(tokio::spawn(async move {
                 let _send = send;
@@ -543,13 +700,13 @@ last 界"
                 Err(ReadRefusal::Unavailable)
             }));
             let id = view.request.as_ref().unwrap().id();
-            assert!(view.key(KeyCode::Char('r'), client()));
-            assert!(view.key(KeyCode::Char('i'), client()));
+            assert!(view.key(KeyCode::Char('r'), client.clone()));
+            assert!(view.key(KeyCode::Char('i'), client.clone()));
             assert_eq!(view.request.as_ref().unwrap().id(), id);
-            assert!(view.key(KeyCode::Char('x'), client()));
-            assert!(view.key(KeyCode::Char('y'), client()));
+            assert!(view.key(KeyCode::Char('x'), client.clone()));
+            assert!(view.key(KeyCode::Char('y'), client.clone()));
             if let Some(key) = key {
-                assert!(view.key(key, client()));
+                assert!(view.key(key, client.clone()));
                 assert!(!view.pending());
                 assert!(!view.text(Instant::now()).contains("private-plan"));
                 assert_eq!(view.is_open(), key != KeyCode::Esc);
@@ -607,6 +764,281 @@ last 界"
                 .collect();
             assert_eq!(text.contains("private-plan"), visible);
             assert!(text.contains("Peak context tokens: 42"));
+        }
+    }
+
+    fn graph_view() -> InspectorView {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(
+            "../tests/fixtures/execution_graph_contract.json"
+        ))
+        .unwrap();
+        let value = &fixture["value"];
+        let binding = TaskCorrelation::from_task(
+            &json!({"kind":"task", "id":value["task_id"], "contextId":"context-one",
+            "status":{"state":"working"}, "metadata":{"arbora":{"runId":value["run_id"]}}}),
+        )
+        .unwrap();
+        let mut view = InspectorView::default();
+        view.task_updated(Some(&binding));
+        view.client_updated(&client());
+        view.open = true;
+        view.graph_mode = true;
+        view.graph = Some(ExecutionGraph::decode(value, &binding).unwrap());
+        view.selected_step = Some(0);
+        view.reveal_step = true;
+        view
+    }
+
+    fn rendered(terminal: &Terminal<TestBackend>) -> String {
+        terminal
+            .backend()
+            .buffer()
+            .content()
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect()
+    }
+
+    // spec: TUI-RUNTIME-R010.12
+    #[test]
+    fn graph_keyboard_narrow_resize_search_and_edges_keep_one_step_row() {
+        let mut view = graph_view();
+        let client = view.client.as_ref().unwrap().clone();
+        let now = Instant::now();
+        let mut terminal = Terminal::new(TestBackend::new(40, 16)).unwrap();
+        terminal
+            .draw(|frame| view.draw(frame, Style::reset(), now))
+            .unwrap();
+        assert!(rendered(&terminal).contains("1. first [running]"));
+        assert!(view.key(KeyCode::BackTab, client.clone()));
+        terminal
+            .draw(|frame| view.draw(frame, Style::reset(), now))
+            .unwrap();
+        assert_eq!(view.selected_step, Some(3));
+        assert!(rendered(&terminal).contains("4. join [unobserved]"));
+        assert_eq!(view.text(now).matches("4. join [unobserved]").count(), 1);
+        assert!(
+            view.text(now)
+                .contains("Predecessors (depends_on): 2: left, 3: right")
+        );
+        for (width, height) in [(100, 30), (40, 12), (60, 18)] {
+            terminal.backend_mut().resize(width, height);
+            terminal
+                .draw(|frame| view.draw(frame, Style::reset(), now))
+                .unwrap();
+            assert_eq!(view.selected_step, Some(3));
+        }
+        assert!(view.key(KeyCode::Tab, client.clone()));
+        assert_eq!(view.selected_step, Some(0));
+        search_text(&mut view, "event-2");
+        terminal
+            .draw(|frame| view.draw(frame, Style::reset(), now))
+            .unwrap();
+        assert_eq!(view.search.as_ref().unwrap().matches, 1);
+        assert!(rendered(&terminal).contains("event-2"));
+        for ch in ['g', 'r', 'c'] {
+            assert!(view.search_key(KeyEvent::new(KeyCode::Char(ch), KeyModifiers::NONE)));
+        }
+        assert!(view.graph.is_some());
+        assert!(!view.pending());
+        assert!(view.search_key(KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE)));
+        terminal.backend_mut().resize(40, 16);
+        terminal
+            .draw(|frame| view.draw(frame, Style::reset(), now))
+            .unwrap();
+        assert!(view.key(KeyCode::End, client));
+        terminal
+            .draw(|frame| view.draw(frame, Style::reset(), now))
+            .unwrap();
+        let text = rendered(&terminal);
+        assert!(text.contains("Escape: close | q: quit"));
+        assert!(text.contains("g: graph / summary"));
+    }
+
+    // spec: TUI-RUNTIME-R010.11, TUI-RUNTIME-R010.12
+    #[tokio::test]
+    async fn graph_refresh_cancels_previous_read_and_clears_selection() {
+        let mut view = graph_view();
+        let client = view.client.as_ref().unwrap().clone();
+        view.selected_step = Some(3);
+        let (send, receive) = std::sync::mpsc::channel::<()>();
+        let scope = GraphScope {
+            binding: view.binding.clone().unwrap(),
+            client: client.clone(),
+            generation: view.generation,
+        };
+        view.graph_request = Some(tokio::spawn(async move {
+            let _send = send;
+            std::future::pending::<()>().await;
+            (scope, Err(ReadRefusal::Unavailable))
+        }));
+        let previous = view.graph_request.as_ref().unwrap().id();
+        assert!(view.key(KeyCode::Char('r'), client.clone()));
+        assert!(view.pending());
+        assert_ne!(view.graph_request.as_ref().unwrap().id(), previous);
+        assert!(view.graph.is_none());
+        assert!(view.selected_step.is_none());
+        tokio::time::timeout(Duration::from_secs(1), async {
+            while matches!(
+                receive.try_recv(),
+                Err(std::sync::mpsc::TryRecvError::Empty)
+            ) {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+        assert!(matches!(
+            receive.try_recv(),
+            Err(std::sync::mpsc::TryRecvError::Disconnected)
+        ));
+        assert!(view.key(KeyCode::Char('c'), client));
+        assert!(!view.pending());
+        assert!(view.graph.is_none());
+        assert!(view.selected_step.is_none());
+    }
+
+    // spec: TUI-RUNTIME-R010.11
+    #[tokio::test]
+    async fn graph_is_independent_of_run_summary_and_switches_one_read() {
+        let mut view = graph_view();
+        let client = view.client.as_ref().unwrap().clone();
+        assert!(view.key(KeyCode::Char('g'), client.clone()));
+        assert!(!view.graph_mode);
+        assert!(view.graph.is_none());
+        view.complete().await;
+        assert!(view.text(Instant::now()).contains("unavailable"));
+        assert!(view.key(KeyCode::Char('g'), client.clone()));
+        assert!(view.graph_mode);
+        assert!(view.graph_request.is_some());
+        assert!(view.request.is_none());
+        view.abort();
+        let graph = graph_view().graph.clone().unwrap();
+        let scope = GraphScope {
+            binding: view.binding.clone().unwrap(),
+            client,
+            generation: view.generation,
+        };
+        view.graph_request = Some(tokio::spawn(async move { (scope, Ok(graph)) }));
+        view.complete().await;
+        assert!(view.graph.is_some());
+        assert!(view.text(Instant::now()).contains("Flat execution DAG"));
+    }
+
+    // spec: TUI-RUNTIME-R010.11
+    #[tokio::test]
+    async fn graph_denial_panic_and_stale_replies_never_restore_protected_data() {
+        for invalidation in [
+            "denied",
+            "panic",
+            "generation",
+            "client",
+            "owner",
+            "context",
+            "run",
+            "close",
+        ] {
+            let mut view = graph_view();
+            let graph = view.graph.clone().unwrap();
+            let scope = GraphScope {
+                binding: view.binding.clone().unwrap(),
+                client: view.client.as_ref().unwrap().clone(),
+                generation: view.generation,
+            };
+            match invalidation {
+                "generation" => view.abort(),
+                "client" => view.client_updated(&client()),
+                "owner" | "context" | "run" => {
+                    let old = view.binding.as_ref().unwrap();
+                    let binding = TaskCorrelation::from_task(&json!({"kind":"task",
+                        "id":if invalidation == "owner" { "other-root" } else { old.task_id() },
+                        "contextId":if invalidation == "context" { "other-context" } else { old.context_id() },
+                        "status":{"state":"working"},
+                        "metadata":{"arbora":{"runId":if invalidation == "run" { "other-run" } else { old.run_id().unwrap() }}}})).unwrap();
+                    view.task_updated(Some(&binding));
+                }
+                "close" => view.close(),
+                _ => {}
+            }
+            // Inject a late completion even after abort to exercise scope validation.
+            view.graph_request = Some(tokio::spawn(async move {
+                assert!(invalidation != "panic", "fixture panic");
+                (
+                    scope,
+                    if invalidation == "denied" {
+                        Err(ReadRefusal::Denied)
+                    } else {
+                        Ok(graph)
+                    },
+                )
+            }));
+            view.complete().await;
+            assert!(view.graph.is_none(), "{invalidation}");
+            assert!(view.selected_step.is_none(), "{invalidation}");
+            assert!(!view.pending());
+            assert!(!view.text(Instant::now()).contains("event-2"));
+            if invalidation == "denied" {
+                assert!(view.text(Instant::now()).contains("denied"));
+            }
+        }
+    }
+
+    // spec: TUI-RUNTIME-R010.11
+    #[test]
+    fn graph_task_refusal_close_and_client_replacement_clear_selection() {
+        for reason in ["task", "close", "client"] {
+            let mut view = graph_view();
+            view.selected_step = Some(3);
+            match reason {
+                "task" => view.task_updated(None),
+                "close" => view.close(),
+                _ => view.client_updated(&client()),
+            }
+            assert!(view.graph.is_none());
+            assert!(view.selected_step.is_none());
+            assert!(!view.text(Instant::now()).contains("event-2"));
+        }
+    }
+
+    // spec: TUI-RUNTIME-R010.11
+    #[tokio::test]
+    async fn canceled_complete_future_keeps_join_handle_and_rejects_stale_scope() {
+        use std::sync::atomic::{AtomicBool, Ordering};
+
+        for stale in [false, true] {
+            let mut view = graph_view();
+            let graph = view.graph.clone().unwrap();
+            view.clear_read();
+            let scope = GraphScope {
+                binding: view.binding.clone().unwrap(),
+                client: view.client.as_ref().unwrap().clone(),
+                generation: view.generation,
+            };
+            let release = Arc::new(AtomicBool::new(false));
+            let gate = release.clone();
+            view.graph_request = Some(tokio::spawn(async move {
+                while !gate.load(Ordering::Acquire) {
+                    tokio::task::yield_now().await;
+                }
+                (scope, Ok(graph))
+            }));
+            let id = view.graph_request.as_ref().unwrap().id();
+            // Biased order polls complete first; the closed gate forces Pending.
+            tokio::select! {
+                biased;
+                _ = view.complete() => panic!("The read cannot complete before release"),
+                _ = std::future::ready(()) => {}
+            }
+            assert_eq!(view.graph_request.as_ref().unwrap().id(), id);
+            assert!(view.graph.is_none());
+            if stale {
+                view.generation += 1;
+            }
+            release.store(true, Ordering::Release);
+            view.complete().await;
+            assert!(!view.pending());
+            assert_eq!(view.graph.is_some(), !stale);
+            assert_eq!(view.selected_step, if stale { None } else { Some(0) });
         }
     }
 }

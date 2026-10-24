@@ -938,6 +938,19 @@ class AgentApp(App):
 
         self.push_screen(CurrentPlanScreen(self.agent_client, run_id))
 
+    def open_execution_graph(self, run_id: str, *, task_id: str | None = None) -> None:
+        """Inspect an explicit run without changing the active conversation."""
+        from agent_terminal_ui.tui.execution_graph import ExecutionGraphScreen
+
+        self.push_screen(
+            ExecutionGraphScreen(
+                self.agent_client,
+                run_id,
+                context_id=self.current_session_id,
+                task_id=task_id,
+            )
+        )
+
     def remember_run_id(self, run_id: str) -> None:
         """Record an explicit run identity returned by a capability invocation."""
         self._last_run_id = run_id
