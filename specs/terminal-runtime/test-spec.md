@@ -475,21 +475,21 @@ Permitted fallback preserves message identity and the idempotency key.
 | `TUI-RUNTIME-R015.52` | Fresh bounded client and mounted test execution plus configured all-file maintenance gates; record commands and results below. |
 | `TUI-RUNTIME-R015.53` | Planned `tests/test_source_quality.py::test_source_quality_53` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.54` | Planned `tests/test_source_quality.py::test_source_quality_54` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.55` | Planned `tests/test_source_quality.py::test_source_quality_55` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.56` | Planned `tests/test_source_quality.py::test_source_quality_56` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.57` | Planned `tests/test_source_quality.py::test_source_quality_57` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.58` | Planned `tests/test_source_quality.py::test_source_quality_58` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.59` | Planned `tests/test_source_quality.py::test_source_quality_59` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.60` | Planned `tests/test_source_quality.py::test_source_quality_60` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.61` | Planned `tests/test_source_quality.py::test_source_quality_61` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.62` | Planned `tests/test_source_quality.py::test_source_quality_62` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.63` | Planned `tests/test_source_quality.py::test_source_quality_63` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.64` | Planned `tests/test_source_quality.py::test_source_quality_64` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.65` | Planned `tests/test_source_quality.py::test_source_quality_65` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.66` | Planned `tests/test_source_quality.py::test_source_quality_66` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.67` | Planned `tests/test_source_quality.py::test_source_quality_67` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.68` | Planned `tests/test_source_quality.py::test_source_quality_68` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.69` | Planned `tests/test_source_quality.py::test_source_quality_69` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.55` | Run project checks in the quality acceptance v1 matrix. Record the complete tracked-file scope and every finding. See quality acceptance v1 below; this amendment supplies no result receipt. |
+| `TUI-RUNTIME-R015.56` | Measure the full source and test tree against R015.1–R015.7, R015.19–R015.20 and R015.34–R015.35. A changed-file baseline does not prove acceptance. See quality acceptance v1 below; this amendment supplies no result receipt. |
+| `TUI-RUNTIME-R015.57` | Run source, secret and dependency scans. Retain raw reports, database dates and all severities; resolve every actionable finding. See quality acceptance v1 below; this amendment supplies no result receipt. |
+| `TUI-RUNTIME-R015.58` | Measure covered Python package lines and branches separately across the complete suite. Inventory native coverage separately; heuristic scores and test counts do not qualify. See quality acceptance v1 below; this amendment supplies no result receipt. |
+| `TUI-RUNTIME-R015.59` | Build documentation strictly, check links and examples, and run operator-documentation acceptance tests. Missing checks remain open. See quality acceptance v1 below; this amendment supplies no result receipt. |
+| `TUI-RUNTIME-R015.60` | Run boundary and dependency-seam tests against production imports and entry points. Record the full module responsibility map and unresolved violations. See quality acceptance v1 below; this amendment supplies no result receipt. |
+| `TUI-RUNTIME-R015.61` | Reconcile all declarations, implementation references and test bindings. Run spec and concept checks; resolve every orphan and missing binding. See quality acceptance v1 below; this amendment supplies no result receipt. |
+| `TUI-RUNTIME-R015.62` | Run both all-file stages with exact configured pins. Failures, warnings, skipped hooks and unavailable dependencies prevent acceptance. See quality acceptance v1 below; this amendment supplies no result receipt. |
+| `TUI-RUNTIME-R015.63` | Record collection, execution and outcomes for every test. Explain skips and expected failures; missing required acceptance coverage prevents acceptance. See quality acceptance v1 below; this amendment supplies no result receipt. |
+| `TUI-RUNTIME-R015.64` | Run version dry-run, lock consistency and installed-version checks. Preserve historical reports outside authoritative version mirrors. See quality acceptance v1 below; this amendment supplies no result receipt. |
+| `TUI-RUNTIME-R015.65` | Check the complete test inventory, shared fixtures, structural limits and behavior-specific assertions. Exercise incorrect results; assertion counts alone do not qualify. See quality acceptance v1 below; this amendment supplies no result receipt. |
+| `TUI-RUNTIME-R015.66` | Reconcile all Python, native and dynamic inputs with documented defaults and examples. Run environment, theme and log refusal tests. See quality acceptance v1 below; this amendment supplies no result receipt. |
+| `TUI-RUNTIME-R015.67` | Require passing evidence for R015.55–R015.66, all 17 domain entries and the current finding inventory. Missing evidence prevents acceptance. See quality acceptance v1 below; this amendment supplies no result receipt. |
+| `TUI-RUNTIME-R015.68` | Use the complete domain matrix in test-spec.md. Each domain needs completed checks and explicit remaining gaps; a grade is insufficient. See quality acceptance v1 below; this amendment supplies no result receipt. |
+| `TUI-RUNTIME-R015.69` | Reconcile historical priorities with current scan findings by stable identifier. Require resolution evidence for each item; never infer closure from a count. See quality acceptance v1 below; this amendment supplies no result receipt. |
 | `TUI-RUNTIME-R015.70` | `tests/test_installed_operator_entry.py::test_source_quality_entry_wiring` runs the installed command against a loopback unary fixture; installed Arbora qualification remains open. |
 | `TUI-RUNTIME-R015.71` | Planned `tests/test_source_quality.py::test_source_quality_served_entry` must enter the installed command against an authorized served fixture. |
 
@@ -1100,3 +1100,119 @@ This is client-candidate smoke evidence against older backend artifacts.
 It does not prove the history UI against a live backend, native or fullscreen operation.
 Current-backend compatibility, released dependency installation and complete spec acceptance remain open.
 No requirement state changed.
+
+## Quality acceptance v1
+
+This contract covers R015.55–R015.69. Its effective date is 2026-10-24.
+This section defines required evidence, not a passing receipt.
+Every command runs from the repository root against one recorded candidate commit.
+The evaluator must use a clean checkout and save output outside the source tree.
+
+### Receipt contract
+
+Each domain receipt must include:
+
+- Contract version, candidate commit, UTC time, operating system and architecture.
+- Exact command, working-directory role, exit code and full output artifact with its digest.
+- Interpreter and tool versions, dependency lock digest, hook configuration digest and resolved shared workflow commits.
+- Tracked input scope, exclusions, thresholds, collected test IDs and selected test IDs.
+- Counts for passed, failed, skipped and expected-failure tests, with reasons and owning requirements.
+- Each finding's stable ID, domain, severity, location, owning requirement, current disposition and supporting evidence.
+- Missing implementations, unavailable tools, stale vulnerability databases and incomplete evidence as explicit gaps.
+
+The evaluator must record hook revisions from `.pre-commit-config.yaml` and tool versions from the active environments.
+Shared workflows currently track `main`; record their resolved commit for the exact workflow run.
+Record `python --version`, `uv --version`, `pre-commit --version`, `rustc +1.96.0 --version` and `cargo +1.96.0 --version`.
+Record additional scanner versions and vulnerability database timestamps before using their results.
+A tool that prints warnings needs investigation even when its exit code is zero.
+No staged-only check, exclusion added for acceptance, warning suppression or no-regression comparison substitutes for this contract.
+Existing configured exclusions must remain visible and receive complementary evidence where the domain includes those paths.
+
+### Executable checks
+
+Commands identify existing entry points unless marked planned. Their presence does not prove successful execution.
+Use the pinned hook runner, `uvx --from pre-commit==4.6.2 pre-commit`, for each `pre-commit` command below.
+Use the configured shared hook revision for `pipelines-hook`; record the resolved revision and installed distribution version.
+
+| Check | Required invocation and interpretation |
+|---|---|
+| Commit hooks | `pre-commit run --all-files --hook-stage pre-commit`. Preserve complete output, including warnings. |
+| Push hooks | `pre-commit run --all-files --hook-stage pre-push`. Dependency readiness, lock and test hooks are required. |
+| Spec contract | `pre-commit run spec --all-files`; `pre-commit run spec-trailers --all-files --hook-stage manual`. Record the base revision. |
+| Project structure | `pipelines-hook root-hygiene`; `pipelines-hook public-surface`; `pipelines-hook gitignore-convergence`. Inspect all tracked paths. |
+| Structural census | `pipelines-hook complexity-census`; `pipelines-hook kiss-census`. Retain complete reports and their resolved threshold definitions. |
+| Python execution | `uv run --frozen --extra test pytest tests -q -W error`. Run every required slow or served acceptance test too. |
+| Python coverage | `uv run --frozen --extra test pytest tests --cov=agent_terminal_ui --cov-branch --cov-report=json:/tmp/tui-quality-coverage.json --cov-report=term-missing -W error`. |
+| Source security | Run configured `bandit`, `detect-private-key` and `security-sanitizer` hooks with `--all-files`. Retain findings before any remediation. |
+| Dependency consistency | `uv lock --check`; `pre-commit run dependency-readiness --all-files --hook-stage manual`. These are not vulnerability scans. |
+| Version mirrors | `pre-commit run check-bumpversion --all-files --hook-stage pre-commit`. Installed metadata and lock-mirror comparisons still need a pinned executable gate. |
+| Documentation | Planned: `mkdocs build --strict --site-dir /tmp/tui-quality-docs` after pinned documentation dependencies and the inherited theme are installed. Example and link checks remain required. |
+| Native format | `cargo +1.96.0 fmt --manifest-path native/agent-terminal-ui/Cargo.toml --check`. |
+| Native tests | `cargo +1.96.0 test --locked --manifest-path native/agent-terminal-ui/Cargo.toml`. |
+| Native lint | `cargo +1.96.0 clippy --locked --manifest-path native/agent-terminal-ui/Cargo.toml --all-targets -- -D warnings`. |
+
+The coverage evaluator must compute line and branch percentages separately from measured coverage data.
+Each percentage must reach 80 across all tracked Python package files, including files not imported during tests.
+These are new measurable targets, not a conversion of the historical score.
+Do not use the combined coverage percentage, source-token heuristics, test counts or the historical score.
+Record uncovered lines and branches, coverage exclusions and omitted files. Missing source files invalidate the measurement.
+Native code requires a separate measured coverage report and per-requirement acceptance evidence; Python coverage does not cover native code.
+The native coverage tool, pinned version and executable command remain to be implemented and recorded.
+The separate line/branch threshold evaluator and tracked-file completeness check also remain to be implemented.
+
+The dependency security gate must scan all locked Python and native dependencies against a current advisory database.
+It must include runtime and test extras, transitive dependencies, registry packages and pinned source dependencies.
+A lock consistency check, dependency installation or empty historical report is insufficient.
+The dependency scanner selection, pinned version, exact command and raw report remain required implementation work.
+Resolve all actionable findings at every severity, including R015.8's medium-severity findings.
+Any disputed finding requires reproduction evidence and an explicit reviewed disposition; omission or suppression does not resolve it.
+
+Structural census wrappers refuse unavailable scanners in CI; local skips do not establish acceptance.
+Acceptance requires zero unresolved violations of the owning requirements, not merely exit code zero.
+Implement missing full-tree module-size, method-count, nesting and test-structure checks before claiming the corresponding rows.
+Retain shared thresholds at the recorded revision; do not introduce more permissive local limits.
+
+### Per-domain evidence matrix
+
+The evaluator must retain all seventeen domains, including domains without a separate legacy score row.
+Each entry requires a distinct receipt with the commands above, acceptance obligations and remaining gaps.
+
+| Domain | Required evidence and open implementation scope |
+|---|---|
+| Project Analysis | Project structure checks, valid package metadata, installed entry-point tests and R015.11–R015.18 documentation evidence. |
+| Dependency Audit | Lock consistency, dependency readiness and complete actual vulnerability scans; scanner implementation remains required. |
+| Codebase Optimization | Full structural census and R015.1–R015.7, R015.19–R015.20 measurements; implement missing structural checks. |
+| Security Analysis | Source and secret scans, dependency scan, R015.8 and functional security acceptance. No severity is silently waived. |
+| Test Coverage | Separate measured line and branch thresholds, native report and uncovered requirement inventory; coverage tooling gaps remain open. |
+| Documentation & Governance | Strict documentation build, links, examples, license and R015.10–R015.18 evidence; implement missing link/example checks. |
+| Architecture & Design Patterns | R015.21–R015.23 import boundaries, dependency seams and responsibility map; implement missing full-tree checks. |
+| Concept Traceability | Spec and concept hooks plus complete R015.24–R015.27 declaration-to-source-to-test reconciliation; missing reconciliation remains open. |
+| Linting & Formatting | Complete configured lint, format and type checks with no errors or warnings; native checks and excluded-path evidence included. |
+| Pre-Commit Compliance | Both all-file stages, exact configured hook pins and complete logs; CI skips do not qualify omitted hooks. |
+| Test Execution | Full Python and native suites, collection/outcome inventory and required served acceptance; selection or refusal-only coverage is insufficient. |
+| Directory Organization | Root hygiene, tracked-file layout and module responsibility checks; inventory source and test structure, not generated artifacts. |
+| UI/UX Quality | Existing R008, R012 and R014 interaction, presentation and native acceptance tests; no screenshot or heuristic replaces behavior. |
+| Version Sync Analysis | Version dry-run, lock mirrors, installed metadata and R015.31–R015.33; historical reports remain outside authoritative mirrors. |
+| Changelog Audit | Verify the changelog's current version, dated release sections and change entries against repository history; implement missing automated checks. |
+| Pytest Quality | R015.9 and R015.34–R015.40 structural, fixture and assertion evidence; test incorrect observable results, not assertion presence. |
+| Environment Variables | R015.41–R015.43 source inventory, dynamic aliases, examples, defaults and real entry-point tests; native residuals remain required. |
+
+The existing environment, fixture, README and operator-documentation tests supply bounded evidence only.
+Reuse `tests/test_environment_inventory.py`, `tests/test_fixture_isolation.py`, `tests/test_readme_navigation.py` and `tests/test_operator_documentation.py`.
+Their presence or a targeted pass does not establish complete domain acceptance.
+A missing full-domain check remains work to implement; do not create a test that asserts this table exists as acceptance.
+
+### Finding inventory and aggregate acceptance
+
+The evaluator must build the current inventory from complete scans of the candidate revision.
+Use stable IDs that survive line movement; retain original report locations and links to current owning requirements.
+Map every historical priority and finding to a current item, duplicate, resolved item or evidenced non-applicable item.
+Keep historical provenance separate from new findings. Never invent entries to match an old total.
+For each resolved item, record the fix revision and a successful reproduction or regression check.
+For each duplicate or non-applicable item, record the source evidence and reviewed reason.
+A missing historical item or unexplained count discrepancy is an inventory gap, not an implicit resolution.
+
+R015.67 requires all domain criteria and the complete inventory, without averaging or compensating for failed domains.
+R015.68 requires seventeen independent receipts with no omitted domain or evidence gap.
+R015.69 requires no unresolved actionable finding and a complete historical-to-current reconciliation.
+These clauses do not assert a new finding count, GPA or letter grade.
