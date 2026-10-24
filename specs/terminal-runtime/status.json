@@ -516,7 +516,9 @@
       "landed_in": [
         "c35cb5a545cf"
       ],
-      "verified_by": [],
+      "verified_by": [
+        "tests/test_native_execution_graph_contract.py:17"
+      ],
       "rollup_of": [
         "TUI-RUNTIME-R010.1",
         "TUI-RUNTIME-R010.2",

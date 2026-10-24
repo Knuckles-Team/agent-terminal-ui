@@ -14,7 +14,7 @@ def fixture():
     return json.loads((NATIVE / "tests/fixtures/execution_graph_contract.json").read_text())
 
 
-@pytest.mark.spec("TUI-RUNTIME-R010.11")
+@pytest.mark.spec("TUI-RUNTIME-R010", "TUI-RUNTIME-R010.11")
 def test_native_graph_source_limits_match_producer_fixture():
     contract = fixture()
     source = (NATIVE / "src/execution_graph.rs").read_text()
