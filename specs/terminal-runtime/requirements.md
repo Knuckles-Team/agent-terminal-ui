@@ -291,7 +291,7 @@ session recovery. Retain the incumbent coding terminal until the operator accept
 
 | ID | Requirement | Acceptance evidence |
 |---|---|---|
-| `TUI-RUNTIME-R008.2.3.2.2.2.2.1` | **Native held-key viewport navigation.** Accept repeat events for unmodified Up, Down, Left, Right, PageUp, PageDown, Home and End in the existing task, inspector and log viewport routes. Ignore release events and repeated action or modified keys. Preserve ordinary press behavior. | Production event-filter and viewport tests verify repeated scrolling and inert repeated actions. This child does not establish live backend or complete presentation acceptance. |
+| `TUI-RUNTIME-R008.2.3.2.2.2.2.1` | **Native held-key viewport navigation.** Accept repeat events for unmodified Up, Down, Left, Right, PageUp, PageDown, Home and End. Use the existing task, inspector and log viewport routes. Ignore release events and repeated action or modified keys. Preserve ordinary press behavior. | Production event-filter and viewport tests verify repeated scrolling and inert repeated actions. This child does not establish live backend or complete presentation acceptance. |
 | `TUI-RUNTIME-R008.2.3.2.2.2.2.2` | **Remaining complete presentation acceptance.** Retain every parent criterion beyond held-key navigation, including complete tokens, selection, keyboard parity, no-color, reduced motion, scroll retention, served journeys and release performance. | Full served parity and release performance receipts remain required. |
 
 ## Native mouse-wheel navigation
