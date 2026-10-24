@@ -446,7 +446,9 @@
       "id": "TUI-RUNTIME-R008",
       "title": "Terminal theme tokens and accessibility are a stated contract",
       "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "landed_in": [
+        "fb71e74c9edf"
+      ],
       "verified_by": [
         "tests/test_exit_confirm_keyboard.py:12"
       ],
