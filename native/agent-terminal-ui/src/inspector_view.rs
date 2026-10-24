@@ -1,4 +1,7 @@
-use crate::presentation::Viewport;
+use crate::{
+    presentation::Viewport,
+    spatial_graph::{SpatialGraph, label},
+};
 use agent_terminal_ui_native::{
     ArboraClient,
     correlation::TaskCorrelation,
@@ -9,6 +12,7 @@ use agent_terminal_ui_native::{
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers, MouseEvent};
 use ratatui::{
     Frame,
+    layout::Rect,
     style::{Modifier, Style},
     text::Line,
     widgets::{Block, Paragraph, Wrap},
@@ -35,6 +39,9 @@ pub struct InspectorView {
     generation: u64,
     graph_mode: bool,
     graph: Option<ExecutionGraph>,
+    spatial: Option<SpatialGraph>,
+    spatial_mode: bool,
+    spatial_visible: bool,
     graph_refusal: Option<ReadRefusal>,
     selected_step: Option<usize>,
     reveal_step: bool,
@@ -200,6 +207,8 @@ impl InspectorView {
 
     fn clear_read(&mut self) {
         self.graph = None;
+        self.spatial = None;
+        self.spatial_visible = false;
         self.selected_step = None;
         self.reveal_step = false;
         self.graph_refusal = None;
@@ -223,6 +232,7 @@ impl InspectorView {
         self.abort();
         self.open = false;
         self.graph_mode = false;
+        self.spatial_mode = false;
         self.search = None;
     }
 
@@ -243,6 +253,7 @@ impl InspectorView {
             {
                 match result {
                     Ok(graph) => {
+                        self.spatial = Some(SpatialGraph::new(&graph));
                         self.graph = Some(graph);
                         self.selected_step = Some(0);
                         self.reveal_step = true;
@@ -277,6 +288,9 @@ impl InspectorView {
                 self.viewport = Viewport::default();
                 self.refresh(client);
             }
+            KeyCode::Char('v') if self.graph_mode => {
+                self.spatial_mode = !self.spatial_mode;
+            }
             KeyCode::Tab | KeyCode::BackTab if self.graph_mode => {
                 if let Some(graph) = &self.graph {
                     let step = if key == KeyCode::BackTab {
@@ -287,10 +301,18 @@ impl InspectorView {
                     self.selected_step =
                         Some((self.selected_step.unwrap_or(0) + step) % graph.nodes.len());
                     self.reveal_step = true;
+                    if let Some(spatial) = &mut self.spatial {
+                        spatial.focus_selected();
+                    }
                 }
             }
             KeyCode::Char('c') => self.abort(),
             KeyCode::Char('r') | KeyCode::Char('i') => self.refresh(client),
+            _ if self.spatial_mode && self.spatial_visible && self.search.is_none() => {
+                if let Some(spatial) = &mut self.spatial {
+                    spatial.key(key);
+                }
+            }
             _ => {
                 self.viewport.handle(key);
             }
@@ -353,17 +375,115 @@ impl InspectorView {
         } else {
             ""
         };
+        let map_help = if self.graph_mode {
+            "v: map / full list and details\n"
+        } else {
+            ""
+        };
         format!(
-            "{state}{body}\n\ng: graph / summary\nr / i: refresh | c: cancel local read\nEscape: close | q: quit"
+            "{state}{body}\n\n{map_help}g: graph / summary\nr / i: refresh | c: cancel local read\nEscape: close | q: quit"
         )
     }
 
     pub fn mouse(&mut self, event: MouseEvent) -> bool {
+        if self.open && self.spatial_mode && self.spatial_visible && self.search.is_none() {
+            if event.modifiers.is_empty()
+                && let Some(spatial) = &mut self.spatial
+            {
+                match event.kind {
+                    crossterm::event::MouseEventKind::ScrollUp => spatial.key(KeyCode::Up),
+                    crossterm::event::MouseEventKind::ScrollDown => spatial.key(KeyCode::Down),
+                    _ => return false,
+                }
+                return true;
+            }
+            return false;
+        }
         self.open && self.viewport.mouse(event)
     }
 
+    fn draw_spatial(&mut self, frame: &mut Frame, style: Style) {
+        let (Some(graph), Some(spatial)) = (&self.graph, &mut self.spatial) else {
+            return;
+        };
+        let selected = self.selected_step.unwrap_or(0);
+        let outer = Block::bordered()
+            .title("Flat execution DAG (read-only)")
+            .title_bottom("v: full list/details | Ctrl+F: find | g: summary | Esc: close");
+        let inner = outer.inner(frame.area());
+        frame.render_widget(outer.style(style), frame.area());
+        let header = format!(
+            "Run: {} | depends_on: left to right
+Topology: complete | Lifecycle: incomplete; observed prefix only
+Arrows: pan | Tab/Shift+Tab: select | Home: focus | F6: theme",
+            label(&graph.run_id)
+        );
+        frame.render_widget(
+            Paragraph::new(header).style(style),
+            Rect::new(inner.x, inner.y, inner.width, 3),
+        );
+        let map_area = Rect::new(inner.x, inner.y + 3, inner.width, inner.height - 8);
+        spatial.draw(frame, map_area, graph, selected, style);
+        let adjacent = |incoming| {
+            let nodes: Vec<_> = graph
+                .edges
+                .iter()
+                .filter_map(|&(from, to)| {
+                    if incoming && to == selected {
+                        Some(from + 1)
+                    } else if !incoming && from == selected {
+                        Some(to + 1)
+                    } else {
+                        None
+                    }
+                })
+                .map(|i| i.to_string())
+                .collect();
+            if nodes.is_empty() {
+                "none".to_owned()
+            } else {
+                nodes.join(", ")
+            }
+        };
+        let node = &graph.nodes[selected];
+        let details = format!(
+            "Selected {}: {} [{}]
+Predecessors: {} | Dependents: {}
+Public event evidence: {}
+Child actions unavailable | unobserved means unknown
+r / i: refresh | c: cancel local read | q: quit",
+            selected + 1,
+            label(&node.task_id),
+            node.status,
+            adjacent(true),
+            adjacent(false),
+            node.evidence.as_ref().map_or_else(
+                || "unavailable".to_owned(),
+                |e| format!("{} (sequence {})", label(&e.event_id), e.sequence)
+            )
+        );
+        frame.render_widget(
+            Paragraph::new(details).style(style),
+            Rect::new(inner.x, map_area.bottom(), inner.width, 5),
+        );
+    }
+
     pub fn draw(&mut self, frame: &mut Frame, style: Style, now: Instant) {
-        let text = self.text(now);
+        self.spatial_visible = self.spatial_mode
+            && self.graph_mode
+            && self.graph.is_some()
+            && self.spatial.is_some()
+            && self.search.is_none()
+            && frame.area().width >= 72
+            && frame.area().height >= 20;
+        if self.spatial_visible {
+            self.draw_spatial(frame, style);
+            return;
+        }
+        let mut text = self.text(now);
+        if self.spatial_mode && self.graph.is_some() && self.search.is_none() {
+            text.insert_str(0, "Map needs 72x20; showing the full list.\n");
+        }
         let graph_row = if self.graph_mode {
             text.lines().position(|line| line.starts_with("> "))
         } else {
@@ -783,7 +903,9 @@ last 界"
         view.client_updated(&client());
         view.open = true;
         view.graph_mode = true;
-        view.graph = Some(ExecutionGraph::decode(value, &binding).unwrap());
+        let graph = ExecutionGraph::decode(value, &binding).unwrap();
+        view.spatial = Some(SpatialGraph::new(&graph));
+        view.graph = Some(graph);
         view.selected_step = Some(0);
         view.reveal_step = true;
         view
@@ -797,6 +919,87 @@ last 界"
             .iter()
             .map(|cell| cell.symbol())
             .collect()
+    }
+
+    // spec: TUI-RUNTIME-R010.12.1, TUI-RUNTIME-R010.12.1.1, TUI-RUNTIME-R008.3
+    #[test]
+    fn spatial_map_keeps_selection_and_list_search_across_resize_and_themes() {
+        let mut view = graph_view();
+        let client = view.client.as_ref().unwrap().clone();
+        let now = Instant::now();
+        let mut terminal = Terminal::new(TestBackend::new(100, 30)).unwrap();
+        assert!(!view.spatial_mode);
+        view.key(KeyCode::Char('v'), client.clone());
+        terminal
+            .draw(|f| {
+                view.draw(
+                    f,
+                    crate::presentation::presentation_style("canopy", ""),
+                    now,
+                )
+            })
+            .unwrap();
+        assert!(view.spatial_visible);
+        assert!(rendered(&terminal).contains("depends_on: left to right"));
+        assert!(rendered(&terminal).contains("Selected 1: first [running]"));
+        assert!(rendered(&terminal).contains("unobserved means unknown"));
+        view.key(KeyCode::BackTab, client.clone());
+        terminal
+            .draw(|f| view.draw(f, Style::reset(), now))
+            .unwrap();
+        assert_eq!(view.selected_step, Some(3));
+        assert!(rendered(&terminal).contains("Predecessors: 2, 3 | Dependents: none"));
+        let map = terminal.backend().buffer().clone();
+        for key in [
+            KeyCode::Char('x'),
+            KeyCode::Char('y'),
+            KeyCode::Enter,
+            KeyCode::Char(' '),
+        ] {
+            assert!(view.key(key, client.clone()));
+            assert!(!view.pending());
+        }
+        terminal
+            .draw(|f| view.draw(f, Style::reset(), now))
+            .unwrap();
+        assert_eq!(&map, terminal.backend().buffer());
+        search_text(&mut view, "Predecessors");
+        terminal
+            .draw(|f| view.draw(f, Style::reset(), now))
+            .unwrap();
+        assert!(!view.spatial_visible);
+        assert_eq!(view.search.as_ref().unwrap().matches, 1);
+        assert!(rendered(&terminal).contains("Predecessors (depends_on): 2: left, 3: right"));
+        assert_eq!(view.selected_step, Some(3));
+        view.search_key(KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE));
+        for (width, height, spatial) in [
+            (40, 16, false),
+            (100, 30, true),
+            (80, 10, false),
+            (80, 24, true),
+        ] {
+            terminal.backend_mut().resize(width, height);
+            view.reveal_step = true;
+            terminal
+                .draw(|f| view.draw(f, Style::reset(), now))
+                .unwrap();
+            assert_eq!(view.spatial_visible, spatial);
+            assert_eq!(view.selected_step, Some(3));
+            assert!(rendered(&terminal).contains(if spatial {
+                "Selected 4: join"
+            } else {
+                "4. join [unobserved]"
+            }));
+        }
+        view.key(KeyCode::Char('v'), client.clone());
+        terminal
+            .draw(|f| view.draw(f, Style::reset(), now))
+            .unwrap();
+        assert!(!view.spatial_visible);
+        assert!(view.text(now).contains("Message active child: unavailable"));
+        view.key(KeyCode::Esc, client);
+        assert!(view.spatial.is_none());
+        assert!(!view.spatial_mode);
     }
 
     // spec: TUI-RUNTIME-R010.12
@@ -877,6 +1080,8 @@ last 界"
         assert!(view.pending());
         assert_ne!(view.graph_request.as_ref().unwrap().id(), previous);
         assert!(view.graph.is_none());
+        assert!(view.spatial.is_none());
+        assert!(!view.spatial_visible);
         assert!(view.selected_step.is_none());
         tokio::time::timeout(Duration::from_secs(1), async {
             while matches!(
@@ -895,6 +1100,8 @@ last 界"
         assert!(view.key(KeyCode::Char('c'), client));
         assert!(!view.pending());
         assert!(view.graph.is_none());
+        assert!(view.spatial.is_none());
+        assert!(!view.spatial_visible);
         assert!(view.selected_step.is_none());
     }
 
@@ -906,6 +1113,8 @@ last 界"
         assert!(view.key(KeyCode::Char('g'), client.clone()));
         assert!(!view.graph_mode);
         assert!(view.graph.is_none());
+        assert!(view.spatial.is_none());
+        assert!(!view.spatial_visible);
         view.complete().await;
         assert!(view.text(Instant::now()).contains("unavailable"));
         assert!(view.key(KeyCode::Char('g'), client.clone()));
@@ -974,6 +1183,8 @@ last 界"
             }));
             view.complete().await;
             assert!(view.graph.is_none(), "{invalidation}");
+            assert!(view.spatial.is_none(), "{invalidation}");
+            assert!(!view.spatial_visible, "{invalidation}");
             assert!(view.selected_step.is_none(), "{invalidation}");
             assert!(!view.pending());
             assert!(!view.text(Instant::now()).contains("event-2"));
@@ -995,6 +1206,8 @@ last 界"
                 _ => view.client_updated(&client()),
             }
             assert!(view.graph.is_none());
+            assert!(view.spatial.is_none());
+            assert!(!view.spatial_visible);
             assert!(view.selected_step.is_none());
             assert!(!view.text(Instant::now()).contains("event-2"));
         }
@@ -1031,6 +1244,8 @@ last 界"
             }
             assert_eq!(view.graph_request.as_ref().unwrap().id(), id);
             assert!(view.graph.is_none());
+            assert!(view.spatial.is_none());
+            assert!(!view.spatial_visible);
             if stale {
                 view.generation += 1;
             }

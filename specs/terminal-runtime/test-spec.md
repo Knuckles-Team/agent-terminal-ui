@@ -130,7 +130,7 @@ No application runtime behavior or user configuration changed.
 | TUI-RUNTIME-R006 | File-level unit test in `tests/test_precommit_hooks.py` | Both sections present | A missing section fails |
 | TUI-RUNTIME-R007 | File-level unit test in `tests/test_docs_layout.py` | Workflow calls pipelines at main | A SHA pin fails |
 | TUI-RUNTIME-R008 | File-level unit test in `tests/test_app_handlers.py` | Default theme and no-colour fallback hold | An unknown theme name falls back, not crashes |
-| TUI-RUNTIME-R008.1 | Production native draw function with Ratatui TestBackend | Resize from 100 to 40 columns preserves wrapped discovery status and complete keyboard help; Tokyo Night tokens render | Nonempty NO_COLOR resets foreground and background; unsupported AGENT_THEME falls back without panic |
+| TUI-RUNTIME-R008.1 | Production native draw function with Ratatui TestBackend. | Resize from 100 to 40 columns preserves wrapped discovery status and complete keyboard help. Tokyo Night tokens render. | Nonempty NO_COLOR resets foreground and background. Unsupported AGENT_THEME falls back without panic. |
 | TUI-RUNTIME-R009 | File-level unit test in `tests/test_docs_layout.py` | Four headings present | A missing heading fails |
 
 ## Cross-terminal presentation inventory
@@ -1598,3 +1598,24 @@ used as a root task. Each screen expectation and held response has a bounded wai
 
 The fixture qualifies the compiled terminal and public client path only. It does
 not replace native-service, released producer/SDK or nested-agent acceptance.
+
+## Canopy and spatial presentation acceptance
+
+R008.3 requires explicit Canopy selection, unchanged defaults, all existing
+theme cycles, no-color rules, resize and a 4.5:1 text contrast floor. Exercise
+the mounted Python app and native TestBackend, then the compiled entry point.
+
+R010.12.1 requires stable chain, diamond, disconnected and maximum-size layout;
+pan bounds; selection focus; map/list switching; narrow and search fallback;
+literal hostile labels; redraw stability; and clearing after denial, close,
+refresh or changed binding. Existing transport guards and effect-key isolation
+remain required. Compiled PTY and served qualification are separate gates.
+
+The optional entry-point matrix in `tests/test_entry_environment_pty.py` includes
+Canopy startup and no-color cases for both clients. Supply a wheel installation
+and a matching compiled executable; skips do not establish acceptance. The
+spatial helper and InspectorView tests require compiled native execution.
+`tests/test_native_spatial_graph_pty.py` covers resize, selection, pan, search,
+denial, no-color and local effect isolation through the compiled entry point.
+The native CI job requires both color cases and both existing PTY journeys
+without skips. These new map cases are authored; execution remains pending.

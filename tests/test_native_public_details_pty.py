@@ -37,6 +37,8 @@ class NativeTerminal:
         server: ThreadingHTTPServer,
         requests: list[tuple[str, dict[str, Any] | None, str | None]],
         task_id: str = OWNER_TASK_ID,
+        *,
+        no_color: bool = True,
     ) -> None:
         self.requests = requests
         self.trace: deque[tuple[str, object]] = deque(maxlen=64)
@@ -46,7 +48,7 @@ class NativeTerminal:
         environment = {
             **os.environ,
             "TERM": "xterm-256color",
-            "NO_COLOR": "1",
+            "NO_COLOR": "1" if no_color else "",
             "AGENT_URL": f"http://127.0.0.1:{server.server_port}",
             "AGENT_TASK_ID": task_id,
             "AGENT_AUTH_MODE": "none",

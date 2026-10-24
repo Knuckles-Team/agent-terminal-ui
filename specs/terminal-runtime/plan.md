@@ -1358,3 +1358,24 @@ parameters, anonymous reads and no effect or fallback requests.
 
 This is compiled client/terminal proof, not a production Arbora service or
 released-stack receipt. Nested execution and broad acceptance rows remain open.
+
+## Amendment 2026-10-24: Canopy and spatial flat-DAG presentation
+
+Extend existing theme registration and native presentation tokens. Canopy is an
+explicit option, not a replacement default. Adapt the nature palette to opaque
+terminal colors and stable borders. Do not add blur, transparency or animation.
+
+Add a small presentation-only layout for the validated flat ExecutionGraph.
+Use deterministic dependency layers and source order within each layer. Reuse
+InspectorView, its selected step and its authority and lifecycle guards. Keep
+the full accessible list as the default; a local key selects the spatial view.
+Narrow terminals and text search use the list. Selection focus and bounded pan
+make large graphs readable without physics or persistent background updates.
+
+No producer, transport, child interaction or dependency changes are part of this
+slice. Keep R008, R010.12 and R010.14 open. Local fixtures do not prove compiled
+PTY behavior, served hierarchy parity or release performance.
+
+Separate source implementation from compiled acceptance in child rows.
+R008.3.2 and R010.12.1.2 retain every pending parent criterion. Generated
+source bindings are not evidence that a native executable or PTY test ran.

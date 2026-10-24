@@ -138,7 +138,7 @@ containing the generated client. Without it, `/op` refuses with
 ## Theme and log entry points
 
 Python startup accepts the registered Textual themes.
-Native themes: `tokyo-night`, `nord`, `gruvbox`, `textual-light`.
+Native themes: `tokyo-night`, `nord`, `gruvbox`, `textual-light`, `canopy`.
 Both use `tokyo-night` when AGENT_THEME is unset or unknown.
 Alt+Shift+T cycles Python themes; F6 cycles native themes.
 NO_COLOR disables Python colors when present, including an empty value.
@@ -241,8 +241,8 @@ nonempty `NO_COLOR` to select terminal foreground/background colors. Labels and
 keyboard help remain necessary; color alone must not convey task state. Full
 cross-client theme and performance parity remains pending.
 
-The native terminal cycles its four baseline palettes with F6: Tokyo Night,
-Nord, Gruvbox and Textual Light. Switching works in the task, inspector, log
+The native terminal cycles its five palettes with F6: Tokyo Night,
+Nord, Gruvbox, Textual Light and Canopy. Switching works in the task, inspector, log
 and cancellation views without restarting or changing requests. Nonempty
 `NO_COLOR` keeps terminal foreground and background colors after switching.
 
