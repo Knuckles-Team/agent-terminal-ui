@@ -1335,10 +1335,12 @@
       "delivery_state": "VERIFIED",
       "landed_in": [
         "33e68ece1844",
+        "6743e92fa6dd",
         "c5e545f7cea6",
         "e3680d6a8cad"
       ],
       "verified_by": [
+        "tests/test_command_completion_contract.py:9",
         "tests/test_registered_command_contract.py:19"
       ]
     },

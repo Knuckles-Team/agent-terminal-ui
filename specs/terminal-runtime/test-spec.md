@@ -758,3 +758,11 @@ non-object JSON cause one warning and zero client calls. A later valid command
 still works. Missing IDs refuse; omitted parameters remain an empty object.
 These tests use a client double and do not qualify generated registry validation,
 versioned transport or served effects.
+## Consistent command completion
+
+`TUI-RUNTIME-R012.4.3.1`: `tests/test_command_completion_contract.py` mounts the
+production composer and drives Enter and Tab. Exact command names retain their
+identity instead of expanding to longer siblings. Case-insensitive prefixes and
+aliases select one canonical command consistently across completion and the
+suggestion list. Ambiguous prefixes and argument text are not replaced on Enter.
+These keyboard fixtures do not claim the full served command matrix.

@@ -39,6 +39,16 @@ def _iter_workspace_files():
                 yield rel_path
 
 
+def _matching_commands(
+    commands: dict, query: str, aliases: dict | None = None
+) -> list[str]:
+    """Match dispatcher casing and count aliases as one canonical command."""
+    aliases = aliases or {}
+    return sorted(
+        {aliases.get(name, name) for name in commands if name.startswith(query.lower())}
+    )
+
+
 class CommandSuggestionsOverlay(Widget):
     """A non-modal overlay showing command suggestions."""
 
@@ -138,8 +148,8 @@ class CommandSuggestionsOverlay(Widget):
         if not query:
             self._filtered_commands = sorted(self._command_keys)
         else:
-            self._filtered_commands = sorted(
-                [cmd for cmd in self._command_keys if cmd.startswith(query)]
+            self._filtered_commands = _matching_commands(
+                self._commands, query, self._canonical_commands
             )
         self._update_list()
 
@@ -502,9 +512,11 @@ class InputTextArea(TextArea):
         if not current_text_enter.startswith("/") or self._suggestion_overlay:
             return False
         command = current_text_enter[1:]
-        if command in self._commands:
+        if command.lower() in self._commands:
             return False
-        matches = [cmd for cmd in self._commands if cmd.startswith(command)]
+        matches = _matching_commands(
+            self._commands, command, self._get_canonical_commands()
+        )
         if len(matches) != 1:
             return False
         self.text = f"/{matches[0]} "
@@ -650,27 +662,21 @@ class InputTextArea(TextArea):
         if not current_text.startswith("/"):
             return
 
-        # Find matching commands
-        matches = [
-            cmd
-            for cmd in self._commands.keys()
-            if cmd.startswith(current_text[1:]) and cmd != current_text[1:]
-        ]
+        command = current_text[1:]
+        if command.lower() in self._commands:
+            self.text = f"/{command} "
+            self.cursor_position = len(self.text)
+            self._close_suggestion_overlay()
+            return
 
+        matches = _matching_commands(
+            self._commands, command, self._get_canonical_commands()
+        )
         if not matches:
             return
 
-        canonical_commands = self._get_canonical_commands()
-
-        # Auto-complete if only one match
         if len(matches) == 1:
-            # Use canonical command name if available
-            canonical_match = (
-                canonical_commands.get(matches[0], matches[0])
-                if canonical_commands
-                else matches[0]
-            )
-            self.text = f"/{canonical_match} "
+            self.text = f"/{matches[0]} "
             self.cursor_position = len(self.text)
             self._close_suggestion_overlay()
         else:

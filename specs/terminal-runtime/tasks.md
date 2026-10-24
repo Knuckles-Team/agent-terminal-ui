@@ -292,3 +292,4 @@ Record deferred validation as deferred, never passed.
 - [x] **TUI-RUNTIME-R015.30.2:** Implement native CLI help before runtime setup and qualify both help aliases and argument boundaries. Executable regression fails on main and passes with the implementation.
 
 - [x] **TUI-RUNTIME-R001.1:** Reject non-JSON numeric constants before client dispatch and parse whitespace-separated operation arguments. Focused dispatcher regressions cover refusal and recovery; the full generated-registry and transport acceptance remains separate.
+- [x] **TUI-RUNTIME-R012.4.3.1:** Preserve exact names during Tab completion and align Enter, Tab and suggestion matching across casing and aliases. Mounted command tests cover these paths; full served matrix acceptance remains pending.
