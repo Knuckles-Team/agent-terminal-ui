@@ -51,6 +51,7 @@ nav:
   - Status: status.md
   - Deployment: deployment.md
   - Design system: design-system.md
+  - Screenshots: screenshots.md
   - Architecture: architecture.md
   - Features: features.md
   - Configuration: configuration.md

@@ -33,6 +33,7 @@
 ## Contents
 
 - [Overview](#overview)
+- [Screenshots](#screenshots)
 - [Architecture](#architecture)
 - [Key Capabilities](#key-capabilities)
 - [Features](#features)
@@ -52,6 +53,13 @@ Arbora runs separately from this frontend.
 
 > [!NOTE]
 > This library is in early development and subject to change.
+
+## Screenshots
+
+![Python Textual chat with synthetic demo content](docs/assets/screenshots/chat-wide.svg)
+
+Synthetic demo captured from the real Python Textual app, not a live service or
+the Rust native terminal. [Gallery and refresh command](docs/screenshots.md).
 
 ## Architecture
 
