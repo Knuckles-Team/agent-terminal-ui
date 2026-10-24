@@ -42,7 +42,7 @@ This inventory binds existing R008 rows without closing full presentation accept
 | R008 keyboard access | `test_presentation_resize.py` verifies sidebar reopening focuses its tabs, arrow navigation, resize and composer return. The baseline targets a non-focusable container. |
 | R008.2.1 baseline tokens | Existing Python contrast tests and native presentation tests check the four baseline palettes. They do not qualify every accent/widget combination. |
 | R008.2.2 viewport behavior | Native production viewport tests retain requested rows through refresh and resize. Mounted Python tests preserve a multiline draft and available reading space. |
-| R008.2 retained parity | `test_presentation_pty.py` tests both production terminals against one loopback task fixture. It checks reading, paging, resize, theme redraw, visible-row retention through switching, color suppression and clean exit. Navigation makes no extra requests. |
+| R008.2 retained parity | `test_presentation_pty.py` tests both production terminals against one loopback task fixture. It checks reading, paging, resize, theme redraw, visible-row retention through switching, color suppression and clean exit. Navigation makes no extra recorded POST requests. GET activity is not asserted. |
 
 The PTY matrix uses 100x30 and 40x16 viewports, with and without nonempty NO_COLOR.
 Python uses the actual module command; native uses an explicitly compiled current binary.
