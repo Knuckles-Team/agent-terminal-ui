@@ -1,5 +1,17 @@
 # General Instructions
 
+<!-- agent-contract:start -->
+## Agent contract
+
+Tool-neutral rules for any AI agent or human working in this repository. The fleet standard maintains this block; edit outside the markers.
+
+- **Owner boundary:** this repository owns the terminal interface (spec prefix `TUI-`). Data reaches it only through arbora. See [ecosystem boundaries](https://github.com/Knuckles-Team/pipelines/blob/main/reference/ecosystem-boundaries.md) for feature routing.
+- **Setup:** run `scripts/bootstrap.sh`. The script is idempotent and non-interactive. It ensures uv >= 0.9 and the declared Python version. It syncs the locked environment, installs git hooks and prints the gate command.
+- **Gates:** `uvx pre-commit run --all-files` must pass before each push. Do not bypass hooks to get green.
+- **Commits:** one logical change per commit with a `Spec: <ID>` trailer (or `Spec: none (<reason>)`), plus a `Co-Authored-By:` trailer naming the assisting agent. Stage explicit paths only; never `git add -A` or `git add .`. Use the contributor's configured Git identity, never a tool or bot name.
+- **Org rules:** [organization AGENTS.md](https://github.com/Knuckles-Team/.github/blob/main/AGENTS.md).
+<!-- agent-contract:end -->
+
 > Claude Code loads this file via `CLAUDE.md` (`@AGENTS.md` import) — the two stay in sync. Edit this file, not `CLAUDE.md`.
 
 

@@ -19,48 +19,52 @@
         font-weight: 700;
     }
 
-    .terminal-3567286217-matrix {
+    .terminal-2915238081-matrix {
         font-family: Fira Code, monospace;
         font-size: 20px;
         line-height: 24.4px;
         font-variant-east-asian: full-width;
     }
 
-    .terminal-3567286217-title {
+    .terminal-2915238081-title {
         font-size: 18px;
         font-weight: bold;
         font-family: arial;
     }
 
-    .terminal-3567286217-r1 { fill: #c5c8c6 }
-.terminal-3567286217-r2 { fill: #0e2638 }
+    .terminal-2915238081-r1 { fill: #c5c8c6 }
+.terminal-2915238081-r2 { fill: #0e2638 }
+.terminal-2915238081-r3 { fill: #0178d4;font-weight: bold }
+.terminal-2915238081-r4 { fill: #e0e0e0 }
+.terminal-2915238081-r5 { fill: #fea62b }
+.terminal-2915238081-r6 { fill: #777777 }
     </style>
 
     <defs>
-    <clipPath id="terminal-3567286217-clip-terminal">
+    <clipPath id="terminal-2915238081-clip-terminal">
       <rect x="0" y="0" width="1219.0" height="72.19999999999999" />
     </clipPath>
-    <clipPath id="terminal-3567286217-line-0">
+    <clipPath id="terminal-2915238081-line-0">
     <rect x="0" y="1.5" width="1220" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-3567286217-line-1">
+<clipPath id="terminal-2915238081-line-1">
     <rect x="0" y="25.9" width="1220" height="24.65"/>
             </clipPath>
     </defs>
 
-    <rect fill="#292929" stroke="rgba(255,255,255,0.35)" stroke-width="1" x="1" y="1" width="1236" height="121.2" rx="8"/><text class="terminal-3567286217-title" fill="#c5c8c6" text-anchor="middle" x="618" y="27">StatusLineHarness</text>
+    <rect fill="#292929" stroke="rgba(255,255,255,0.35)" stroke-width="1" x="1" y="1" width="1236" height="121.2" rx="8"/><text class="terminal-2915238081-title" fill="#c5c8c6" text-anchor="middle" x="618" y="27">StatusLineHarness</text>
             <g transform="translate(26,22)">
             <circle cx="0" cy="0" r="7" fill="#ff5f57"/>
             <circle cx="22" cy="0" r="7" fill="#febc2e"/>
             <circle cx="44" cy="0" r="7" fill="#28c840"/>
             </g>
         
-    <g transform="translate(9, 41)" clip-path="url(#terminal-3567286217-clip-terminal)">
-    <rect fill="#121212" x="0" y="1.5" width="1220" height="24.65" shape-rendering="crispEdges"/><rect fill="#121212" x="0" y="25.9" width="1220" height="24.65" shape-rendering="crispEdges"/><rect fill="#1e1e1e" x="0" y="50.3" width="1220" height="24.65" shape-rendering="crispEdges"/>
-    <g class="terminal-3567286217-matrix">
-    <text class="terminal-3567286217-r1" x="1220" y="20" textLength="12.2" clip-path="url(#terminal-3567286217-line-0)">
-</text><text class="terminal-3567286217-r1" x="1220" y="44.4" textLength="12.2" clip-path="url(#terminal-3567286217-line-1)">
-</text><text class="terminal-3567286217-r2" x="0" y="68.8" textLength="1220" clip-path="url(#terminal-3567286217-line-2)">────────────────────────────────────────────────────────────────────────────────────────────────────</text>
+    <g transform="translate(9, 41)" clip-path="url(#terminal-2915238081-clip-terminal)">
+    <rect fill="#121212" x="0" y="1.5" width="1220" height="24.65" shape-rendering="crispEdges"/><rect fill="#1e1e1e" x="0" y="25.9" width="1220" height="24.65" shape-rendering="crispEdges"/><rect fill="#1e1e1e" x="0" y="50.3" width="12.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#1e1e1e" x="12.2" y="50.3" width="36.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#1e1e1e" x="48.8" y="50.3" width="12.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#1e1e1e" x="61" y="50.3" width="12.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#1e1e1e" x="73.2" y="50.3" width="36.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#1e1e1e" x="109.8" y="50.3" width="12.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#1e1e1e" x="122" y="50.3" width="12.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#1e1e1e" x="134.2" y="50.3" width="0" height="24.65" shape-rendering="crispEdges"/><rect fill="#1e1e1e" x="134.2" y="50.3" width="12.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#1e1e1e" x="146.4" y="50.3" width="12.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#1e1e1e" x="158.6" y="50.3" width="61" height="24.65" shape-rendering="crispEdges"/><rect fill="#1e1e1e" x="219.6" y="50.3" width="12.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#1e1e1e" x="231.8" y="50.3" width="12.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#1e1e1e" x="244" y="50.3" width="36.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#1e1e1e" x="280.6" y="50.3" width="12.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#1e1e1e" x="292.8" y="50.3" width="12.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#1e1e1e" x="305" y="50.3" width="207.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#1e1e1e" x="512.4" y="50.3" width="695.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#1e1e1e" x="1207.8" y="50.3" width="12.2" height="24.65" shape-rendering="crispEdges"/>
+    <g class="terminal-2915238081-matrix">
+    <text class="terminal-2915238081-r1" x="1220" y="20" textLength="12.2" clip-path="url(#terminal-2915238081-line-0)">
+</text><text class="terminal-2915238081-r2" x="0" y="44.4" textLength="1220" clip-path="url(#terminal-2915238081-line-1)">────────────────────────────────────────────────────────────────────────────────────────────────────</text><text class="terminal-2915238081-r1" x="1220" y="44.4" textLength="12.2" clip-path="url(#terminal-2915238081-line-1)">
+</text><text class="terminal-2915238081-r3" x="12.2" y="68.8" textLength="36.6" clip-path="url(#terminal-2915238081-line-2)">ask</text><text class="terminal-2915238081-r4" x="73.2" y="68.8" textLength="36.6" clip-path="url(#terminal-2915238081-line-2)">&#160;│&#160;</text><text class="terminal-2915238081-r6" x="158.6" y="68.8" textLength="61" clip-path="url(#terminal-2915238081-line-2)">model</text><text class="terminal-2915238081-r4" x="244" y="68.8" textLength="36.6" clip-path="url(#terminal-2915238081-line-2)">&#160;│&#160;</text><text class="terminal-2915238081-r6" x="305" y="68.8" textLength="207.4" clip-path="url(#terminal-2915238081-line-2)">usage&#160;unavailable</text>
     </g>
     </g>
 </svg>

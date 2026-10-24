@@ -1563,16 +1563,22 @@
         "8d67aee7ffd9"
       ],
       "verified_by": [
-        "tests/test_operator_documentation.py:28",
-        "tests/test_operator_documentation.py:33"
+        "tests/test_operator_documentation.py:29",
+        "tests/test_operator_documentation.py:34"
       ]
     },
     {
       "id": "TUI-RUNTIME-R015.12",
       "title": "The README must cover each supported operator entry point. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "2f8561f36c43",
+        "89cf41d65f78"
+      ],
+      "verified_by": [
+        "tests/test_operator_documentation.py:112",
+        "tests/test_operator_documentation.py:117"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.13",
@@ -1594,9 +1600,9 @@
         "8d67aee7ffd9"
       ],
       "verified_by": [
-        "tests/test_operator_documentation.py:28",
-        "tests/test_operator_documentation.py:33",
-        "tests/test_operator_documentation.py:77"
+        "tests/test_operator_documentation.py:29",
+        "tests/test_operator_documentation.py:34",
+        "tests/test_operator_documentation.py:78"
       ]
     },
     {
@@ -1614,9 +1620,14 @@
     {
       "id": "TUI-RUNTIME-R015.16",
       "title": "The README must link its detailed documentation. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "2f8561f36c43"
+      ],
+      "verified_by": [
+        "tests/test_operator_documentation.py:130",
+        "tests/test_operator_documentation.py:135"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.17",
@@ -1626,16 +1637,21 @@
         "8d67aee7ffd9"
       ],
       "verified_by": [
-        "tests/test_operator_documentation.py:60",
-        "tests/test_operator_documentation.py:65"
+        "tests/test_operator_documentation.py:61",
+        "tests/test_operator_documentation.py:66"
       ]
     },
     {
       "id": "TUI-RUNTIME-R015.18",
       "title": "The repository must declare its license in a tracked license file. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "2f8561f36c43"
+      ],
+      "verified_by": [
+        "tests/test_package_metadata.py:24",
+        "tests/test_package_metadata.py:31"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.19",
@@ -2169,15 +2185,19 @@
         "8d67aee7ffd9"
       ],
       "verified_by": [
-        "tests/test_installed_operator_entry.py:12"
+        "tests/test_installed_operator_entry.py:36"
       ]
     },
     {
       "id": "TUI-RUNTIME-R015.71",
       "title": "A served integration test must launch the installed command and observe client behavior after source-quality repairs. It must distinguish a denied request from an authenticated empty result",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "2f8561f36c43"
+      ],
+      "verified_by": [
+        "tests/test_installed_operator_entry.py:87"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R012.3.1",
