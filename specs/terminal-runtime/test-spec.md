@@ -896,3 +896,17 @@ Model-shape review adds mounted regressions for consumed cost and tags fields.
 Cost must be a mapping with finite numeric input/output values when supplied.
 Tags must be a list of strings when supplied. Invalid fields produce the named
 unavailable result for all three registry-read forms. Unrelated metadata is preserved.
+
+
+### Focus command after sidebar keyboard navigation
+
+R012.4.3.1 preserves composer focus after `/focus` hides or opens the sidebar.
+The command reuses the existing screen action, then restores composer focus.
+Ctrl+B still moves focus into sidebar tabs when opening them. Mounted real-client
+regressions exercise both command spellings and the shortcut, with no command
+requests or model turn. The existing dispatcher regressions remain unchanged.
+
+Both original cases fail on untouched main 55c5aad6 at
+`tests/test_registered_command_contract.py:47`: ContentTabs has focus instead
+of InputTextArea. The two new real-client cases reproduce the same failure.
+This command repair does not change sidebar navigation, layout or transport.

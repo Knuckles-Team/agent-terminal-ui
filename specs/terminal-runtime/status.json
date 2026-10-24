@@ -1360,6 +1360,7 @@
       "verified_by": [
         "tests/test_command_completion_contract.py:9",
         "tests/test_mounted_command_matrix.py:448",
+        "tests/test_mounted_command_matrix.py:607",
         "tests/test_registered_command_contract.py:19"
       ]
     },

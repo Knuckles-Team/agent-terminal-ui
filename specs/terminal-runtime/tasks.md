@@ -299,3 +299,5 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R012.4.3.1:** Review local settings command entry and mounted edit, persistence, close and reopen evidence.
 - [ ] **TUI-RUNTIME-R012.2.1:** Review distinct model-read failures and genuine empty-registry behavior. Governed model choice remains open.
 - [ ] **TUI-RUNTIME-R012.4.1:** Review named pre-transport refusal for legacy config, resources and maintenance commands.
+
+- [ ] **TUI-RUNTIME-R012.4.3.1:** Review composer-focus restoration after `/focus` while preserving Ctrl+B sidebar keyboard navigation.
