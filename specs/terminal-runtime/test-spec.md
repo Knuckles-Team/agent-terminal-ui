@@ -413,6 +413,16 @@ These local contracts do not close full served recovery, presentation parity or 
 |---|---|---|---|
 | TUI-RUNTIME-R015.29.1 | `tests/test_shared_hook_consumers.py` and actual remote pre-commit installs | Exact pins preserve both stages and invocation flags. A clean linked worktree passes. | Altered configuration fails. Real hooks reject legacy markers, canonical edits and foreign Cargo targets. |
 
+## Modal keyboard ownership
+
+Partial R008 evidence exercises the mounted exit, graph-chat and tool-approval
+journeys in `tests/test_modal_keyboard_isolation.py`. Escape returns to the
+composer; Shift+Tab moves focus without changing the agent mode. Input editing
+keys stay with the modal, including Ctrl+A, Ctrl+C, Ctrl+D, Ctrl+U and Ctrl+Y.
+Escape denies pending approvals through the existing callback. The fixture
+checks main-screen shortcuts separately. Transport effects are not qualified.
+Full presentation, native parity and served acceptance remain open.
+
 ## Python operator documentation
 
 `tests/test_cli_documentation.py` captures actual CLI help and tests dispatch.

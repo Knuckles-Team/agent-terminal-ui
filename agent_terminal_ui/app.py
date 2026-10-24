@@ -39,6 +39,7 @@ except ImportError:
 from textual.app import App, ScreenStackError
 from textual.binding import Binding, BindingType
 from textual.message import Message
+from textual.screen import ModalScreen
 
 # Core client and command imports
 from agent_terminal_ui.capability_provider import CapabilityCommandProvider
@@ -742,6 +743,25 @@ class AgentApp(App):
                     logger.error(f"Error during exit: {e}")
 
         self.push_screen(ExitConfirmScreen(callback=on_confirm))
+
+    def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
+        """Let modal controls handle navigation and editing before the composer."""
+        if (
+            self.screen_stack
+            and isinstance(self.screen, ModalScreen)
+            and action
+            in {
+                "rewind",
+                "cycle_mode",
+                "select_all",
+                "clear_input",
+                "restore_input",
+                "quit_session",
+                "interrupt",
+            }
+        ):
+            return False
+        return super().check_action(action, parameters)
 
     def action_select_all(self) -> None:
         """Perform a select-all action in the input text area."""

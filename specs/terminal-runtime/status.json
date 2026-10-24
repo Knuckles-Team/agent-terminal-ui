@@ -453,6 +453,7 @@
       ],
       "verified_by": [
         "tests/test_exit_confirm_keyboard.py:12",
+        "tests/test_modal_keyboard_isolation.py:15",
         "tests/test_modal_layout.py:14"
       ],
       "rollup_of": [

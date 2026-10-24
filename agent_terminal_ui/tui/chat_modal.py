@@ -14,6 +14,8 @@ from textual.widgets import Button, Label, RichLog
 class ChatModal(ModalScreen[None]):
     """Modal to display chat messages for a subgraph."""
 
+    BINDINGS = [("escape", "dismiss", "Close")]
+
     DEFAULT_CSS = """
     ChatModal {
         align: center middle;
