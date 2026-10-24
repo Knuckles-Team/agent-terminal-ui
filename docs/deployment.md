@@ -18,6 +18,8 @@ From the repository root, run:
 cargo run --locked --manifest-path native/agent-terminal-ui/Cargo.toml
 ```
 
-Configure `AGENT_URL` and optional `AGENT_BEARER_TOKEN` before launch.
+Configure `AGENT_URL` and an existing `AGENT_BEARER_TOKEN` for the default bearer mode.
+For anonymous loopback only, set `AGENT_AUTH_MODE=none` and unset the bearer token.
+The Arbora server must also permit that anonymous mode.
 This executable does not use the Python CLI flags. Native live-service parity
 and release performance qualification remain open.

@@ -1220,7 +1220,7 @@ These clauses do not assert a new finding count, GPA or letter grade.
 ## Operator package qualification receipt (2026-10-24)
 
 This batch starts from main `64d59bd6cb4ebf3611204a59b183e29523b5aa89`.
-The final wheel includes main `89c35b57451ead75d50a4998c5d2ef37ff754f0f` plus this package change.
+The final wheel includes main `69bed18c5896389b1fc6a03cf4203758202a0e27` plus this package change.
 R015.12 checks every Python parser flag plus interactive, headless, observer,
 Docker and native start instructions. Five mutations remove entry coverage.
 R015.16 checks local documentation links and rejects missing or broken targets.
@@ -1240,7 +1240,7 @@ writing files, commits or tags. No release or version change occurred.
 
 On the cloud computer, Python 3.12.14 built the wheel from tracked source plus
 this batch with `uv build --offline --wheel --python` and an explicit interpreter.
-Wheel SHA-256: `061b06515f78a5ad7a4f719e40d8f44ac41380e642df3a8ddb9c632d7f6a2a4c`.
+Wheel SHA-256: `c4af35741b9920b4fa091781876dc4dce5ddaffc35d1de2ae03adb77fe7c082f`.
 A separate environment reused cached dependency files and installed that wheel.
 With TUI_TEST_INSTALLED_ENV set, the operator documentation, package metadata,
 installed operator entry and environment inventory suite passed 79 tests.
@@ -1267,3 +1267,7 @@ It emitted the existing subprocess-finalizer warning after the event loop closed
 The run used two workers, the explicit installed wheel and writable tool caches.
 Only ALL_PROXY and all_proxy were unset; HTTP and HTTPS proxy settings remained.
 Native skips and the warning remain qualification gaps, not passing evidence.
+
+The native instructions now state the default bearer mode and explicit anonymous loopback configuration.
+After this wording change, 36 operator checks passed and the wheel was rebuilt.
+The runtime source and license bytes did not change.

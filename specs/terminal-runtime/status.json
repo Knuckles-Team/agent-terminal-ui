@@ -1574,8 +1574,8 @@
         "2f8561f36c43"
       ],
       "verified_by": [
-        "tests/test_operator_documentation.py:111",
-        "tests/test_operator_documentation.py:116"
+        "tests/test_operator_documentation.py:112",
+        "tests/test_operator_documentation.py:117"
       ]
     },
     {
@@ -1623,8 +1623,8 @@
         "2f8561f36c43"
       ],
       "verified_by": [
-        "tests/test_operator_documentation.py:129",
-        "tests/test_operator_documentation.py:134"
+        "tests/test_operator_documentation.py:130",
+        "tests/test_operator_documentation.py:135"
       ]
     },
     {

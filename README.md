@@ -324,7 +324,9 @@ Build and launch it from the repository root with a Rust toolchain:
 cargo run --locked --manifest-path native/agent-terminal-ui/Cargo.toml
 ```
 
-It uses the same `AGENT_URL` and optional `AGENT_BEARER_TOKEN` inputs.
+Configure `AGENT_URL` and an existing `AGENT_BEARER_TOKEN` for the default bearer mode.
+For anonymous loopback only, set `AGENT_AUTH_MODE=none` and unset the bearer token.
+The Arbora server must also permit that anonymous mode.
 Python flags do not imply native support. See [Deployment](docs/deployment.md)
 for native setup and the remaining qualification limits.
 

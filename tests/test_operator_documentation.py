@@ -106,6 +106,7 @@ def check_operator_entries(readme: str) -> None:
     assert "agent-terminal-ui --observe-task TASK_ID" in usage
     assert "cargo run --locked --manifest-path native/agent-terminal-ui/Cargo.toml" in usage
     assert "docker run --rm -e AGENT_URL=" in usage
+    assert "`AGENT_AUTH_MODE=none` and unset the bearer token" in usage
 
 
 @pytest.mark.spec("TUI-RUNTIME-R015.12")
@@ -114,7 +115,7 @@ def test_readme_operator_entry_points() -> None:
 
 
 @pytest.mark.spec("TUI-RUNTIME-R015.12")
-@pytest.mark.parametrize("entry", ["--observe-task", "--mode", "cargo run", "docker run", "--headless"])
+@pytest.mark.parametrize("entry", ["--observe-task", "--mode", "cargo run", "docker run", "--headless", "AGENT_AUTH_MODE=none"])
 def test_readme_rejects_missing_operator_entries(entry: str) -> None:
     with pytest.raises(AssertionError):
         check_operator_entries((ROOT / "README.md").read_text().replace(entry, "missing-entry"))
