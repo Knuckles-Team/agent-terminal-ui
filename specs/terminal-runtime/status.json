@@ -261,7 +261,7 @@
         "tests/test_client.py:116",
         "tests/test_client.py:122",
         "tests/test_client.py:129",
-        "tests/test_headless.py:119"
+        "tests/test_headless.py:107"
       ]
     },
     {

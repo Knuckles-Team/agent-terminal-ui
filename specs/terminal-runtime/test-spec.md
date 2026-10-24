@@ -1216,3 +1216,13 @@ R015.67 requires all domain criteria and the complete inventory, without averagi
 R015.68 requires seventeen independent receipts with no omitted domain or evidence gap.
 R015.69 requires no unresolved actionable finding and a complete historical-to-current reconciliation.
 These clauses do not assert a new finding count, GPA or letter grade.
+
+## Literal completion-marker regression
+
+`TUI-RUNTIME-R012.1.1`: `tests/test_turn_completion.py` feeds A2A-normalized
+artifacts and typed terminal states into the mounted app and headless runner.
+Exact, embedded and split `[DONE]` text must remain content. Mounted checks
+preserve processing and queued work until terminal delivery, then dispatch once.
+Pending approval still precedes the queue. Headless checks retain later text
+and failures, and stop at typed completion or cancellation. These fixtures do
+not qualify served streaming, native parity or full mounted cancellation.

@@ -1089,3 +1089,11 @@ The versioned contract uses the repository revision and resolved shared-gate rev
 A future rubric change requires another dated amendment and a new contract version.
 Historic analysis remains source history, not a current scan or an authoritative version mirror.
 The historical count is not a verified current inventory. R015.69 requires reconciliation rather than invented missing findings.
+
+## Amendment 2026-10-24: literal completion markers
+
+R012.1.1 owns Python reply and terminal-state handling. Normalized text remains
+content even when it contains `[DONE]`. Only a typed `turn_end` event completes
+the turn and releases queued work or pending approval. Headless output must
+retain this content and later failures. Mounted and headless regressions extend
+the existing owner; served streaming and cancellation remain open under R012.1.2.
