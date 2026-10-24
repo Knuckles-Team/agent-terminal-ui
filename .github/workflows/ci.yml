@@ -94,3 +94,18 @@ jobs:
         run: cargo +1.96.0 test --locked --manifest-path native/agent-terminal-ui/Cargo.toml
       - name: Native Clippy
         run: cargo +1.96.0 clippy --locked --manifest-path native/agent-terminal-ui/Cargo.toml --all-targets -- -D warnings
+      - name: Build the checkout's native terminal
+        run: cargo +1.96.0 build --locked --manifest-path native/agent-terminal-ui/Cargo.toml --bin agent-terminal-ui-native
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          python-version: '3.14'
+      - name: Required compiled-native PTY journeys
+        env:
+          TUI_NATIVE_TEST_BINARY: ${{ github.workspace }}/native/agent-terminal-ui/target/debug/agent-terminal-ui-native
+          PTY_RESULTS: ${{ runner.temp }}/native-pty-results.xml
+        run: |
+          set -euo pipefail
+          uv sync --frozen --extra test --python 3.14
+          uv run --frozen --no-sync python -c 'import os, pathlib, pty, termios, pyte; binary = pathlib.Path(os.environ["TUI_NATIVE_TEST_BINARY"]); assert binary.is_file() and os.access(binary, os.X_OK)'
+          uv run --frozen --no-sync pytest tests/test_native_public_details_pty.py -q --no-cov --junitxml="$PTY_RESULTS"
+          uv run --frozen --no-sync python -c 'import os, xml.etree.ElementTree as ET; cases = ET.parse(os.environ["PTY_RESULTS"]).findall(".//testcase"); assert len(cases) == 2 and all(case.find(tag) is None for case in cases for tag in ("skipped", "failure", "error")), "Both required PTY journeys must pass without skips"'

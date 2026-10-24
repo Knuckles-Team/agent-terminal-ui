@@ -29,6 +29,7 @@ shell = [
     "bashlex>=0.18"
 ]
 test = [
+    "pyte==0.8.2",
     "pytest-xdist>=3.8.0",
     "pytest>=9.0.2",
     "pytest-asyncio>=1.4.0",

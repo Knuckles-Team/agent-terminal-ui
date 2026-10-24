@@ -1337,6 +1337,24 @@ Clear protected data before refresh, after refusal and when client, context or s
 Do not infer child agents, transcripts, root identities or lifecycle completion from this flat graph.
 Python mounted source-contract tests qualify this consumer slice, not installed producer support or served acceptance.
 Native graph source is present in the companion amendment.
-Native compilation, Rust tests, Clippy and compiled-terminal qualification remain unrun.
+Native compilation, Rust tests and Clippy passed in hosted CI on `612def9`.
+Compiled-terminal qualification still requires the exact-checkout PTY journey below.
 Nested execution, public records and released-stack proof remain open.
 This slice leaves existing `/run` behavior and its separate canonical-read migration unchanged.
+
+## Amendment: compiled-native flat graph journey (2026-10-24)
+
+Extend the existing native public-details PTY harness for R010.11 and R010.12.
+The native CI job builds its checkout, then runs both terminal journeys with that
+explicit executable. Pin the terminal decoder in the test extra and locked environment.
+Missing prerequisites, an absent executable or a skipped journey fail the job.
+
+Use a bounded synthetic loopback Arbora fixture and the actual producer diamond.
+Read a real task correlation before opening `i`, then `g`. Check one row per step,
+predecessors, dependents, evidence, keyboard selection and 40-column resizing.
+Hold a refresh until old graph data and selection clear, then test denied reads,
+close/reopen and quit with terminal restoration. Assert exact root-bound graph
+parameters, anonymous reads and no effect or fallback requests.
+
+This is compiled client/terminal proof, not a production Arbora service or
+released-stack receipt. Nested execution and broad acceptance rows remain open.

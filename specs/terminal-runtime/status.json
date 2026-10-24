@@ -518,7 +518,8 @@
         "c35cb5a545cf"
       ],
       "verified_by": [
-        "tests/test_native_execution_graph_contract.py:17"
+        "tests/test_native_execution_graph_contract.py:17",
+        "tests/test_native_public_details_pty.py:229"
       ],
       "rollup_of": [
         "TUI-RUNTIME-R010.1",

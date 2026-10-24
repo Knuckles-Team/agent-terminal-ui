@@ -1561,7 +1561,8 @@ Negative tests cover identity, topology, evidence, bounds, refusal, credential/c
 The missing-operation regression makes zero network requests, without a fallback or skip.
 Actual installed-SDK qualification remains separate from this source fixture.
 These mounted Python tests do not close R010.11 through R010.14.
-Native source is present; its tests, compilation, Clippy and compiled-terminal qualification remain unrun.
+Native compilation, tests and Clippy passed in hosted CI on `612def9`.
+The compiled-terminal journey below must qualify the exact candidate executable.
 Nested and released-stack acceptance also remain required.
 
 ## Native flat graph source-contract coverage
@@ -1578,7 +1579,22 @@ scrolling, resize, search isolation, local cancellation and stale replies.
 A deterministic test cancels the awaiting completion future, then resumes its retained read handle. Each
 read is scoped to the full task correlation, immutable client and generation.
 Python source-contract tests check fixture provenance and schema limits only;
-they do not run native code. Native tests, Clippy and the actual compiled
-terminal journey remain unrun for this source-only candidate. R010.11 through
+they do not run native code. Hosted native tests and Clippy passed on `612def9`;
+actual compiled-terminal qualification uses the required journey below. R010.11 through
 R010.14 and R012.7 through R012.9 remain open. No older native binary qualifies
 this new graph source, and the held release prerequisite is unchanged.
+
+## Required compiled-native graph PTY journey
+
+`tests/test_native_public_details_pty.py` runs the real binary built by the same
+native CI job. Both public-details and graph journeys must pass without skips.
+The graph fixture serves only loopback registry, task and graph reads; it does
+not advertise `runs.get`. Verify the validated root task/context/run, diamond
+rows, separate edge details, public evidence and unavailable child controls.
+Exercise Tab and Shift+Tab, resize to 40 by 24 and back, hold a refresh to inspect
+clearing, return HTTP 403, close/reopen and quit with terminal modes restored.
+Request assertions reject fallback routes, credentials, effects and any step ID
+used as a root task. Each screen expectation and held response has a bounded wait.
+
+The fixture qualifies the compiled terminal and public client path only. It does
+not replace native-service, released producer/SDK or nested-agent acceptance.
