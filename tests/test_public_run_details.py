@@ -873,3 +873,53 @@ def test_resumed_empty_terminal_page_uses_cursor_without_inventing_events():
     value.update(has_more=False, after=0, next_after=0)
     with pytest.raises(ValueError):
         PublicRunPage.parse(value, "run-1", 0)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "invalid",
+    [
+        {"context_id": None},
+        {"context_id": ""},
+        {"context_id": []},
+        {"context_id": "context\x1b"},
+        {"run_id": ""},
+        {"run_id": []},
+        {"run_id": "run\x1b"},
+    ],
+)
+async def test_malformed_rebinding_clears_only_matching_task_and_requires_revalidation(
+    invalid,
+):
+    client = AsyncMock(spec=AgentClient)
+    client.get_public_run_events.return_value = page()
+    app = DetailsApp(client)
+    async with app.run_test(size=(100, 40)) as pilot:
+        conversation = app.query_one(Conversation)
+        details = app.query_one(PublicRunDetails)
+        details.summary_fold.collapsed = False
+        await pilot.pause()
+        assert details.records and details.terminal
+        await conversation.bind_public_run(client, {**binding(), "task_id": "other"})
+        other = conversation._public_details["other"][1]
+        assert other.apply_page(PublicRunPage.parse(page(), "run-1", 0))
+        header = details.summary_fold.query_one("CollapsibleTitle")
+        header.focus()
+        await pilot.pause()
+
+        await conversation.bind_public_run(client, {**binding(), **invalid})
+        assert not details.records and not details._valid
+        assert "unavailable" in str(details._summary.render())
+        assert "task_started" not in str(details._trace.render())
+        assert other.records and other._valid
+        assert not details.summary_fold.collapsed and details.trace_fold.collapsed
+        assert app.focused is header
+        details.action_replay()
+        await pilot.pause()
+        assert client.get_public_run_events.await_count == 1
+
+        await conversation.bind_public_run(client, binding())
+        await pilot.pause()
+        assert details.records and details._valid
+        assert client.get_public_run_events.await_count == 2
+        assert len(app.query(PublicRunDetails)) == 2

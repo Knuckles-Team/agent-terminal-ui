@@ -644,3 +644,49 @@ usage, supported flags and environment settings, including with invalid runtime
 configuration. Mixed help/operation flags fail. A prompt value of `--help` still
 reaches submission credential validation. These checks do not claim served
 transport, native release or full terminal cutover qualification.
+
+## Public detail malformed-binding regression
+
+`TUI-RUNTIME-R008.2.3.2.2.1` clears the displayed task's protected summary and
+trace when a replacement context or run identifier is malformed. It retains
+fold choice and focus, leaves other tasks unchanged, and refuses replay until
+the exact binding is validated again. This repairs the existing leaf; it adds
+no new completed requirement or served acceptance claim.
+
+Baseline: `52bc92d5fb1e140c9502f634b3ea6ac3c37f5760` on GR1080.
+The seven parameter cases in
+`tests/test_public_run_details.py::test_malformed_rebinding_clears_only_matching_task_and_requires_revalidation`
+fail against unchanged baseline production code and pass with the repair.
+The focused public-details, whole-app keyboard and mounted tool-block suite
+passes all 106 tests with Python 3.14.7:
+
+```bash
+python -m pytest tests/test_public_run_details.py tests/test_public_run_keyboard_app.py tests/test_tool_call_block_mounted.py -q -o addopts='' --timeout=30 --timeout-method=thread
+```
+
+`pre-commit run --all-files` passes all configured commit-stage checks.
+An isolated pre-commit cache avoids a missing manifest in the shared cache.
+The restricted execution environment stalled mounted tests; the completed
+results above use the same GR1080 host outside that restriction. No native,
+live Arbora, release-performance or cross-terminal qualification is claimed.
+
+
+The full pre-push gate passed every hook except pytest. Its default locked
+all-extras environment lacks the optional Arbora client. It reported 1272
+passes, one skip, seven failures in `tests/test_client.py`, and four collection
+errors in `test_client_read_contracts.py`, `test_current_plan_view.py`,
+`test_registered_command_contract.py` and `test_served_fleet_usage.py`.
+A separate `uv run --all-extras` environment tests the same five files on unchanged main.
+It reproduces all seven failures and four errors, with 74 passes.
+This default gate remains failing. The repair changes no dependency or hook configuration.
+
+
+The full suite also ran with the existing installed `arbora==0.1.7` client
+environment on GR1080: 1444 passed, one skipped, and all six snapshots passed.
+The command was `python -m pytest tests -q -n 2 --dist loadfile -p no:randomly -m 'not slow' --timeout=60 --tb=short`.
+This installed-client result does not make the default pre-push environment green.
+
+
+Publication rebase: `d370244d768458262cfc46692152eadd913709a2` adds native CLI help.
+Both appended evidence sections are retained. Python production code is unchanged
+by that upstream change. The full-suite receipt above predates this rebase.
