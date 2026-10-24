@@ -451,7 +451,8 @@
         "070e15682e71"
       ],
       "verified_by": [
-        "tests/test_exit_confirm_keyboard.py:12"
+        "tests/test_exit_confirm_keyboard.py:12",
+        "tests/test_modal_layout.py:14"
       ],
       "rollup_of": [
         "TUI-RUNTIME-R008.1",

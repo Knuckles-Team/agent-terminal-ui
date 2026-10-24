@@ -440,6 +440,16 @@ These tests do not prove model selection, history loading or backend authority.
 - Anonymous task clients cannot obtain authenticated host-log authority.
 - Observe remains read-only in the actual loopback EG/Arbora/native journey.
 
+## Responsive modal layouts
+
+Partial R008 presentation evidence covers chat-dialog bounds, approval-list
+scrolling, visible compact approval controls, and feedback focus after resize.
+`tests/test_modal_layout.py` resizes the same mounted modal through 120x40,
+40x12 and 60x20 viewports, then restores 120x40. The baseline clips the chat
+dialog, hides approval feedback and clips one-row button content. These local
+fixtures do not close native parity, full keyboard access, served journeys or
+performance acceptance. R008 and its remaining presentation leaf stay open.
+
 ## Collapsed public-detail regression proof
 
 - R012.1.4: mount the actual Conversation and ToolCallBlock. Focus the header,
