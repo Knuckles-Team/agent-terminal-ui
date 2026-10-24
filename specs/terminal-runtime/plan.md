@@ -1068,3 +1068,24 @@ Open the modal before reading; retain keyboard close and retry during failure.
 Test the real application command route with delayed and refused client reads.
 A closed screen must discard late results even if cancellation is suppressed.
 This is client presentation work; conversation resume and live producer proof remain open.
+
+## Amendment 2026-10-24: reproducible quality acceptance v1
+
+The owner approved replacement of the legacy score clauses in R015.55–R015.69.
+Quality acceptance v1 replaces the undocumented score, GPA, letter-grade and fixed finding-count criteria.
+The amendment preserves all functional requirements and their acceptance tests.
+The substantive quality obligations in R015.1–R015.54 remain unchanged.
+The existing source-quality rows own this correction; no new capability or spec directory is needed.
+
+The gates enter through the configured commit, push and CI workflows.
+They inspect production source, tests, documentation, metadata and lockfiles.
+The acceptance matrix in test-spec.md names the commands, domains and outstanding checks.
+A configuration entry is not an execution receipt. A passing partial check does not qualify its entire domain.
+No score, average, changed-file baseline or source-only merge exception replaces complete quality acceptance.
+Warnings, security findings and missing implementations remain acceptance gaps.
+Specification repair supplies no implementation or execution evidence for these fifteen rows.
+
+The versioned contract uses the repository revision and resolved shared-gate revisions as its inputs.
+A future rubric change requires another dated amendment and a new contract version.
+Historic analysis remains source history, not a current scan or an authoritative version mirror.
+The historical count is not a verified current inventory. R015.69 requires reconciliation rather than invented missing findings.

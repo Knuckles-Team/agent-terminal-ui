@@ -2045,105 +2045,105 @@
     },
     {
       "id": "TUI-RUNTIME-R015.55",
-      "title": "The terminal must score at least 80 in project analysis. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "title": "The repository must pass project metadata, layout and public-surface checks under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.56",
-      "title": "The terminal must score at least 80 in codebase optimization. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "title": "Terminal source must meet the shared structural limits under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.57",
-      "title": "The terminal must score at least 80 in security analysis. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "title": "Terminal source and locked dependencies must pass actual security scans under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.58",
-      "title": "The terminal must score at least 80 in test coverage. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "title": "Terminal tests must measure at least 80 percent line coverage and 80 percent branch coverage under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.59",
-      "title": "The terminal must score at least 80 in documentation & governance. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "title": "Terminal documentation and governance must satisfy R015.10–R015.18 under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.60",
-      "title": "The terminal must score at least 80 in architecture & design patterns. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "title": "Terminal architecture must satisfy R015.21–R015.23 under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.61",
-      "title": "The terminal must score at least 80 in concept traceability. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "title": "Terminal concepts and tests must satisfy R015.24–R015.27 under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.62",
-      "title": "The terminal must score at least 80 in pre-commit compliance. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "title": "The complete repository must pass configured commit and push hooks under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.63",
-      "title": "The terminal must score at least 80 in test execution. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "title": "Terminal tests must pass the complete Python suite and configured native checks under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.64",
-      "title": "The terminal must score at least 80 in version sync analysis. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "title": "Terminal version mirrors and locked dependencies must remain consistent under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.65",
-      "title": "The terminal must score at least 80 in pytest quality. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "title": "Terminal tests must satisfy R015.9 and R015.34–R015.40 under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.66",
-      "title": "The terminal must score at least 80 in environment variables. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "title": "Terminal environment documentation must satisfy R015.41–R015.43 under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.67",
-      "title": "The terminal must achieve an overall source-quality grade of at least 3.0. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "title": "Terminal source quality must satisfy every quality acceptance v1 domain without averaging failures. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.68",
-      "title": "The terminal must achieve grade B or higher in all 17 source-quality domains. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "title": "Terminal source quality must provide separate reproducible evidence for all 17 quality acceptance v1 domains. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.69",
-      "title": "The terminal must resolve all 43 actionable source findings. Touches `agent_terminal_ui/`, tests or the named repository documentation",
+      "title": "The repository must resolve every actionable finding in the current quality acceptance v1 inventory. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []

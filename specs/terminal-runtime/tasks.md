@@ -224,21 +224,21 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R015.52:** The repository must run available client maintenance checks. Source obligation: `missing-client-methods next step 2`.
 - [x] **TUI-RUNTIME-R015.53:** Restore Alt+Shift+T theme cycling on the main screen. Mounted tests cover every registered theme, wraparound, composer focus and text, and no-color preservation. Source obligation: `missing-client-methods next step 3`.
 - [ ] **TUI-RUNTIME-R015.54:** The terminal must assess the remaining environment-example and tool-guard obligations. Source obligation: `missing-client-methods next step 4`.
-- [ ] **TUI-RUNTIME-R015.55:** The terminal must score at least 80 in project analysis. Source obligation: `CHECKLIST non-FR checkbox 44`.
-- [ ] **TUI-RUNTIME-R015.56:** The terminal must score at least 80 in codebase optimization. Source obligation: `CHECKLIST non-FR checkbox 45`.
-- [ ] **TUI-RUNTIME-R015.57:** The terminal must score at least 80 in security analysis. Source obligation: `CHECKLIST non-FR checkbox 46`.
-- [ ] **TUI-RUNTIME-R015.58:** The terminal must score at least 80 in test coverage. Source obligation: `CHECKLIST non-FR checkbox 47`.
-- [ ] **TUI-RUNTIME-R015.59:** The terminal must score at least 80 in documentation & governance. Source obligation: `CHECKLIST non-FR checkbox 48`.
-- [ ] **TUI-RUNTIME-R015.60:** The terminal must score at least 80 in architecture & design patterns. Source obligation: `CHECKLIST non-FR checkbox 49`.
-- [ ] **TUI-RUNTIME-R015.61:** The terminal must score at least 80 in concept traceability. Source obligation: `CHECKLIST non-FR checkbox 50`.
-- [ ] **TUI-RUNTIME-R015.62:** The terminal must score at least 80 in pre-commit compliance. Source obligation: `CHECKLIST non-FR checkbox 51`.
-- [ ] **TUI-RUNTIME-R015.63:** The terminal must score at least 80 in test execution. Source obligation: `CHECKLIST non-FR checkbox 52`.
-- [ ] **TUI-RUNTIME-R015.64:** The terminal must score at least 80 in version sync analysis. Source obligation: `CHECKLIST non-FR checkbox 53`.
-- [ ] **TUI-RUNTIME-R015.65:** The terminal must score at least 80 in pytest quality. Source obligation: `CHECKLIST non-FR checkbox 54`.
-- [ ] **TUI-RUNTIME-R015.66:** The terminal must score at least 80 in environment variables. Source obligation: `CHECKLIST non-FR checkbox 55`.
-- [ ] **TUI-RUNTIME-R015.67:** The terminal must achieve an overall source-quality grade of at least 3.0. Source obligation: `CHECKLIST non-FR checkbox 56`.
-- [ ] **TUI-RUNTIME-R015.68:** The terminal must achieve grade B or higher in all 17 source-quality domains. Source obligation: `CHECKLIST non-FR checkbox 57`.
-- [ ] **TUI-RUNTIME-R015.69:** The terminal must resolve all 43 actionable source findings. Source obligation: `CHECKLIST non-FR checkbox 58`.
+- [ ] **TUI-RUNTIME-R015.55:** The repository must pass project metadata, layout and public-surface checks under quality acceptance v1. Source obligation: `CHECKLIST non-FR checkbox 44`.
+- [ ] **TUI-RUNTIME-R015.56:** Terminal source must meet the shared structural limits under quality acceptance v1. Source obligation: `CHECKLIST non-FR checkbox 45`.
+- [ ] **TUI-RUNTIME-R015.57:** Terminal source and locked dependencies must pass actual security scans under quality acceptance v1. Source obligation: `CHECKLIST non-FR checkbox 46`.
+- [ ] **TUI-RUNTIME-R015.58:** Terminal tests must measure at least 80 percent line coverage and 80 percent branch coverage under quality acceptance v1. Source obligation: `CHECKLIST non-FR checkbox 47`.
+- [ ] **TUI-RUNTIME-R015.59:** Terminal documentation and governance must satisfy R015.10–R015.18 under quality acceptance v1. Source obligation: `CHECKLIST non-FR checkbox 48`.
+- [ ] **TUI-RUNTIME-R015.60:** Terminal architecture must satisfy R015.21–R015.23 under quality acceptance v1. Source obligation: `CHECKLIST non-FR checkbox 49`.
+- [ ] **TUI-RUNTIME-R015.61:** Terminal concepts and tests must satisfy R015.24–R015.27 under quality acceptance v1. Source obligation: `CHECKLIST non-FR checkbox 50`.
+- [ ] **TUI-RUNTIME-R015.62:** The complete repository must pass configured commit and push hooks under quality acceptance v1. Source obligation: `CHECKLIST non-FR checkbox 51`.
+- [ ] **TUI-RUNTIME-R015.63:** Terminal tests must pass the complete Python suite and configured native checks under quality acceptance v1. Source obligation: `CHECKLIST non-FR checkbox 52`.
+- [ ] **TUI-RUNTIME-R015.64:** Terminal version mirrors and locked dependencies must remain consistent under quality acceptance v1. Source obligation: `CHECKLIST non-FR checkbox 53`.
+- [ ] **TUI-RUNTIME-R015.65:** Terminal tests must satisfy R015.9 and R015.34–R015.40 under quality acceptance v1. Source obligation: `CHECKLIST non-FR checkbox 54`.
+- [ ] **TUI-RUNTIME-R015.66:** Terminal environment documentation must satisfy R015.41–R015.43 under quality acceptance v1. Source obligation: `CHECKLIST non-FR checkbox 55`.
+- [ ] **TUI-RUNTIME-R015.67:** Terminal source quality must satisfy every quality acceptance v1 domain without averaging failures. Source obligation: `CHECKLIST non-FR checkbox 56`.
+- [ ] **TUI-RUNTIME-R015.68:** Terminal source quality must provide separate reproducible evidence for all 17 quality acceptance v1 domains. Source obligation: `CHECKLIST non-FR checkbox 57`.
+- [ ] **TUI-RUNTIME-R015.69:** The repository must resolve every actionable finding in the current quality acceptance v1 inventory. Source obligation: `CHECKLIST non-FR checkbox 58`.
 - [x] **TUI-RUNTIME-R015.70:** Source-quality repairs must preserve the installed command path through `agent_terminal_ui/terminal_ui.py:10`.
 - [ ] **TUI-RUNTIME-R015.71:** A served integration test must start the installed command and observe client behavior after source-quality repairs. It must distinguish a denied request from an authenticated empty result.
 
