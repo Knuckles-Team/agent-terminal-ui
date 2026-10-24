@@ -1182,3 +1182,19 @@ must confirm that neither process opens the given sentinel log path.
 Use a wheel whose package bytes match the current source.
 Use a native binary whose build receipt matches the unchanged native tree. Missing optional
 artifacts skip these tests and do not establish acceptance.
+
+## Amendment 2026-10-24: client maintenance qualification
+
+R015.48 requires actual configured Ruff and mypy execution against the current
+client source. Preserve the hook configuration and its pinned tool owners.
+A temporary Git repository must also exercise those same hooks with valid
+client-shaped input and with undefined-name or return-type counterexamples.
+A skipped hook does not qualify either case. Reuse installed hook environments.
+Without an explicit qualification runner, the test skips and cannot establish acceptance.
+Run the candidate's complete commit-stage gate and existing client regressions.
+This slice does not qualify every dependency hook or broader quality domains.
+
+R015.51 keeps the owning client contract tied to the production method-to-operation
+map and completed acceptance commands. Derive mappings from the client source;
+reject missing or wrong mappings, absent or narrowed receipts, and false live-proof claims.
+R015.52 retains its separate maintenance obligation.
