@@ -514,9 +514,7 @@
       "title": "Run harness surface is read-only and honest",
       "delivery_state": "SPECIFIED",
       "landed_in": [
-        "3586d851134c",
-        "41e85fa601ee",
-        "5ca06b4de26a"
+        "c35cb5a545cf"
       ],
       "verified_by": [],
       "rollup_of": [
