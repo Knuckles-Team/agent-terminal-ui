@@ -308,3 +308,9 @@ session recovery. Retain the incumbent coding terminal until the operator accept
 | ID | Requirement | Acceptance evidence |
 |---|---|---|
 | `TUI-RUNTIME-R010.10` | **Search the native inspector's displayed text.** Ctrl+F opens a bounded local query. Match logical lines case-insensitively, reverse the selected line and reveal its first wrapped row. Enter and Shift+Enter cycle matching lines; Backspace edits; Escape closes search before closing the inspector. Typed action letters belong to search, while Ctrl+C still quits. Recompute matches from current display after resize, expiry or refusal; clear search on close or changed task binding. Make no search network requests. | Native production input and renderer tests cover match navigation, Unicode, query bounds, action isolation, expiry/refusal and lifecycle. This local interaction child does not close full served inspector or presentation qualification. |
+
+## Documentation screenshot capture
+
+| ID | Requirement | Verification |
+|---|---|---|
+| `TUI-RUNTIME-R016` | **Refresh documentation screenshots.** Render the production Python Textual app with synthetic content at fixed compact and wide sizes. Export stable SVG assets for README and docs with a refresh command and read-only freshness check. Isolate settings, credentials, workspace and service access. Label demo provenance without native or served-parity claims. | `tests/test_documentation_screenshots.py` verifies deterministic exports, expected views, freshness failures and private-state isolation. |

@@ -1198,3 +1198,13 @@ R015.51 keeps the owning client contract tied to the production method-to-operat
 map and completed acceptance commands. Derive mappings from the client source;
 reject missing or wrong mappings, absent or narrowed receipts, and false live-proof claims.
 R015.52 retains its separate maintenance obligation.
+
+### 2026-10-24: Refreshable documentation screenshots
+
+TUI-RUNTIME-R016 adds a local capture command for the Python Textual app.
+The existing R005 documentation-layout obligation remains unchanged.
+Use the production widget tree, fixed synthetic chat content and isolated settings.
+Export SVGs at compact and wide sizes to stable documentation paths. The command
+must support a read-only freshness check. Tests must verify repeatable output and
+that capture does not read private sessions or contact a live service. Label all
+images as demo captures, not native-terminal or live-service qualification.

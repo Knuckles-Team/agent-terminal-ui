@@ -210,7 +210,8 @@
     "TUI-RUNTIME-R008.2.3.2.2.2.2.2.1",
     "TUI-RUNTIME-R008.2.3.2.2.2.2.2.2",
     "TUI-RUNTIME-R012.3.1.1",
-    "TUI-RUNTIME-R010.10"
+    "TUI-RUNTIME-R010.10",
+    "TUI-RUNTIME-R016"
   ],
   "requirements": [
     {
@@ -2534,6 +2535,16 @@
         "native/agent-terminal-ui/src/inspector_view.rs:355",
         "native/agent-terminal-ui/src/inspector_view.rs:390",
         "native/agent-terminal-ui/src/inspector_view.rs:441"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R016",
+      "title": "Refresh documentation screenshots",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [
+        "tests/test_documentation_screenshots.py:12",
+        "tests/test_documentation_screenshots.py:40"
       ]
     }
   ]
