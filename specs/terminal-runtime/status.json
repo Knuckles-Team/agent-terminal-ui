@@ -2540,8 +2540,10 @@
     {
       "id": "TUI-RUNTIME-R016",
       "title": "Refresh documentation screenshots",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "2b219f071c62"
+      ],
       "verified_by": [
         "tests/test_documentation_screenshots.py:12",
         "tests/test_documentation_screenshots.py:40"
