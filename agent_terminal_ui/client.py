@@ -1214,7 +1214,7 @@ class AgentClient:
         return payload if isinstance(payload, dict) else {}
 
     async def list_configured_models(self) -> dict[str, Any]:
-        """Read legacy registry metadata without masking failed reads as empty.
+        """Read legacy registry metadata with GET /models and preserve failed reads.
 
         This is not models.list admission or server-side model selection.
         HTTP errors and invalid registry shapes propagate to the command view.

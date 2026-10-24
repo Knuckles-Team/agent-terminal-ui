@@ -1079,7 +1079,8 @@
       "title": "Native inspector transport boundary",
       "delivery_state": "VERIFIED",
       "landed_in": [
-        "14a4f6e68157"
+        "14a4f6e68157",
+        "c2e571cd0f64"
       ],
       "verified_by": [
         "native/agent-terminal-ui/src/run_inspector_client.rs:355",
