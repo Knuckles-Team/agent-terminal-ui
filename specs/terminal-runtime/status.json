@@ -1305,10 +1305,10 @@
       "delivery_state": "VERIFIED",
       "landed_in": [
         "26659005d190",
+        "6fb4244aa144",
+        "c90dc111c171",
         "d1af8f3a226c",
-        "e953bdfc7768",
-        "f12eaaa42549",
-        "fc6471bc2409"
+        "e953bdfc7768"
       ],
       "verified_by": [
         "tests/test_mounted_command_matrix.py:53",

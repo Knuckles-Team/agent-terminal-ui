@@ -323,6 +323,13 @@ async def test_mounted_read_entry_points(command, paths, screen):
         await submit(app, pilot, f"/{command}")
         assert requests == paths
         assert type(app.screen).__name__ == screen
+        if screen in {"UsageScreen", "CapabilityPaletteScreen", "RunBrowserScreen"}:
+            await pilot.press("escape")
+            await pilot.pause()
+            assert app.focused is app.screen.query_one(InputTextArea)
+            await submit(app, pilot, "/help")
+            assert "Available Commands" in info(app)
+            assert requests == paths
 
 
 LOCAL_COMMANDS = [
@@ -431,8 +438,9 @@ async def test_supported_read_failure_keeps_composer_usable(
         assert "unavailable" in rendered.lower()
         assert not any("Error executing" in notice for notice in notices)
         if status_selector:
-            await app.screen.run_action("go_back" if command == "usage" else "close")
+            await pilot.press("escape")
             await pilot.pause()
+        assert app.focused is app.screen.query_one(InputTextArea)
         await submit(app, pilot, "/help")
         assert "Available Commands" in info(app)
         assert requests == [path]

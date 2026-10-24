@@ -116,5 +116,9 @@ class UsageScreen(Screen):
         self._render_live()
         self.refresh_usage()
 
+    def check_consume_key(self, key: str, character: str | None) -> bool:
+        """Keep the screen close key from reaching application rewind."""
+        return key == "escape" or super().check_consume_key(key, character)
+
     def action_go_back(self) -> None:
         self.app.pop_screen()
