@@ -7,9 +7,11 @@ with buffer, and additional on_agent_event_received variants.
 
 from __future__ import annotations
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from textual.worker import WorkerState
 
 
 @pytest.fixture
@@ -70,21 +72,25 @@ async def test_action_interrupt_cancels_workers(app):
     async with app.run_test() as pilot:
         await pilot.pause()
         app._is_processing = True
-        # ``workers`` is a read-only property on Textual App; patch the
-        # descriptor at the class level so the getter returns our mock.
-        from textual.app import App as _TextualApp
+        pending = asyncio.Event()
+        worker = app.run_worker(pending.wait())
+        await pilot.pause()
+        assert worker.state is WorkerState.RUNNING
 
-        mock_workers = MagicMock()
-
-        class _FakeProp:
-            def __get__(self, *args: object):
-                return mock_workers
-
-        with patch.object(_TextualApp, "workers", _FakeProp()):
+        with patch.object(
+            app.workers, "cancel_all", wraps=app.workers.cancel_all
+        ) as cancel_all:
             app.action_interrupt()
             await pilot.pause()
-        mock_workers.cancel_all.assert_called_once()
+        cancel_all.assert_called_once()
+        await app.workers.wait_for_complete()
+        assert worker.state is WorkerState.CANCELLED
         assert app._is_processing is False
+        notices = app.query(".info-message")
+        assert any(
+            "Operation interrupted by user" in str(notice.content)
+            for notice in notices
+        )
 
 
 @pytest.mark.asyncio
