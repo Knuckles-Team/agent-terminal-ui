@@ -450,9 +450,9 @@
       "landed_in": [
         "070e15682e71",
         "19a5072aed8e",
+        "613ee3f899e3",
         "877a834e65e3",
-        "d9be071196d3",
-        "fc214c63e6fb"
+        "d9be071196d3"
       ],
       "verified_by": [
         "tests/test_exit_confirm_keyboard.py:12",
