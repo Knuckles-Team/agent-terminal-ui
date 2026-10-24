@@ -123,10 +123,64 @@ Custom pricing can be set via `tracker.set_pricing(model, input, output, cached)
 | `AGENT_UTILITIES_DATA_DIR` | platform default | Override the local session data directory. Takes precedence over the configuration-relative fallback. |
 | `AGENT_UTILITIES_CONFIG_DIR` | platform default | Override the settings directory. Without a data override, local session data uses its sibling `share/agent-utilities` directory. |
 | `AGENT_LOG_FILE` | ignored | Never opened by the main screen. `/logs` and Ctrl+V require an authenticated host reader. |
+| `AGENT_TASK_ID` | unset | Native only. Read an existing task; does not resume chat. Reject empty, control-containing or over-512-byte identifiers. |
+| `AGENT_SUBMISSION_TIMEOUT_SECONDS` | `300` | Native only. Decimal seconds from 1 to 900; invalid values fail startup. No automatic resubmission. |
+| `AGENT_INCLUDE_COMMITTED_EVENT` | `false` | Native only. Accept exactly `true` or `false`; request committed-event evidence without granting access. |
+| `NO_COLOR` | unset | Python follows Textual presence semantics. Native disables theme colors only for a nonempty value. |
+| `TERM_PROGRAM` | empty | Python notification detection uses the terminal application name to choose OSC9 or fallback behavior. |
+| `TERM` | empty | Python notification detection recognizes xterm, screen and tmux families for BEL fallback. |
+| `SHELL` | `/bin/bash` | Python shell sessions use this executable unless an explicit shell path is set. |
 
 The `/op` command needs Python 3.12 or newer and the Arbora distribution
 containing the generated client. Without it, `/op` refuses with
 `CLIENT_UNAVAILABLE`; basic A2A chat remains available. The package requires Python 3.12 or newer.
+
+## Dynamic setting overrides
+
+`AppSettings.get(key)` checks the exact key, then its uppercase spelling, before stored configuration.
+A nonempty lowercase value wins over uppercase. An empty lowercase value falls through to uppercase.
+An empty uppercase value is still an override. Other mixed-case spellings are not searched.
+Boolean values accept `true`, `1`, `yes` and `on`, without case sensitivity; every other value becomes false.
+Integer values use Python integer parsing. Invalid integers remain strings; environment choices are not validated against schema choices.
+String environment overrides remain literal. Stored strings expand `$NAME` and `${NAME}` unless the caller disables expansion.
+Unknown referenced variables remain unchanged. Arbitrary requested keys also support exact-key and uppercase lookup and return raw strings.
+
+These are the current schema keys and their uppercase aliases. This lists lookup support, not proof that every setting changes runtime behavior.
+
+| Setting key | Uppercase alias |
+|---|---|
+| `theme` | `THEME` |
+| `tool_expand` | `TOOL_EXPAND` |
+| `diff_view` | `DIFF_VIEW` |
+| `sidebar_visible` | `SIDEBAR_VISIBLE` |
+| `shell_command` | `SHELL_COMMAND` |
+| `agent_url` | `AGENT_URL` |
+| `default_mode` | `DEFAULT_MODE` |
+| `show_tokens` | `SHOW_TOKENS` |
+| `auto_scroll` | `AUTO_SCROLL` |
+| `approval_policy` | `APPROVAL_POLICY` |
+| `sandbox_mode` | `SANDBOX_MODE` |
+| `auto_allow` | `AUTO_ALLOW` |
+| `auto_compact` | `AUTO_COMPACT` |
+| `reasoning_effort` | `REASONING_EFFORT` |
+| `auto_model_routing` | `AUTO_MODEL_ROUTING` |
+| `notification_method` | `NOTIFICATION_METHOD` |
+| `notification_threshold_secs` | `NOTIFICATION_THRESHOLD_SECS` |
+| `snapshots_enabled` | `SNAPSHOTS_ENABLED` |
+| `snapshots_max_age_days` | `SNAPSHOTS_MAX_AGE_DAYS` |
+| `hooks_enabled` | `HOOKS_ENABLED` |
+| `trust_mode` | `TRUST_MODE` |
+| `max_concurrent_tasks` | `MAX_CONCURRENT_TASKS` |
+| `max_conversation_widgets` | `MAX_CONVERSATION_WIDGETS` |
+| `max_log_lines` | `MAX_LOG_LINES` |
+
+Environment lookup precedes local `settings.toml`, global `config.json` and schema defaults, in that order.
+The transport factory reads `AGENT_URL` directly. A lowercase `agent_url` setting does not override that factory.
+Startup theme selection reads `AGENT_THEME`; `theme` and `THEME` are settings lookups, not startup aliases.
+
+Shells and lifecycle hooks inherit the process environment. Their additional context variables belong to those subprocess interfaces.
+The terminal does not interpret every inherited variable. HTTP proxy, locale and framework settings remain dependency-level inputs.
+`TEXTUAL_ANIMATIONS` and `NO_COLOR` are included here because the terminal explicitly documents their presentation effects.
 
 ## CLI Flags
 

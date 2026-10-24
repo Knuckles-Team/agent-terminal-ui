@@ -72,6 +72,28 @@ R015.10 and R015.12 remain open. Other feature claims and the detailed architect
 The exact-main qualification receipt from PR 137 remains the broad-suite baseline; this batch does not rerun that suite.
 Its coroutine-finalization warning remains unresolved. Live-service, installed-service and release-performance acceptance remain open.
 
+## Environment inventory receipt
+
+R015.41.2 adds missing native task controls, terminal detection and shell selection to the configuration reference.
+It documents all 24 dynamic schema aliases, exact-key precedence, empty values, coercion and expansion behavior.
+The source audit covers direct Python getenv/environ reads and native env::var reads throughout both implementations.
+Dynamic key lookups remain explicit; arbitrary inherited subprocess and dependency variables are not terminal configuration keys.
+The inventory rejects unchanged documentation at bb988ba2, three new undocumented read patterns and three documentation mutations.
+
+On GR1080 with Python 3.14.7, the following focused suite passed 79 tests:
+
+```bash
+python -m pytest tests/test_environment_inventory.py tests/test_notifications.py tests/test_cli_documentation.py -q
+```
+
+Tests exercise each uppercase schema alias, lowercase precedence, empty overrides, boolean and integer conversion, and literal environment strings.
+A file-backed test proves environment, local TOML, global JSON and schema precedence, including removal of the environment override.
+Existing notification and CLI tests support terminal detection and directory behavior.
+No settings behavior, credential policy, native code or dependency changed.
+This receipt documents lookup support; it does not prove that every setting changes runtime behavior.
+Native source reads were audited against existing code. The exact-main receipt from PR 137 remains the broad Python/native baseline.
+Its coroutine-finalization warning remains unresolved. Installed-service, live-service and release qualification remain open.
+
 ## Structure parity rows
 
 | Requirement | Layer and fixture | Expected positive result | Required negative proof |

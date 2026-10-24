@@ -1851,9 +1851,15 @@
     {
       "id": "TUI-RUNTIME-R015.41",
       "title": "The documentation must cover every supported terminal environment variable. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "2f6d1188fb53",
+        "d2e3a7e63965"
+      ],
+      "verified_by": [
+        "tests/test_cli_documentation.py:4",
+        "tests/test_environment_inventory.py:12"
+      ],
       "rollup_of": [
         "TUI-RUNTIME-R015.41.1",
         "TUI-RUNTIME-R015.41.2"
@@ -1873,9 +1879,13 @@
     {
       "id": "TUI-RUNTIME-R015.41.2",
       "title": "Retain a complete inventory of other terminal environment inputs and dynamic setting overrides",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "d2e3a7e63965"
+      ],
+      "verified_by": [
+        "tests/test_environment_inventory.py:12"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.42",
