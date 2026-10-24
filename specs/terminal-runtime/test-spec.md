@@ -432,13 +432,13 @@ Permitted fallback preserves message identity and the idempotency key.
 | `TUI-RUNTIME-R015.9` | Planned `tests/test_source_quality.py::test_source_quality_9` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.10` | Planned `tests/test_source_quality.py::test_source_quality_10` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.11` | `tests/test_operator_documentation.py::test_operator_installation_documentation`; see operator documentation receipt above. |
-| `TUI-RUNTIME-R015.12` | Planned `tests/test_source_quality.py::test_source_quality_12` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.12` | `tests/test_operator_documentation.py::test_readme_operator_entry_points` and negative cases; see operator package qualification receipt. |
 | `TUI-RUNTIME-R015.13` | `tests/test_readme_navigation.py::test_readme_navigation_reaches_each_top_level_section` and counterexamples; see README navigation and architecture receipt. |
 | `TUI-RUNTIME-R015.14` | `tests/test_operator_documentation.py::test_locked_install_refuses_a_checkout_without_its_lockfile`; see operator documentation receipt above. |
 | `TUI-RUNTIME-R015.15` | `tests/test_readme_navigation.py::test_readme_explains_frontend_entry_paths_and_served_boundary` and counterexamples; see README navigation and architecture receipt. |
-| `TUI-RUNTIME-R015.16` | Planned `tests/test_source_quality.py::test_source_quality_16` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.16` | `tests/test_operator_documentation.py::test_readme_links_existing_detailed_documentation` and negative cases; see operator package qualification receipt. |
 | `TUI-RUNTIME-R015.17` | `tests/test_operator_documentation.py::test_contributor_guide_tools_commands_and_source_map`; see operator documentation receipt above. |
-| `TUI-RUNTIME-R015.18` | Planned `tests/test_source_quality.py::test_source_quality_18` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.18` | `tests/test_package_metadata.py::test_declared_mit_license_is_tracked_and_linked` and negative cases; see operator package qualification receipt. |
 | `TUI-RUNTIME-R015.19` | Planned `tests/test_source_quality.py::test_source_quality_19` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.20` | Planned `tests/test_source_quality.py::test_source_quality_20` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.21` | Planned `tests/test_source_quality.py::test_source_quality_21` must enter the owning path and prove the requirement. |
@@ -451,7 +451,7 @@ Permitted fallback preserves message identity and the idempotency key.
 | `TUI-RUNTIME-R015.28` | Planned `tests/test_source_quality.py::test_source_quality_28` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.29` | Planned `tests/test_source_quality.py::test_source_quality_29` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.30` | Planned `tests/test_source_quality.py::test_source_quality_30` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.31` | Planned `tests/test_source_quality.py::test_source_quality_31` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.31` | Partial Python bump and native consistency checks in `tests/test_package_metadata.py`; native version-configuration coverage remains open. |
 | `TUI-RUNTIME-R015.32` | Planned `tests/test_source_quality.py::test_source_quality_32` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.33` | Planned `tests/test_source_quality.py::test_source_quality_33` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.34` | Planned `tests/test_source_quality.py::test_source_quality_34` must enter the owning path and prove the requirement. |
@@ -491,7 +491,7 @@ Permitted fallback preserves message identity and the idempotency key.
 | `TUI-RUNTIME-R015.68` | Use the complete domain matrix in test-spec.md. Each domain needs completed checks and explicit remaining gaps; a grade is insufficient. See quality acceptance v1 below; this amendment supplies no result receipt. |
 | `TUI-RUNTIME-R015.69` | Reconcile historical priorities with current scan findings by stable identifier. Require resolution evidence for each item; never infer closure from a count. See quality acceptance v1 below; this amendment supplies no result receipt. |
 | `TUI-RUNTIME-R015.70` | `tests/test_installed_operator_entry.py::test_source_quality_entry_wiring` runs the installed command against a loopback unary fixture; installed Arbora qualification remains open. |
-| `TUI-RUNTIME-R015.71` | Planned `tests/test_source_quality.py::test_source_quality_served_entry` must enter the installed command against an authorized served fixture. |
+| `TUI-RUNTIME-R015.71` | `tests/test_installed_operator_entry.py::test_installed_observer_distinguishes_denied_and_empty_reads` and negative cases; see operator package qualification receipt. |
 
 ### Native runtime palette switching (R008.2.3.2.1)
 
@@ -1216,3 +1216,54 @@ R015.67 requires all domain criteria and the complete inventory, without averagi
 R015.68 requires seventeen independent receipts with no omitted domain or evidence gap.
 R015.69 requires no unresolved actionable finding and a complete historical-to-current reconciliation.
 These clauses do not assert a new finding count, GPA or letter grade.
+
+## Operator package qualification receipt (2026-10-24)
+
+This batch starts from main `64d59bd6cb4ebf3611204a59b183e29523b5aa89`.
+The final wheel includes main `89c35b57451ead75d50a4998c5d2ef37ff754f0f` plus this package change.
+R015.12 checks every Python parser flag plus interactive, headless, observer,
+Docker and native start instructions. Five mutations remove entry coverage.
+R015.16 checks local documentation links and rejects missing or broken targets.
+These are documentation contracts, not runtime or native acceptance evidence.
+R015.18 checks the tracked MIT declaration and existing license text. Packaging
+now includes that unchanged file; the installed-resource check compares its bytes.
+Partial R015.31 evidence checks three Python version mirrors: pyproject.toml, docs/concepts.md
+and the distribution entry in uv.lock. Drift and missing registrations fail.
+Native manifest and lock versions agree and reject drift. The Python bumper
+does not cover those files; no native version-maintenance policy was found.
+R015.31 remains open for full version configuration. Historical analysis
+is not a version mirror. R015.32 and R015.33 remain open.
+
+The configured `bump2version patch --dry-run --allow-dirty --verbose` passed.
+It found each registered current version and proposed the next version without
+writing files, commits or tags. No release or version change occurred.
+
+On the cloud computer, Python 3.12.14 built the wheel from tracked source plus
+this batch with `uv build --offline --wheel --python` and an explicit interpreter.
+Wheel SHA-256: `061b06515f78a5ad7a4f719e40d8f44ac41380e642df3a8ddb9c632d7f6a2a4c`.
+A separate environment reused cached dependency files and installed that wheel.
+With TUI_TEST_INSTALLED_ENV set, the operator documentation, package metadata,
+installed operator entry and environment inventory suite passed 79 tests.
+
+R015.71 starts the real installed console script outside the checkout against
+a loopback HTTP fixture. Missing and wrong fixture credentials produce HTTP 403,
+exit status 1 and a refused-read message. The authorized fixture credential
+produces a completed task with no artifacts, exit status 0 and unavailable
+output. Each case sends exactly one tasks/get and no submission or approval.
+Neither fixture credential appears in output. This proves empty task output,
+not an empty catalog or conversation list. The entry fixture also verifies the
+installed metadata, import location and packaged license. Without the explicit
+installed environment, these tests skip and give no installed-entry proof.
+Live Arbora, native parity and release performance qualification remain open.
+
+The final source batch reconciles the quality rubric from main `69bed18c`.
+Normal pre-push checks passed except pytest in the declared-dependency environment.
+That run had seven failures and six collection errors from missing optional Arbora.
+Their IDs exactly match the recorded unchanged-main baseline; no new IDs appeared.
+All other hooks passed. This is not a fully green declared-dependency gate.
+The installed-client environment retained Arbora without a dependency sync.
+Its ordinary test suite passed 1,747 tests and six snapshots, with three native skips.
+It emitted the existing subprocess-finalizer warning after the event loop closed.
+The run used two workers, the explicit installed wheel and writable tool caches.
+Only ALL_PROXY and all_proxy were unset; HTTP and HTTPS proxy settings remained.
+Native skips and the warning remain qualification gaps, not passing evidence.
