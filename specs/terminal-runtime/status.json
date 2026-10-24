@@ -2678,8 +2678,10 @@
     {
       "id": "TUI-RUNTIME-R008.3.1",
       "title": "Implement optional Canopy tokens",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "6c1e6f34dc0e"
+      ],
       "verified_by": [
         "tests/test_canopy_theme.py:12"
       ]
@@ -2694,8 +2696,10 @@
     {
       "id": "TUI-RUNTIME-R010.12.1.1",
       "title": "Implement the bounded spatial flat DAG",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "6c1e6f34dc0e"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/inspector_view.rs:924",
         "native/agent-terminal-ui/src/spatial_graph.rs:267",
