@@ -1217,6 +1217,28 @@ R015.68 requires seventeen independent receipts with no omitted domain or eviden
 R015.69 requires no unresolved actionable finding and a complete historical-to-current reconciliation.
 These clauses do not assert a new finding count, GPA or letter grade.
 
+## MCP loading and retry evidence (2026-10-24)
+
+`tests/test_mcp_responsiveness.py` qualifies client presentation for R012.4.2.
+Mounted AgentApp commands open a loading view before the first read and restore
+composer focus on Escape. Retry clears previous rows; typed failures remain
+unavailable, distinct from valid empty results. Late success and failure cannot
+replace a newer refresh or continue after a client-owner change. Cancellation
+suppression cannot reopen a closed screen. The command starts no model turn.
+`tests/test_served_fleet_usage.py` checks mounted MCP dispatch through real
+generated-client transport fixtures. These checks do not close model admission,
+conversation resume, or served session and turn usage acceptance.
+
+## Literal completion-marker regression
+
+`TUI-RUNTIME-R012.1.1`: `tests/test_turn_completion.py` feeds A2A-normalized
+artifacts and typed terminal states into the mounted app and headless runner.
+Exact, embedded and split `[DONE]` text must remain content. Mounted checks
+preserve processing and queued work until terminal delivery, then dispatch once.
+Pending approval still precedes the queue. Headless checks retain later text
+and failures, and stop at typed completion or cancellation. These fixtures do
+not qualify served streaming, native parity or full mounted cancellation.
+
 ### Python status usage regression
 
 R012.6.2 has supporting coverage in `tests/test_status_line_usage.py`.

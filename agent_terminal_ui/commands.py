@@ -259,20 +259,9 @@ class CommandProcessor:
 
     async def cmd_mcp(self, args: str) -> None:
         """Browse connected MCP servers and their available tools."""
-        try:
-            config = await self.app._client.get_mcp_config()
-            tools = await self.app._client.list_mcp_tools()
-        except (ArboraOperationError, httpx.HTTPError) as exc:
-            self.app.notify(
-                f"/mcp unavailable: fleet.status / fleet.catalog.list ({exc})",
-                severity="warning",
-            )
-            return
-
-        # Fixed legacy import from agent_tui to agent_terminal_ui
         from agent_terminal_ui.tui.mcp_screen import MCPScreen
 
-        self.app.push_screen(MCPScreen(config, tools))
+        self.app.push_screen(MCPScreen(client=self.app._client))
 
     async def cmd_capabilities(self, args: str) -> None:
         """Search live capabilities. Usage: /capabilities [query]"""

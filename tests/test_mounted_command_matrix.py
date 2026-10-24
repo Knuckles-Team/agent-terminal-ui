@@ -396,7 +396,7 @@ def test_inventory_accounts_for_every_registered_command():
     "command,path,status_selector",
     [
         ("fleet", "/api/v1/ops/fleet.status", None),
-        ("mcp", "/api/v1/ops/fleet.status", None),
+        ("mcp", "/api/v1/ops/fleet.status", "#mcp-status"),
         ("tools", "/api/v1/ops/fleet.catalog.list", None),
         ("history", "/a2a", "#history-reply"),
         ("usage", "/api/v1/ops/usage.read", "#usage-hist"),
