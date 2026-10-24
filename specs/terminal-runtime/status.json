@@ -238,7 +238,7 @@
       "delivery_state": "VERIFIED",
       "landed_in": [
         "d309979d133f",
-        "e08e2f53aadf"
+        "dbd8c23d0bed"
       ],
       "verified_by": [
         "tests/test_client.py:421",
