@@ -1811,16 +1811,28 @@
     {
       "id": "TUI-RUNTIME-R015.32",
       "title": "The preserved JSON analysis must remain historical evidence, separate from authoritative version mirrors. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "e3eca3dd39dc"
+      ],
+      "verified_by": [
+        "tests/test_historical_analysis.py:17",
+        "tests/test_historical_analysis.py:91",
+        "tests/test_historical_analysis.py:97"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.33",
       "title": "The preserved Markdown analysis must remain historical evidence, separate from authoritative version mirrors. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "e3eca3dd39dc"
+      ],
+      "verified_by": [
+        "tests/test_historical_analysis.py:22",
+        "tests/test_historical_analysis.py:91",
+        "tests/test_historical_analysis.py:97"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.34",

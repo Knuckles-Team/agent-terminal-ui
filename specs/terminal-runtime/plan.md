@@ -1101,13 +1101,13 @@ Use only a dry run; do not change versions, tags or releases for this proof.
 R015.71 starts the installed task observer against a loopback HTTP fixture.
 Check denied reads separately from authenticated completed tasks with no output.
 This is installed-client evidence, not live Arbora or native parity acceptance.
-R015.32 and R015.33 remain open. The historical analysis artifacts are not in
-this checkout. This batch does not recreate or alter historical evidence.
+R015.32 and R015.33 have separate historical-preservation qualification below.
+The operator batch does not recreate or alter those artifacts.
 
 ## Amendment 2026-10-24: responsive MCP reads
 
 R012.4.2 opens the MCP view before fleet reads. A screen-owned worker keeps
-Escape and refresh available, clears old data before retry, and distinguishes
+Escape and refresh available. It clears old data before retry and distinguishes
 failed reads from valid empty results. Closed or superseded reads cannot render
 or start the next request, including when cancellation is suppressed. A changed
 client owner invalidates the read. This client presentation repair does not
@@ -1154,3 +1154,15 @@ No shell expansion or URL read is allowed. Read at most 65,537 bytes, then
 check the aggregate staged limits. Bind files to the client and context through
 queued dispatch. A changed owner refuses the turn before network access.
 Clear staged files with `/clear` or interruption. Send the prompt exactly once.
+
+## Amendment 2026-10-24: historical analysis preservation
+
+R015.32 and R015.33 retain the JSON and Markdown analysis in immutable Git
+history, not in the current source tree or release version configuration.
+The existing Git read path and `.bumpversion.cfg` own this qualification.
+Tests verify the original byte digests and reject modified bytes and version
+registration under either the original or migrated report path.
+A full checkout with missing evidence fails. A shallow checkout or source
+export reports unavailable history explicitly; that skip is not acceptance.
+This work restores no report and treats no historical conclusion as a current finding.
+R015.31 and the quality acceptance v1 rows remain open.

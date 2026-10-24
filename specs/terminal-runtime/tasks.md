@@ -201,8 +201,8 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R015.29.2:** Validate all remaining formatter and dependency hook versions; retain the broader R015.29 acceptance obligation.
 - [ ] **TUI-RUNTIME-R015.30:** The terminal CLI must provide help text for its supported arguments. Source obligation: `T030`.
 - [ ] **TUI-RUNTIME-R015.31:** The version configuration must cover every authoritative version mirror. Source obligation: `T031`.
-- [ ] **TUI-RUNTIME-R015.32:** The preserved JSON analysis must remain historical evidence, separate from authoritative version mirrors. Source obligation: `T032`.
-- [ ] **TUI-RUNTIME-R015.33:** The preserved Markdown analysis must remain historical evidence, separate from authoritative version mirrors. Source obligation: `T033`.
+- [x] **TUI-RUNTIME-R015.32:** The preserved JSON analysis must remain historical evidence, separate from authoritative version mirrors. Source obligation: `T032`.
+- [x] **TUI-RUNTIME-R015.33:** The preserved Markdown analysis must remain historical evidence, separate from authoritative version mirrors. Source obligation: `T033`.
 - [ ] **TUI-RUNTIME-R015.34:** Terminal test modules must meet the shared file-size checks. Source obligation: `T034`.
 - [ ] **TUI-RUNTIME-R015.35:** Terminal test modules must meet the shared test-count checks. Source obligation: `T035`.
 - [ ] **TUI-RUNTIME-R015.36:** Terminal tests must organize unit, integration and served acceptance coverage. Source obligation: `T036`.
