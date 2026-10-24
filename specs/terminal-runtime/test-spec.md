@@ -94,6 +94,32 @@ This receipt documents lookup support; it does not prove that every setting chan
 Native source reads were audited against existing code. The exact-main receipt from PR 137 remains the broad Python/native baseline.
 Its coroutine-finalization warning remains unresolved. Installed-service, live-service and release qualification remain open.
 
+## Shared fixture settings isolation receipt
+
+R015.37 repairs the shared pytest fixture, which previously isolated session data but left developer settings reachable.
+The fixture now redirects global configuration and the default local settings file into each test directory.
+Pytest restores the data/configuration environment and default settings paths after each test.
+Explicit settings paths remain available to tests.
+
+The regression copies the production conftest into a child pytest suite with disposable developer sentinel files.
+Two child tests verify default isolation, persistence within one test, no cross-test leakage and explicit-path independence.
+A session-finish check verifies restored environment and default settings path. Parent checks verify untouched sentinel files.
+On unchanged main 36de5343, both child cases fail because the default settings path remains outside the test directory.
+No real developer files are used in that counterexample.
+
+GR1080 validation used Python 3.14.7 and the existing qualification environment with Arbora 0.1.7:
+
+- The fixture, widget, settings/MCP, environment, mounted-command and CLI suite passed 280 tests.
+- `PYTHONPATH=. python -m pytest tests -q -n 4 --tb=short` passed 1,720 tests, with four skips and six snapshots passed.
+- The broad run reported no warning. This does not establish the cause or repair of PR 137's intermittent coroutine-finalization warning.
+
+The initial older environment lacked Arbora and failed collection of the mounted-command module; no tests passed from that attempt.
+The qualification environment was reused without dependency changes, under its existing no-deps Arbora policy.
+The broad Python rerun was necessary because this autouse fixture affects the entire suite.
+Native code did not change; the existing exact-main native receipt remains the baseline.
+Skipped optional cases confer no new installed/native acceptance. R015.38 and broad assertion-quality requirements remain open.
+No application runtime behavior or user configuration changed.
+
 ## Structure parity rows
 
 | Requirement | Layer and fixture | Expected positive result | Required negative proof |
@@ -431,7 +457,7 @@ Permitted fallback preserves message identity and the idempotency key.
 | `TUI-RUNTIME-R015.34` | Planned `tests/test_source_quality.py::test_source_quality_34` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.35` | Planned `tests/test_source_quality.py::test_source_quality_35` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.36` | Planned `tests/test_source_quality.py::test_source_quality_36` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.37` | Planned `tests/test_source_quality.py::test_source_quality_37` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.37` | `tests/test_fixture_isolation.py` runs the production shared fixture in a child pytest process; developer sentinels stay unchanged and test state resets. |
 | `TUI-RUNTIME-R015.38` | Planned `tests/test_source_quality.py::test_source_quality_38` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.39` | Planned `tests/test_source_quality.py::test_source_quality_39` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.40` | Planned `tests/test_source_quality.py::test_source_quality_40` must enter the owning path and prove the requirement. |

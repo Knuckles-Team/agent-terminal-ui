@@ -2,16 +2,17 @@
 
 Centralizes the mock ``AgentClient`` and ``AgentApp`` construction that the
 individual test modules previously duplicated, and isolates session state to a
-temporary directory so tests never touch a developer's real database.
+temporary directory so tests do not touch developer databases or settings.
 """
 
 import os
-from collections.abc import Iterator
 from pathlib import Path
 from unittest.mock import AsyncMock
 
 import pytest
 import textual.constants
+
+from agent_terminal_ui import settings
 
 os.environ.setdefault("AGENT_UTILITIES_TESTING", "true")
 
@@ -24,17 +25,14 @@ textual.constants.TEXTUAL_ANIMATIONS = "none"
 
 
 @pytest.fixture(autouse=True)
-def isolated_data_dir(tmp_path: Path) -> Iterator[Path]:
-    """Point session/task persistence at a throwaway dir (applied to all tests)."""
-    prev = os.environ.get("AGENT_UTILITIES_DATA_DIR")
-    os.environ["AGENT_UTILITIES_DATA_DIR"] = str(tmp_path)
-    try:
-        yield tmp_path
-    finally:
-        if prev is None:
-            os.environ.pop("AGENT_UTILITIES_DATA_DIR", None)
-        else:
-            os.environ["AGENT_UTILITIES_DATA_DIR"] = prev
+def isolated_data_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Isolate shared persistence and settings, restoring all overrides afterward."""
+    monkeypatch.setenv("AGENT_UTILITIES_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("AGENT_UTILITIES_CONFIG_DIR", str(tmp_path / "global-config"))
+    settings_dir = tmp_path / "terminal-config"
+    monkeypatch.setattr(settings, "DEFAULT_SETTINGS_DIR", settings_dir)
+    monkeypatch.setattr(settings, "DEFAULT_SETTINGS_FILE", settings_dir / "settings.toml")
+    return tmp_path
 
 
 @pytest.fixture

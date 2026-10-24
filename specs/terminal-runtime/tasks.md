@@ -206,7 +206,7 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R015.34:** Terminal test modules must meet the shared file-size checks. Source obligation: `T034`.
 - [ ] **TUI-RUNTIME-R015.35:** Terminal test modules must meet the shared test-count checks. Source obligation: `T035`.
 - [ ] **TUI-RUNTIME-R015.36:** Terminal tests must organize unit, integration and served acceptance coverage. Source obligation: `T036`.
-- [ ] **TUI-RUNTIME-R015.37:** Terminal tests must provide a shared fixture entry point. Source obligation: `T037`.
+- [x] **TUI-RUNTIME-R015.37:** Terminal tests must provide a shared fixture entry point. Source obligation: `T037`.
 - [ ] **TUI-RUNTIME-R015.38:** Terminal tests must reuse shared fixtures for common setup. Source obligation: `T038`.
 - [ ] **TUI-RUNTIME-R015.39:** Each terminal test must assert its observable result. Source obligation: `T039`.
 - [ ] **TUI-RUNTIME-R015.40:** Terminal tests must reject incorrect values through behavior-specific assertions. Source obligation: `T040`.
