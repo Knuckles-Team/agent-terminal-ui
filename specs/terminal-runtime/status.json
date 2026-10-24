@@ -2264,6 +2264,7 @@
       "title": "Collapsed public details in both terminals",
       "delivery_state": "VERIFIED",
       "landed_in": [
+        "31c1c99e284d",
         "49404376c22b",
         "4f460e776734"
       ],
