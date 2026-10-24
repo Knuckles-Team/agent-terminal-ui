@@ -198,13 +198,7 @@ class MainScreen(Screen):
             await handler(self, conversation, event)
             return
 
-        # NOTE: since "text" is dispatched above via _EVENT_HANDLERS, the
-        # `event_type == "text" and "[DONE]" in ...` half of this condition
-        # is unreachable in practice (an existing quirk, preserved as-is --
-        # see the module's known-issues notes).
-        if event_type == "turn_end" or (
-            event_type == "text" and "[DONE]" in event.get("content", "")
-        ):
+        if event_type == "turn_end":
             self._handle_turn_end_display(conversation, event)
 
     async def _handle_text_event(
@@ -320,7 +314,7 @@ class MainScreen(Screen):
         await conversation.add_error(error_message)
 
     #: Dispatch table for `handle_agent_event`, keyed by `event["type"]`.
-    #: "turn_end" (and the text+"[DONE]" case) is handled separately below
+    #: "turn_end" is handled separately
     #: since it isn't a simple one-shot per-type handler.
     _EVENT_HANDLERS: ClassVar[
         dict[str, Callable[[MainScreen, Conversation, dict[str, Any]], Awaitable[None]]]

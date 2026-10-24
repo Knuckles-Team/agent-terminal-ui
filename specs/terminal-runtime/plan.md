@@ -1098,3 +1098,11 @@ failed reads from valid empty results. Closed or superseded reads cannot render
 or start the next request, including when cancellation is suppressed. A changed
 client owner invalidates the read. This client presentation repair does not
 close served model choice, conversation resume or per-session usage acceptance.
+
+## Amendment 2026-10-24: literal completion markers
+
+R012.1.1 owns Python reply and terminal-state handling. Normalized text remains
+content even when it contains `[DONE]`. Only a typed `turn_end` event completes
+the turn and releases queued work or pending approval. Headless output must
+retain this content and later failures. Mounted and headless regressions extend
+the existing owner; served streaming and cancellation remain open under R012.1.2.

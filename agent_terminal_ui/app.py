@@ -560,9 +560,7 @@ class AgentApp(App):
             self._handle_tool_call_event(event)
         elif event_type == "usage":
             self._handle_usage_event(event)
-        elif event_type == "turn_end" or (
-            event_type == "text" and "[DONE]" in event.get("content", "")
-        ):
+        elif event_type == "turn_end":
             self._handle_turn_end_event(event, main_screen)
         elif event_type == "error":
             self._handle_agent_error_event(main_screen)

@@ -1228,3 +1228,13 @@ suppression cannot reopen a closed screen. The command starts no model turn.
 `tests/test_served_fleet_usage.py` checks mounted MCP dispatch through real
 generated-client transport fixtures. These checks do not close model admission,
 conversation resume, or served session and turn usage acceptance.
+
+## Literal completion-marker regression
+
+`TUI-RUNTIME-R012.1.1`: `tests/test_turn_completion.py` feeds A2A-normalized
+artifacts and typed terminal states into the mounted app and headless runner.
+Exact, embedded and split `[DONE]` text must remain content. Mounted checks
+preserve processing and queued work until terminal delivery, then dispatch once.
+Pending approval still precedes the queue. Headless checks retain later text
+and failures, and stop at typed completion or cancellation. These fixtures do
+not qualify served streaming, native parity or full mounted cancellation.
