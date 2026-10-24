@@ -601,3 +601,37 @@ async def test_model_registry_empty_and_populated_remain_successful(models):
         if models:
             assert "fixture-model" in rendered
         assert requests == ["/models"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.spec("TUI-RUNTIME-R012.4.3.1")
+@pytest.mark.parametrize("command", ["/focus", "/focus "])
+async def test_focus_command_keeps_composer_and_sidebar_shortcut_keeps_navigation(
+    command,
+):
+    requests = []
+
+    def reply(request):
+        requests.append(request.url.path)
+        return httpx.Response(404)
+
+    async with mounted(reply) as (app, pilot):
+        requests.clear()
+        composer = app.screen.query_one(InputTextArea)
+        sidebar = app.screen.query_one("#sidebar")
+        initially_visible = sidebar.display
+        for visible in (not initially_visible, initially_visible):
+            await submit(app, pilot, command)
+            assert sidebar.display is visible
+            assert app.focused is composer
+            assert composer.text == ""
+        await pilot.press("ctrl+b")
+        await pilot.pause()
+        assert not sidebar.display
+        assert app.focused is composer
+        await pilot.press("ctrl+b")
+        await pilot.pause()
+        assert sidebar.display
+        assert app.focused is not None and sidebar in app.focused.ancestors
+        assert requests == []
+        assert not app._is_processing

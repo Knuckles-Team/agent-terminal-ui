@@ -937,6 +937,7 @@ class CommandProcessor:
     async def cmd_focus(self, args: str = "") -> None:
         """Toggle focus view (fullscreen mode)."""
         await self.app.run_action("screen.toggle_sidebar")
+        self.app.screen.query_one("InputTextArea").focus()
 
     async def cmd_fast(self, args: str) -> None:
         """Report unavailable served fast-mode selection."""
