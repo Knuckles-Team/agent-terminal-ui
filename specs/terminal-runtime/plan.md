@@ -1198,3 +1198,20 @@ R015.51 keeps the owning client contract tied to the production method-to-operat
 map and completed acceptance commands. Derive mappings from the client source;
 reject missing or wrong mappings, absent or narrowed receipts, and false live-proof claims.
 R015.52 retains its separate maintenance obligation.
+
+## Amendment 2026-10-24: canonical run inspection
+
+R010.1 and R012.4.3.2 extend the existing Python run inspector to `runs.get`
+and `runs.events` through the generated Arbora client. Keep `/run plan`
+separate. A selected run displays its authorized task and status, bounded public
+events and public summaries. Configuration, context use and cost remain
+unavailable when the producer does not supply them. Arbora does not expose a
+run-list operation. A missing run ID receives a notice without a request.
+Reuse the existing public-event validators and literal rendering. Clear
+protected values after refusal, refresh or an owner change. Closed and
+superseded reads cannot restore content. Capture the client and context before
+mount. Check ownership before cached row selection or follow actions, not only
+at idle. Do not fall back to legacy REST.
+Old clients and servers may refuse the newer operations. Fixture qualification
+against the current public contract does not establish released-stack, native
+or live producer acceptance. R010.6 and the full command matrix remain open.
