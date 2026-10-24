@@ -6,7 +6,7 @@
 
 <p align="center">
   <b>The terminal frontend for Arbora agent sessions.</b><br>
-  <sub>Textual-based TUI connecting to an Arbora-served agent backend through a normalized ACP transport adapter.</sub>
+  <sub>Arbora over A2A.</sub>
 </p>
 
 [![GitHub Repo stars](https://img.shields.io/github/stars/Knuckles-Team/agent-terminal-ui)](https://github.com/Knuckles-Team/agent-terminal-ui/stargazers)
@@ -32,10 +32,10 @@
 
 ## Overview
 
-Agent Terminal UI is a [Textual](https://textual.textualize.io/)-based terminal interface
-for interacting with agents served by [Arbora](https://knuckles-team.github.io/arbora/).
-It connects to an Arbora-hosted `agent-utilities` backend through a normalized transport
-adapter; the currently shipped adapter uses ACP (JSON-RPC + SSE).
+Built with [Textual](https://textual.textualize.io/).
+Connects to [Arbora](https://knuckles-team.github.io/arbora/).
+It connects to Arbora's A2A endpoint for task submission and observation.
+Arbora runs separately from this frontend.
 
 > [!NOTE]
 > This library is in early development and subject to change.
@@ -232,6 +232,20 @@ The full command, keyboard shortcut, and module reference lives in
 - **Real-time token and cost tracking** -- integrated in the status line for session monitoring
 - **Memory Auto-loading** -- backend automatically includes `AGENTS.md` and `MEMORY.md` in the system prompt for project-aware reasoning.
 
+## Installation
+
+Use Python 3.12 or newer and [uv](https://docs.astral.sh/uv/getting-started/installation/).
+Check out the intended revision, then install its locked runtime dependencies:
+
+```bash
+uv sync --frozen
+uv run --frozen agent-terminal-ui --help
+```
+
+These commands install the frontend, not an Arbora server. Help works without a running backend.
+The tracked `uv.lock` defines the dependency versions for this checkout.
+For test tools and source structure, see [Contributing](CONTRIBUTING.md).
+
 ## Usage
 
 Start the Arbora-hosted `agent-utilities` backend server, then launch the TUI:
@@ -354,29 +368,18 @@ the `AGENT_THEME` environment variable.
 
 ## Development
 
-### Prerequisites
-
-- [uv](https://docs.astral.sh/uv/getting-started/installation/)
-- [prek](https://github.com/j178/prek/blob/master/README.md#installation)
-
-### Setup
-
-Create uv virtual environment and install dependencies:
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, focused tests, repository gates and source structure.
+The test dependencies are an optional extra:
 
 ```bash
-uv sync --frozen --all-groups
+uv sync --frozen --extra test
+uv run --frozen --extra test pytest tests/test_source_quality.py -q
 ```
 
-To update dependencies (updates the lock file):
+Use the pinned pre-commit runner for configured formatting, lint and type checks:
 
 ```bash
-uv sync --all-groups
-```
-
-Run formatting, linting, and type checking:
-
-```bash
-uv run ruff format && uv run ruff check --fix && uv run ty check
+uvx --from pre-commit==4.6.0 pre-commit run --all-files
 ```
 
 ## Documentation
@@ -388,7 +391,7 @@ It includes [Architecture](https://knuckles-team.github.io/agent-terminal-ui/arc
 
 ## Contributing
 
-See [AGENTS.md](AGENTS.md) for contribution and validation guidance.
+See [CONTRIBUTING.md](CONTRIBUTING.md) and the repository instructions in [AGENTS.md](AGENTS.md).
 
 ## License
 

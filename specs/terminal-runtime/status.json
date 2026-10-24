@@ -1557,9 +1557,14 @@
     {
       "id": "TUI-RUNTIME-R015.11",
       "title": "The README must explain the terminal purpose and installation. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "8d67aee7ffd9"
+      ],
+      "verified_by": [
+        "tests/test_operator_documentation.py:28",
+        "tests/test_operator_documentation.py:33"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.12",
@@ -1578,9 +1583,15 @@
     {
       "id": "TUI-RUNTIME-R015.14",
       "title": "The README must supply reproducible installation instructions. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "8d67aee7ffd9"
+      ],
+      "verified_by": [
+        "tests/test_operator_documentation.py:28",
+        "tests/test_operator_documentation.py:33",
+        "tests/test_operator_documentation.py:77"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.15",
@@ -1599,9 +1610,14 @@
     {
       "id": "TUI-RUNTIME-R015.17",
       "title": "The contributor guide must describe tools, commands and source structure. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "8d67aee7ffd9"
+      ],
+      "verified_by": [
+        "tests/test_operator_documentation.py:60",
+        "tests/test_operator_documentation.py:65"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.18",
@@ -2111,9 +2127,13 @@
     {
       "id": "TUI-RUNTIME-R015.70",
       "title": "Source-quality repairs must preserve the installed command path through `agent_terminal_ui/terminal_ui.py:10`",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "8d67aee7ffd9"
+      ],
+      "verified_by": [
+        "tests/test_installed_operator_entry.py:12"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.71",

@@ -178,13 +178,13 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R015.8:** The dependency and source security scans must report no medium-severity findings. Source obligation: `T008`.
 - [ ] **TUI-RUNTIME-R015.9:** Each terminal test must assert its observable result. Source obligation: `T009`.
 - [ ] **TUI-RUNTIME-R015.10:** Documentation examples must match the tested terminal behavior. Source obligation: `T010`.
-- [ ] **TUI-RUNTIME-R015.11:** The README must explain the terminal purpose and installation. Source obligation: `T011`.
+- [x] **TUI-RUNTIME-R015.11:** The README must explain the terminal purpose and installation. Source obligation: `T011`.
 - [ ] **TUI-RUNTIME-R015.12:** The README must cover each supported operator entry point. Source obligation: `T012`.
 - [ ] **TUI-RUNTIME-R015.13:** The README must provide navigation for its documented sections. Source obligation: `T013`.
-- [ ] **TUI-RUNTIME-R015.14:** The README must provide reproducible installation instructions. Source obligation: `T014`.
+- [x] **TUI-RUNTIME-R015.14:** The README must provide reproducible installation instructions. Source obligation: `T014`.
 - [ ] **TUI-RUNTIME-R015.15:** The README must explain the terminal architecture. Source obligation: `T015`.
 - [ ] **TUI-RUNTIME-R015.16:** The README must link its detailed documentation. Source obligation: `T016`.
-- [ ] **TUI-RUNTIME-R015.17:** The contributor guide must describe tools, commands and source structure. Source obligation: `T017`.
+- [x] **TUI-RUNTIME-R015.17:** The contributor guide must describe tools, commands and source structure. Source obligation: `T017`.
 - [ ] **TUI-RUNTIME-R015.18:** The repository must declare its license in a tracked license file. Source obligation: `T018`.
 - [ ] **TUI-RUNTIME-R015.19:** Terminal modules must meet the shared module-size checks. Source obligation: `T019`.
 - [ ] **TUI-RUNTIME-R015.20:** Terminal classes must meet the shared method-count checks. Source obligation: `T020`.
@@ -239,7 +239,7 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R015.67:** The terminal must achieve an overall source-quality grade of at least 3.0. Source obligation: `CHECKLIST non-FR checkbox 56`.
 - [ ] **TUI-RUNTIME-R015.68:** The terminal must achieve grade B or higher in all 17 source-quality domains. Source obligation: `CHECKLIST non-FR checkbox 57`.
 - [ ] **TUI-RUNTIME-R015.69:** The terminal must resolve all 43 actionable source findings. Source obligation: `CHECKLIST non-FR checkbox 58`.
-- [ ] **TUI-RUNTIME-R015.70:** Source-quality repairs must preserve the installed command path through `agent_terminal_ui/terminal_ui.py:10`.
+- [x] **TUI-RUNTIME-R015.70:** Source-quality repairs must preserve the installed command path through `agent_terminal_ui/terminal_ui.py:10`.
 - [ ] **TUI-RUNTIME-R015.71:** A served integration test must start the installed command and observe client behavior after source-quality repairs. It must distinguish a denied request from an authenticated empty result.
 
 - [ ] `TUI-RUNTIME-R008.2.3.2.1`: Deliver native runtime baseline palette switching with focused production-handler and rendering coverage.

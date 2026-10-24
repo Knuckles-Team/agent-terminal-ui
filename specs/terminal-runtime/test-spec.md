@@ -20,6 +20,34 @@
 
 No manual-only proof substitutes for the negative tests. If a live identity provider is unavailable, keep approval disabled and acceptance pending. Baseline tests must not require private infrastructure.
 
+## Operator documentation and installed-entry receipt
+
+R015.11, R015.14 and R015.17 now have installation instructions and a contributor guide.
+The guide identifies tools, executable commands and source responsibilities.
+Documentation contracts reject five installation mutations and three contributor-guide mutations.
+Both positive documentation contracts fail against the unchanged main documentation at 612446cb.
+A real `uv sync --frozen --offline` rejects a checkout without its lockfile.
+
+On GR1080, Python 3.14.7 and uv 0.12.21 ran these documented commands successfully:
+
+- `uv sync --frozen`
+- `uv run --frozen agent-terminal-ui --help`
+- `uv sync --frozen --extra test`
+- `uv run --frozen --extra test pytest tests/test_source_quality.py -q`: 7 passed.
+
+The commands used an isolated copy of tracked source and an external environment.
+A wheel built with `uv build --wheel` was installed into a separate environment using exported lock constraints.
+With TUI_TEST_INSTALLED_ENV set to that environment, R015.70's installed-entry test passed.
+It runs outside the checkout, verifies installed metadata and import location, then invokes the real console script.
+Help and invalid arguments make no recorded fixture GET or POST requests.
+A valid headless prompt sends one message/send and renders the loopback fixture response.
+The fixture is not an installed Arbora service and does not qualify authenticated denial or empty results.
+Without TUI_TEST_INSTALLED_ENV, this test skips; that skip is not installed-entry proof.
+
+The combined operator-documentation, installed-entry, source-quality, CLI-documentation and docs-layout suite passed 40 tests.
+No runtime behavior, package version or dependency changed. R015.10 and R015.12 full documentation accuracy remain open.
+Version-analysis requirements, R015.71 installed served behavior, native and release performance acceptance remain open.
+
 ## Structure parity rows
 
 | Requirement | Layer and fixture | Expected positive result | Required negative proof |
@@ -331,13 +359,13 @@ Permitted fallback preserves message identity and the idempotency key.
 | `TUI-RUNTIME-R015.8` | Planned `tests/test_source_quality.py::test_source_quality_8` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.9` | Planned `tests/test_source_quality.py::test_source_quality_9` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.10` | Planned `tests/test_source_quality.py::test_source_quality_10` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.11` | Planned `tests/test_source_quality.py::test_source_quality_11` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.11` | `tests/test_operator_documentation.py::test_operator_installation_documentation`; see operator documentation receipt above. |
 | `TUI-RUNTIME-R015.12` | Planned `tests/test_source_quality.py::test_source_quality_12` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.13` | Planned `tests/test_source_quality.py::test_source_quality_13` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.14` | Planned `tests/test_source_quality.py::test_source_quality_14` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.14` | `tests/test_operator_documentation.py::test_locked_install_refuses_a_checkout_without_its_lockfile`; see operator documentation receipt above. |
 | `TUI-RUNTIME-R015.15` | Planned `tests/test_source_quality.py::test_source_quality_15` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.16` | Planned `tests/test_source_quality.py::test_source_quality_16` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.17` | Planned `tests/test_source_quality.py::test_source_quality_17` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.17` | `tests/test_operator_documentation.py::test_contributor_guide_tools_commands_and_source_map`; see operator documentation receipt above. |
 | `TUI-RUNTIME-R015.18` | Planned `tests/test_source_quality.py::test_source_quality_18` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.19` | Planned `tests/test_source_quality.py::test_source_quality_19` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.20` | Planned `tests/test_source_quality.py::test_source_quality_20` must enter the owning path and prove the requirement. |
@@ -390,7 +418,7 @@ Permitted fallback preserves message identity and the idempotency key.
 | `TUI-RUNTIME-R015.67` | Planned `tests/test_source_quality.py::test_source_quality_67` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.68` | Planned `tests/test_source_quality.py::test_source_quality_68` must enter the owning path and prove the requirement. |
 | `TUI-RUNTIME-R015.69` | Planned `tests/test_source_quality.py::test_source_quality_69` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.70` | Planned `tests/test_source_quality.py::test_source_quality_entry_wiring` must enter the installed command against an authorized served fixture. |
+| `TUI-RUNTIME-R015.70` | `tests/test_installed_operator_entry.py::test_source_quality_entry_wiring` runs the installed command against a loopback unary fixture; installed Arbora qualification remains open. |
 | `TUI-RUNTIME-R015.71` | Planned `tests/test_source_quality.py::test_source_quality_served_entry` must enter the installed command against an authorized served fixture. |
 
 ### Native runtime palette switching (R008.2.3.2.1)

@@ -16,6 +16,7 @@
 [files]
 "AGENTS.md" = "Repository contributor instructions."
 "CHANGELOG.md" = "Release history."
+"CONTRIBUTING.md" = "Contributor setup, validation commands and source map."
 "CLAUDE.md" = "Claude instruction entry point."
 "Dockerfile" = "Container image build definition."
 "README.md" = "Public installation and project entry point."
