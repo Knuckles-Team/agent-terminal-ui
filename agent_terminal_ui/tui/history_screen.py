@@ -51,10 +51,13 @@ class HistoryScreen(ModalScreen[None]):
     #history-reply-scroll { height: 1fr; }
     """
 
-    def __init__(self, client: AgentClient, page: dict[str, Any]) -> None:
+    def __init__(self, client: AgentClient, page: dict[str, Any] | None = None) -> None:
         super().__init__()
         self.client = client
-        self.page = page
+        self.page: dict[str, Any] = (
+            page if page is not None else {"tasks": [], "nextCursor": None}
+        )
+        self._load_on_mount = page is None
         self._page_cursors: list[str | None] = [None]
         self._reading = False
 
@@ -78,6 +81,8 @@ class HistoryScreen(ModalScreen[None]):
         table.add_columns("Updated", "Task", "Context", "State")
         table.cursor_type = "row"
         self._render_page()
+        if self._load_on_mount:
+            self.action_refresh_history()
 
     def _render_page(self) -> None:
         table = self.query_one(DataTable)

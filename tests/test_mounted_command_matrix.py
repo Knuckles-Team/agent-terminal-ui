@@ -398,7 +398,7 @@ def test_inventory_accounts_for_every_registered_command():
         ("fleet", "/api/v1/ops/fleet.status", None),
         ("mcp", "/api/v1/ops/fleet.status", None),
         ("tools", "/api/v1/ops/fleet.catalog.list", None),
-        ("history", "/a2a", None),
+        ("history", "/a2a", "#history-reply"),
         ("usage", "/api/v1/ops/usage.read", "#usage-hist"),
         ("capabilities", "/api/capabilities", "#capability-palette-status"),
         ("run", "/api/runs", "#run-browser-status"),

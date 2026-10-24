@@ -1053,3 +1053,50 @@ the final dependency freeze, source-file hashes and the warning investigation.
 This receipt supports existing bounded R012.4.3.1 and R012.2.1 evidence without
 changing acceptance status or test markers. It does not prove live producers,
 production identity, full served parity or release performance.
+
+## Initial history loading regression
+
+R012.3.1 now opens its history screen before the first page read.
+`tests/test_history_initial_load.py` enters `/history` through the mounted
+AgentApp composer and real client transport with controlled HTTP responses.
+It verifies pending-read keyboard close, duplicate-key suppression, safe reopen
+and rejection of a late completion that suppresses cancellation. Denied and
+malformed first reads remain visible as unavailable and can retry with R.
+The tests assert only tasks/list reads and no active task or context change.
+All three cases fail on main 36de5343 before the repair.
+This receipt does not establish live producer, native or conversation-resume acceptance.
+
+Cloud qualification used Python 3.12.14, Textual 8.2.8 and Arbora 0.1.7.
+The 41 scoped history tests and 26 command/documentation cases passed.
+`python -m pytest tests -q -n 2 --tb=short` passed 1,723 tests with four skips
+and six snapshots. The same command on baseline 64d59bd6 passed 1,720 tests
+with the same skips and snapshots. Both runs emitted one subprocess-finalizer
+warning after its event loop closed; this repair does not resolve that warning.
+The test environment used a writable UV_CACHE_DIR for the locked-install check.
+All-files pre-commit and ty on both changed runtime modules passed.
+Native builds, installed-service acceptance and pre-push release gates were not run.
+No new acceptance row was closed.
+
+## Installed client candidate smoke receipt
+
+The client candidate at ce5eb8495f47bec755841c16718e124277971318 passed
+Arbora's published `test_actual_tui_completes_tokenless_chat` from
+7f39b8a2bb8826e5792a6981e73d4e1f2bf81525: one test passed in 22.26 seconds.
+Its normally built wheel has SHA256
+`632310e571a551895e392f8a8dd181a0ac63b638ae36dacebcb06c932aaf6cfa`.
+An isolated disposable environment loaded installed packages, not source overlays.
+The changed client modules matched that candidate's source bytes.
+
+The test started real local Arbora and EG services with a simulated HTTP model.
+It ran the installed Python headless command.
+The unique rendered nonce matched the model receipt and persisted task artifact.
+The test then stopped the services.
+The unchanged preserved environment was not used as the candidate installation.
+
+The older matched backend artifacts were Arbora 0.1.7, EG 2.27.5, AU 3.1.0
+and connector SDK 0.2.2, using Python 3.12.14. The cached EG union server had
+SHA256 `a25412230e263bc952a140c4d81ee5c276b018ee7b376646e86928d7a735c0c0`.
+This is client-candidate smoke evidence against older backend artifacts.
+It does not prove the history UI against a live backend, native or fullscreen operation.
+Current-backend compatibility, released dependency installation and complete spec acceptance remain open.
+No requirement state changed.

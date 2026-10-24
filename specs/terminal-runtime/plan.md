@@ -1060,3 +1060,11 @@ The previous filter excluded exact names, so /queue could become /queue:clear.
 Only a unique partial command may autocomplete. Mounted keyboard tests preserve
 queued messages and prove that ambiguous input selects no command or model turn.
 This extends R012.4.3.1, not full served command-family acceptance.
+
+## Amendment 2026-10-24: responsive initial task history
+
+R012.3.1 uses the existing history refresh worker for its initial page.
+Open the modal before reading; retain keyboard close and retry during failure.
+Test the real application command route with delayed and refused client reads.
+A closed screen must discard late results even if cancellation is suppressed.
+This is client presentation work; conversation resume and live producer proof remain open.
