@@ -196,7 +196,8 @@ backend. See [Architecture](architecture.md#run-modes).
   memory; full history is persisted in SQLite (see
   [Session Management](session_management.md)).
 - Themes: default `tokyo-night`; switch live with `/theme <name>` across Textual's
-  built-in themes, or set the startup theme via `AGENT_THEME`.
+  built-in themes, cycle them with `Alt+Shift+T`, or set the startup theme via
+  `AGENT_THEME`.
 
 ### Public run details
 
