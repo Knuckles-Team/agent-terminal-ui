@@ -791,13 +791,14 @@ PYTEST_XDIST_AUTO_NUM_WORKERS=2 pre-commit run --all-files
 
 Independent review returned GO on scope and tests and reproduced 209 passing
 tests with two workers. R015.46 covers bounded context identifiers only.
-R015.48, R015.51 and R015.52 rely on execution and documentation receipts,
-not artificial test markers. The trailer gate requires bound tests, so these three rows remain open.
-The batch does not add artificial markers to change their generated state. No native build or live service is needed for this batch.
+At this baseline, R015.48, R015.51 and R015.52 relied on execution and documentation receipts,
+not artificial test markers. The trailer gate required bound tests, so these three rows remained open.
+This batch added no artificial markers to change their generated state. No native build or live service was needed.
 
 Candidate implementation: `20e00677ac4ccb15d813e4eb9a71a9155d3b8543`.
 Six existing rows qualify through tests: R015.44, .45, .46, .47, .49 and .50.
-R015.48, .51 and .52 retain execution receipts but remain open in the ledger.
+R015.48, .51 and .52 retained execution receipts but remained open at this baseline.
+The later client maintenance qualification below owns R015.48 and R015.51. R015.52 remains open.
 
 ## Theme keyboard regression (R015.53)
 
@@ -1428,3 +1429,49 @@ Missing artifacts or Linux/PTY dependencies skip entry qualification and give
 no acceptance evidence. Documentation checks remain available independently.
 This does not qualify served theme parity, authorized host-log production,
 complete native performance or the full quality acceptance v1 domains.
+
+## Client maintenance qualification (R015.48, R015.51)
+
+Base: `b60b72f5647dbe2662461f2d8398f2bba405455e`. This slice changes
+only tests and specification records. The client, hook rules and tool pins are unchanged.
+The owning implementation is `agent_terminal_ui/client.py`. Its three read
+adapters remain mapped to their served operations in the client maintenance table above.
+
+`tests/test_client_maintenance_gates.py` copies the actual hook configuration
+and pyproject into temporary Git repositories. It tracks the real client path,
+then invokes the configured Ruff and mypy hooks through pre-commit.
+Both accept a valid function. Ruff rejects an undefined name with F821;
+mypy rejects an integer returned as a string with a return-value diagnostic.
+The tests reject skipped hooks, failed clean inputs and accepted wrong results.
+They use populated hook environments, not replacement tool arguments or mocks.
+
+The two enforcement tests passed without skips in 1.74 seconds.
+The current-source client, transport, mounted-command, history and text-file
+regressions passed 407 tests without skips in 67.46 seconds with two workers.
+The exact regression command was:
+
+```bash
+python -m pytest tests/test_client_maintenance_gates.py tests/test_client_read_contracts.py tests/test_client.py tests/test_client_methods.py tests/test_served_fleet_usage.py tests/test_task_history.py tests/test_history_refresh.py tests/test_history_navigation.py tests/test_mounted_command_matrix.py tests/test_text_files.py -q -n 2 -p no:randomly
+```
+
+The package import resolved inside this worktree through an explicit PYTHONPATH.
+This evidence is not an installed-wheel qualification.
+
+Python was 3.12.14 and the pre-commit runner was 4.7.0.
+Configured Ruff was 0.15.12 at `6fec9b7edb08fd9989088709d864a7826dc74e80`.
+Configured mypy was 1.20.2 at `fc0f09a29bb495f4a91f00266155d6282d52485d`.
+The hook configuration SHA-256 is `053413c0ab09b0f920a642867ddee61618da5a5b4171ce49357352b1086fb80f`.
+The client source SHA-256 is `fb27dd8facc158d81f0458e49b9b07cc0b1e1492f9a956f2d9a3c654771a3414`.
+
+Set TUI_TEST_PRE_COMMIT to the installed runner and PRE_COMMIT_HOME to its
+populated cache before running the enforcement module. An unset runner skips
+both cases and gives no acceptance evidence. Invalid supplied paths fail.
+The full candidate `pre-commit run --all-files` passed, including configured Ruff and mypy.
+The candidate's full all-file gate remains the primary lint and type acceptance;
+temporary counterexamples prove enforcement, not current-client correctness.
+No dependency or hook environment was installed for this qualification.
+`tests/test_client_maintenance_documentation.py` derives the three operation
+mappings from production source and checks their owning table and execution receipt.
+It rejects missing or wrong mappings, narrowed commands, missing outcomes and false live-proof claims.
+A fresh combined run passed all 11 enforcement and documentation cases without skips in 1.71 seconds.
+R015.29.2, R015.52 and quality acceptance v1 remain open.
