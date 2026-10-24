@@ -711,3 +711,20 @@ python -m pytest tests/test_tool_call_block_mounted.py tests/test_public_run_det
 
 This repairs an existing leaf. It adds no completed requirement and makes no
 served streaming, native presentation or release-performance claim.
+
+
+Full-suite receipt before the publication rebase: Python 3.14.7 with installed
+`arbora==0.1.7` passes 1446 tests, skips one, and passes all six snapshots.
+The command is `python -m pytest tests -q -n 2 --dist loadfile -p no:randomly -m 'not slow' --timeout=60 --tb=short`.
+
+The normal pre-push gate runs with two workers. All hooks except pytest pass.
+Its locked all-extras environment lacks Arbora: 1274 pass, one skips, seven fail,
+and four modules fail collection. The seven failures are in `test_client.py`.
+Collection fails in `test_client_read_contracts.py`, `test_current_plan_view.py`,
+`test_registered_command_contract.py` and `test_served_fleet_usage.py`.
+The same five files on unchanged `d370244` reproduce seven failures and four
+errors, with 74 passes. The repair changes no dependency or hook configuration.
+
+The publication rebase includes merged PR #120 from `5643d81`.
+Both evidence sections and task updates are retained. Full-suite counts above
+predate this rebase; focused presentation tests and commit gates run again.
