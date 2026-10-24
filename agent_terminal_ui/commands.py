@@ -11,7 +11,7 @@ import json
 import logging
 from collections.abc import Awaitable, Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, Never
 
 import httpx
 from rich.console import Group
@@ -513,12 +513,23 @@ class CommandProcessor:
             f"[dim]conf {conf}%  {tags}[/dim]"
         )
 
+    @staticmethod
+    def _reject_json_constant(value: str) -> Never:
+        """Reject the non-JSON numeric constants accepted by Python's decoder."""
+        raise ValueError(f"Invalid JSON constant: {value}")
+
     async def cmd_op(self, args: str) -> None:
         """Invoke an Arbora operation: /op <op.id> <JSON object>."""
-        op, _, raw = args.strip().partition(" ")
+        parts = args.split(maxsplit=1)
+        op = parts[0] if parts else ""
+        raw = parts[1] if len(parts) > 1 else ""
         try:
-            params = json.loads(raw) if raw.strip() else {}
-        except json.JSONDecodeError:
+            params = (
+                json.loads(raw, parse_constant=self._reject_json_constant)
+                if raw
+                else {}
+            )
+        except ValueError:
             self.app.notify("/op params must be a JSON object", severity="warning")
             return
         if not op or not isinstance(params, dict):
