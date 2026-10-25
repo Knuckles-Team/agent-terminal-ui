@@ -425,7 +425,8 @@
       "title": "Release workflow caller matches Overstory",
       "delivery_state": "VERIFIED",
       "landed_in": [
-        "4ba2da4eafce"
+        "4ba2da4eafce",
+        "ab946be70cba"
       ],
       "verified_by": [
         "tests/test_docs_layout.py:30"
@@ -1749,9 +1750,13 @@
     {
       "id": "TUI-RUNTIME-R015.31",
       "title": "The version configuration must cover every authoritative version mirror. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "ab946be70cba"
+      ],
+      "verified_by": [
+        "tests/test_native_packaging.py:22"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R015.32",
