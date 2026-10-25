@@ -26,6 +26,7 @@ fn help_is_available_without_runtime_configuration_or_a_terminal() {
         assert!(short.stderr.is_empty());
         let help = String::from_utf8(long.stdout).unwrap();
         for text in [
+            "Tuig: native Arbora terminal",
             "Usage: tuig",
             "--prompt TEXT",
             "--observe-task TASK_ID",

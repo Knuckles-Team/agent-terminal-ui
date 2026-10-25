@@ -1739,7 +1739,7 @@
       ],
       "verified_by": [
         "native/agent-terminal-ui/tests/cli_help.rs:16",
-        "native/agent-terminal-ui/tests/cli_help.rs:50"
+        "native/agent-terminal-ui/tests/cli_help.rs:51"
       ]
     },
     {

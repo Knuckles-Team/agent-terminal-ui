@@ -3,7 +3,7 @@ name = "agent-terminal-ui-native"
 version = "0.1.0"
 edition = "2024"
 publish = false
-description = "tuig native Ratatui terminal interface for Arbora"
+description = "Tuig native Ratatui terminal interface for Arbora"
 license = "MIT"
 repository = "https://github.com/Knuckles-Team/agent-terminal-ui"
 
