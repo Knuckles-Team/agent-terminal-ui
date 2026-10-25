@@ -33,12 +33,30 @@ def test_release_publishes_after_native_wheels_on_tags() -> None:
     assert workflow["jobs"]["native-wheels"] == {
         "uses": "./.github/workflows/native-wheels.yml"
     }
-    assert workflow["jobs"]["publish-pypi"] == {
-        "needs": ["native-wheels"],
-        "if": "github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')",
-        "uses": "Knuckles-Team/pipelines/.github/workflows/python_pipeline.yml@main",
-        "permissions": {"contents": "write"},
-        "with": {"require-tag": True},
-        "secrets": {"PYPI_API_TOKEN": "${{ secrets.PYPI_API_TOKEN }}"},
+    publish = workflow["jobs"]["publish-pypi"]
+    assert publish["needs"] == ["native-wheels"]
+    assert publish["if"] == "github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')"
+    assert publish["runs-on"] == "ubuntu-24.04"
+    assert publish["permissions"] == {"contents": "write"}
+    steps = publish["steps"]
+    downloads = [step for step in steps if step.get("uses", "").startswith("actions/download-artifact@")]
+    assert {step["with"]["name"] for step in downloads} == {
+        "native-wheel-x86_64",
+        "native-wheel-aarch64",
     }
+    assembly_index = next(
+        i for i, step in enumerate(steps) if step.get("name") == "Assemble and verify qualified publication artifacts"
+    )
+    publish_index = next(
+        i for i, step in enumerate(steps) if step.get("uses", "").startswith("pypa/gh-action-pypi-publish@")
+    )
+    source_index = next(
+        i for i, step in enumerate(steps) if step.get("name") == "Verify release source before publication"
+    )
+    assert assembly_index < source_index < publish_index
+    assert "manylinux_2_28" in steps[assembly_index]["run"]
+    publish = steps[publish_index]
+    assert publish["with"]["packages-dir"] == "dist/"
+    assert publish["with"]["password"] == "${{ secrets.PYPI_API_TOKEN }}"
+    assert not any("python_pipeline.yml" in step.get("uses", "") for step in steps)
     assert workflow["permissions"] == {"contents": "read"}
