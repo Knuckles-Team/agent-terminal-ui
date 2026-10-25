@@ -18,12 +18,12 @@ hashes; it does not automatically replace screenshots. See the
 
 ## Installation
 
-The PyPI distribution is `agent-terminal-ui`; the installed command is `tuig`.
+The PyPI distribution and installed command are `tuig`.
 Native wheel availability and platform qualification are release requirements.
 Do not assume a published older version already includes this cutover.
 
 ```sh
-pip install agent-terminal-ui
+pip install tuig
 tuig --help
 ```
 

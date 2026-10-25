@@ -19,7 +19,7 @@ SPEC.loader.exec_module(VERIFIER)
 class NativePackagingTests(unittest.TestCase):
     def test_binary_only_metadata(self):
         project = tomllib.loads((ROOT / "pyproject.toml").read_text())
-        self.assertEqual(project["project"]["name"], "agent-terminal-ui")
+        self.assertEqual(project["project"]["name"], "tuig")
         self.assertEqual(project["project"]["dependencies"], [])
         self.assertNotIn("scripts", project["project"])
         self.assertEqual(project["tool"]["maturin"]["bindings"], "bin")
@@ -43,11 +43,11 @@ class NativePackagingTests(unittest.TestCase):
                     wheel = Path(directory) / "fixture.whl"
                     with zipfile.ZipFile(wheel, "w") as archive:
                         archive.writestr(
-                            "agent_terminal_ui-2.3.2.data/scripts/tuig", executable
+                            "tuig-2.3.3.data/scripts/tuig", executable
                         )
                         archive.writestr(
-                            "agent_terminal_ui-2.3.2.dist-info/METADATA",
-                            "Name: agent-terminal-ui\n" + dependencies,
+                            "tuig-2.3.3.dist-info/METADATA",
+                            "Name: tuig\n" + dependencies,
                         )
                         if extra:
                             archive.writestr(extra, "")

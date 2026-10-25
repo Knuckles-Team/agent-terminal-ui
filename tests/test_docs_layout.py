@@ -28,9 +28,17 @@ def test_agents_md_headings():
 
 
 @pytest.mark.spec("TUI-RUNTIME-R007")
-def test_release_qualification_uses_native_wheels_without_publication() -> None:
+def test_release_publishes_after_native_wheels_on_tags() -> None:
     workflow = yaml.safe_load((ROOT / ".github/workflows/release.yml").read_text())
-    assert workflow["jobs"] == {
-        "native-wheels": {"uses": "./.github/workflows/native-wheels.yml"}
+    assert workflow["jobs"]["native-wheels"] == {
+        "uses": "./.github/workflows/native-wheels.yml"
+    }
+    assert workflow["jobs"]["publish-pypi"] == {
+        "needs": ["native-wheels"],
+        "if": "github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')",
+        "uses": "Knuckles-Team/pipelines/.github/workflows/python_pipeline.yml@main",
+        "permissions": {"contents": "write"},
+        "with": {"require-tag": True},
+        "secrets": {"PYPI_API_TOKEN": "${{ secrets.PYPI_API_TOKEN }}"},
     }
     assert workflow["permissions"] == {"contents": "read"}

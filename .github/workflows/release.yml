@@ -1,9 +1,12 @@
-name: Release qualification
+name: Release
 
-# Native cutover is qualification-only until the wheel matrix and runtime
-# acceptance are reviewed. This workflow cannot upload to PyPI or tag a release.
+# Manual dispatch keeps the native qualification lane available without a
+# publication side effect. A v* tag runs that qualification first, then the
+# shared wheel-and-sdist publisher for the renamed `tuig` distribution.
 on:
-  workflow_dispatch:
+  push:
+    tags: ['v*']
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -15,3 +18,14 @@ concurrency:
 jobs:
   native-wheels:
     uses: ./.github/workflows/native-wheels.yml
+
+  publish-pypi:
+    needs: [native-wheels]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    uses: Knuckles-Team/pipelines/.github/workflows/python_pipeline.yml@main
+    permissions:
+      contents: write
+    with:
+      require-tag: true
+    secrets:
+      PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}

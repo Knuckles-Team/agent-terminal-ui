@@ -43,7 +43,7 @@ extra:
     - icon: fontawesome/brands/github
       link: https://github.com/Knuckles-Team/agent-terminal-ui
     - icon: fontawesome/brands/python
-      link: https://pypi.org/project/agent-terminal-ui/
+      link: https://pypi.org/project/tuig/
 
 nav:
   - Home: index.md

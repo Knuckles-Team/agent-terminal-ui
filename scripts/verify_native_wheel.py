@@ -26,7 +26,7 @@ def wheel_binary(wheel: Path) -> bytes:
         if len(metadata_paths) != 1:
             raise ValueError("wheel must contain exactly one distribution")
         metadata = BytesParser().parsebytes(archive.read(metadata_paths[0]))
-        if metadata["Name"] != "agent-terminal-ui" or metadata.get_all("Requires-Dist"):
+        if metadata["Name"] != "tuig" or metadata.get_all("Requires-Dist"):
             raise ValueError("unexpected distribution name or runtime dependencies")
         binary = archive.read(scripts[0])
         if not binary.startswith(b"\x7fELF"):

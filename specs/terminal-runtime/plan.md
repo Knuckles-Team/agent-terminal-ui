@@ -35,11 +35,11 @@ Keep the TUI's base chat install working at the supported Python floor. The 2026
 
 Use the existing command registry, `AgentClient`, `httpx`, Textual widgets, and Arbora generated models. Keep one transport normalization path and no duplicated request envelope construction. Run the repository's configured Ruff, type and pytest checks. The current repository has no configured CCCC, `jscpd` or Dupehound command or threshold. Before acceptance, either add shared ecosystem invocations with an explicit baseline or record an agreed exception. Do not claim a numerical pass without a configured tool. Apply KISS through a single client and one-use confirmation state. No unrelated `/docs` edit is required. Update README/configuration only where command or credential setup changes, and update AGENTS/constitution only if the contract itself changes.
 
-## Structure parity with agent-webui (2026-10-11)
+## Structure parity with Overstory (2026-10-11)
 
-The operator requires agent-terminal-ui to use the same structure as agent-webui. The table compares structure only.
+The operator requires Tuig to use the same structure as Overstory. The table compares structure only.
 
-| Element | agent-webui | agent-terminal-ui | Action |
+| Element | Overstory | Tuig | Action |
 |---|---|---|---|
 | Specs | 6 area specs | 1 spec (`terminal-runtime`) | Decisions below; no new directory |
 | Workflows | `advisory.yml`, `release.yml` | `pages.yml`, `pipeline.yml` | Differs in names; add release caller (R007) |
@@ -117,7 +117,7 @@ Each row requires its own positive and negative served case through the producti
 
 ### Amendments
 
-- 2026-10-11, rows `TUI-RUNTIME-R003` to `TUI-RUNTIME-R009`: the operator required agent-terminal-ui to match agent-webui structure. The old state had no structure rows. The new state adds seven rollups. Evidence: the comparison table above.
+- 2026-10-11, rows `TUI-RUNTIME-R003` to `TUI-RUNTIME-R009`: the operator required Tuig to match Overstory structure. The old state had no structure rows. The new state adds seven rollups. Evidence: the comparison table above.
 
 <!-- spec-definition-patch:r002-consumer-plan -->
 ## TUI-RUNTIME-R002 consumer boundary
@@ -228,7 +228,7 @@ copy of its instructions. Provisioning itself is not delivered by this spec.
 
 ### Native discovery entry point (R002.7)
 
-The separate native/agent-terminal-ui executable reads the existing AGENT_URL
+The separate Tuig executable at `native/agent-terminal-ui` reads the existing AGENT_URL
 and AGENT_BEARER_TOKEN settings. Its single HTTP client fetches
 /.well-known/agent-card.json. Ratatui renders discovery state while Tokio handles
 the request and terminal input. A response name does not prove task capabilities.
