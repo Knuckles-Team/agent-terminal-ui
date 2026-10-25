@@ -1397,3 +1397,16 @@ case that queues resize and input together. Send no sentinel to release input.
 
 R008.4.1 records the source correction. R008.4.2 requires repeated current
 compiled PTY evidence. An older executable is useful only for diagnosis.
+
+## Amendment 2026-10-24: installed startup CI qualification
+
+Extend the existing native CI job after its compiled PTY journeys. Build the
+Python wheel from the same checkout and replace only the editable project in
+the locked test environment. Verify the isolated import, console entry point,
+distribution metadata and installed file hashes against that wheel from
+outside the checkout. Record source, wheel and native executable hashes.
+
+Require all 18 startup cases and the log-open probe check without skips. Retain
+the result and provenance receipts. This gate wiring provides no passing receipt;
+R008.3.2 remains open until the matching hosted job passes. Cross-terminal,
+served-service and release qualification remain separate.

@@ -1612,9 +1612,13 @@ literal hostile labels; redraw stability; and clearing after denial, close,
 refresh or changed binding. Existing transport guards and effect-key isolation
 remain required. Compiled PTY and served qualification are separate gates.
 
-The optional entry-point matrix in `tests/test_entry_environment_pty.py` includes
-Canopy startup and no-color cases for both clients. Supply a wheel installation
-and a matching compiled executable; skips do not establish acceptance. The
+The entry-point matrix in `tests/test_entry_environment_pty.py` includes Canopy
+startup and no-color cases for both clients. It is opt-in locally; the native
+CI job requires all 18 cases and the log-open probe check without skips. Build
+and install the wheel from the same checkout as the native executable. Verify
+isolated import provenance and installed bytes against the wheel, then retain
+source and artifact hashes with JUnit results. CI wiring regressions in
+`tests/test_installed_startup_ci.py` do not qualify the actual matrix. The
 spatial helper and InspectorView tests require compiled native execution.
 `tests/test_native_spatial_graph_pty.py` covers resize, selection, pan, search,
 denial, no-color and local effect isolation through the compiled entry point.
