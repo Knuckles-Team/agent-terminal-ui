@@ -564,7 +564,9 @@
       "title": "Run operation wiring",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [
+        "tests/test_run_inspector_contract.py:25"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R010.2",
@@ -1250,8 +1252,8 @@
         "3ea65009beab"
       ],
       "verified_by": [
-        "tests/test_mounted_command_matrix.py:503",
-        "tests/test_mounted_command_matrix.py:598",
+        "tests/test_mounted_command_matrix.py:545",
+        "tests/test_mounted_command_matrix.py:640",
         "tests/test_tui_widgets.py:872",
         "tests/test_tui_widgets.py:909"
       ]
@@ -1295,7 +1297,7 @@
         "b0cc25d210bc"
       ],
       "verified_by": [
-        "tests/test_mounted_command_matrix.py:565",
+        "tests/test_mounted_command_matrix.py:607",
         "tests/test_unavailable_commands.py:12"
       ]
     },
@@ -1413,8 +1415,8 @@
       ],
       "verified_by": [
         "tests/test_command_completion_contract.py:9",
-        "tests/test_mounted_command_matrix.py:462",
-        "tests/test_mounted_command_matrix.py:621",
+        "tests/test_mounted_command_matrix.py:504",
+        "tests/test_mounted_command_matrix.py:663",
         "tests/test_registered_command_contract.py:19"
       ]
     },

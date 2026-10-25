@@ -270,6 +270,20 @@ class Conversation(VerticalScroll):
         await self.window.mount(details)
         self._prune_old_widgets()
 
+    def public_run_task_id(
+        self, client: AgentClient, context_id: str | None, run_id: str
+    ) -> str | None:
+        """Return only an observed run binding owned by the current connection."""
+        for task_id, (context, details) in self._public_details.items():
+            if (
+                context == context_id
+                and details.client is client
+                and details.run_id == run_id
+                and details._valid
+            ):
+                return task_id
+        return None
+
     def invalidate_public_run(self, binding: object) -> None:
         if isinstance(binding, dict) and isinstance(binding.get("task_id"), str):
             existing = self._public_details.get(binding["task_id"])

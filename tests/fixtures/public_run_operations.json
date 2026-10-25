@@ -1,0 +1,126 @@
+{
+  "source": "https://github.com/Knuckles-Team/arbora/blob/45b8d1d8bae4e3621f9432030769803a659671fc/arbora/api/generated/registry.json",
+  "registry_digest": "71ecacbf75cb3d9ae7a799e5da7507e965ff3d2a2302786b229e8a4d617fcd11",
+  "operations": {
+    "runs.events": {
+      "params": {
+        "model": "arbora.api.ops.run_replay.RunEventsParams",
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "after": {
+              "default": 0,
+              "maximum": 9223372036854775807,
+              "minimum": 0,
+              "title": "After",
+              "type": "integer"
+            },
+            "limit": {
+              "default": 1000,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            },
+            "run_id": {
+              "maxLength": 512,
+              "minLength": 1,
+              "title": "Run Id",
+              "type": "string"
+            },
+            "task_id": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Task Id"
+            }
+          },
+          "required": [
+            "run_id"
+          ],
+          "title": "RunEventsParams",
+          "type": "object"
+        }
+      },
+      "result": {
+        "model": "arbora.api.ops.runs.RunsCurrentPlanResult",
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "value": {
+              "additionalProperties": true,
+              "title": "Value",
+              "type": "object"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "title": "RunsCurrentPlanResult",
+          "type": "object"
+        }
+      }
+    },
+    "runs.get": {
+      "params": {
+        "model": "arbora.api.ops.run_replay.RunReadParams",
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "run_id": {
+              "maxLength": 512,
+              "minLength": 1,
+              "title": "Run Id",
+              "type": "string"
+            },
+            "task_id": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Task Id"
+            }
+          },
+          "required": [
+            "run_id"
+          ],
+          "title": "RunReadParams",
+          "type": "object"
+        }
+      },
+      "result": {
+        "model": "arbora.api.ops.runs.RunsCurrentPlanResult",
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "value": {
+              "additionalProperties": true,
+              "title": "Value",
+              "type": "object"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "title": "RunsCurrentPlanResult",
+          "type": "object"
+        }
+      }
+    }
+  }
+}

@@ -113,20 +113,25 @@ request and server-bound approval, run, and session IDs. An explicit approve
 action grants the approval and resumes that same request with those IDs; denial
 does not execute it.
 
-`/run [run_id]` opens live Mission Control for the canonical event stream. With
-no explicit or recently observed run ID, it opens a newest-first browser backed
-by `GET /api/runs`, scoped to the current session when available. Mission Control
-polls cursor replay from `GET /api/runs/{run_id}/events`, drains retained pages,
-deduplicates by sequence, and follows until an exact terminal event arrives.
-Only `run_completed`, `run_failed`, `run_interrupted`, `run_cancelled`, and
-`error` are terminal. `graph_complete` and `final_output` remain progress because
-final output and the authoritative run completion can follow graph completion.
-The view reports unknown, expired, empty, degraded, and truncated process-local
-history explicitly, including the missing sequence range when the bounded replay
-window forces a reset.
+`/run <run_id>` and `/runs <run_id>` inspect one authorized run through
+`runs.get` and `runs.events`. The overview shows the server's task identity and
+status. Applied configuration, context budget, cost and terminal reason stay
+unavailable until the public read provides a supported projection.
+`/run plan <run_id>` remains a separate current-plan view.
 
-Session IDs remain stable across turns while each execution receives a distinct
-run ID; the palette and replay browser preserve both identities independently.
+The inspector reuses the bounded public-event parser. It shows only public
+summaries and allowlisted execution facts, not opaque producer payloads. R
+replays from the start, F pauses or resumes follow, and Esc closes the view.
+The public `arbora-run-events-v1` contract marks `graph_complete`, `error` and
+`run_cancelled` as terminal; legacy event names do not establish completion.
+The view retains at most 1000 events and 128 KiB of displayed text. It reports
+omitted earlier events. Invalid cursors and duplicate events refuse the read,
+not a guessed reset. Refusal, refresh and connection changes clear old content.
+
+Arbora does not expose a run-list operation, so run discovery is unavailable.
+Provide an explicit run ID. An unknown operation, incompatible registry or denied read
+stays unavailable, with no legacy REST fallback. This current-main contract
+integration does not establish support in an older released Arbora package.
 
 ### Flat execution graph (Python)
 

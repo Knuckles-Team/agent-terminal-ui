@@ -272,13 +272,21 @@ READ_CASES = [
         (name, ["/api/capabilities"], "CapabilityPaletteScreen")
         for name in ("capability", "capabilities")
     ],
-    *[(name, ["/api/runs"], "RunBrowserScreen") for name in ("run", "runs")],
+    *[
+        (
+            f"{name} run-1",
+            ["/api/v1/ops/runs.get", "/api/v1/ops/runs.events"],
+            "RunInspectorScreen",
+        )
+        for name in ("run", "runs")
+    ],
     ("op fleet.status {}", ["/api/v1/ops/fleet.status"], "MainScreen"),
 ]
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("command,paths,screen", READ_CASES)
+@pytest.mark.usefixtures("current_public_run_schema")
 async def test_mounted_read_entry_points(command, paths, screen):
     requests = []
 
@@ -304,6 +312,37 @@ async def test_mounted_read_entry_points(command, paths, screen):
                 if path.endswith("fleet.catalog.list")
                 else {"totals": {"tokens": 42}}
             )
+            if path.endswith("runs.get"):
+                value = {
+                    "schema_version": "arbora-run-events-v1",
+                    "availability": "available",
+                    "run_id": "run-1",
+                    "task_id": "task-1",
+                    "status": "completed",
+                }
+            elif path.endswith("runs.events"):
+                value = {
+                    "schema_version": "arbora-run-events-v1",
+                    "availability": "available",
+                    "run_id": "run-1",
+                    "events": [
+                        {
+                            "schema_version": "arbora-run-events-v1",
+                            "event_id": "event-1",
+                            "sequence": 1,
+                            "run_id": "run-1",
+                            "task_id": "task-1",
+                            "type": "graph_complete",
+                            "category": "execution_trace",
+                            "terminal": True,
+                            "payload": {},
+                        }
+                    ],
+                    "after": 0,
+                    "next_after": 1,
+                    "has_more": False,
+                    "terminal": True,
+                }
             return httpx.Response(
                 200,
                 json={
@@ -333,7 +372,7 @@ async def test_mounted_read_entry_points(command, paths, screen):
         await submit(app, pilot, f"/{command}")
         assert requests == paths
         assert type(app.screen).__name__ == screen
-        if screen in {"UsageScreen", "CapabilityPaletteScreen", "RunBrowserScreen"}:
+        if screen in {"UsageScreen", "CapabilityPaletteScreen", "RunInspectorScreen"}:
             await pilot.press("escape")
             await pilot.pause()
             assert app.focused is app.screen.query_one(InputTextArea)
@@ -343,6 +382,8 @@ async def test_mounted_read_entry_points(command, paths, screen):
 
 
 LOCAL_COMMANDS = [
+    "run",
+    "runs",
     "clear",
     "file",
     "exit",
@@ -415,9 +456,10 @@ def test_inventory_accounts_for_every_registered_command():
         ("history", "/a2a", "#history-reply"),
         ("usage", "/api/v1/ops/usage.read", "#usage-hist"),
         ("capabilities", "/api/capabilities", "#capability-palette-status"),
-        ("run", "/api/runs", "#run-browser-status"),
+        ("run run-1", "/api/v1/ops/runs.get", "#run-inspector-status"),
     ],
 )
+@pytest.mark.usefixtures("current_public_run_schema")
 async def test_supported_read_failure_keeps_composer_usable(
     failure, command, path, status_selector, monkeypatch
 ):
