@@ -1410,3 +1410,14 @@ Require all 18 startup cases and the log-open probe check without skips. Retain
 the result and provenance receipts. This gate wiring provides no passing receipt;
 R008.3.2 remains open until the matching hosted job passes. Cross-terminal,
 served-service and release qualification remain separate.
+
+## Amendment 2026-10-24: retain hierarchy acceptance in rollups
+
+Completing the bounded flat-map child must not close complete hierarchy acceptance.
+R010.12.2 retains every unmet parent criterion in the generated rollup.
+Keep the original parent requirement and bounded native evidence unchanged.
+
+Extend the existing gate tests with an ancestor-state audit. Check the full
+R008 and R010 paths, their retained acceptance, and the qualified bounded children.
+Future broad acceptance requires its own evidence and an explicit audit update.
+No terminal runtime or dependency change belongs in this correction.

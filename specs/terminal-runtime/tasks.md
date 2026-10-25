@@ -154,7 +154,7 @@ Record deferred validation as deferred, never passed.
 
 - [ ] **TUI-RUNTIME-R010.4.1:** Wire the Python current-plan command and expiring read-only view.
 - [ ] **TUI-RUNTIME-R012.4.2:** Wire fleet and tenant usage reads; preserve unavailable and pagination boundaries.
-- [ ] **TUI-RUNTIME-R004.1:** Consolidate spec checks while preserving stages and trailer fallback.
+- [x] **TUI-RUNTIME-R004.1:** Consolidate spec checks while preserving stages, trailer fallback and retained acceptance boundaries.
 - [ ] **TUI-RUNTIME-R012.4.1:** Refuse unavailable management command families before transport.
 
 - [ ] **TUI-RUNTIME-R004.2:** Preserve blocking spec coverage and wire repository checks at their shared-policy stages.
@@ -319,15 +319,21 @@ Existing inspection, presentation and daily-workflow obligations remain open whe
 ## Canopy presentation slice
 
 - [ ] **TUI-RUNTIME-R008.3:** Add and qualify the optional Canopy palette in both existing theme systems. Preserve all existing presentation obligations.
-- [ ] **TUI-RUNTIME-R010.12.1:** Add and qualify a bounded spatial flat-DAG view. Retain full R010.12 hierarchy and R010.14 served acceptance.
+- [x] **TUI-RUNTIME-R010.12.1:** Add and qualify a bounded spatial flat-DAG view. Retain full R010.12 hierarchy and R010.14 served acceptance.
 
-- [ ] **TUI-RUNTIME-R008.3.1:** Review the optional palette source and local mounted evidence.
+- [x] **TUI-RUNTIME-R008.3.1:** Review the optional palette source and local mounted evidence.
 - [ ] **TUI-RUNTIME-R008.3.2:** Complete compiled and installed Canopy qualification without skips.
-- [ ] **TUI-RUNTIME-R010.12.1.1:** Review the spatial layout, controls and authored native tests.
+- [x] **TUI-RUNTIME-R010.12.1.1:** Review the spatial layout, controls and authored native tests.
 - [x] **TUI-RUNTIME-R010.12.1.2:** Complete exact-source native and real PTY spatial qualification.
 
 
 ## Native resize/input readiness
 
-- [ ] **TUI-RUNTIME-R008.4.1:** Select the existing supported input backend and lock its dependency closure. Bind source checks and the controlled regression.
+- [x] **TUI-RUNTIME-R008.4.1:** Select the existing supported input backend and lock its dependency closure. Bind source checks and the controlled regression.
 - [x] **TUI-RUNTIME-R008.4.2:** Repeat exact compiled rapid and controlled resize/input journeys. Preserve all existing PTY assertions and terminal restoration.
+
+
+## Retained acceptance rollup correction
+
+- [ ] **TUI-RUNTIME-R010.12.2:** Complete all remaining hierarchy navigation criteria. Bounded flat-map proof does not close this task.
+- [x] **TUI-RUNTIME-R008.4:** Qualify bounded native resize/input delivery in the tested Linux checkout. Broader native parity remains open.

@@ -1668,3 +1668,16 @@ Keep that intermittent input failure and fixture error in the evidence history.
 The receipt update also captures real terminal cells and observed colors in
 bounded PTY output. Inspect those screens and repeat the compiled gate before merge.
 Installed palette, cross-terminal, served hierarchy and release qualification remain open.
+
+
+## Ancestor acceptance audit regression (2026-10-24)
+
+The bounded native evidence remains valid. Completing the flat-map child must
+not mark complete hierarchy navigation as qualified. R010.12.2 retains every
+unmet hierarchy criterion; the parent prose remains unchanged.
+
+Existing gate tests assert both bounded and retained children in the hierarchy rollup.
+They keep broad R008, native parity, installed Canopy, R010 and hierarchy acceptance open.
+They also retain R010.14 and verify the bounded native children remain qualified.
+The audit is metadata validation, not evidence for the unmet hierarchy row.
+Bind it only to the existing gate requirement, never to R010.12.2.

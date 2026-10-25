@@ -225,6 +225,7 @@
     "TUI-RUNTIME-R008.3.2",
     "TUI-RUNTIME-R010.12.1.1",
     "TUI-RUNTIME-R010.12.1.2",
+    "TUI-RUNTIME-R010.12.2",
     "TUI-RUNTIME-R008.4",
     "TUI-RUNTIME-R008.4.1",
     "TUI-RUNTIME-R008.4.2"
@@ -403,12 +404,15 @@
       "landed_in": [
         "184c528c68ca",
         "417e3a75f217",
+        "856f118d3c67",
         "b90eb520052a"
       ],
       "verified_by": [
-        "tests/test_precommit_hooks.py:18",
-        "tests/test_precommit_hooks.py:38",
-        "tests/test_precommit_hooks.py:53"
+        "tests/test_precommit_hooks.py:120",
+        "tests/test_precommit_hooks.py:19",
+        "tests/test_precommit_hooks.py:43",
+        "tests/test_precommit_hooks.py:63",
+        "tests/test_precommit_hooks.py:89"
       ],
       "rollup_of": [
         "TUI-RUNTIME-R004.1",
@@ -421,10 +425,13 @@
       "delivery_state": "VERIFIED",
       "landed_in": [
         "184c528c68ca",
+        "856f118d3c67",
         "b90eb520052a"
       ],
       "verified_by": [
-        "tests/test_precommit_hooks.py:18"
+        "tests/test_precommit_hooks.py:120",
+        "tests/test_precommit_hooks.py:19",
+        "tests/test_precommit_hooks.py:89"
       ]
     },
     {
@@ -446,7 +453,7 @@
         "1f9a26a46229"
       ],
       "verified_by": [
-        "tests/test_precommit_hooks.py:10"
+        "tests/test_precommit_hooks.py:11"
       ]
     },
     {
@@ -1374,8 +1381,8 @@
         "417e3a75f217"
       ],
       "verified_by": [
-        "tests/test_precommit_hooks.py:38",
-        "tests/test_precommit_hooks.py:53"
+        "tests/test_precommit_hooks.py:43",
+        "tests/test_precommit_hooks.py:63"
       ]
     },
     {
@@ -2600,7 +2607,7 @@
     {
       "id": "TUI-RUNTIME-R010.12",
       "title": "Navigate the execution hierarchy and dependency graph",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "SPECIFIED",
       "landed_in": [
         "55431e8da128",
         "5f25c6dfa910",
@@ -2612,10 +2619,11 @@
         "native/agent-terminal-ui/src/execution_graph.rs:405",
         "native/agent-terminal-ui/src/inspector_view.rs:1010",
         "native/agent-terminal-ui/src/inspector_view.rs:1066",
-        "native/agent-terminal-ui/src/inspector_view.rs:925"
+        "tests/test_execution_graph.py:22"
       ],
       "rollup_of": [
-        "TUI-RUNTIME-R010.12.1"
+        "TUI-RUNTIME-R010.12.1",
+        "TUI-RUNTIME-R010.12.2"
       ]
     },
     {
@@ -2739,6 +2747,13 @@
         "native/agent-terminal-ui/src/spatial_graph.rs:359",
         "tests/test_native_spatial_graph_pty.py:29"
       ]
+    },
+    {
+      "id": "TUI-RUNTIME-R010.12.2",
+      "title": "Retain complete hierarchy navigation acceptance",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R008.4",
