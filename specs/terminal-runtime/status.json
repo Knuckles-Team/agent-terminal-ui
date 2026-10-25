@@ -404,8 +404,8 @@
       "landed_in": [
         "184c528c68ca",
         "417e3a75f217",
-        "b90eb520052a",
-        "d4deb13b4e08"
+        "856f118d3c67",
+        "b90eb520052a"
       ],
       "verified_by": [
         "tests/test_precommit_hooks.py:120",
@@ -425,8 +425,8 @@
       "delivery_state": "VERIFIED",
       "landed_in": [
         "184c528c68ca",
-        "b90eb520052a",
-        "d4deb13b4e08"
+        "856f118d3c67",
+        "b90eb520052a"
       ],
       "verified_by": [
         "tests/test_precommit_hooks.py:120",
