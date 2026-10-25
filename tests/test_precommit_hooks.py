@@ -1,3 +1,4 @@
+import json
 import tomllib
 from pathlib import Path
 
@@ -18,7 +19,11 @@ def test_pipelines_hook_sections():
 @pytest.mark.spec("TUI-RUNTIME-R004.1")
 def test_spec_group_preserves_stages_and_trailer_fallback():
     data = yaml.safe_load((ROOT / ".pre-commit-config.yaml").read_text())
-    shared = next(repo for repo in data["repos"] if repo["repo"] == "https://github.com/Knuckles-Team/pipelines")
+    shared = next(
+        repo
+        for repo in data["repos"]
+        if repo["repo"] == "https://github.com/Knuckles-Team/pipelines"
+    )
     hooks = {hook["id"]: hook for hook in shared["hooks"]}
     assert set(hooks["spec"]["stages"]) == {"pre-commit", "pre-push", "manual"}
     assert not hooks["spec"].get("args")
@@ -44,9 +49,14 @@ def test_layout_and_surface_checks_follow_shared_advisory_policy():
     assert "workflow_dispatch" in triggers
     assert data["permissions"] == {"contents": "read"}
     job = data["jobs"]["advisory"]
-    assert job["uses"] == "Knuckles-Team/pipelines/.github/workflows/advisory_pipeline.yml@main"
+    assert (
+        job["uses"]
+        == "Knuckles-Team/pipelines/.github/workflows/advisory_pipeline.yml@main"
+    )
     assert set(job["with"]["gates"].split()) == {
-        "public-surface", "root-hygiene", "gitignore-convergence"
+        "public-surface",
+        "root-hygiene",
+        "gitignore-convergence",
     }
 
 
@@ -58,7 +68,9 @@ def test_docs_ci_enforces_spec_checks_with_full_history_and_range():
     job = data["jobs"]["gates"]
     assert not job.get("continue-on-error")
     steps = job["steps"]
-    checkout = next(step for step in steps if step.get("uses", "").startswith("actions/checkout@"))
+    checkout = next(
+        step for step in steps if step.get("uses", "").startswith("actions/checkout@")
+    )
     assert checkout["with"]["fetch-depth"] == 0
     commands = [step for step in steps if "run" in step]
     assert len(commands) == 1
@@ -66,8 +78,60 @@ def test_docs_ci_enforces_spec_checks_with_full_history_and_range():
     assert not check.get("continue-on-error")
     assert check["env"]["BASE_SHA"] == "${{ github.event.pull_request.base.sha }}"
     assert check["run"] == (
-        "uvx --from pre-commit==4.6.2 pre-commit run spec --config .pre-commit-config.yaml "
+        "uvx --from pre-commit==4.6.2 pre-commit run spec "
+        "--config .pre-commit-config.yaml "
         '--hook-stage pre-commit --from-ref "$BASE_SHA" --to-ref HEAD'
     )
     assert "SKIP" not in check.get("env", {})
     assert "SKIP" not in job.get("env", {})
+
+
+@pytest.mark.spec("TUI-RUNTIME-R004.1")
+@pytest.mark.parametrize(
+    ("ancestor", "retained"),
+    [
+        ("TUI-RUNTIME-R008", "TUI-RUNTIME-R008.3.2"),
+        ("TUI-RUNTIME-R008.2", "TUI-RUNTIME-R008.2.3.2.2.2.2.2.2"),
+        ("TUI-RUNTIME-R008.3", "TUI-RUNTIME-R008.3.2"),
+        ("TUI-RUNTIME-R010", "TUI-RUNTIME-R010.12.2"),
+        ("TUI-RUNTIME-R010", "TUI-RUNTIME-R010.14"),
+        ("TUI-RUNTIME-R010.12", "TUI-RUNTIME-R010.12.2"),
+    ],
+)
+def test_bounded_completion_keeps_unqualified_ancestor_acceptance_open(
+    ancestor: str, retained: str
+) -> None:
+    """Current acceptance boundaries must change only with broader proof."""
+    status = json.loads((ROOT / "specs/terminal-runtime/status.json").read_text())
+    rows = {row["id"]: row for row in status["requirements"]}
+    assert rows[ancestor]["delivery_state"] == "SPECIFIED", ancestor
+    assert retained in rows, f"Missing retained acceptance: {retained}"
+    assert rows[retained]["delivery_state"] == "SPECIFIED", retained
+    descendants = set()
+    pending = list(rows[ancestor].get("rollup_of", []))
+    while pending:
+        identifier = pending.pop()
+        if identifier not in descendants:
+            descendants.add(identifier)
+            pending.extend(rows[identifier].get("rollup_of", []))
+    assert retained in descendants, f"{ancestor} lost its retained acceptance"
+
+
+@pytest.mark.spec("TUI-RUNTIME-R004.1")
+def test_ledger_preserves_actual_bounded_native_qualification() -> None:
+    status = json.loads((ROOT / "specs/terminal-runtime/status.json").read_text())
+    rows = {row["id"]: row for row in status["requirements"]}
+    assert {"TUI-RUNTIME-R010.12.1", "TUI-RUNTIME-R010.12.2"} <= set(
+        rows["TUI-RUNTIME-R010.12"]["rollup_of"]
+    )
+    for identifier in (
+        "TUI-RUNTIME-R008.3.1",
+        "TUI-RUNTIME-R008.4.1",
+        "TUI-RUNTIME-R008.4.2",
+        "TUI-RUNTIME-R010.12.1",
+        "TUI-RUNTIME-R010.12.1.1",
+        "TUI-RUNTIME-R010.12.1.2",
+    ):
+        row = rows[identifier]
+        assert row["delivery_state"] == "VERIFIED", identifier
+        assert row["landed_in"] and row["verified_by"], identifier
