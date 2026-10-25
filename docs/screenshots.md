@@ -78,3 +78,19 @@ It also verifies clean quit and terminal restoration. Python and `pyte` are capt
 no Python frontend or browser UI in this capture path. Font rendering can vary
 between SVG viewers; glyph positions and terminal colors come from the capture.
 The retired Python/Textual gallery remains only in git history.
+
+## Refreshing the gallery
+
+The README embeds `docs/assets/native/answer.svg` from this gallery. There is no
+separate README copy to refresh.
+
+Capture generation and publication are separate steps. The capture command above
+writes local SVGs and their manifest. The optional native capture test writes to
+a temporary directory; it does not update committed assets. CI validates fixture
+and image hashes, but it does not detect every visual change or commit new images.
+Pages deployment publishes the assets already in the repository.
+
+After a native display change, run the capture helper against the intended native
+build. Supply that binary's source revision, not an unrelated checkout revision.
+Review all six views and update the binary provenance above. Commit the SVGs and
+manifest together. The README then displays the updated answer asset.
