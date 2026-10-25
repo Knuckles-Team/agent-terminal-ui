@@ -318,10 +318,10 @@ Existing inspection, presentation and daily-workflow obligations remain open whe
 
 ## Canopy presentation slice
 
-- [ ] **TUI-RUNTIME-R008.3:** Add and qualify the optional Canopy palette in both existing theme systems. Preserve all existing presentation obligations.
+- [ ] **TUI-RUNTIME-R008.3:** Add and qualify the optional Canopy palette in the existing native theme system. Preserve all existing presentation obligations.
 - [x] **TUI-RUNTIME-R010.12.1:** Add and qualify a bounded spatial flat-DAG view. Retain full R010.12 hierarchy and R010.14 served acceptance.
 
-- [x] **TUI-RUNTIME-R008.3.1:** Review the optional palette source and local mounted evidence.
+- [x] **TUI-RUNTIME-R008.3.1:** Review the optional native palette source and bounded native evidence.
 - [ ] **TUI-RUNTIME-R008.3.2:** Complete compiled and installed Canopy qualification without skips.
 - [x] **TUI-RUNTIME-R010.12.1.1:** Review the spatial layout, controls and authored native tests.
 - [x] **TUI-RUNTIME-R010.12.1.2:** Complete exact-source native and real PTY spatial qualification.
@@ -339,3 +339,13 @@ Existing inspection, presentation and daily-workflow obligations remain open whe
 - [x] **TUI-RUNTIME-R008.4:** Qualify bounded native resize/input delivery in the tested Linux checkout. Broader native parity remains open.
 
 - [x] **TUI-RUNTIME-R012.6.3:** Decode and display bound Python turn receipts through the existing status line and read-only task history. Retain session, cost and installed producer acceptance under R012.6.2.
+
+## Native presentation acceptance ownership (2026-10-25)
+
+- [ ] Preserve all R008 and R008.2 acceptance in native journeys, including
+  keyboard, selection, scroll, no-color, reduced motion and release performance.
+- [ ] Complete R008.3 production native resize, composer-retention and compiled
+  qualification. R008.3.1 source evidence does not complete this work.
+
+These tasks replace only Python frontend execution, not product obligations.
+Do not restore the removed frontend. Keep native Python test harnesses.
