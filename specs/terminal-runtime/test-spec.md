@@ -202,8 +202,8 @@ No benchmark has run for this definition.
 These are acceptance targets, not measured claims. If hardware cannot meet a
 target, revise it with baseline evidence before acceptance. Report raw samples,
 percentile method and failures; do not average away a slow client. Broker trials
-must include broker RSS/CPU in totals and demonstrate at least 20% lower total RSS or
-upstream request count at 16 clients, with no latency regression. Otherwise keep
+must include broker RSS/CPU in totals. At 16 clients, require at least 20%
+lower total RSS or upstream request count, with no latency regression. Otherwise keep
 direct access. Limit each transport subscriber to 128 events and 2 MiB; exceeding
 either produces explicit backpressure/gap handling rather than silent loss.
 
@@ -509,7 +509,7 @@ not replace the remaining served parity and performance checks.
 
 | Requirement | Layer and fixture | Expected positive result | Required negative proof |
 |---|---|---|---|
-| TUI-RUNTIME-R012.2 | Rollup of R012.2.1 and R012.2.2 | Both legacy client regression coverage and governed served model choice meet their child criteria | Legacy reads and selection refusal alone cannot close model-choice acceptance |
+| TUI-RUNTIME-R012.2 | Rollup of R012.2.1 and R012.2.2. | Both legacy client regression coverage and governed served model choice meet their child criteria. | Legacy reads and selection refusal alone cannot close model-choice acceptance. |
 | TUI-RUNTIME-R012.2.1 | `tests/test_tui_widgets.py::TestModelConfiguration::test_model_registry_metadata_crosses_client_boundary` and `test_model_registry_failure_does_not_reuse_or_route`; Real AgentClient with HTTP fixtures. | Registry metadata survives authenticated GET /models unchanged. | After success, missing or denied routes, invalid JSON, non-object responses and timeouts raise errors. No stale data or alternate requests. |
 | TUI-RUNTIME-R012.2.2 | Planned served fixture through the model picker, /model and the real client; actual models.list operation from ARBORA-A2A-R016.6 | Discover profiles, send arboraModelProfile preference and display the producer-selected profile from task metadata | When Arbora does not honour the preference, display its different selected profile without local model routing. Legacy reads and selection refusal are not evidence for this child |
 
@@ -1568,7 +1568,7 @@ Nested and released-stack acceptance also remain required.
 ## Native flat graph source-contract coverage
 
 The native execution graph module and loopback test file use the actual Arbora
-source-contract fixture, including non-ASCII and maximum-length Unicode keys.
+source-contract fixture. It includes non-ASCII and maximum-length Unicode keys.
 The decoder tests cover typed bounds, exact run/root binding and semantic tuple identity.
 They reject duplicate evidence, cycles, unknown fields and raised child capabilities.
 The public-client tests require registry advertisement and matching digests.
@@ -1681,3 +1681,48 @@ They keep broad R008, native parity, installed Canopy, R010 and hierarchy accept
 They also retain R010.14 and verify the bounded native children remain qualified.
 The audit is metadata validation, not evidence for the unmet hierarchy row.
 Bind it only to the existing gate requirement, never to R010.12.2.
+
+## Python bound turn receipt coverage
+
+`TUI-RUNTIME-R012.6.3`: Test terminal task and status normalization, exact task,
+context and run binding, malformed and unknown counters, safe integer bounds,
+zero versus absence, empty counts and failed turns. Mounted status/history
+tests must cover replacement on replay, stale-value clearing, fresh-client
+tasks/get readback, refused reads and close during a pending read. Verify that
+only the existing A2A methods are used and that history never changes the
+active conversation. Resize from wide to 40 by 12 and back without covering
+the footer or losing exact tooltip values. Keep installed producer and
+session/cost acceptance open.
+
+
+## Grouped source integration receipt (2026-10-25)
+
+Source `706cd3661212` integrates Python turn receipts and native Canopy sage on
+main `8eeb2bffa338`. Original source commits are `b89278b8093f` and `995a885f8f62`.
+Production and test files retain their exact bytes. Both plan amendments remain.
+The old generated receipt commits are not copied into this integration.
+
+The combined checkout passes 393 focused Python tests with Python 3.12.14,
+pytest 9.1.1 and Textual 8.2.8. The command uses `pytest -q` and
+`--override-ini addopts=''` with these modules:
+
+- `test_python_turn_usage`, `test_status_line_usage`, `test_status_line_layout`;
+- `test_task_history`, `test_precommit_hooks`, `test_client`;
+- `test_native_task_correlation`, `test_turn_completion`, `test_app_workers`;
+- `test_tui_components`, `test_headless`, `test_canopy_theme`;
+- `test_history_initial_load`, `test_history_navigation`, `test_history_refresh`;
+- `test_theme_keyboard`, `test_installed_startup_ci`;
+- `test_native_execution_graph_contract`;
+- the theme-token and baseline-contrast cases in `test_app_handlers`.
+
+Module names above refer to files under `tests/` with the `.py` extension.
+The configured all-files pre-commit stage and Rust 1.96.0 format check pass.
+Both enhanced spatial PTY cases collect; collection is not execution.
+Imports come from this checkout, not from an installed product qualification.
+
+Fresh native compilation, Rust tests, Clippy, all compiled PTY cases and the
+installed startup matrix remain required for this exact native source.
+Historical two-color receipts do not qualify the new sage rendering.
+R008.3.2 and broader presentation, native parity and hierarchy acceptance stay
+open. R012.6.2 still requires installed producer, served session totals and cost
+acceptance. The full configured pre-push release stage was not run locally.

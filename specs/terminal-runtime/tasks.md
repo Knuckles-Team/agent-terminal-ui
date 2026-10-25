@@ -337,3 +337,5 @@ Existing inspection, presentation and daily-workflow obligations remain open whe
 
 - [ ] **TUI-RUNTIME-R010.12.2:** Complete all remaining hierarchy navigation criteria. Bounded flat-map proof does not close this task.
 - [x] **TUI-RUNTIME-R008.4:** Qualify bounded native resize/input delivery in the tested Linux checkout. Broader native parity remains open.
+
+- [x] **TUI-RUNTIME-R012.6.3:** Decode and display bound Python turn receipts through the existing status line and read-only task history. Retain session, cost and installed producer acceptance under R012.6.2.

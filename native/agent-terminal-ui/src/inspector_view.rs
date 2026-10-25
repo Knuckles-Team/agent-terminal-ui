@@ -402,12 +402,14 @@ impl InspectorView {
         self.open && self.viewport.mouse(event)
     }
 
-    fn draw_spatial(&mut self, frame: &mut Frame, style: Style) {
+    fn draw_spatial(&mut self, frame: &mut Frame, style: Style, border_style: Style) {
         let (Some(graph), Some(spatial)) = (&self.graph, &mut self.spatial) else {
             return;
         };
         let selected = self.selected_step.unwrap_or(0);
         let outer = Block::bordered()
+            .border_style(border_style)
+            .title_style(border_style)
             .title("Flat execution DAG (read-only; selected edges)")
             .title_bottom("v: full list/details | Ctrl+F: find | g: summary | Esc: close");
         let inner = outer.inner(frame.area());
@@ -469,7 +471,7 @@ r / i: refresh | c: cancel local read | q: quit",
         );
     }
 
-    pub fn draw(&mut self, frame: &mut Frame, style: Style, now: Instant) {
+    pub fn draw(&mut self, frame: &mut Frame, style: Style, border_style: Style, now: Instant) {
         self.spatial_visible = self.spatial_mode
             && self.graph_mode
             && self.graph.is_some()
@@ -478,7 +480,7 @@ r / i: refresh | c: cancel local read | q: quit",
             && frame.area().width >= 72
             && frame.area().height >= 20;
         if self.spatial_visible {
-            self.draw_spatial(frame, style);
+            self.draw_spatial(frame, style, border_style);
             return;
         }
         let mut text = self.text(now);
@@ -513,6 +515,8 @@ r / i: refresh | c: cancel local read | q: quit",
             .map(InspectorSearch::title)
             .unwrap_or_else(|| "Ctrl+F: find | PgUp/PgDn Home/End".to_owned());
         let block = Block::bordered()
+            .border_style(border_style)
+            .title_style(border_style)
             .title("Run inspector (read-only)")
             .title_bottom(title);
         let inner = block.inner(frame.area());
@@ -637,7 +641,7 @@ mod tests {
         let mut terminal = Terminal::new(TestBackend::new(50, 6)).unwrap();
         search_text(&mut view, "PRIVATE-PLAN");
         terminal
-            .draw(|frame| view.draw(frame, Style::reset(), now))
+            .draw(|frame| view.draw(frame, Style::reset(), Style::reset(), now))
             .unwrap();
         assert_eq!(view.search.as_ref().unwrap().matches, 1);
         assert!(view.viewport.offset() > 0);
@@ -723,21 +727,28 @@ last 界"
         let mut terminal = Terminal::new(TestBackend::new(40, 6)).unwrap();
         search_text(&mut view, "private-plan");
         terminal
-            .draw(|frame| view.draw(frame, Style::reset(), now))
+            .draw(|frame| view.draw(frame, Style::reset(), Style::reset(), now))
             .unwrap();
         assert_eq!(view.search.as_ref().unwrap().matches, 1);
         terminal.backend_mut().resize(30, 8);
         terminal
-            .draw(|frame| view.draw(frame, Style::reset(), now))
+            .draw(|frame| view.draw(frame, Style::reset(), Style::reset(), now))
             .unwrap();
         assert_eq!(view.search.as_ref().unwrap().matches, 1);
         terminal
-            .draw(|frame| view.draw(frame, Style::reset(), now + Duration::from_secs(2)))
+            .draw(|frame| {
+                view.draw(
+                    frame,
+                    Style::reset(),
+                    Style::reset(),
+                    now + Duration::from_secs(2),
+                )
+            })
             .unwrap();
         assert_eq!(view.search.as_ref().unwrap().matches, 0);
         view.clear_read();
         terminal
-            .draw(|frame| view.draw(frame, Style::reset(), now))
+            .draw(|frame| view.draw(frame, Style::reset(), Style::reset(), now))
             .unwrap();
         assert_eq!(view.search.as_ref().unwrap().matches, 0);
         view.task_updated(Some(&binding(Some("new-run"))));
@@ -874,7 +885,7 @@ last 界"
         let mut terminal = Terminal::new(TestBackend::new(120, 20)).unwrap();
         for (at, visible) in [(now, true), (now + Duration::from_secs(2), false)] {
             terminal
-                .draw(|frame| view.draw(frame, Style::default(), at))
+                .draw(|frame| view.draw(frame, Style::default(), Style::default(), at))
                 .unwrap();
             let text: String = terminal
                 .backend()
@@ -932,15 +943,34 @@ last 界"
         let mut terminal = Terminal::new(TestBackend::new(100, 30)).unwrap();
         assert!(!view.spatial_mode);
         view.key(KeyCode::Char('v'), client.clone());
-        terminal
-            .draw(|f| {
-                view.draw(
-                    f,
-                    crate::presentation::presentation_style("canopy", ""),
-                    now,
-                )
-            })
-            .unwrap();
+        for no_color in ["", "1", "0", "false"] {
+            let themes = crate::presentation::ThemeSelection::new("canopy", no_color);
+            terminal
+                .draw(|f| view.draw(f, themes.style(), themes.border_style(), now))
+                .unwrap();
+            let buffer = terminal.backend().buffer();
+            let color = |value| {
+                if no_color.is_empty() {
+                    ratatui::style::Color::from_u32(value)
+                } else {
+                    ratatui::style::Color::Reset
+                }
+            };
+            for position in [(0, 0), (1, 0)] {
+                assert_eq!(buffer[position].fg, color(0xadc99f));
+                assert_eq!(buffer[position].bg, color(0x121c17));
+                assert_ne!(buffer[position].symbol(), " ");
+            }
+            assert_eq!(buffer[(1, 1)].fg, color(0xf1f5eb));
+            assert_eq!(buffer[(1, 1)].bg, color(0x121c17));
+            assert_eq!(buffer[(1, 1)].symbol(), "R");
+            if !no_color.is_empty() {
+                assert!(buffer.content().iter().all(|cell| {
+                    cell.fg == ratatui::style::Color::Reset
+                        && cell.bg == ratatui::style::Color::Reset
+                }));
+            }
+        }
         assert!(view.spatial_visible);
         assert!(
             rendered(&terminal)
@@ -950,7 +980,7 @@ last 界"
         assert!(rendered(&terminal).contains("unobserved means unknown"));
         view.key(KeyCode::BackTab, client.clone());
         terminal
-            .draw(|f| view.draw(f, Style::reset(), now))
+            .draw(|f| view.draw(f, Style::reset(), Style::reset(), now))
             .unwrap();
         assert_eq!(view.selected_step, Some(3));
         assert!(rendered(&terminal).contains("Predecessors: 2, 3 | Dependents: none"));
@@ -965,12 +995,12 @@ last 界"
             assert!(!view.pending());
         }
         terminal
-            .draw(|f| view.draw(f, Style::reset(), now))
+            .draw(|f| view.draw(f, Style::reset(), Style::reset(), now))
             .unwrap();
         assert_eq!(&map, terminal.backend().buffer());
         search_text(&mut view, "Predecessors");
         terminal
-            .draw(|f| view.draw(f, Style::reset(), now))
+            .draw(|f| view.draw(f, Style::reset(), Style::reset(), now))
             .unwrap();
         assert!(!view.spatial_visible);
         assert_eq!(view.search.as_ref().unwrap().matches, 1);
@@ -986,7 +1016,7 @@ last 界"
             terminal.backend_mut().resize(width, height);
             view.reveal_step = true;
             terminal
-                .draw(|f| view.draw(f, Style::reset(), now))
+                .draw(|f| view.draw(f, Style::reset(), Style::reset(), now))
                 .unwrap();
             assert_eq!(view.spatial_visible, spatial);
             assert_eq!(view.selected_step, Some(3));
@@ -998,7 +1028,7 @@ last 界"
         }
         view.key(KeyCode::Char('v'), client.clone());
         terminal
-            .draw(|f| view.draw(f, Style::reset(), now))
+            .draw(|f| view.draw(f, Style::reset(), Style::reset(), now))
             .unwrap();
         assert!(!view.spatial_visible);
         assert!(view.text(now).contains("Message active child: unavailable"));
@@ -1015,12 +1045,12 @@ last 界"
         let now = Instant::now();
         let mut terminal = Terminal::new(TestBackend::new(40, 16)).unwrap();
         terminal
-            .draw(|frame| view.draw(frame, Style::reset(), now))
+            .draw(|frame| view.draw(frame, Style::reset(), Style::reset(), now))
             .unwrap();
         assert!(rendered(&terminal).contains("1. first [running]"));
         assert!(view.key(KeyCode::BackTab, client.clone()));
         terminal
-            .draw(|frame| view.draw(frame, Style::reset(), now))
+            .draw(|frame| view.draw(frame, Style::reset(), Style::reset(), now))
             .unwrap();
         assert_eq!(view.selected_step, Some(3));
         assert!(rendered(&terminal).contains("4. join [unobserved]"));
@@ -1032,7 +1062,7 @@ last 界"
         for (width, height) in [(100, 30), (40, 12), (60, 18)] {
             terminal.backend_mut().resize(width, height);
             terminal
-                .draw(|frame| view.draw(frame, Style::reset(), now))
+                .draw(|frame| view.draw(frame, Style::reset(), Style::reset(), now))
                 .unwrap();
             assert_eq!(view.selected_step, Some(3));
         }
@@ -1040,7 +1070,7 @@ last 界"
         assert_eq!(view.selected_step, Some(0));
         search_text(&mut view, "event-2");
         terminal
-            .draw(|frame| view.draw(frame, Style::reset(), now))
+            .draw(|frame| view.draw(frame, Style::reset(), Style::reset(), now))
             .unwrap();
         assert_eq!(view.search.as_ref().unwrap().matches, 1);
         assert!(rendered(&terminal).contains("event-2"));
@@ -1052,11 +1082,11 @@ last 界"
         assert!(view.search_key(KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE)));
         terminal.backend_mut().resize(40, 16);
         terminal
-            .draw(|frame| view.draw(frame, Style::reset(), now))
+            .draw(|frame| view.draw(frame, Style::reset(), Style::reset(), now))
             .unwrap();
         assert!(view.key(KeyCode::End, client));
         terminal
-            .draw(|frame| view.draw(frame, Style::reset(), now))
+            .draw(|frame| view.draw(frame, Style::reset(), Style::reset(), now))
             .unwrap();
         let text = rendered(&terminal);
         assert!(text.contains("Escape: close | q: quit"));

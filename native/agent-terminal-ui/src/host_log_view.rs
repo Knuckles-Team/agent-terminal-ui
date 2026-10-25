@@ -125,7 +125,7 @@ impl HostLogView {
         self.open && self.viewport.mouse(event)
     }
 
-    pub fn draw(&mut self, frame: &mut Frame, style: Style) {
+    pub fn draw(&mut self, frame: &mut Frame, style: Style, border_style: Style) {
         if self.expires != 0 && !HostLogs::unexpired(self.expires) {
             self.refuse();
         }
@@ -134,7 +134,10 @@ impl HostLogView {
             self.status,
             self.lines.iter().cloned().collect::<Vec<_>>().join("\n")
         );
-        let block = Block::bordered().title("Host logs");
+        let block = Block::bordered()
+            .border_style(border_style)
+            .title_style(border_style)
+            .title("Host logs");
         let inner = block.inner(frame.area());
         let paragraph = Paragraph::new(text).style(style).wrap(Wrap { trim: false });
         self.viewport
@@ -219,7 +222,7 @@ mod tests {
         let backend = ratatui::backend::TestBackend::new(100, 8);
         let mut terminal = ratatui::Terminal::new(backend).unwrap();
         terminal
-            .draw(|frame| view.draw(frame, Style::default()))
+            .draw(|frame| view.draw(frame, Style::default(), Style::default()))
             .unwrap();
         let text: String = terminal
             .backend()

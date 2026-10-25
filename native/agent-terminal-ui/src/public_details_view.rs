@@ -367,7 +367,7 @@ mod tests {
         let now = Instant::now();
         let mut terminal = Terminal::new(TestBackend::new(20, 4)).unwrap();
         terminal
-            .draw(|frame| inspector.draw(frame, Style::reset(), now))
+            .draw(|frame| inspector.draw(frame, Style::reset(), Style::reset(), now))
             .unwrap();
         let inspector_before = shown(&terminal);
         assert!(route_mouse(
@@ -379,14 +379,14 @@ mod tests {
             &mut details
         ));
         terminal
-            .draw(|frame| inspector.draw(frame, Style::reset(), now))
+            .draw(|frame| inspector.draw(frame, Style::reset(), Style::reset(), now))
             .unwrap();
         let inspector_after = shown(&terminal);
         assert_ne!(inspector_before, inspector_after);
         assert_eq!(viewport.offset(), 1);
         logs.open(client);
         terminal
-            .draw(|frame| logs.draw(frame, Style::reset()))
+            .draw(|frame| logs.draw(frame, Style::reset(), Style::reset()))
             .unwrap();
         let logs_before = shown(&terminal);
         assert!(route_mouse(
@@ -398,13 +398,13 @@ mod tests {
             &mut details
         ));
         terminal
-            .draw(|frame| logs.draw(frame, Style::reset()))
+            .draw(|frame| logs.draw(frame, Style::reset(), Style::reset()))
             .unwrap();
         let logs_after = shown(&terminal);
         assert_ne!(logs_before, logs_after);
         assert_eq!(viewport.offset(), 1);
         terminal
-            .draw(|frame| inspector.draw(frame, Style::reset(), now))
+            .draw(|frame| inspector.draw(frame, Style::reset(), Style::reset(), now))
             .unwrap();
         assert_eq!(shown(&terminal), inspector_after);
         assert!(!route_mouse(
@@ -430,7 +430,7 @@ mod tests {
             ));
         }
         terminal
-            .draw(|frame| logs.draw(frame, Style::reset()))
+            .draw(|frame| logs.draw(frame, Style::reset(), Style::reset()))
             .unwrap();
         assert_eq!(shown(&terminal), logs_after);
         logs.close();
@@ -462,6 +462,7 @@ mod tests {
                     frame,
                     "Task ID: task-1\nReply: visible answer",
                     Style::reset(),
+                    Style::reset(),
                     &mut viewport,
                     false,
                     &mut view,
@@ -478,6 +479,7 @@ mod tests {
                 draw_task_viewport(
                     frame,
                     "Task ID: task-1\nReply: visible answer",
+                    Style::reset(),
                     Style::reset(),
                     &mut viewport,
                     false,
@@ -498,6 +500,7 @@ mod tests {
                 draw_task_viewport(
                     frame,
                     "Task",
+                    Style::reset(),
                     Style::reset(),
                     &mut viewport,
                     false,
@@ -522,6 +525,7 @@ mod tests {
                 draw_task_viewport(
                     frame,
                     "Task text wraps across the narrow terminal before the fold",
+                    Style::reset(),
                     Style::reset(),
                     &mut viewport,
                     true,
@@ -550,6 +554,7 @@ mod tests {
                     frame,
                     &"long status\n".repeat(30),
                     Style::reset(),
+                    Style::reset(),
                     &mut viewport,
                     true,
                     &mut view,
@@ -577,6 +582,7 @@ mod tests {
                     frame,
                     &status,
                     Style::reset(),
+                    Style::reset(),
                     &mut viewport,
                     false,
                     &mut view,
@@ -590,6 +596,7 @@ mod tests {
                 draw_task_viewport(
                     frame,
                     &status,
+                    Style::reset(),
                     Style::reset(),
                     &mut viewport,
                     false,
@@ -605,6 +612,7 @@ mod tests {
                 draw_task_viewport(
                     frame,
                     &status,
+                    Style::reset(),
                     Style::reset(),
                     &mut viewport,
                     false,
