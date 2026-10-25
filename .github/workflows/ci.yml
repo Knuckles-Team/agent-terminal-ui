@@ -95,5 +95,5 @@ jobs:
           TUI_NATIVE_TEST_BINARY: ${{ github.workspace }}/native/agent-terminal-ui/target/debug/tuig
           ACP_RESULTS: ${{ runner.temp }}/native-acp-results.xml
         run: |
-          uv run --frozen --no-sync --with agent-client-protocol==0.11.0 pytest tests/test_native_acp.py -q -rP --no-cov --junitxml="$ACP_RESULTS"
+          uv run --frozen --no-sync --with agent-client-protocol==0.11.0 python -m pytest tests/test_native_acp.py -q -rP --no-cov --junitxml="$ACP_RESULTS"
           uv run --frozen --no-sync python -c 'import os, xml.etree.ElementTree as ET; cases = ET.parse(os.environ["ACP_RESULTS"]).findall(".//testcase"); assert len(cases) == 7 and all(case.find(tag) is None for case in cases for tag in ("skipped", "failure", "error")), "All seven ACP lifecycle cases must pass without skips"'
