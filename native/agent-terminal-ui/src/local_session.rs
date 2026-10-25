@@ -9,10 +9,11 @@ use crossterm::event::{
 };
 use futures_util::StreamExt;
 use ratatui::{
+    backend::CrosstermBackend,
     style::Style,
     widgets::{Block, Paragraph, Wrap},
 };
-use std::time::Duration;
+use std::{cell::Cell, io::Write, rc::Rc, time::Duration};
 use tokio::{
     sync::{mpsc, watch},
     time::timeout,
@@ -20,6 +21,44 @@ use tokio::{
 
 const TRANSCRIPT_BYTES: usize = 128 * 1024;
 const TURN_LIMIT: usize = 64;
+
+struct TerminalOutput<W: Write> {
+    writer: Option<std::io::BufWriter<W>>,
+    cleanup: Rc<Cell<bool>>,
+}
+
+impl<W: Write> Write for TerminalOutput<W> {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        if self.cleanup.get() {
+            Ok(bytes.len())
+        } else {
+            self.writer
+                .as_mut()
+                .expect("output owned until drop")
+                .write(bytes)
+        }
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        if self.cleanup.get() {
+            Ok(())
+        } else {
+            self.writer
+                .as_mut()
+                .expect("output owned until drop")
+                .flush()
+        }
+    }
+}
+
+impl<W: Write> Drop for TerminalOutput<W> {
+    fn drop(&mut self) {
+        // Do not replay a partially written frame after leaving the alternate screen.
+        if let Some(writer) = self.writer.take() {
+            let _ = writer.into_parts();
+        }
+    }
+}
 
 enum Update {
     Ready(&'static str),
@@ -191,6 +230,29 @@ pub async fn run(options: Options) -> Result<(), &'static str> {
         .await
 }
 
+fn restore_terminal(output: &mut impl Write) {
+    let _ = crossterm::terminal::disable_raw_mode();
+    let _ = crossterm::execute!(
+        output,
+        DisableBracketedPaste,
+        DisableMouseCapture,
+        crossterm::terminal::LeaveAlternateScreen,
+        crossterm::cursor::Show
+    );
+}
+
+struct TerminalCleanup<W: Write> {
+    output: W,
+    cleanup: Rc<Cell<bool>>,
+}
+
+impl<W: Write> Drop for TerminalCleanup<W> {
+    fn drop(&mut self) {
+        self.cleanup.set(true);
+        restore_terminal(&mut self.output);
+    }
+}
+
 async fn run_ui(mut options: Options) -> Result<(), &'static str> {
     let initial = options.prompt.take();
     let (commands, command_rx) = mpsc::channel(1);
@@ -198,15 +260,33 @@ async fn run_ui(mut options: Options) -> Result<(), &'static str> {
     let (cancel, cancel_rx) = watch::channel(false);
     let (quit, quit_rx) = watch::channel(false);
     let _output = crate::local_runtime::Output::new()?;
-    let mut terminal = match ratatui::try_init() {
+    let mut output = rustix::io::fcntl_dupfd_cloexec(std::io::stdout(), 3)
+        .map(std::fs::File::from)
+        .map_err(|_| "Cannot open terminal output")?;
+    let cleanup = Rc::new(Cell::new(false));
+    let initialized = (|| {
+        crossterm::terminal::enable_raw_mode()?;
+        crossterm::execute!(&mut output, crossterm::terminal::EnterAlternateScreen)?;
+        ratatui::Terminal::new(CrosstermBackend::new(TerminalOutput {
+            writer: Some(std::io::BufWriter::with_capacity(
+                64 * 1024,
+                output.try_clone()?,
+            )),
+            cleanup: Rc::clone(&cleanup),
+        }))
+    })();
+    let mut terminal = match initialized {
         Ok(terminal) => terminal,
         Err(_) => {
-            let _ = ratatui::try_restore();
+            restore_terminal(&mut output);
             return Err("Cannot initialize local terminal");
         }
     };
-    if crate::enable_terminal_input(&mut std::io::stdout()).is_err() {
-        let _ = ratatui::try_restore();
+    let terminal_cleanup = TerminalCleanup {
+        output: &mut output,
+        cleanup: Rc::clone(&cleanup),
+    };
+    if crate::enable_terminal_input(terminal_cleanup.output).is_err() {
         return Err("Cannot enable terminal input");
     }
     let mut worker =
@@ -228,9 +308,13 @@ async fn run_ui(mut options: Options) -> Result<(), &'static str> {
     let mut outcome = Ok(());
     let mut redraw = tokio::time::interval(Duration::from_millis(33));
     redraw.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+    let interrupt = tokio::signal::ctrl_c();
+    tokio::pin!(interrupt);
     let result = async {
         loop {
             tokio::select! {
+                biased;
+                _ = &mut interrupt => return Ok(()),
                 _ = redraw.tick() => {
             terminal.draw(|frame| {
                 if composer.open { composer.draw(frame, themes.style(), themes.border_style()); }
@@ -265,7 +349,6 @@ async fn run_ui(mut options: Options) -> Result<(), &'static str> {
                         status = format!("Session closed: {}", outcome.err().unwrap_or("closed"));
                     },
                 },
-                _ = tokio::signal::ctrl_c() => return Ok(()),
                 event = events.next() => {
                     let Some(Ok(event)) = event else { return Err("Terminal input unavailable"); };
                     match event {
@@ -303,12 +386,9 @@ async fn run_ui(mut options: Options) -> Result<(), &'static str> {
     quit.send_replace(true);
     drop(commands);
     drop(updates);
-    let _ = crossterm::execute!(
-        std::io::stdout(),
-        DisableBracketedPaste,
-        DisableMouseCapture
-    );
-    let _ = ratatui::try_restore();
+    // Ratatui's Drop logs failed cursor restoration to stderr, which can itself
+    // panic when stderr shares this full terminal. Cleanup writes are best effort.
+    drop(terminal_cleanup);
     if !worker_done {
         outcome = worker
             .await
@@ -320,6 +400,46 @@ async fn run_ui(mut options: Options) -> Result<(), &'static str> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // spec: TUI-RUNTIME-R011.14
+    #[test]
+    fn terminal_cleanup_runs_during_unwinding() {
+        let cleanup = Rc::new(Cell::new(false));
+        let mut output = Vec::new();
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let _guard = TerminalCleanup {
+                output: &mut output,
+                cleanup: Rc::clone(&cleanup),
+            };
+            panic!("interrupted UI");
+        }));
+        assert!(result.is_err());
+        assert!(cleanup.get());
+        assert!(output.windows(6).any(|bytes| bytes == b"\x1b[?25h"));
+    }
+
+    // spec: TUI-RUNTIME-R011.14
+    #[test]
+    fn terminal_output_only_ignores_errors_during_cleanup() {
+        struct Blocked;
+        impl Write for Blocked {
+            fn write(&mut self, _: &[u8]) -> std::io::Result<usize> {
+                Err(std::io::ErrorKind::WouldBlock.into())
+            }
+            fn flush(&mut self) -> std::io::Result<()> {
+                Err(std::io::ErrorKind::WouldBlock.into())
+            }
+        }
+        let mut output = TerminalOutput {
+            writer: Some(std::io::BufWriter::with_capacity(1, Blocked)),
+            cleanup: Rc::new(Cell::new(false)),
+        };
+        assert!(output.write_all(b"frame").is_err());
+        assert!(output.flush().is_err());
+        output.cleanup.set(true);
+        assert!(output.write_all(b"cursor restoration").is_ok());
+        assert!(output.flush().is_ok());
+    }
 
     // spec: TUI-RUNTIME-R011.14
     #[test]

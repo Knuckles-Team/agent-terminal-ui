@@ -751,7 +751,7 @@ Environment:
   NO_COLOR                        Nonempty value disables theme colors.
 
 Remote access requires TLS. Anonymous loopback mode rejects bearer credentials.
-Task streaming and approvals remain unavailable.
+Central task streaming and approvals remain unavailable.
 Headless exits nonzero on input/auth required, failed, canceled or rejected tasks.
 Headless observation is bounded to four hours and never cancels backend work.
 Local ACP requires a separately installed compatible Arbora/AU backend.
@@ -817,14 +817,49 @@ async fn main() -> ExitCode {
     match result {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
-            eprintln!("{error}");
+            report_error(error);
             ExitCode::FAILURE
         }
     }
 }
 
+fn report_error(error: &str) {
+    #[cfg(unix)]
+    {
+        write_error(std::io::stderr(), error);
+    }
+    #[cfg(not(unix))]
+    {
+        use std::io::Write;
+        let _ = writeln!(std::io::stderr(), "{error}");
+    }
+}
+
+#[cfg(unix)]
+fn write_error(output: impl std::os::fd::AsFd, error: &str) {
+    if let Ok(flags) = rustix::fs::fcntl_getfl(&output)
+        && rustix::fs::fcntl_setfl(&output, flags | rustix::fs::OFlags::NONBLOCK).is_ok()
+    {
+        let _ = rustix::io::write(&output, format!("{error}\n").as_bytes());
+        let _ = rustix::fs::fcntl_setfl(&output, flags);
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    // spec: TUI-RUNTIME-R011.14
+    #[cfg(unix)]
+    #[test]
+    fn error_reporting_does_not_block_and_restores_flags() {
+        let (output, _reader) = std::os::unix::net::UnixStream::pair().unwrap();
+        let flags = rustix::fs::fcntl_getfl(&output).unwrap();
+        output.set_nonblocking(true).unwrap();
+        while rustix::io::write(&output, &[0; 4096]).is_ok() {}
+        rustix::fs::fcntl_setfl(&output, flags).unwrap();
+        super::write_error(&output, "Cannot draw terminal");
+        assert_eq!(rustix::fs::fcntl_getfl(&output).unwrap(), flags);
+    }
+
     use super::{
         CANCELLATION_UNKNOWN, Cancellation, ReadStatus, SUBMISSION_UNKNOWN, completed_status, draw,
         presentation_style, request_completed, selected_prompt, selected_task, snapshot_status,

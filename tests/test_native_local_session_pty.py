@@ -21,6 +21,8 @@ pytestmark = [
 
 BACKEND = r"""
 import json, os, sys, threading, time
+fds = map(int, os.listdir("/proc/self/fd")) if os.path.isdir("/proc/self/fd") else range(3, 256)
+assert not any(os.isatty(fd) for fd in fds if fd > 2), "Inherited terminal descriptor"
 lock = threading.Lock()
 active = threading.Event()
 wire = os.environ["TUIG_TEST_WIRE"]
@@ -96,7 +98,7 @@ def local_terminal(tmp_path, monkeypatch):
     finally:
         if terminal.process.poll() is None:
             terminal.send(b"\x03")
-            terminal.wait_until(lambda: terminal.process.poll() is not None)
+            terminal.process.wait(timeout=10)
         terminal.close()
         server.server_close()
         if pid.exists():
@@ -187,8 +189,10 @@ def test_local_streamed_text_is_visible_before_turn_ack(local_terminal):
     terminal.resize(12, 40)
     terminal.wait_until(lambda: "Partial " in terminal.shown())
     terminal.resize(40, 100)
-    terminal.wait_until(lambda: "Turn completed" in terminal.shown())
-    assert "Partial reply: stream" in terminal.shown()
+    terminal.wait_until(
+        lambda: "Turn completed" in terminal.shown()
+        and "Partial reply: stream" in terminal.shown()
+    )
     terminal.quit()
     assert sum(m["method"] == "session/prompt" for m in messages(wire)) == 1
 
@@ -208,7 +212,7 @@ def test_local_terminal_output_backpressure_reaps_backend_without_reader(
         time.sleep(0.02)
     assert any(m["method"] == "session/cancel" for m in messages(wire))
     assert any(m["method"] == "session/close" for m in messages(wire))
-    terminal.wait_until(lambda: terminal.process.poll() is not None)
+    terminal.process.wait(timeout=10)
     assert terminal.process.returncode != 0
     termios = pytest.importorskip("termios")
     assert termios.tcgetattr(terminal.master) == terminal.original_terminal
