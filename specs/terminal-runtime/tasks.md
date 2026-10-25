@@ -23,7 +23,7 @@
 - [ ] **TUI-RUNTIME-R001.7:** Legacy screens still render or use served replacement
 - [ ] **TUI-RUNTIME-R001.8:** One-shot background tool-task command extends command/client contract with Arbora preapproval binding gate
 
-## Structure parity with agent-webui (tracked)
+## Structure parity with Overstory (tracked)
 
 - [ ] **TUI-RUNTIME-R003:** Packaged skill `agent-terminal-ui-development`
 - [ ] **TUI-RUNTIME-R004:** Pre-commit spec and sprawl hooks

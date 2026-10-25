@@ -31,7 +31,7 @@ A real `uv sync --frozen --offline` rejects a checkout without its lockfile.
 On GR1080, Python 3.14.7 and uv 0.12.21 ran these documented commands successfully:
 
 - `uv sync --frozen`
-- `uv run --frozen agent-terminal-ui --help`
+- `uv run --frozen tuig --help`
 - `uv sync --frozen --extra test`
 - `uv run --frozen --extra test pytest tests/test_source_quality.py -q`: 7 passed.
 
@@ -234,7 +234,7 @@ parity and performance evidence. Verify the incumbent coding terminal remains a 
 
 ## Native discovery tests (R002.7)
 
-Run cargo test with the native/agent-terminal-ui manifest after slot allocation.
+Run cargo test with the Tuig native manifest at `native/agent-terminal-ui/Cargo.toml` after slot allocation.
 The discovery integration tests serve real loopback HTTP responses. They verify
 the existing Agent Card route, caller header, invalid endpoint refusal,
 authentication errors, redirects, malformed cards and cancellation during a

@@ -3,8 +3,8 @@ requires = ["maturin==1.15.0"]
 build-backend = "maturin"
 
 [project]
-name = "agent-terminal-ui"
-version = "2.3.2"
+name = "tuig"
+version = "2.3.3"
 description = "Tuig: native Ratatui terminal interface for Arbora"
 readme = "README.md"
 authors = [{ name = "Project maintainers" }]
@@ -58,7 +58,7 @@ paths = ["README.md", "AGENTS.md", "CLAUDE.md", "CONTRIBUTING.md", "CHANGELOG.md
 exempt = ["specs/_template/*"]
 
 [tool.pipelines_hooks.public_surface]
-repository = "Knuckles-Team/agent-terminal-ui"
-distribution = "agent-terminal-ui"
-pages_url = "https://knuckles-team.github.io/agent-terminal-ui/"
+repository = "Knuckles-Team/tuig"
+distribution = "tuig"
+pages_url = "https://knuckles-team.github.io/tuig/"
 mcp_server = false

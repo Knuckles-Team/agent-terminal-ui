@@ -5,7 +5,7 @@ edition = "2024"
 publish = false
 description = "Tuig native Ratatui terminal interface for Arbora"
 license = "MIT"
-repository = "https://github.com/Knuckles-Team/agent-terminal-ui"
+repository = "https://github.com/Knuckles-Team/tuig"
 
 [[bin]]
 name = "tuig"

@@ -1,6 +1,6 @@
 # Start
 
-Install a qualified native wheel with `pip install agent-terminal-ui`, then run
+Install a qualified native wheel with `pip install tuig`, then run
 `tuig --help`. Older published releases may predate the native-only cutover.
 
 Set `AGENT_URL` and `AGENT_BEARER_TOKEN` for an authorized Arbora service.

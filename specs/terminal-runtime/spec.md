@@ -1,6 +1,6 @@
 # TUI-RUNTIME — Terminal Arbora operation client
 
-**Owner:** agent-terminal-ui
+**Owner:** Tuig
 
 **Delivery:** specified; implementation and acceptance require separate evidence.
 
