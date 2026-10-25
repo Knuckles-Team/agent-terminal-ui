@@ -1397,3 +1397,15 @@ case that queues resize and input together. Send no sentinel to release input.
 
 R008.4.1 records the source correction. R008.4.2 requires repeated current
 compiled PTY evidence. An older executable is useful only for diagnosis.
+
+
+## Amendment 2026-10-24: retain hierarchy acceptance in rollups
+
+Completing the bounded flat-map child must not close complete hierarchy acceptance.
+R010.12.2 retains every unmet parent criterion in the generated rollup.
+Keep the original parent requirement and bounded native evidence unchanged.
+
+Extend the existing gate tests with an ancestor-state audit. Check the full
+R008 and R010 paths, their retained acceptance, and the qualified bounded children.
+Future broad acceptance requires its own evidence and an explicit audit update.
+No terminal runtime or dependency change belongs in this correction.
