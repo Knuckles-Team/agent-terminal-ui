@@ -716,7 +716,7 @@ async fn run(
     result
 }
 
-const CLI_HELP: &str = "tuig: native Arbora terminal
+const CLI_HELP: &str = "Tuig: native Arbora terminal
 
 Usage: tuig [--headless] [--prompt TEXT | --observe-task TASK_ID]
        tuig --local-runtime --local-model PROVIDER:MODEL --headless --prompt TEXT

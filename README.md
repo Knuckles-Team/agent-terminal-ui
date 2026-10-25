@@ -1,6 +1,7 @@
-# agent-terminal-ui: tuig
+# Tuig
 
-`tuig` is the Rust/Ratatui terminal frontend for Arbora. There is one executable
+Tuig is the Rust/Ratatui terminal frontend for Arbora. The brand is pronounced
+“twig” (/twɪɡ/); the command remains `tuig`. There is one executable
 and one UI implementation. The former Python/Textual frontend is retired.
 
 ## Native terminal preview

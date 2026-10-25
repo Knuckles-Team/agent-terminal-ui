@@ -1602,3 +1602,10 @@ resume. Observation-only invocation remains read-only. Modes remain inferred
 upstream, with no ask, plan or code selector. Native unit and actual executable
 PTY fixtures qualify input routing and one-shot transport, not live producer
 streaming, approval attachment or installed-package parity.
+
+## Amendment 2026-10-25: display name
+
+Use Tuig as the client display name in the primary UI, package description,
+and documentation entry points. Keep repository, distribution, import, command,
+protocol and storage identifiers unchanged. Arbora remains the backend and
+ecosystem name. Existing image assets and capture provenance remain unchanged.
