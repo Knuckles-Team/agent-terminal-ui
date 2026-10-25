@@ -1,0 +1,93 @@
+{
+  "format": "native-pty-cell-svg-v1",
+  "synthetic": true,
+  "binary_sha256": "0e408e1e86ad6e4f13f813672a185254eb6f4d1dc37cf3367201fcf56c39f592",
+  "binary_source_revision": "a8952ff1036fb67900b5d1f24b629d4c85224ac0",
+  "theme": "canopy",
+  "columns": 100,
+  "rows": 40,
+  "screens": [
+    {
+      "file": "answer.svg",
+      "title": "Answer with folded public details",
+      "sha256": "f010abffc675bd79d0f2cbd29f702806d0b6652cd8f6431dba20b4ceb3854a48",
+      "expected_text": [
+        "Synthetic demo:",
+        "Execution trace"
+      ]
+    },
+    {
+      "file": "public-summary.svg",
+      "title": "Expanded public model summary",
+      "sha256": "fbe4a7e2c300de82d8faf216b953ae5481b4f3a2f2cdcbb2f22ff5be3f01b72f",
+      "expected_text": [
+        "Public explanation:"
+      ]
+    },
+    {
+      "file": "execution-trace.svg",
+      "title": "Expanded public execution trace",
+      "sha256": "a9339c52db4115924f2709408d9e0f562520a50841801618d8db18e1e4c52583",
+      "expected_text": [
+        "task_started",
+        "Public explanation:"
+      ]
+    },
+    {
+      "file": "run-inspector.svg",
+      "title": "Read-only inspector with unavailable operations",
+      "sha256": "c56c4acfcf35421ac8badb1a5c0dbf46b9e107350c2226114644cd33a35d21d8",
+      "expected_text": [
+        "Run inspector (read-only)",
+        "unavailable"
+      ]
+    },
+    {
+      "file": "graph-list.svg",
+      "title": "Execution graph list",
+      "sha256": "9dca5e4fb67c51e1fa0c97b9672faf3cd239db15b9dfea548e4441b1da5e12d7",
+      "expected_text": [
+        "> 1. first [running]"
+      ]
+    },
+    {
+      "file": "spatial-map.svg",
+      "title": "Spatial dependency map with join selected",
+      "sha256": "1d578c204b6162814be631d5eec0a0416ed60de9d9bcb07508d29e9a144e1d18",
+      "expected_text": [
+        "Selected 4: join [unobserved]",
+        "Predecessors: 2, 3"
+      ]
+    }
+  ],
+  "fixtures": {
+    "execution_graph_contract.json": "15a84dbd06d466ae2e0298cccbbd9ad627229b57854eea9f33fad05868110ea0",
+    "public_run_events.json": "be0eb1472ed78223550ae0a3f9d9ecd0e460f46910488d502f48ac91a0a787db"
+  },
+  "requests": [
+    {
+      "path": "/a2a",
+      "method": "tasks/get"
+    },
+    {
+      "path": "/api/v1/registry",
+      "method": null
+    },
+    {
+      "path": "/api/v1/ops/runs.events",
+      "method": null
+    },
+    {
+      "path": "/api/v1/registry",
+      "method": null
+    },
+    {
+      "path": "/api/v1/registry",
+      "method": null
+    },
+    {
+      "path": "/api/v1/ops/runs.execution_graph",
+      "method": null
+    }
+  ]
+}
