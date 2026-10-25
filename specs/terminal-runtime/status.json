@@ -2708,7 +2708,8 @@
       "delivery_state": "VERIFIED",
       "landed_in": [
         "5f25c6dfa910",
-        "6c1e6f34dc0e"
+        "6c1e6f34dc0e",
+        "706cd3661212"
       ],
       "verified_by": [
         "native/agent-terminal-ui/src/presentation.rs:208",
@@ -2803,8 +2804,10 @@
     {
       "id": "TUI-RUNTIME-R012.6.3",
       "title": "Display bound Python turn receipts",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "706cd3661212"
+      ],
       "verified_by": [
         "tests/test_python_turn_usage.py:19"
       ]

@@ -1568,7 +1568,7 @@ Nested and released-stack acceptance also remain required.
 ## Native flat graph source-contract coverage
 
 The native execution graph module and loopback test file use the actual Arbora
-source-contract fixture, including non-ASCII and maximum-length Unicode keys.
+source-contract fixture. It includes non-ASCII and maximum-length Unicode keys.
 The decoder tests cover typed bounds, exact run/root binding and semantic tuple identity.
 They reject duplicate evidence, cycles, unknown fields and raised child capabilities.
 The public-client tests require registry advertisement and matching digests.
@@ -1693,3 +1693,36 @@ only the existing A2A methods are used and that history never changes the
 active conversation. Resize from wide to 40 by 12 and back without covering
 the footer or losing exact tooltip values. Keep installed producer and
 session/cost acceptance open.
+
+
+## Grouped source integration receipt (2026-10-25)
+
+Source `706cd3661212` integrates Python turn receipts and native Canopy sage on
+main `8eeb2bffa338`. Original source commits are `b89278b8093f` and `995a885f8f62`.
+Production and test files retain their exact bytes. Both plan amendments remain.
+The old generated receipt commits are not copied into this integration.
+
+The combined checkout passes 393 focused Python tests with Python 3.12.14,
+pytest 9.1.1 and Textual 8.2.8. The command uses `pytest -q` and
+`--override-ini addopts=''` with these modules:
+
+- `test_python_turn_usage`, `test_status_line_usage`, `test_status_line_layout`;
+- `test_task_history`, `test_precommit_hooks`, `test_client`;
+- `test_native_task_correlation`, `test_turn_completion`, `test_app_workers`;
+- `test_tui_components`, `test_headless`, `test_canopy_theme`;
+- `test_history_initial_load`, `test_history_navigation`, `test_history_refresh`;
+- `test_theme_keyboard`, `test_installed_startup_ci`;
+- `test_native_execution_graph_contract`;
+- the theme-token and baseline-contrast cases in `test_app_handlers`.
+
+Module names above refer to files under `tests/` with the `.py` extension.
+The configured all-files pre-commit stage and Rust 1.96.0 format check pass.
+Both enhanced spatial PTY cases collect; collection is not execution.
+Imports come from this checkout, not from an installed product qualification.
+
+Fresh native compilation, Rust tests, Clippy, all compiled PTY cases and the
+installed startup matrix remain required for this exact native source.
+Historical two-color receipts do not qualify the new sage rendering.
+R008.3.2 and broader presentation, native parity and hierarchy acceptance stay
+open. R012.6.2 still requires installed producer, served session totals and cost
+acceptance. The full configured pre-push release stage was not run locally.
