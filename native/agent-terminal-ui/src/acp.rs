@@ -15,6 +15,10 @@ pub struct TextClient<R, W> {
     pending: Option<u64>,
     notifications: usize,
     prompted: bool,
+    sequential: bool,
+    next_id: u64,
+    turn: Option<u64>,
+    turn_ready: bool,
 }
 
 impl<R: AsyncRead + Unpin, W: AsyncWrite + Unpin> TextClient<R, W> {
@@ -29,7 +33,16 @@ impl<R: AsyncRead + Unpin, W: AsyncWrite + Unpin> TextClient<R, W> {
             pending: None,
             notifications: 0,
             prompted: false,
+            sequential: false,
+            next_id: 3,
+            turn: None,
+            turn_ready: true,
         }
+    }
+
+    pub fn with_sequential_turns(mut self) -> Self {
+        self.sequential = true;
+        self
     }
 
     async fn send(&mut self, value: Value) -> Result<(), &'static str> {
@@ -158,6 +171,12 @@ impl<R: AsyncRead + Unpin, W: AsyncWrite + Unpin> TextClient<R, W> {
                 .get("result")
                 .filter(|result| result.is_object())
                 .ok_or("Invalid ACP result")?;
+            if self.turn == Some(id) {
+                self.turn_ready = matches!(
+                    result["stopReason"].as_str(),
+                    Some("end_turn" | "cancelled")
+                );
+            }
             return Ok(result.clone());
         }
     }
@@ -195,9 +214,25 @@ impl<R: AsyncRead + Unpin, W: AsyncWrite + Unpin> TextClient<R, W> {
         Ok(())
     }
 
-    pub async fn prompt(&mut self, text: &str) -> Result<(), &'static str> {
-        if self.prompted {
+    pub async fn idle(&mut self) -> Result<(), &'static str> {
+        if self.pending.is_some() {
+            return Err("ACP request still pending");
+        }
+        let result = self.read().await;
+        self.turn_ready = false;
+        result?;
+        Err("Unsolicited ACP message between turns")
+    }
+
+    pub async fn prompt(&mut self, text: &str) -> Result<u64, &'static str> {
+        if self.prompted && !self.sequential {
             return Err("ACP one-shot prompt already sent");
+        }
+        if !self.frame.is_empty() {
+            return Err("Partial unsolicited ACP frame; session cannot continue");
+        }
+        if !self.turn_ready {
+            return Err("ACP previous turn has no acknowledged outcome");
         }
         if text.trim().is_empty() || text.len() > 16_384 {
             return Err("ACP prompt must contain 1..16384 bytes");
@@ -206,14 +241,20 @@ impl<R: AsyncRead + Unpin, W: AsyncWrite + Unpin> TextClient<R, W> {
             .session
             .as_deref()
             .ok_or("ACP session not initialized")?;
+        let id = self.next_id;
+        self.next_id = self.next_id.checked_add(1).ok_or("ACP request ID limit")?;
+        self.turn_ready = false;
+        self.output_bytes = 0;
+        self.notifications = 0;
         self.request(
-            3,
+            id,
             "session/prompt",
             json!({"sessionId":session,"prompt":[{"type":"text","text":text}]}),
         )
         .await?;
         self.prompted = true;
-        Ok(())
+        self.turn = Some(id);
+        Ok(id)
     }
 
     pub async fn cancel(&mut self) -> Result<(), &'static str> {
@@ -231,9 +272,11 @@ impl<R: AsyncRead + Unpin, W: AsyncWrite + Unpin> TextClient<R, W> {
                 .session
                 .as_deref()
                 .ok_or("ACP session not initialized")?;
-            self.request(4, "session/close", json!({"sessionId":session}))
+            let id = self.next_id;
+            self.next_id = self.next_id.checked_add(1).ok_or("ACP request ID limit")?;
+            self.request(id, "session/close", json!({"sessionId":session}))
                 .await?;
-            self.response(4, async |_| Err("Unexpected ACP output after turn"))
+            self.response(id, async |_| Err("Unexpected ACP output after turn"))
                 .await?;
         }
         self.writer

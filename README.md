@@ -59,8 +59,9 @@ interactive view requires confirmation. `--observe-task` remains read-only.
 With no selected task or prompt, `tuig` opens a one-task text composer.
 Enter submits; Ctrl+J adds a newline; Escape reviews status and `p` returns
 to the draft before submission. It never resubmits an unknown outcome.
-Streaming, approval attachment, context continuation and durable resume
-are not yet implemented. The removed Python frontend is not a fallback. `--override`, `--bg`, `--model` and `--session` are
+Central streaming, approval attachment, context continuation and durable resume
+are not yet implemented. Explicit local ACP sessions support sequential text
+turns within one owned backend process; they do not resume after restart. The removed Python frontend is not a fallback. `--override`, `--bg`, `--model` and `--session` are
 rejected. Full served parity and release performance remain open in
 [the runtime specification](specs/terminal-runtime/requirements.md).
 

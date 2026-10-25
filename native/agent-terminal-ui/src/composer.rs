@@ -1,4 +1,3 @@
-use agent_terminal_ui_native::TaskSubmission;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{
     Frame,
@@ -11,31 +10,54 @@ pub struct Composer {
     text: String,
     notice: String,
     pub open: bool,
+    local: bool,
 }
 
 impl Composer {
+    pub fn local() -> Self {
+        Self {
+            local: true,
+            ..Self::default()
+        }
+    }
+
+    pub fn clear(&mut self) {
+        self.text.clear();
+        self.notice.clear();
+    }
+
+    fn limit(&self) -> usize {
+        if self.local { 16_384 } else { 65_536 }
+    }
+
     pub fn paste(&mut self, value: &str) {
         let value = value.replace("\r\n", "\n").replace('\r', "\n");
-        if self.text.len() + value.len() > 65_536
+        if self.text.len() + value.len() > self.limit()
             || value
                 .chars()
                 .any(|c| c.is_control() && c != '\n' && c != '\t')
         {
-            self.notice = "Input rejected: maximum 65536 bytes; text only.".to_owned();
+            self.notice = format!("Input rejected: maximum {} bytes; text only.", self.limit());
             return;
         }
         self.text.push_str(&value);
         self.notice.clear();
     }
 
-    pub fn key(&mut self, key: KeyEvent) -> Option<TaskSubmission> {
+    pub fn key(&mut self, key: KeyEvent) -> Option<String> {
         match key.code {
             KeyCode::Esc => self.open = false,
             KeyCode::Char('j') if key.modifiers == KeyModifiers::CONTROL => self.paste("\n"),
-            KeyCode::Enter if key.modifiers.is_empty() => match TaskSubmission::new(&self.text) {
-                Ok(submission) => return Some(submission),
-                Err(error) => self.notice = error.to_owned(),
-            },
+            KeyCode::Enter if key.modifiers.is_empty() => {
+                if self.text.trim().is_empty() || self.text.len() > self.limit() {
+                    self.notice = format!(
+                        "Prompt must contain text and be at most {} bytes",
+                        self.limit()
+                    );
+                } else {
+                    return Some(self.text.clone());
+                }
+            }
             KeyCode::Backspace => {
                 self.text.pop();
                 self.notice.clear();
@@ -54,14 +76,24 @@ impl Composer {
 
     pub fn draw(&self, frame: &mut Frame, style: Style, border: Style) {
         let block = Block::bordered()
-            .title("Compose one task")
+            .title(if self.local {
+                "Compose local turn"
+            } else {
+                "Compose one task"
+            })
             .border_style(border)
             .title_style(border);
         let area = frame.area();
         let inner = block.inner(area);
         let text = format!(
-            "Enter: submit | Ctrl+J: newline | Escape: review | Ctrl+C: quit\nOne new task only; no conversation continuation.\n{}\n\n{}▏",
-            self.notice, self.text
+            "Enter: submit | Ctrl+J: newline | Escape: review | Ctrl+C: quit\n{}\n{}\n\n{}▏",
+            if self.local {
+                "Local process session; history ends when you quit."
+            } else {
+                "One new task only; no conversation continuation."
+            },
+            self.notice,
+            self.text
         );
         let paragraph = Paragraph::new(text).style(style).wrap(Wrap { trim: false });
         let offset = paragraph
@@ -81,6 +113,20 @@ mod tests {
     use super::*;
     fn key(code: KeyCode) -> KeyEvent {
         KeyEvent::new(code, KeyModifiers::NONE)
+    }
+
+    // spec: TUI-RUNTIME-R011.14
+    #[test]
+    fn local_composer_has_the_backend_byte_limit_and_can_clear_completed_drafts() {
+        let mut composer = Composer::local();
+        composer.paste(&"x".repeat(16_384));
+        composer.paste("界");
+        assert_eq!(composer.text.len(), 16_384);
+        assert_eq!(composer.key(key(KeyCode::Enter)).unwrap().len(), 16_384);
+        composer.clear();
+        assert!(composer.key(key(KeyCode::Enter)).is_none());
+        composer.paste("next turn");
+        assert_eq!(composer.key(key(KeyCode::Enter)).unwrap(), "next turn");
     }
 
     // spec: TUI-RUNTIME-R012.1.3

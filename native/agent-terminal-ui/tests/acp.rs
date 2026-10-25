@@ -278,3 +278,140 @@ async fn local_prompt_and_encoded_request_respect_backend_limits() {
         assert!(client.response(3, async |_| Ok(())).await.is_err());
     }
 }
+
+// spec: TUI-RUNTIME-R011.14
+#[tokio::test]
+async fn sequential_turns_require_acknowledgement_and_monotonic_ids() {
+    let (local, remote) = tokio::io::duplex(4096);
+    let (reader, writer) = split(local);
+    let (rr, rw) = split(remote);
+    let backend = tokio::spawn(async move {
+        let mut peer = (BufReader::new(rr), rw);
+        setup(&mut peer).await;
+        for (id, stop) in [(3, "end_turn"), (4, "cancelled"), (5, "end_turn")] {
+            let prompt = receive(&mut peer).await;
+            assert_eq!(prompt["id"], id);
+            assert_eq!(prompt["params"]["sessionId"], "s");
+            if id == 4 {
+                assert_eq!(receive(&mut peer).await["method"], "session/cancel");
+            }
+            send(&mut peer, update("s", "text")).await;
+            send(
+                &mut peer,
+                json!({"jsonrpc":"2.0","id":id,"result":{"stopReason":stop}}),
+            )
+            .await;
+        }
+        assert_eq!(receive(&mut peer).await["id"], 6);
+        send(&mut peer, json!({"jsonrpc":"2.0","id":6,"result":{}})).await;
+    });
+    let mut client = TextClient::new(reader, writer).with_sequential_turns();
+    client.initialize("/workspace").await.unwrap();
+    for expected in 3..=5 {
+        let id = client.prompt("turn").await.unwrap();
+        assert_eq!(id, expected);
+        assert!(client.prompt("duplicate").await.is_err());
+        if id == 4 {
+            client.cancel().await.unwrap();
+        }
+        let response = client.response(id, async |_| Ok(())).await.unwrap();
+        assert!(matches!(
+            response["stopReason"].as_str(),
+            Some("end_turn" | "cancelled")
+        ));
+    }
+    client.close().await.unwrap();
+    backend.await.unwrap();
+}
+
+// spec: TUI-RUNTIME-R011.14
+#[tokio::test]
+async fn unknown_or_refused_turn_never_permits_sequential_replay() {
+    for response in [
+        json!({"jsonrpc":"2.0","id":3,"result":{"stopReason":"max_tokens"}}),
+        json!({"jsonrpc":"2.0","id":3,"error":{"code":-1}}),
+        json!({"jsonrpc":"2.0","id":4,"result":{"stopReason":"end_turn"}}),
+    ] {
+        let (local, remote) = tokio::io::duplex(4096);
+        let (reader, writer) = split(local);
+        let (rr, rw) = split(remote);
+        let backend = tokio::spawn(async move {
+            let mut peer = (BufReader::new(rr), rw);
+            setup(&mut peer).await;
+            receive(&mut peer).await;
+            send(&mut peer, response).await;
+        });
+        let mut client = TextClient::new(reader, writer).with_sequential_turns();
+        client.initialize("/workspace").await.unwrap();
+        let id = client.prompt("turn").await.unwrap();
+        let _ = client.response(id, async |_| Ok(())).await;
+        assert!(client.prompt("must not send").await.is_err());
+        backend.await.unwrap();
+    }
+}
+
+// spec: TUI-RUNTIME-R011.14
+#[tokio::test]
+async fn sequential_output_budget_resets_only_for_an_acknowledged_next_turn() {
+    let mut wire = String::from(
+        "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"protocolVersion\":1}}\n{\"jsonrpc\":\"2.0\",\"id\":2,\"result\":{\"sessionId\":\"s\"}}\n",
+    );
+    for id in [3, 4] {
+        for _ in 0..20 {
+            wire.push_str(&format!("{}\n", update("s", &"x".repeat(150_000))));
+        }
+        wire.push_str(&format!(
+            "{}\n",
+            json!({"jsonrpc":"2.0","id":id,"result":{"stopReason":"end_turn"}})
+        ));
+    }
+    let mut client = TextClient::new(wire.as_bytes(), tokio::io::sink()).with_sequential_turns();
+    client.initialize("/workspace").await.unwrap();
+    for _ in 0..2 {
+        let id = client.prompt("turn").await.unwrap();
+        let mut delivered = 0;
+        client
+            .response(id, async |text| {
+                delivered += text.len();
+                Ok(())
+            })
+            .await
+            .unwrap();
+        assert_eq!(delivered, 3_000_000);
+    }
+}
+
+// spec: TUI-RUNTIME-R011.14
+#[tokio::test]
+async fn unsolicited_idle_frames_cannot_become_the_next_turn() {
+    let mut wire = String::from(
+        "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"protocolVersion\":1}}\n{\"jsonrpc\":\"2.0\",\"id\":2,\"result\":{\"sessionId\":\"s\"}}\n",
+    );
+    wire.push_str(&format!("{}\n", update("s", "unsolicited")));
+    let mut client = TextClient::new(wire.as_bytes(), tokio::io::sink()).with_sequential_turns();
+    client.initialize("/workspace").await.unwrap();
+    assert_eq!(
+        client.idle().await,
+        Err("Unsolicited ACP message between turns")
+    );
+    assert!(client.prompt("must not send").await.is_err());
+}
+
+// spec: TUI-RUNTIME-R011.14
+#[tokio::test]
+async fn partial_idle_frame_is_not_attached_to_a_new_prompt() {
+    let (local, mut remote) = tokio::io::duplex(4096);
+    remote.write_all(b"{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"protocolVersion\":1}}\n{\"jsonrpc\":\"2.0\",\"id\":2,\"result\":{\"sessionId\":\"s\"}}\n{\"jsonrpc\":").await.unwrap();
+    let (read, write) = split(local);
+    let mut client = TextClient::new(read, write).with_sequential_turns();
+    client.initialize("/workspace").await.unwrap();
+    assert!(
+        tokio::time::timeout(std::time::Duration::from_millis(10), client.idle())
+            .await
+            .is_err()
+    );
+    assert_eq!(
+        client.prompt("must not send").await,
+        Err("Partial unsolicited ACP frame; session cannot continue")
+    );
+}

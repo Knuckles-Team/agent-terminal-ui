@@ -41,7 +41,7 @@ fn help_is_available_without_runtime_configuration_or_a_terminal() {
             "NO_COLOR",
             "cannot be combined",
             "does not resume chat",
-            "Task streaming and approvals remain unavailable",
+            "Central task streaming and approvals remain unavailable",
         ] {
             assert!(help.contains(text), "missing help: {text}");
         }
