@@ -1491,3 +1491,44 @@ Legacy `default_mode` entries remain in user-owned settings files but have no
 consumer or visible control. Do not rewrite personal configuration merely to
 remove an obsolete selector. Regression coverage proves that stored and
 environment preferences cannot select request handling.
+
+## Amendment 2026-10-25: one native tuig CLI
+
+The operator selects one Rust/Ratatui executable, `tuig`, distributed through
+PyPI without a Python frontend or compatibility launcher. This supersedes the
+2026-10-13 instruction to retain the Python implementation during migration.
+Historical implementation remains in git, not as a second live application.
+
+The bounded CLI increment reuses the existing Arbora client for `--headless`
+with `--prompt` or `--observe-task`. It prints validated unary task snapshots,
+polls only submitted/working tasks, and exits unsuccessfully on approval,
+authentication or unsuccessful terminal states. It never approves, cancels,
+replays a submission or changes authentication policy. Its four-hour bound
+ends local observation, not backend execution. Streaming is not implied.
+
+Native interactive composition, approval attachment, context continuation,
+streaming, durable resume and complete presentation parity remain open under
+their existing requirements. Retiring Python does not verify those requirements.
+Legacy `--override`, `--bg`, `--model` and `--session` are rejected rather than
+silently changing server policy or claiming native support. No new ACP transport
+or local agent runtime is introduced by this CLI increment.
+
+Packaging uses a binary-only maturin wheel for the existing Rust crate, with one
+explicit Cargo binary named `tuig`. Linux wheel qualification must validate the
+installed executable, exclude Python runtime modules, and record locked build
+inputs and artifact provenance. Unsupported platforms are not advertised as
+qualified. Packaging does not require a Python runtime shim.
+
+The runtime retirement removes `agent_terminal_ui/`, its Python-only regression
+harness and Textual screenshot capture. Native PTY tests, shared wire fixtures
+and repository-governance checks remain. The license moves to the repository
+root. Development guidance moves to `docs/development.md`; no importable Python
+skill package or launch path remains. Old Textual screenshots are not presented
+as evidence for Ratatui. Historical source is available at parent `2107779`.
+
+The distribution name remains `agent-terminal-ui`. Initially qualify Linux
+x86_64 and aarch64 binary wheels. Validate the installed `tuig` executable and
+its artifact hash, including invocation with Python and Cargo absent from the
+runtime PATH. macOS and Windows are not qualified by Linux receipts. Remove
+the Python-only Dockerfile and requirements export rather than advertise an
+untested container path. Release qualification remains required before shipping.

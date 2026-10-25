@@ -1,0 +1,75 @@
+name: Native wheel qualification
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux-wheel:
+    name: Linux wheel (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build locked wheel from source distribution
+        uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
+        with:
+          maturin-version: '1.15.0'
+          rust-toolchain: '1.96.0'
+          target: ${{ matrix.arch }}-unknown-linux-gnu
+          manylinux: '2_28'
+          args: --release --locked --sdist --out dist
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          python-version: '3.14'
+      - name: Validate installed wheel on both installer Python versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          wheels=(dist/*.whl)
+          test "${#wheels[@]}" -eq 1
+          export TUI_TEST_SOURCE_REVISION="$(git rev-parse HEAD)"
+          export TUI_TEST_SOURCE_TREE="$(git rev-parse HEAD^{tree})"
+          for version in 3.12 3.14; do
+            environment="$RUNNER_TEMP/wheel-$version"
+            uv venv --python "$version" "$environment"
+            uv pip install --python "$environment/bin/python" --no-deps --only-binary :all: "${wheels[0]}"
+            test ! -e "$environment/bin/agent-terminal-ui"
+            "$environment/bin/python" scripts/verify_native_wheel.py "${wheels[0]}" "$environment/bin/tuig" "$RUNNER_TEMP/provenance-$version.json"
+          done
+          git diff --exit-code
+      - name: Required PTY and headless journeys against the installed wheel executable
+        shell: bash
+        env:
+          PTY_RESULTS: ${{ runner.temp }}/wheel-pty-results.xml
+        run: |
+          set -euo pipefail
+          export TUI_NATIVE_TEST_BINARY="$RUNNER_TEMP/wheel-3.14/bin/tuig"
+          uv sync --frozen --no-install-project --group test --python 3.14
+          uv run --frozen --no-sync pytest tests/test_native_public_details_pty.py tests/test_native_spatial_graph_pty.py tests/test_native_headless.py -q -rP --no-cov --junitxml="$PTY_RESULTS"
+          uv run --frozen --no-sync python -c 'import os, xml.etree.ElementTree as ET; cases = ET.parse(os.environ["PTY_RESULTS"]).findall(".//testcase"); assert len(cases) == 9 and all(case.find(tag) is None for case in cases for tag in ("skipped", "failure", "error")), "All nine installed-native cases must pass without skips"'
+      - name: Retain wheels and qualification receipts (not a release)
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: native-wheel-${{ matrix.arch }}
+          path: |
+            dist/*
+            ${{ runner.temp }}/provenance-*.json
+            ${{ runner.temp }}/wheel-pty-results.xml
+          if-no-files-found: error

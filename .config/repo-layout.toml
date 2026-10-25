@@ -5,7 +5,6 @@
 ".github" = "GitHub Actions workflows and dashboard source configuration."
 ".security" = "Security scanning configuration and reviewed policy inputs."
 ".specify" = "Project constitution; no feature or generated source belongs here."
-"agent_terminal_ui" = "Terminal application source."
 "docs" = "Published documentation content."
 "native" = "Native terminal implementation and build inputs."
 "plans" = "Historical source evidence and complete spec migration path map."
@@ -14,17 +13,16 @@
 "tests" = "Automated regression and acceptance tests."
 
 [files]
+"LICENSE" = "Project MIT license."
 "AGENTS.md" = "Repository contributor instructions."
 "CHANGELOG.md" = "Release history."
 "CONTRIBUTING.md" = "Contributor setup, validation commands and source map."
 "CLAUDE.md" = "Claude instruction entry point."
-"Dockerfile" = "Container image build definition."
 "README.md" = "Public installation and project entry point."
 "mkdocs.yml" = "Published documentation navigation and build configuration."
 "opencode.json" = "Terminal client integration configuration."
 "pyproject.toml" = "Python package metadata and tool configuration."
 "pytest.ini" = "Pytest discovery and test configuration."
-"requirements.txt" = "Exported Python installation requirements."
 "uv.lock" = "Locked Python dependency graph."
 
 [dotfiles]

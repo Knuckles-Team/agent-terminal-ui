@@ -15,6 +15,8 @@ use ratatui::{
 };
 use std::{env, ffi::OsString, process::ExitCode, sync::Arc};
 
+mod cli;
+mod headless;
 mod host_log_view;
 mod inspector_view;
 use host_log_view::HostLogView;
@@ -668,12 +670,14 @@ async fn run(
     result
 }
 
-const CLI_HELP: &str = "Arbora native terminal
+const CLI_HELP: &str = "tuig: native Arbora terminal
 
-Usage: agent-terminal-ui-native [--prompt TEXT | --observe-task TASK_ID]
-       agent-terminal-ui-native --help
+Usage: tuig [--headless] [--prompt TEXT | --observe-task TASK_ID]
+       tuig --help
 
 Options:
+  --headless              Print unary snapshots without opening a terminal.
+                          Requires --prompt or --observe-task.
   --prompt TEXT           Submit one text task (1..65536 bytes).
   --observe-task TASK_ID   Observe an existing task without remote cancellation.
   -h, --help              Print this help without connecting or opening a terminal.
@@ -693,6 +697,9 @@ Environment:
 
 Remote access requires TLS. Anonymous loopback mode rejects bearer credentials.
 Task streaming and approvals remain unavailable.
+Headless exits nonzero on input/auth required, failed, canceled or rejected tasks.
+Headless observation is bounded to four hours and never cancels backend work.
+Legacy --override, --bg, --model and --session are unsupported.
 ";
 
 #[tokio::main]
@@ -704,6 +711,7 @@ async fn main() -> ExitCode {
     }
     let endpoint = env::var("AGENT_URL").unwrap_or_else(|_| "http://localhost:8000".to_owned());
     let result = async {
+        let (headless, args) = cli::arguments(&args)?;
         let token = match env::var("AGENT_BEARER_TOKEN") {
             Ok(value) => Some(value),
             Err(env::VarError::NotPresent) => None,
@@ -738,7 +746,11 @@ async fn main() -> ExitCode {
         let client = ArboraClient::with_auth_mode(&endpoint, token.as_deref(), auth_mode)?
             .with_submission_timeout(timeout)?
             .with_committed_event_reads(include_event);
-        run(Arc::new(client), task_id, submission, observe).await
+        if headless {
+            headless::run(&client, task_id.as_deref(), submission.as_ref()).await
+        } else {
+            run(Arc::new(client), task_id, submission, observe).await
+        }
     }
     .await;
     match result {

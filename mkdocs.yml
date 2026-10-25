@@ -1,7 +1,7 @@
 INHERIT: .pipeline-theme/templates/mkdocs-theme/base.mkdocs.yml
 
 site_name: "agent-terminal-ui"
-site_description: "Textual-based terminal user interface for SI agents built on Arbora — dual-protocol (AG-UI / ACP) chat, workflow visualization, session persistence, and autonomous goal loops."
+site_description: "tuig: the Rust/Ratatui terminal frontend for Arbora."
 site_url: "https://knuckles-team.github.io/agent-terminal-ui/"
 repo_name: "Knuckles-Team/agent-terminal-ui"
 repo_url: "https://github.com/Knuckles-Team/agent-terminal-ui"
@@ -53,6 +53,7 @@ nav:
   - Design system: design-system.md
   - Screenshots: screenshots.md
   - Architecture: architecture.md
+  - Development: development.md
   - Features: features.md
   - Configuration: configuration.md
   - Sessions & State:
