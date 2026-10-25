@@ -28,8 +28,9 @@ def test_agents_md_headings():
 
 
 @pytest.mark.spec("TUI-RUNTIME-R007")
-def test_release_workflow_calls_pipelines() -> None:
+def test_release_qualification_uses_native_wheels_without_publication() -> None:
     workflow = yaml.safe_load((ROOT / ".github/workflows/release.yml").read_text())
-    assert workflow["jobs"]["publish-pypi"]["uses"] == (
-        "Knuckles-Team/pipelines/.github/workflows/python_pipeline.yml@main"
-    )
+    assert workflow["jobs"] == {
+        "native-wheels": {"uses": "./.github/workflows/native-wheels.yml"}
+    }
+    assert workflow["permissions"] == {"contents": "read"}

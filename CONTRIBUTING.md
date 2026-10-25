@@ -1,44 +1,45 @@
 # Contributing
 
-Read [AGENTS.md](AGENTS.md) and the owning requirement in `specs/terminal-runtime/` before editing.
-Use a separate Git worktree. Keep unrelated changes intact and stage explicit paths.
+Read [AGENTS.md](AGENTS.md) and the owning runtime requirement before editing.
+Use a separate Git worktree and stage explicit paths.
 
-## Tools and setup
+## Setup and checks
 
-The package requires Python 3.12 or newer. `.python-version` selects the development interpreter.
-Use uv for the locked environment and pre-commit 4.6.0 for repository checks.
-Install the test extra; `--all-groups` alone does not install optional test dependencies.
+Rust implements the runtime. Python supports repository and native PTY tests.
 
-```bash
-uv sync --frozen --extra test
-uv run --frozen --extra test pytest tests/test_source_quality.py -q
-uvx --from pre-commit==4.6.0 pre-commit run --all-files
+```sh
+uv sync --frozen --no-install-project --group test
+uv run --frozen --no-sync pytest tests -q
+cargo fmt --manifest-path native/agent-terminal-ui/Cargo.toml --check
+cargo test --locked --manifest-path native/agent-terminal-ui/Cargo.toml
+cargo clippy --locked --manifest-path native/agent-terminal-ui/Cargo.toml --all-targets -- -D warnings
+uvx --from pre-commit==4.6.2 pre-commit run --all-files
 ```
 
-The focused command checks the credential-free environment example.
-Choose the affected test modules for other changes. Run the configured gates before committing.
-The pre-commit configuration owns formatter, lint, type and security tool versions.
-Standalone ruff or ty executables are not supplied by the runtime installation.
-Dependency changes also require the repository's lock validation; do not bypass a failed gate.
+Set `TUI_NATIVE_TEST_BINARY` to the compiled `tuig` executable for native PTY
+checks. A run that skips those tests is not native integration qualification.
+Use the native-wheel workflow to validate installed binary provenance and the
+command with Python and Cargo absent from its runtime PATH.
 
 ## Source map
 
 | Path | Responsibility |
-|---|---|
-| `agent_terminal_ui/terminal_ui.py` | Installed command argument parsing and dispatch. |
-| `agent_terminal_ui/app.py` | Application lifecycle and event coordination. |
-| `agent_terminal_ui/screens/` | Screen composition, focus and layout. |
-| `agent_terminal_ui/widgets/` | Conversation and other reusable widgets. |
-| `agent_terminal_ui/tui/` | Modal screens, input and presentation helpers. |
-| `agent_terminal_ui/client.py` | Served Arbora client adapter. |
-| `native/agent-terminal-ui/` | Separate native terminal implementation. |
-| `tests/` | Unit, mounted, integration and terminal regression fixtures. |
-| `specs/terminal-runtime/` | Requirements, tasks, acceptance evidence and generated status. |
-| `docs/` | Detailed operator documentation published with MkDocs. |
+| --- | --- |
+| `native/agent-terminal-ui/src/main.rs` | Native command dispatch and terminal loop. |
+| `native/agent-terminal-ui/src/cli.rs` | Headless flag selection. |
+| `native/agent-terminal-ui/src/headless.rs` | Unary headless observation. |
+| `native/agent-terminal-ui/src/lib.rs` | Authenticated Arbora task client. |
+| `native/agent-terminal-ui/tests/` | Native protocol and presentation tests. |
+| `tests/` | Developer checks and compiled-native PTY harnesses. |
+| `specs/terminal-runtime/` | Requirements, retained gaps and generated status. |
 
 ## Evidence and publication
 
-Record completed checks and unproven acceptance criteria in the owning test specification.
-Source tests do not replace installed-command, live-service or native performance qualification.
-Generate canonical spec status after implementation commits and check freshness before publication.
-Follow the repository's review process; do not claim skipped checks as passes.
+Generate canonical status with the shared spec generator. Deleted Python test
+bindings must not count as native acceptance. Historical landing commits remain
+historical evidence, not a passing native journey. Preserve open composer,
+streaming, approval, continuation, durability and ACP requirements.
+
+Publish migration work as a draft until native tests, installed-wheel checks,
+PTY journeys and required repository gates pass. A release or deployment needs
+separate authorization. Do not claim skipped or unrun checks passed.

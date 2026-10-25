@@ -3,6 +3,13 @@ name = "agent-terminal-ui-native"
 version = "0.1.0"
 edition = "2024"
 publish = false
+description = "tuig native Ratatui terminal interface for Arbora"
+license = "MIT"
+repository = "https://github.com/Knuckles-Team/agent-terminal-ui"
+
+[[bin]]
+name = "tuig"
+path = "src/main.rs"
 
 [dependencies]
 # Level-triggered input keeps keys queued alongside resize readable (crossterm#1126).

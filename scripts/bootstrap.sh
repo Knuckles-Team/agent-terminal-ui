@@ -45,10 +45,10 @@ uv python install "$python_version"
 # 2. Environment ------------------------------------------------------------
 if [ -f uv.lock ]; then
   log "uv sync --locked"
-  uv sync --locked --python "$python_version"
+  uv sync --locked --no-install-project --group test --python "$python_version"
 else
   log "no uv.lock: uv sync (generate and commit one)"
-  uv sync --python "$python_version"
+  uv sync --no-install-project --group test --python "$python_version"
 fi
 
 # 3. Git hooks --------------------------------------------------------------

@@ -1,12 +1,10 @@
 # Status
 
-Delivery status is generated from `specs/*/status.json`. The spec-delivery page rebuilds on each push to main.
+The native client supports unary task submission and observation, public task
+output, themes, viewport controls, run inspection and host logs. Headless mode
+uses the same client and fails closed on input/authentication requirements.
 
-| State | Meaning |
-|---|---|
-| SPECIFIED | The requirement is written. |
-| LANDED | The change is on main. |
-| VERIFIED | The change is on main with a bound test. |
-| RETIRED | The requirement is withdrawn. |
-
-The active spec is `specs/terminal-runtime`.
+Interactive composition, streaming, approval attachment, context continuation
+and durable resume remain open. Full served parity and release performance are
+not established by focused tests. The Python implementation is removed, not a
+fallback. See the canonical [requirements](../specs/terminal-runtime/requirements.md).

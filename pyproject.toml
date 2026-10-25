@@ -1,34 +1,27 @@
 [build-system]
-requires = ["setuptools>=80.9.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["maturin==1.15.0"]
+build-backend = "maturin"
 
 [project]
 name = "agent-terminal-ui"
 version = "2.3.2"
-description = "Terminal UI for Agentic SI!"
+description = "tuig: native Ratatui terminal interface for Arbora"
 readme = "README.md"
 authors = [{ name = "Project maintainers" }]
-license = { text = "MIT" }
+license = { file = "LICENSE" }
 classifiers = [
     "Development Status :: 4 - Beta",
     "License :: OSI Approved :: MIT License",
     "Environment :: Console",
     "Operating System :: POSIX :: Linux",
-    "Programming Language :: Python :: 3", "Programming Language :: Python :: 3.12", "Programming Language :: Python :: 3.13", "Programming Language :: Python :: 3.14"]
+    "Programming Language :: Rust",
+]
 requires-python = ">=3.12"
-dependencies = [
-    "textual>=8.2.8",
-    "rich>=15.0.0",
-    "httpx>=0.28.1",
-    "pyyaml>=6.0.3",
-    "textual-diff-view>=0.1.5"
-]
+dependencies = []
 
-[project.optional-dependencies]
-shell = [
-    "bashlex>=0.18"
-]
+[dependency-groups]
 test = [
+    "pyyaml>=6.0.3",
     "pyte==0.8.2",
     "pytest-xdist>=3.8.0",
     "pytest>=9.0.2",
@@ -37,29 +30,15 @@ test = [
     "pytest-cov>=7.1.0",
     "syrupy>=6.1.1",
     "pytest-benchmark>=5.2.3",
-    "pytest-timeout>=2.4.0"
-]
-profile = [
-    "memray>=1.19.3",
-    "py-spy>=0.4.2",
-    "psutil>=7.2.2"
+    "pytest-timeout>=2.4.0",
 ]
 
-[project.scripts]
-agent-terminal-ui = "agent_terminal_ui.terminal_ui:terminal_ui"
-
-[tool.uv.workspace]
-members = ["."]
-
-[tool.setuptools]
-include-package-data = true
-
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["agent_terminal_ui*"]
-
-[tool.setuptools.package-data]
-agent_terminal_ui = ["LICENSE", "py.typed", "skills/**/*", "screens/*.tcss", "tui/*.tcss"]
+[tool.maturin]
+manifest-path = "native/agent-terminal-ui/Cargo.toml"
+bindings = "bin"
+locked = true
+strip = true
+include = [{ path = "LICENSE", format = "sdist" }]
 
 [tool.ruff]
 line-length = 88

@@ -25,10 +25,10 @@ Tool-neutral rules for any AI agent or human working in this repository. The fle
 <!-- CONCEPT:AU-KG.memory.background-learning-engine Cross-Session Chat Recall — consumed via kernel API -->
 <!-- CONCEPT:AU-KG.memory.ground-truth-preamble-declaring Project-Aware Context — AGENTS.md auto-loaded by kernel -->
 <!-- CONCEPT:AU-KG.temporal.bi-temporal-memory-layers Cross-Pillar Synergy Engine — topology consumer -->
-<!-- CONCEPT:AU-ECO.toolkit.journey-map-milestones Terminal Agent Launcher — --prompt and --override CLI flags for tmux-spawned one-shot execution -->
-- This is a production-grade Python package. You must *always* follow best open-source Python practices.
+<!-- CONCEPT:AU-ECO.toolkit.journey-map-milestones Terminal Agent Launcher — --prompt CLI flag for tmux-spawned one-shot execution -->
+- This is a production-grade Rust/Ratatui application distributed through PyPI.
 - Shortcuts are not appropriate. When in doubt, you must work with the user for guidance.
-- Any documentation you write, including in the README.md, should be clear, concise, and accurate like the official documentation of other production-grade Python packages.
+- Any documentation you write, including in the README.md, should be clear, concise, and accurate like the official documentation of other production-grade native applications.
 - Make sure any comments in code are necessary. A necessary comment captures intent that cannot be encoded in names, types, or structure. Comments should be reserved for the "why", only used to record rationale, trade-offs, links to specs/papers, or non-obvious domain insights. They should add signal that code cannot.
 - The current code in the package should be treated as an example of high quality code. Make sure to follow its style and tackle issues in similar ways where appropriate.
 - Anything is possible. Do not blame external factors after something doesn't work on the first try. Instead, investigate and test assumptions through debugging through first principles.
@@ -37,71 +37,27 @@ Tool-neutral rules for any AI agent or human working in this repository. The fle
 
 - **Owns:** what a person sees in the terminal.
 - **Never builds:** data access other than through arbora, or a decision (route decisions to epistemic-graph). Served operations go to arbora.
-- **Allowed dependencies:** `arbora.client` and agent-connector-sdk. It imports no EG or arbora internals in-process.
+- **Allowed integration:** public Arbora wire contracts. No EG or Arbora internals run in-process.
 
 Route every feature with the [ecosystem boundaries standard](https://github.com/Knuckles-Team/pipelines/blob/main/reference/ecosystem-boundaries.md) before any code. A part this repository does not own goes to its owner's specs.
 
-# Python Development Instructions
-- `ty` by Astral is used for type checking. Always add appropriate type hints such that the code would pass ty's type check.
-- Follow the Google Python Style Guide.
-- After each code change, checks are automatically run. Fix any issues that arise.
-- **IMPORTANT**: The checks will remove any unused imports after you make an edit to a file. So if you need to use a new import, be sure to use it FIRST (or do your edits at the same time) or else it will be automatically removed. DO NOT use local imports to get around this.
-- Always prefer pathlib for dealing with files. Use `Path.open` instead of `open`.
-- When using pathlib, **always** Use `.parents[i]` syntax to go up directories instead of using `.parent` multiple times.
-- When writing tests, use pytest and pytest-asyncio.
-- Prefer using loguru for logging instead of the built-in logging module. Do not add logging unless requested.
-- NEVER use `# type: ignore`. It is better to leave the issue and have the user work with you to fix it.
-- Don't put types in quotes unless it is absolutely necessary to avoid circular imports and forward references.
+# Native Development Instructions
 
-# Documentation Instructions
-- Keep it very concise
-- No emojis or em dashes.
+`tuig` is the only runtime executable and Rust/Ratatui is the only frontend.
+Python is developer tooling only. Do not restore Textual or a compatibility CLI.
+Use the existing native Arbora client and keep authorization upstream.
 
-# Key Files
+## CLI
 
-@README.md
-
-@pyproject.toml
-
-## New Modules (DeepSeek-TUI Parity)
-
-- **session_manager.py** (TUI-1) -- SQLite-backed session persistence, checkpoints, crash recovery, offline queue
-- **workspace_snapshots.py** (TUI-2) -- Side-git workspace snapshots for turn-level rollback
-- **reasoning.py** (TUI-3) -- Reasoning effort tiers (OFF/HIGH/MAX) and auto model routing
-- **compaction.py** (TUI-4) -- Multi-tier context compaction engine (L1/L2/L3/Cycle)
-- **task_manager.py** (TUI-5) -- Durable task queue with SQLite persistence and bounded concurrency
-- **hooks.py** (TUI-6) -- Lifecycle hooks with TOML config and timeout-protected execution
-- **notifications.py** (TUI-7) -- Desktop notifications via OSC 9/BEL
-- **workspace_policy.py** (TUI-8) -- Workspace boundary enforcement and trust mode
-- **cost_tracker.py** (TUI-10) -- Per-turn cost tracking with pricing registry
-- **danger.py** (TUI-11) -- Extended with ApprovalPolicy/ApprovalEngine
-- **shell.py** (TUI-12) -- Extended with JobRecord/JobCenter
-- **screens/agent_view.py** (TUI-20) -- Supplied session-row and preview components; no production served-session inventory
-- **background_runner.py** (TUI-21) -- Background session runner for detached async agents
-- **widgets/goal_status.py** (AU-ORCH.session.durable-session-autonomous-goal) -- Live goal progress widget
-- **headless.py** -- `HeadlessRunner` + `StreamSink` + `RenderSink` protocol for the no-widget-tree `--headless` run path (lazy-imported from `terminal_ui.py`)
-- **goal.py** -- Dependency-free `GoalSpec` parser for `/goal` (keeps the frontend free of an `agent_utilities` import)
-- **tui/animation.py** -- Shared `animate_in()` entrance fade for conversation widgets (honors `TEXTUAL_ANIMATIONS` / reduced motion)
-- **screens/dashboard.py** -- Alt+D service dashboard, fed over HTTP via `AgentClient.get_dashboard_full()` (no in-process gateway)
-
-## CLI Flags (AU-ECO.toolkit.journey-map-milestones)
-
-- `--prompt TEXT` -- Inject an initial task on launch. Auto-submitted via `on_mount` once the TUI is ready.
-- `--override` -- Yolo mode. Auto-approves all pending tool calls, bypassing `ToolApprovalScreen`.
-- `--bg` -- Open Agent View. This flag does not establish background execution or a served child session.
-- `--headless` -- Run `--prompt` without the TUI, streaming output to stdout (`headless.py`: `HeadlessRunner` + `StreamSink`). No Textual is imported, so a headless instance stays light (~30MB) -- the substrate for many concurrent non-interactive sessions against one shared backend. Requires `--prompt`; optional `--model`.
+Use `tuig --help` for supported invocation. `--headless` supports native unary
+prompt execution or observation without a terminal. Missing native composition,
+streaming and approval support remain explicit requirements, not Python fallbacks.
 
 ## Detailed Documentation
 
-For comprehensive documentation, see the `docs/` directory:
-
-- **[Architecture](docs/architecture.md)** -- Protocols, key components, environment variables, implementation details
-- **[Features](docs/features.md)** -- Slash commands, keyboard shortcuts, model picker
-- **[Agents & Issues](docs/agents.md)** -- Known issues, recent changes, session journal
-- **[Session Management](docs/session_management.md)** -- Session persistence, crash recovery, snapshots
-- **[Configuration](docs/configuration.md)** -- Settings reference, hooks config, sandbox modes
-- **[Goal Command](docs/goal_command.md)** -- Autonomous `/goal` loop with KG-native integration
-- **[Agent View](docs/agent_view.md)** -- Multi-session dashboard and background agent management
+Operator documentation lives in `docs/`. See [architecture](docs/architecture.md),
+[native features](docs/features.md), [configuration](docs/configuration.md),
+[retained gaps](docs/status.md) and [development](docs/development.md).
 
 ## ⛔ No Scratch or Temporary Files in Repository
 
@@ -255,8 +211,9 @@ is what Dependabot flags. Rules:
 ## Commands
 
 ```bash
-uv run --frozen pytest tests -q          # test suite
-agent-terminal-ui                        # run the terminal app
+uv run --frozen --no-install-project --group test pytest tests -q
+cargo test --locked --manifest-path native/agent-terminal-ui/Cargo.toml
+tuig                                     # run the terminal app
 uvx --from pre-commit==4.6.0 pre-commit run --files $(git diff --name-only origin/main...HEAD)
 ```
 

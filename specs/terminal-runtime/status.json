@@ -229,7 +229,8 @@
     "TUI-RUNTIME-R008.4",
     "TUI-RUNTIME-R008.4.1",
     "TUI-RUNTIME-R008.4.2",
-    "TUI-RUNTIME-R012.6.3"
+    "TUI-RUNTIME-R012.6.3",
+    "TUI-RUNTIME-R012.1.3.1"
   ],
   "requirements": [
     {
@@ -254,34 +255,22 @@
     {
       "id": "TUI-RUNTIME-R001.1",
       "title": "Known op and object params produce one versioned request with correct envelope",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "1ccb208dd9d9",
         "d309979d133f"
       ],
-      "verified_by": [
-        "tests/test_client.py:538",
-        "tests/test_client.py:558",
-        "tests/test_client.py:577",
-        "tests/test_client.py:620",
-        "tests/test_client.py:653"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R001.2",
       "title": "Verified caller header reaches remote Arbora only over TLS",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "d309979d133f",
         "e90084eba29c"
       ],
-      "verified_by": [
-        "tests/test_client.py:108",
-        "tests/test_client.py:117",
-        "tests/test_client.py:123",
-        "tests/test_client.py:130",
-        "tests/test_headless.py:107"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R001.3",
@@ -295,61 +284,41 @@
     {
       "id": "TUI-RUNTIME-R001.4",
       "title": "Typed success renders and chat remains functional",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "00fa879f55f8",
         "d309979d133f"
       ],
-      "verified_by": [
-        "tests/test_client.py:208",
-        "tests/test_client.py:220",
-        "tests/test_client.py:244"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R001.5",
       "title": "Pending request is displayed. No effect is asserted",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "d309979d133f"
       ],
-      "verified_by": [
-        "tests/test_client.py:715",
-        "tests/test_client.py:748",
-        "tests/test_client.py:771",
-        "tests/test_client.py:785",
-        "tests/test_client.py:808"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R001.6",
       "title": "Base chat works. Compatible optional install enables /op",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "28c8ecf1657c",
         "d309979d133f"
       ],
-      "verified_by": [
-        "tests/test_client.py:588",
-        "tests/test_client.py:604",
-        "tests/test_commands.py:703"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R001.7",
       "title": "Legacy screens still render or use served replacement",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "34233964fc2f",
         "d309979d133f"
       ],
-      "verified_by": [
-        "tests/test_client.py:869",
-        "tests/test_commands.py:734",
-        "tests/test_import_guard.py:46",
-        "tests/test_import_guard.py:53",
-        "tests/test_import_guard.py:63"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R001.8",
@@ -367,13 +336,7 @@
         "d2b5cea055c8",
         "d309979d133f"
       ],
-      "verified_by": [
-        "tests/test_client.py:146",
-        "tests/test_client.py:440",
-        "tests/test_client.py:464",
-        "tests/test_client.py:492",
-        "tests/test_client.py:935"
-      ],
+      "verified_by": [],
       "rollup_of": [
         "TUI-RUNTIME-R002.1",
         "TUI-RUNTIME-R002.2",
@@ -391,13 +354,11 @@
     {
       "id": "TUI-RUNTIME-R003",
       "title": "Packaged development skill carries the rapid-delivery contract",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "1f9a26a46229"
       ],
-      "verified_by": [
-        "tests/test_skill_package.py:10"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R004",
@@ -480,13 +441,7 @@
         "877a834e65e3",
         "d9be071196d3"
       ],
-      "verified_by": [
-        "tests/test_exit_confirm_keyboard.py:12",
-        "tests/test_modal_keyboard_isolation.py:15",
-        "tests/test_modal_layout.py:14",
-        "tests/test_presentation_pty.py:22",
-        "tests/test_presentation_resize.py:11"
-      ],
+      "verified_by": [],
       "rollup_of": [
         "TUI-RUNTIME-R008.1",
         "TUI-RUNTIME-R008.2",
@@ -502,8 +457,8 @@
         "99b67585d433"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1082",
-        "native/agent-terminal-ui/src/main.rs:1119"
+        "native/agent-terminal-ui/src/main.rs:1094",
+        "native/agent-terminal-ui/src/main.rs:1131"
       ]
     },
     {
@@ -564,9 +519,7 @@
       "title": "Run operation wiring",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": [
-        "tests/test_run_inspector_contract.py:25"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R010.2",
@@ -669,7 +622,7 @@
         "e8711e7f49bf"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1058",
+        "native/agent-terminal-ui/src/main.rs:1070",
         "native/agent-terminal-ui/tests/discovery.rs:110",
         "native/agent-terminal-ui/tests/discovery.rs:29",
         "native/agent-terminal-ui/tests/discovery.rs:50",
@@ -687,8 +640,7 @@
         "native/agent-terminal-ui/tests/correlation.rs:11",
         "native/agent-terminal-ui/tests/correlation.rs:41",
         "native/agent-terminal-ui/tests/correlation.rs:53",
-        "native/agent-terminal-ui/tests/correlation.rs:87",
-        "tests/test_native_task_correlation.py:11"
+        "native/agent-terminal-ui/tests/correlation.rs:87"
       ]
     },
     {
@@ -726,10 +678,10 @@
         "9b0dcc67e610"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:769",
-        "native/agent-terminal-ui/src/main.rs:794",
-        "native/agent-terminal-ui/src/main.rs:813",
-        "native/agent-terminal-ui/src/main.rs:840",
+        "native/agent-terminal-ui/src/main.rs:781",
+        "native/agent-terminal-ui/src/main.rs:806",
+        "native/agent-terminal-ui/src/main.rs:825",
+        "native/agent-terminal-ui/src/main.rs:852",
         "native/agent-terminal-ui/tests/submission.rs:140"
       ]
     },
@@ -752,11 +704,11 @@
         "3c592ffc6075"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1005",
-        "native/agent-terminal-ui/src/main.rs:1021",
-        "native/agent-terminal-ui/src/main.rs:1157",
-        "native/agent-terminal-ui/src/main.rs:1211",
-        "native/agent-terminal-ui/src/main.rs:979"
+        "native/agent-terminal-ui/src/main.rs:1017",
+        "native/agent-terminal-ui/src/main.rs:1033",
+        "native/agent-terminal-ui/src/main.rs:1169",
+        "native/agent-terminal-ui/src/main.rs:1223",
+        "native/agent-terminal-ui/src/main.rs:991"
       ]
     },
     {
@@ -767,10 +719,10 @@
         "b05266d66c30"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1224",
-        "native/agent-terminal-ui/src/main.rs:1241",
-        "native/agent-terminal-ui/src/main.rs:1280",
-        "native/agent-terminal-ui/src/main.rs:1340",
+        "native/agent-terminal-ui/src/main.rs:1236",
+        "native/agent-terminal-ui/src/main.rs:1253",
+        "native/agent-terminal-ui/src/main.rs:1292",
+        "native/agent-terminal-ui/src/main.rs:1352",
         "native/agent-terminal-ui/tests/cancellation.rs:119"
       ]
     },
@@ -858,27 +810,21 @@
       "title": "Model",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": [
-        "tests/test_coding_session.py:30"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R011.2",
       "title": "Behavior",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": [
-        "tests/test_coding_session.py:51"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R011.3",
       "title": "Behavior",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": [
-        "tests/test_coding_session.py:102"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R011.4",
@@ -994,7 +940,7 @@
         "608e9e9d122b"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1540",
+        "native/agent-terminal-ui/src/main.rs:1552",
         "native/agent-terminal-ui/src/presentation.rs:432",
         "native/agent-terminal-ui/src/presentation.rs:483",
         "native/agent-terminal-ui/src/presentation.rs:509"
@@ -1014,13 +960,11 @@
     {
       "id": "TUI-RUNTIME-R008.2.3.1",
       "title": "Python selection during startup",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "7d244200bb23"
       ],
-      "verified_by": [
-        "tests/test_app_handlers.py:231"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R008.2.3.2",
@@ -1149,24 +1093,20 @@
     {
       "id": "TUI-RUNTIME-R002.9",
       "title": "Refuse unbound filesystem logs",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "be5559a633f6"
       ],
-      "verified_by": [
-        "tests/test_host_log_refusal.py:3"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R002.10",
       "title": "Authenticated host log subscription",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "fdee44da708a"
       ],
-      "verified_by": [
-        "tests/test_host_log_subscription.py:2"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R002.11",
@@ -1193,7 +1133,7 @@
         "faeede3c59e8"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1605",
+        "native/agent-terminal-ui/src/main.rs:1617",
         "native/agent-terminal-ui/tests/task_snapshot.rs:195",
         "native/agent-terminal-ui/tests/task_snapshot.rs:234",
         "native/agent-terminal-ui/tests/task_snapshot.rs:267",
@@ -1245,18 +1185,13 @@
     {
       "id": "TUI-RUNTIME-R012.2.1",
       "title": "Legacy model-read boundary regression coverage",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "0025336ad1ca",
         "1be704079a25",
         "3ea65009beab"
       ],
-      "verified_by": [
-        "tests/test_mounted_command_matrix.py:545",
-        "tests/test_mounted_command_matrix.py:640",
-        "tests/test_tui_widgets.py:872",
-        "tests/test_tui_widgets.py:909"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R012.2.2",
@@ -1291,15 +1226,12 @@
     {
       "id": "TUI-RUNTIME-R012.4.1",
       "title": "Unavailable management commands make no requests",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "1be704079a25",
         "b0cc25d210bc"
       ],
-      "verified_by": [
-        "tests/test_mounted_command_matrix.py:607",
-        "tests/test_unavailable_commands.py:12"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R012.5",
@@ -1315,28 +1247,18 @@
     {
       "id": "TUI-RUNTIME-R012.5.1",
       "title": "Unsupported image input refusal",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "4a0636949d36"
       ],
-      "verified_by": [
-        "tests/test_client.py:259",
-        "tests/test_client.py:402",
-        "tests/test_commands.py:244"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R012.5.2",
       "title": "Served image and file admission",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": [
-        "tests/test_client.py:296",
-        "tests/test_client.py:320",
-        "tests/test_client.py:348",
-        "tests/test_client.py:367",
-        "tests/test_client.py:386"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R012.6",
@@ -1353,18 +1275,16 @@
     {
       "id": "TUI-RUNTIME-R010.4.1",
       "title": "Python current-plan view uses the served read",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "4554c7538da9"
       ],
-      "verified_by": [
-        "tests/test_current_plan_view.py:18"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R012.4.2",
       "title": "Read fleet and usage through served operations",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "26659005d190",
         "6fb4244aa144",
@@ -1372,11 +1292,7 @@
         "d1af8f3a226c",
         "e953bdfc7768"
       ],
-      "verified_by": [
-        "tests/test_mcp_responsiveness.py:16",
-        "tests/test_mounted_command_matrix.py:53",
-        "tests/test_served_fleet_usage.py:20"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R004.2",
@@ -1405,7 +1321,7 @@
     {
       "id": "TUI-RUNTIME-R012.4.3.1",
       "title": "Dispatcher signatures and mounted usage aliases",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "1be704079a25",
         "33e68ece1844",
@@ -1413,12 +1329,7 @@
         "c5e545f7cea6",
         "e3680d6a8cad"
       ],
-      "verified_by": [
-        "tests/test_command_completion_contract.py:9",
-        "tests/test_mounted_command_matrix.py:504",
-        "tests/test_mounted_command_matrix.py:663",
-        "tests/test_registered_command_contract.py:19"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R012.4.3.2",
@@ -1437,24 +1348,20 @@
     {
       "id": "TUI-RUNTIME-R002.1.6",
       "title": "Discover unary Agent Cards",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "13b66721ab49"
       ],
-      "verified_by": [
-        "tests/test_card_discovery.py:10"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R002.1.7",
       "title": "Refuse replay after stream acknowledgment",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "3af008493f62"
       ],
-      "verified_by": [
-        "tests/test_stream_fallback.py:11"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015",
@@ -1609,100 +1516,75 @@
     {
       "id": "TUI-RUNTIME-R015.11",
       "title": "The README must explain the terminal purpose and installation. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "8d67aee7ffd9"
       ],
-      "verified_by": [
-        "tests/test_operator_documentation.py:29",
-        "tests/test_operator_documentation.py:34"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.12",
       "title": "The README must cover each supported operator entry point. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "2f8561f36c43",
         "89cf41d65f78"
       ],
-      "verified_by": [
-        "tests/test_operator_documentation.py:112",
-        "tests/test_operator_documentation.py:117"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.13",
       "title": "The README must supply navigation for its documented sections. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "1b2bed32b207"
       ],
-      "verified_by": [
-        "tests/test_readme_navigation.py:26",
-        "tests/test_readme_navigation.py:31"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.14",
       "title": "The README must supply reproducible installation instructions. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "8d67aee7ffd9"
       ],
-      "verified_by": [
-        "tests/test_operator_documentation.py:29",
-        "tests/test_operator_documentation.py:34",
-        "tests/test_operator_documentation.py:78"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.15",
       "title": "The README must explain the terminal architecture. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "1b2bed32b207"
       ],
-      "verified_by": [
-        "tests/test_readme_navigation.py:74",
-        "tests/test_readme_navigation.py:79"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.16",
       "title": "The README must link its detailed documentation. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "2f8561f36c43"
       ],
-      "verified_by": [
-        "tests/test_operator_documentation.py:134",
-        "tests/test_operator_documentation.py:139"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.17",
       "title": "The contributor guide must describe tools, commands and source structure. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "8d67aee7ffd9"
       ],
-      "verified_by": [
-        "tests/test_operator_documentation.py:61",
-        "tests/test_operator_documentation.py:66"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.18",
       "title": "The repository must declare its license in a tracked license file. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "2f8561f36c43"
       ],
-      "verified_by": [
-        "tests/test_package_metadata.py:24",
-        "tests/test_package_metadata.py:31"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.19",
@@ -1808,16 +1690,12 @@
     {
       "id": "TUI-RUNTIME-R015.30",
       "title": "The terminal CLI must supply help text for its supported arguments. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "2f6d1188fb53",
         "69072e496e9b"
       ],
-      "verified_by": [
-        "native/agent-terminal-ui/tests/cli_help.rs:16",
-        "native/agent-terminal-ui/tests/cli_help.rs:50",
-        "tests/test_cli_documentation.py:3"
-      ],
+      "verified_by": [],
       "rollup_of": [
         "TUI-RUNTIME-R015.30.1",
         "TUI-RUNTIME-R015.30.2"
@@ -1826,13 +1704,11 @@
     {
       "id": "TUI-RUNTIME-R015.30.1",
       "title": "Python CLI help and operator examples describe the current arguments without promising model selection or prior-turn loading",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "2f6d1188fb53"
       ],
-      "verified_by": [
-        "tests/test_cli_documentation.py:3"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.30.2",
@@ -1903,13 +1779,11 @@
     {
       "id": "TUI-RUNTIME-R015.37",
       "title": "Terminal tests must supply a shared fixture entry point. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "94bb245591ea"
       ],
-      "verified_by": [
-        "tests/test_fixture_isolation.py:11"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.38",
@@ -1935,15 +1809,12 @@
     {
       "id": "TUI-RUNTIME-R015.41",
       "title": "The documentation must cover every supported terminal environment variable. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "2f6d1188fb53",
         "d2e3a7e63965"
       ],
-      "verified_by": [
-        "tests/test_cli_documentation.py:4",
-        "tests/test_environment_inventory.py:12"
-      ],
+      "verified_by": [],
       "rollup_of": [
         "TUI-RUNTIME-R015.41.1",
         "TUI-RUNTIME-R015.41.2"
@@ -1952,37 +1823,30 @@
     {
       "id": "TUI-RUNTIME-R015.41.1",
       "title": "Document the Python configuration and data directory overrides, including their fallback order",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "2f6d1188fb53"
       ],
-      "verified_by": [
-        "tests/test_cli_documentation.py:4"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.41.2",
       "title": "Retain a complete inventory of other terminal environment inputs and dynamic setting overrides",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "d2e3a7e63965"
       ],
-      "verified_by": [
-        "tests/test_environment_inventory.py:12"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.42",
       "title": "The documentation must define AGENT_LOG_FILE and AGENT_THEME behavior. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "2f6d1188fb53",
         "71e9ba4185f9"
       ],
-      "verified_by": [
-        "tests/test_cli_documentation.py:5",
-        "tests/test_entry_environment_documentation.py:10"
-      ],
+      "verified_by": [],
       "rollup_of": [
         "TUI-RUNTIME-R015.42.1",
         "TUI-RUNTIME-R015.42.2"
@@ -1991,130 +1855,101 @@
     {
       "id": "TUI-RUNTIME-R015.42.1",
       "title": "Operator documentation explains startup theme fallback and refusal of unbound AGENT_LOG_FILE paths",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "2f6d1188fb53"
       ],
-      "verified_by": [
-        "tests/test_cli_documentation.py:5"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.42.2",
       "title": "Retain theme and log documentation acceptance for native and installed entry points",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "71e9ba4185f9"
       ],
-      "verified_by": [
-        "tests/test_entry_environment_documentation.py:10"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.43",
       "title": "The repository must supply a credential-free environment configuration example. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "e82e2fe60e0e"
       ],
-      "verified_by": [
-        "tests/test_source_quality.py:31",
-        "tests/test_source_quality.py:48"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.44",
       "title": "The client must obtain MCP configuration through the currently authorized served contract. Touches `agent_terminal_ui/client.py`",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "20e00677ac4c"
       ],
-      "verified_by": [
-        "tests/test_client_read_contracts.py:269",
-        "tests/test_client_read_contracts.py:78"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.45",
       "title": "The client must list MCP tools through the currently authorized served contract. Touches `agent_terminal_ui/client.py`",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "20e00677ac4c"
       ],
-      "verified_by": [
-        "tests/test_client_read_contracts.py:206",
-        "tests/test_client_read_contracts.py:297",
-        "tests/test_client_read_contracts.py:86"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.46",
       "title": "The client must list conversation identifiers through the currently authorized served contract. Touches `agent_terminal_ui/client.py`",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "20e00677ac4c"
       ],
-      "verified_by": [
-        "tests/test_client_read_contracts.py:241",
-        "tests/test_client_read_contracts.py:325",
-        "tests/test_client_read_contracts.py:94"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.47",
       "title": "The client must follow TUI-RUNTIME-R012.4.2 failure semantics. Authenticated empty results differ from unavailable requests. Touches `agent_terminal_ui/client.py`",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "20e00677ac4c"
       ],
-      "verified_by": [
-        "tests/test_client_read_contracts.py:101",
-        "tests/test_client_read_contracts.py:133"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.48",
       "title": "The client changes must pass the configured lint and type hooks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "eada67552847"
       ],
-      "verified_by": [
-        "tests/test_client_maintenance_gates.py:10"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.49",
       "title": "The client methods must carry type hints consistent with the existing code style. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "20e00677ac4c"
       ],
-      "verified_by": [
-        "tests/test_client_read_contracts.py:281"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.50",
       "title": "The client tests must prove the three methods satisfy their contract. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "20e00677ac4c"
       ],
-      "verified_by": [
-        "tests/test_client_read_contracts.py:19"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.51",
       "title": "The owning client contract must record the method implementation and its acceptance evidence. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "eada67552847"
       ],
-      "verified_by": [
-        "tests/test_client_maintenance_documentation.py:11"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.52",
@@ -2126,25 +1961,20 @@
     {
       "id": "TUI-RUNTIME-R015.53",
       "title": "The terminal must resolve the remaining theme-switch regression. Alt+Shift+T cycles registered Textual themes from the main screen without changing composer text or focus. Preserve no-color mode",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "5a0e96ad3e4b"
       ],
-      "verified_by": [
-        "tests/test_theme_keyboard.py:10"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.54",
       "title": "The terminal must assess the remaining environment-example and tool-guard obligations. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "dced7cb6d64b"
       ],
-      "verified_by": [
-        "tests/test_source_quality.py:116",
-        "tests/test_source_quality.py:84"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.55",
@@ -2253,30 +2083,26 @@
     },
     {
       "id": "TUI-RUNTIME-R015.70",
-      "title": "Source-quality repairs must preserve the installed command path through `agent_terminal_ui/terminal_ui.py:10`",
-      "delivery_state": "VERIFIED",
+      "title": "Source-quality repairs must preserve the installed native `tuig` command through `native/agent-terminal-ui/src/main.rs`",
+      "delivery_state": "LANDED",
       "landed_in": [
         "8d67aee7ffd9"
       ],
-      "verified_by": [
-        "tests/test_installed_operator_entry.py:36"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R015.71",
       "title": "A served integration test must launch the installed command and observe client behavior after source-quality repairs. It must distinguish a denied request from an authenticated empty result",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "2f8561f36c43"
       ],
-      "verified_by": [
-        "tests/test_installed_operator_entry.py:87"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R012.3.1",
       "title": "Read caller task history without claiming conversation resume",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "0d315dab9c4c",
         "2423325a6ff1",
@@ -2284,13 +2110,7 @@
         "655161ef1a11",
         "9dae309b58c9"
       ],
-      "verified_by": [
-        "tests/test_history_initial_load.py:15",
-        "tests/test_history_navigation.py:13",
-        "tests/test_history_refresh.py:16",
-        "tests/test_task_history.py:100",
-        "tests/test_task_history.py:124"
-      ],
+      "verified_by": [],
       "rollup_of": [
         "TUI-RUNTIME-R012.3.1.1"
       ]
@@ -2310,7 +2130,7 @@
         "90fadd31b95d"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:936",
+        "native/agent-terminal-ui/src/main.rs:948",
         "native/agent-terminal-ui/src/task_output.rs:125",
         "native/agent-terminal-ui/src/task_output.rs:77",
         "native/agent-terminal-ui/src/task_output.rs:92",
@@ -2337,7 +2157,7 @@
         "90fadd31b95d"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:883",
+        "native/agent-terminal-ui/src/main.rs:895",
         "native/agent-terminal-ui/src/turn_usage.rs:101",
         "native/agent-terminal-ui/src/turn_usage.rs:125",
         "native/agent-terminal-ui/src/turn_usage.rs:145",
@@ -2352,7 +2172,7 @@
         "90fadd31b95d"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1656",
+        "native/agent-terminal-ui/src/main.rs:1668",
         "native/agent-terminal-ui/tests/submission.rs:232",
         "native/agent-terminal-ui/tests/submission.rs:25",
         "native/agent-terminal-ui/tests/submission.rs:50",
@@ -2367,7 +2187,7 @@
         "90fadd31b95d"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1684",
+        "native/agent-terminal-ui/src/main.rs:1696",
         "native/agent-terminal-ui/tests/task_snapshot.rs:156",
         "native/agent-terminal-ui/tests/task_snapshot.rs:196",
         "native/agent-terminal-ui/tests/task_snapshot.rs:235",
@@ -2398,18 +2218,12 @@
     {
       "id": "TUI-RUNTIME-R012.1.1",
       "title": "Nonblocking Python unary turns",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "a5d2491e870f",
         "ad7aa10ab43c"
       ],
-      "verified_by": [
-        "tests/test_client.py:1003",
-        "tests/test_client.py:1036",
-        "tests/test_client.py:1066",
-        "tests/test_client.py:1093",
-        "tests/test_client.py:983"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R012.1.2",
@@ -2421,14 +2235,17 @@
     {
       "id": "TUI-RUNTIME-R012.1.3",
       "title": "Native nonblocking unary observation",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "SPECIFIED",
       "landed_in": [
         "8879717e48eb"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/main.rs:1439",
-        "native/agent-terminal-ui/src/main.rs:1475",
+        "native/agent-terminal-ui/src/main.rs:1451",
+        "native/agent-terminal-ui/src/main.rs:1487",
         "native/agent-terminal-ui/tests/recovery.rs:280"
+      ],
+      "rollup_of": [
+        "TUI-RUNTIME-R012.1.3.1"
       ]
     },
     {
@@ -2477,13 +2294,11 @@
     {
       "id": "TUI-RUNTIME-R008.2.3.2.2.2.1",
       "title": "Python composer-to-fold keyboard route",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "49404376c22b"
       ],
-      "verified_by": [
-        "tests/test_public_run_keyboard_app.py:13"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R008.2.3.2.2.2.2",
@@ -2499,25 +2314,21 @@
     {
       "id": "TUI-RUNTIME-R012.1.4",
       "title": "Mounted tool detail updates",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "49404376c22b",
         "e59e3a013718"
       ],
-      "verified_by": [
-        "tests/test_tool_call_block_mounted.py:14"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R012.4.3.3",
       "title": "Unavailable session and fast-mode commands",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "7957c3d08f87"
       ],
-      "verified_by": [
-        "tests/test_unavailable_session_commands.py:10"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R008.2.3.2.2.2.2.1",
@@ -2563,13 +2374,11 @@
     {
       "id": "TUI-RUNTIME-R012.3.1.1",
       "title": "Return to previous task pages",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "2423325a6ff1"
       ],
-      "verified_by": [
-        "tests/test_history_navigation.py:13"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R010.10",
@@ -2587,14 +2396,11 @@
     {
       "id": "TUI-RUNTIME-R016",
       "title": "Refresh documentation screenshots",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "2b219f071c62"
       ],
-      "verified_by": [
-        "tests/test_documentation_screenshots.py:12",
-        "tests/test_documentation_screenshots.py:40"
-      ]
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R010.11",
@@ -2623,8 +2429,7 @@
         "native/agent-terminal-ui/src/execution_graph.rs:362",
         "native/agent-terminal-ui/src/execution_graph.rs:405",
         "native/agent-terminal-ui/src/inspector_view.rs:1040",
-        "native/agent-terminal-ui/src/inspector_view.rs:1096",
-        "tests/test_execution_graph.py:22"
+        "native/agent-terminal-ui/src/inspector_view.rs:1096"
       ],
       "rollup_of": [
         "TUI-RUNTIME-R010.12.1",
@@ -2675,8 +2480,7 @@
         "native/agent-terminal-ui/src/inspector_view.rs:936",
         "native/agent-terminal-ui/src/presentation.rs:208",
         "native/agent-terminal-ui/src/presentation.rs:548",
-        "native/agent-terminal-ui/src/spatial_graph.rs:359",
-        "tests/test_canopy_theme.py:12"
+        "native/agent-terminal-ui/src/spatial_graph.rs:359"
       ],
       "rollup_of": [
         "TUI-RUNTIME-R008.3.1",
@@ -2716,8 +2520,7 @@
       ],
       "verified_by": [
         "native/agent-terminal-ui/src/presentation.rs:208",
-        "native/agent-terminal-ui/src/presentation.rs:548",
-        "tests/test_canopy_theme.py:12"
+        "native/agent-terminal-ui/src/presentation.rs:548"
       ]
     },
     {
@@ -2807,12 +2610,23 @@
     {
       "id": "TUI-RUNTIME-R012.6.3",
       "title": "Display bound Python turn receipts",
-      "delivery_state": "VERIFIED",
+      "delivery_state": "LANDED",
       "landed_in": [
         "706cd3661212"
       ],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R012.1.3.1",
+      "title": "Native headless invocation",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
       "verified_by": [
-        "tests/test_python_turn_usage.py:19"
+        "native/agent-terminal-ui/src/cli.rs:38",
+        "native/agent-terminal-ui/src/headless.rs:66",
+        "native/agent-terminal-ui/src/headless.rs:90",
+        "tests/test_native_headless.py:18",
+        "tests/test_native_only_runtime.py:9"
       ]
     }
   ]

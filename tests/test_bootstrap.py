@@ -73,7 +73,7 @@ def test_bootstrap_uses_locked_python_and_both_hooks_twice(
         log.read_text().splitlines()
         == [
             "uv python install 3.14",
-            "uv sync --locked --python 3.14",
+            "uv sync --locked --no-install-project --group test --python 3.14",
             "uvx pre-commit install --config .pre-commit-config.yaml "
             "--hook-type pre-commit --hook-type pre-push",
         ]

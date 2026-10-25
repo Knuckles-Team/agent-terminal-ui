@@ -1762,3 +1762,23 @@ rejects the removed flag rather than abbreviating it to `--model`.
 `test_approval_policy.py` retains required permission policy coverage. Native
 submission already has no request-mode controls or metadata. These regressions
 qualify client behavior only, not producer inference or served task completion.
+
+## Native-only cutover qualification (2026-10-25)
+
+The Python/Textual implementation and its runtime-specific test bindings are
+retired. Historical passing results do not qualify native behavior. Regenerate
+status from current bindings; keep historical landing evidence distinct from
+native verification. Missing composition, streaming, approval attachment,
+context continuation, durable resume and ACP integration remain open.
+
+`tests/test_native_headless.py` runs five compiled-command pipe/HTTP cases:
+completed output, input-required refusal, auth-required refusal, changed-context
+refusal and unknown submission without replay. Native CLI parser/state tests
+cover option handling and terminal outcomes. These are controlled fixtures,
+not deployed-service acceptance. Existing four native PTY journeys remain
+mandatory. A skipped compiled-command test is unqualified, not passed.
+
+The native wheel workflow must pass both Linux architectures, installed-wheel
+provenance, help with an empty runtime PATH and all nine compiled-command tests.
+Native Cargo tests, Clippy and repository gates are required before merge.
+Source-only checks cannot authorize release or deployment.
