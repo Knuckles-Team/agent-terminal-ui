@@ -109,3 +109,76 @@ jobs:
           uv run --frozen --no-sync python -c 'import os, pathlib, pty, termios, pyte; binary = pathlib.Path(os.environ["TUI_NATIVE_TEST_BINARY"]); assert binary.is_file() and os.access(binary, os.X_OK)'
           uv run --frozen --no-sync pytest tests/test_native_public_details_pty.py tests/test_native_spatial_graph_pty.py -q -rP --no-cov --junitxml="$PTY_RESULTS"
           uv run --frozen --no-sync python -c 'import os, xml.etree.ElementTree as ET; cases = ET.parse(os.environ["PTY_RESULTS"]).findall(".//testcase"); assert len(cases) == 4 and all(case.find(tag) is None for case in cases for tag in ("skipped", "failure", "error")), "All four required PTY cases must pass without skips"'
+      - name: Required installed startup matrix
+        env:
+          TUI_NATIVE_TEST_BINARY: ${{ github.workspace }}/native/agent-terminal-ui/target/debug/agent-terminal-ui-native
+          TUI_TEST_INSTALLED_ENV: ${{ github.workspace }}/.venv
+          WHEEL_DIRECTORY: ${{ runner.temp }}/installed-startup-wheel
+          STARTUP_PROVENANCE: ${{ runner.temp }}/installed-startup-provenance.json
+          STARTUP_RESULTS: ${{ runner.temp }}/installed-startup-results.xml
+        run: |
+          set -euo pipefail
+          uv build --wheel --out-dir "$WHEEL_DIRECTORY"
+          wheels=("$WHEEL_DIRECTORY"/*.whl)
+          test "${#wheels[@]}" -eq 1
+          export TUI_TEST_WHEEL="${wheels[0]}"
+          uv pip install --python "$TUI_TEST_INSTALLED_ENV/bin/python" --no-deps --reinstall "$TUI_TEST_WHEEL"
+          git diff --exit-code
+          export TUI_TEST_SOURCE_REVISION="$(git rev-parse HEAD)"
+          export TUI_TEST_SOURCE_TREE="$(git rev-parse HEAD^{tree})"
+          cd "$RUNNER_TEMP"
+          "$TUI_TEST_INSTALLED_ENV/bin/python" -I - <<'PY'
+          import hashlib
+          import importlib.metadata as metadata
+          import json
+          import os
+          import sys
+          import zipfile
+          from pathlib import Path
+          import agent_terminal_ui
+
+          environment = Path(os.environ["TUI_TEST_INSTALLED_ENV"]).resolve()
+          wheel = Path(os.environ["TUI_TEST_WHEEL"]).resolve()
+          binary = Path(os.environ["TUI_NATIVE_TEST_BINARY"]).resolve()
+          module = Path(agent_terminal_ui.__file__).resolve()
+          distribution = metadata.distribution("agent-terminal-ui")
+          assert module.is_relative_to(environment), module
+          assert module == Path(distribution.locate_file("agent_terminal_ui/__init__.py")).resolve(), module
+          origin = json.loads(distribution.read_text("direct_url.json") or "{}")
+          assert origin.get("url") == wheel.as_uri(), origin
+          assert not origin.get("dir_info", {}).get("editable"), origin
+          entry = next(item.value for item in distribution.entry_points if item.name == "agent-terminal-ui")
+          assert entry == "agent_terminal_ui.terminal_ui:terminal_ui", entry
+          with zipfile.ZipFile(wheel) as archive:
+              members = [name for name in archive.namelist() if not name.endswith(("/", "/RECORD"))]
+              assert "agent_terminal_ui/__init__.py" in members
+              for name in members:
+                  installed = Path(distribution.locate_file(name)).resolve()
+                  assert installed.is_relative_to(environment), installed
+                  assert hashlib.sha256(installed.read_bytes()).digest() == hashlib.sha256(archive.read(name)).digest(), name
+          assert binary.is_file() and os.access(binary, os.X_OK), binary
+          receipt = {
+              "source_revision": os.environ["TUI_TEST_SOURCE_REVISION"],
+              "source_tree": os.environ["TUI_TEST_SOURCE_TREE"],
+              "wheel": wheel.name,
+              "wheel_sha256": hashlib.sha256(wheel.read_bytes()).hexdigest(),
+              "native_sha256": hashlib.sha256(binary.read_bytes()).hexdigest(),
+              "distribution_version": distribution.version,
+              "installed_module": str(module),
+              "verified_wheel_members": len(members),
+              "python": sys.version,
+          }
+          Path(os.environ["STARTUP_PROVENANCE"]).write_text(json.dumps(receipt, indent=2) + "\n")
+          print(json.dumps(receipt, indent=2))
+          PY
+          "$TUI_TEST_INSTALLED_ENV/bin/python" -m pytest "$GITHUB_WORKSPACE/tests/test_entry_environment_pty.py" -q --no-cov --junitxml="$STARTUP_RESULTS"
+          "$TUI_TEST_INSTALLED_ENV/bin/python" -I -c 'import os, xml.etree.ElementTree as ET; cases = ET.parse(os.environ["STARTUP_RESULTS"]).findall(".//testcase"); matrix = [case for case in cases if case.attrib["name"].startswith("test_installed_startup_theme_and_log_refusal[")]; assert len(cases) == 19 and len(matrix) == 18 and all(case.find(tag) is None for case in cases for tag in ("skipped", "failure", "error")), "All 18 startup cases and the log-open probe must pass without skips"'
+      - name: Retain installed startup receipts
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: installed-startup-receipts
+          path: |
+            ${{ runner.temp }}/installed-startup-provenance.json
+            ${{ runner.temp }}/installed-startup-results.xml
+          if-no-files-found: warn
