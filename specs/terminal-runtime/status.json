@@ -405,6 +405,7 @@
       "landed_in": [
         "184c528c68ca",
         "417e3a75f217",
+        "856f118d3c67",
         "b90eb520052a"
       ],
       "verified_by": [
@@ -425,6 +426,7 @@
       "delivery_state": "VERIFIED",
       "landed_in": [
         "184c528c68ca",
+        "856f118d3c67",
         "b90eb520052a"
       ],
       "verified_by": [
@@ -530,7 +532,12 @@
       "id": "TUI-RUNTIME-R010",
       "title": "Run harness surface is read-only and honest",
       "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "landed_in": [
+        "2fc78b464855",
+        "342fe3295687",
+        "769033f0eac3",
+        "c35cb5a545cf"
+      ],
       "verified_by": [
         "tests/test_native_execution_graph_contract.py:33"
       ],
@@ -2129,8 +2136,10 @@
     {
       "id": "TUI-RUNTIME-R015.54",
       "title": "The terminal must assess the remaining environment-example and tool-guard obligations. Touches `agent_terminal_ui/`, tests or the named repository documentation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "dced7cb6d64b"
+      ],
       "verified_by": [
         "tests/test_source_quality.py:116",
         "tests/test_source_quality.py:84"
@@ -2577,8 +2586,10 @@
     {
       "id": "TUI-RUNTIME-R016",
       "title": "Refresh documentation screenshots",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "2b219f071c62"
+      ],
       "verified_by": [
         "tests/test_documentation_screenshots.py:12",
         "tests/test_documentation_screenshots.py:40"
@@ -2601,7 +2612,12 @@
       "id": "TUI-RUNTIME-R010.12",
       "title": "Navigate the execution hierarchy and dependency graph",
       "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "landed_in": [
+        "55431e8da128",
+        "5f25c6dfa910",
+        "659152bb71ad",
+        "6c1e6f34dc0e"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/execution_graph.rs:362",
         "native/agent-terminal-ui/src/execution_graph.rs:405",
@@ -2669,11 +2685,18 @@
     {
       "id": "TUI-RUNTIME-R010.12.1",
       "title": "Add a bounded read-only spatial flat DAG",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "55431e8da128",
+        "5f25c6dfa910",
+        "659152bb71ad",
+        "6c1e6f34dc0e"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/inspector_view.rs:936",
+        "native/agent-terminal-ui/src/inspector_view.rs:937",
         "native/agent-terminal-ui/src/spatial_graph.rs:272",
+        "native/agent-terminal-ui/src/spatial_graph.rs:307",
         "native/agent-terminal-ui/src/spatial_graph.rs:359"
       ],
       "rollup_of": [
@@ -2684,8 +2707,12 @@
     {
       "id": "TUI-RUNTIME-R008.3.1",
       "title": "Implement optional Canopy tokens",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "5f25c6dfa910",
+        "6c1e6f34dc0e",
+        "706cd3661212"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/presentation.rs:208",
         "native/agent-terminal-ui/src/presentation.rs:548",
@@ -2702,8 +2729,12 @@
     {
       "id": "TUI-RUNTIME-R010.12.1.1",
       "title": "Implement the bounded spatial flat DAG",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "55431e8da128",
+        "5f25c6dfa910",
+        "6c1e6f34dc0e"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/inspector_view.rs:936",
         "native/agent-terminal-ui/src/spatial_graph.rs:272",
@@ -2714,8 +2745,10 @@
     {
       "id": "TUI-RUNTIME-R010.12.1.2",
       "title": "Qualify the spatial flat DAG",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "659152bb71ad"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/inspector_view.rs:937",
         "native/agent-terminal-ui/src/spatial_graph.rs:272",
@@ -2734,9 +2767,15 @@
     {
       "id": "TUI-RUNTIME-R008.4",
       "title": "Preserve native input across resize",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "55431e8da128",
+        "659152bb71ad"
+      ],
+      "verified_by": [
+        "tests/test_native_execution_graph_contract.py:20",
+        "tests/test_native_public_details_pty.py:269"
+      ],
       "rollup_of": [
         "TUI-RUNTIME-R008.4.1",
         "TUI-RUNTIME-R008.4.2"
@@ -2745,8 +2784,10 @@
     {
       "id": "TUI-RUNTIME-R008.4.1",
       "title": "Select a supported native input backend",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "55431e8da128"
+      ],
       "verified_by": [
         "tests/test_native_execution_graph_contract.py:20"
       ]
@@ -2754,8 +2795,10 @@
     {
       "id": "TUI-RUNTIME-R008.4.2",
       "title": "Qualify native resize/input delivery",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "659152bb71ad"
+      ],
       "verified_by": [
         "tests/test_native_public_details_pty.py:269"
       ]
@@ -2763,8 +2806,10 @@
     {
       "id": "TUI-RUNTIME-R012.6.3",
       "title": "Display bound Python turn receipts",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "706cd3661212"
+      ],
       "verified_by": [
         "tests/test_python_turn_usage.py:19"
       ]
