@@ -1,7 +1,7 @@
 use std::process::{Command, Output};
 
 fn invoke(args: &[&str], invalid_configuration: bool) -> Output {
-    let mut command = Command::new(env!("CARGO_BIN_EXE_agent-terminal-ui-native"));
+    let mut command = Command::new(env!("CARGO_BIN_EXE_tuig"));
     command.args(args).env_clear();
     if invalid_configuration {
         command
@@ -26,7 +26,7 @@ fn help_is_available_without_runtime_configuration_or_a_terminal() {
         assert!(short.stderr.is_empty());
         let help = String::from_utf8(long.stdout).unwrap();
         for text in [
-            "Usage: agent-terminal-ui-native",
+            "Usage: tuig",
             "--prompt TEXT",
             "--observe-task TASK_ID",
             "-h, --help",

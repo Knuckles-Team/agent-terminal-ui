@@ -43,7 +43,7 @@ def test_native_headless_submission_observes_without_replay(outcome, success, me
                 self.end_headers()
                 return
             submitting = body["method"] == "message/send"
-            task = {
+            task: dict[str, object] = {
                 "kind": "task",
                 "id": "task-headless",
                 "contextId": "wrong-context" if outcome == "wrong-context" and not submitting else "context-headless",
