@@ -1782,3 +1782,21 @@ The native wheel workflow must pass both Linux architectures, installed-wheel
 provenance, help with an empty runtime PATH and all nine compiled-command tests.
 Native Cargo tests, Clippy and repository gates are required before merge.
 Source-only checks cannot authorize release or deployment.
+
+## R011.14: explicit local ACP text transport
+
+Native `tests/acp.rs` covers initialization, session binding, ordered text,
+response IDs, unsupported callbacks, cancellation, EOF and frame limits.
+`local_runtime` unit tests preserve flag-looking prompt data and reject mixed
+local and central arguments. `tests/test_native_acp.py` exercises the compiled
+`tuig` executable with scripted success, cancellation, foreign-response and
+unresponsive-child cases. An unread stdout pipe must not block cancellation
+or child cleanup. A separate case uses the official Python ACP 0.11.0
+SDK agent with no model or tools. Required hosted checks reject skipped cases.
+These tests are transport proof only. A separate source probe passed through
+Arbora's actual stdio adapter, the AU loop and a synthetic FunctionModel. It used
+the exact client modules in a scoped Rust harness, not the full `tuig` binary.
+The probe returned `hello client`, accepted advertised close and exited zero.
+Arbora was an uncommitted integration on `72fc99db`; AU used reviewed source
+`3a6adb40` (upstream merge `832d317a`). Full production-binary and installed
+release pairing remain pending. This is not live-provider qualification.

@@ -89,3 +89,11 @@ jobs:
           uv run --frozen --no-sync python -c 'import os, pathlib, pty, termios, pyte; binary = pathlib.Path(os.environ["TUI_NATIVE_TEST_BINARY"]); assert binary.is_file() and os.access(binary, os.X_OK)'
           uv run --frozen --no-sync pytest tests/test_native_public_details_pty.py tests/test_native_spatial_graph_pty.py tests/test_native_headless.py -q -rP --no-cov --junitxml="$PTY_RESULTS"
           uv run --frozen --no-sync python -c 'import os, xml.etree.ElementTree as ET; cases = ET.parse(os.environ["PTY_RESULTS"]).findall(".//testcase"); assert len(cases) == 9 and all(case.find(tag) is None for case in cases for tag in ("skipped", "failure", "error")), "All nine required native cases must pass without skips"'
+
+      - name: Required local ACP child lifecycle journeys
+        env:
+          TUI_NATIVE_TEST_BINARY: ${{ github.workspace }}/native/agent-terminal-ui/target/debug/tuig
+          ACP_RESULTS: ${{ runner.temp }}/native-acp-results.xml
+        run: |
+          uv run --frozen --no-sync --with agent-client-protocol==0.11.0 pytest tests/test_native_acp.py -q -rP --no-cov --junitxml="$ACP_RESULTS"
+          uv run --frozen --no-sync python -c 'import os, xml.etree.ElementTree as ET; cases = ET.parse(os.environ["ACP_RESULTS"]).findall(".//testcase"); assert len(cases) == 7 and all(case.find(tag) is None for case in cases for tag in ("skipped", "failure", "error")), "All seven ACP lifecycle cases must pass without skips"'

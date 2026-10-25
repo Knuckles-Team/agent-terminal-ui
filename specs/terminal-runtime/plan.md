@@ -1532,3 +1532,33 @@ its artifact hash, including invocation with Python and Cargo absent from the
 runtime PATH. macOS and Windows are not qualified by Linux receipts. Remove
 the Python-only Dockerfile and requirements export rather than advertise an
 untested container path. Release qualification remains required before shipping.
+
+
+## Amendment 2026-10-25: local ACP text transport
+
+R011.14 adds an explicit local backend to the single Rust frontend. Central
+Arbora A2A and HTTP remain the default. The internal command is
+`arbora-acp --local --model PROVIDER:MODEL --workspace-root ABSOLUTE_ROOT`.
+The backend negotiates ACP v1 and owns the AU harness. The client advertises no
+file, terminal or other effect capabilities. It never grants permissions.
+It calls the experimental `session/close` method only when advertised.
+A successful text turn with a refused close is not reported as clean success.
+
+This increment supports headless one-shot text only. It does not implement
+R011 host capabilities, interactive chat, persisted resume or remote ACP.
+No local fallback follows a central connection error. Provider configuration
+is inherited by the child, but the central caller token is not forwarded.
+
+The narrow transport follows the official ACP v1 initialization, session setup
+and prompt-turn schemas. The Rust SDK was considered: official repository tags
+confirm releases, but registry access returned HTTP 403 and fetched docs
+resolved inconsistent versions. No new SDK dependency is claimed as qualified.
+Existing Tokio and serde_json implement only the documented subset, with
+scripted interoperability tests. A verified SDK migration remains desirable.
+References: <https://agentclientprotocol.com/protocol/v1/initialization>,
+<https://agentclientprotocol.com/protocol/v1/session-setup>, and
+<https://agentclientprotocol.com/protocol/v1/prompt-turn>.
+
+Installed backend pairing requires the Arbora ACP entry point and compatible AU
+observer release. Source fixtures do not establish that release dependency or
+full ACP compliance. No release, tag or deployment is part of this increment.
