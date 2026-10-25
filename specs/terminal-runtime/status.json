@@ -790,7 +790,8 @@
       "delivery_state": "VERIFIED",
       "landed_in": [
         "2a40ec05a7f1",
-        "57e292b1ab66"
+        "57e292b1ab66",
+        "d0eaeb9b1e86"
       ],
       "verified_by": [
         "native/agent-terminal-ui/src/composer.rs:118",
