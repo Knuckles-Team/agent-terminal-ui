@@ -339,3 +339,11 @@ Existing inspection, presentation and daily-workflow obligations remain open whe
 - [x] **TUI-RUNTIME-R008.4:** Qualify bounded native resize/input delivery in the tested Linux checkout. Broader native parity remains open.
 
 - [x] **TUI-RUNTIME-R012.6.3:** Decode and display bound Python turn receipts through the existing status line and read-only task history. Retain session, cost and installed producer acceptance under R012.6.2.
+
+## Edit-and-fork implementation order
+
+- [ ] **TUI-RUNTIME-R012.10:** Complete all child acceptance in both terminals. Producer history and immutable fork admission are blockers, not delivered UI features.
+- [ ] **TUI-RUNTIME-R012.10.2:** First qualify the producer contract linked in plan.md. Then extend the Python/native Arbora clients without a local transcript store.
+- [ ] **TUI-RUNTIME-R012.10.1:** Add discoverable own-turn selection, the editor and boundary preview through the existing composer/focus paths.
+- [ ] **TUI-RUNTIME-R012.10.3:** Add duplicate protection, read-only outcome reconciliation and stale/owner invalidation in both request lifecycles.
+- [ ] **TUI-RUNTIME-R012.10.4:** Run both installed terminal journeys and WebUI restart/readback parity against actual producers before claiming delivery.

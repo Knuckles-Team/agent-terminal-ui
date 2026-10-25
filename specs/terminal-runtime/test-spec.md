@@ -238,8 +238,8 @@ Run cargo test with the native/agent-terminal-ui manifest after slot allocation.
 The discovery integration tests serve real loopback HTTP responses. They verify
 the existing Agent Card route, caller header, invalid endpoint refusal,
 authentication errors, redirects, malformed cards and cancellation during a
-pending response. Renderer tests use the terminal buffer to verify refusal and
-unavailable task actions. The size-limit case checks bounded input. A Linux pseudo-terminal smoke passed discovery, refusal/retry, cancellation and
+pending response.
+Renderer tests use the terminal buffer to verify refusal and unavailable task actions. The size-limit case checks bounded input. A Linux pseudo-terminal smoke passed discovery, refusal/retry, cancellation and
 terminal restoration. These fixtures are not a served Arbora deployment receipt.
 
 ## Native presentation acceptance remainder
@@ -1686,9 +1686,8 @@ Bind it only to the existing gate requirement, never to R010.12.2.
 
 `TUI-RUNTIME-R012.6.3`: Test terminal task and status normalization, exact task,
 context and run binding, malformed and unknown counters, safe integer bounds,
-zero versus absence, empty counts and failed turns. Mounted status/history
-tests must cover replacement on replay, stale-value clearing, fresh-client
-tasks/get readback, refused reads and close during a pending read. Verify that
+zero versus absence, empty counts and failed turns. Mounted status/history tests must cover replacement on replay, stale-value clearing and fresh-client tasks/get readback.
+They must cover refused reads and close during a pending read. Verify that
 only the existing A2A methods are used and that history never changes the
 active conversation. Resize from wide to 40 by 12 and back without covering
 the footer or losing exact tooltip values. Keep installed producer and
@@ -1726,3 +1725,37 @@ Historical two-color receipts do not qualify the new sage rendering.
 R008.3.2 and broader presentation, native parity and hierarchy acceptance stay
 open. R012.6.2 still requires installed producer, served session totals and cost
 acceptance. The full configured pre-push release stage was not run locally.
+
+## Persisted edit-and-fork acceptance (planned)
+
+| Requirement | Planned proving test | Required observation |
+|---|---|---|
+| TUI-RUNTIME-R012.10 | All four child journeys below | Both Python and native clients pass; neither substitutes for the other. |
+| TUI-RUNTIME-R012.10.1 | `tests/test_conversation_fork_ui.py::test_own_message_editor`; native `tests/conversation_fork.rs::own_message_editor` | Discoverable focused-turn action, preview, composer preservation and cancel. |
+| TUI-RUNTIME-R012.10.2 | `tests/test_client_conversation_fork.py::test_bound_fork_request`; native `tests/conversation_fork.rs::bound_fork_request` | Same bound Arbora contract, exact lineage and zero-request unsupported refusal. |
+| TUI-RUNTIME-R012.10.3 | `tests/test_client_conversation_fork.py::test_fork_lifecycle`; native `tests/conversation_fork.rs::fork_lifecycle` | Duplicate, unknown, stale, pending, restart and owner outcomes. |
+| TUI-RUNTIME-R012.10.4 | `tests/test_conversation_fork_served.py::test_python_and_native_fork_parity` | Installed terminal journeys and WebUI readback against real producers. |
+
+
+Use one synthetic three-turn conversation with distinct prompts and replies.
+Include one observable prior effect, two validated callers and an independently read original transcript. Edit the middle user turn. The first new model request must contain only the first completed pair and the edited text.
+It must omit the superseded reply and third turn. Editing the first turn has no
+prior history. Original bytes and prior effect count must not change.
+
+Cover duplicate submission before and after a lost response, idempotency/content conflict and unreadable or unsupported prefixes.
+Cover missing turn identity, forged user role, foreign context, stale revision and a pending original run.
+Cover cancellation before send, dismissal after send, delayed completion, newer navigation and owner switch. After server and client restart, read the same branch and lineage with
+no resend, then return to the unchanged original. If history is unavailable,
+display that state and make no model, tool or fork call. Do not infer success from
+local cache content. Check keyboard focus and retained drafts throughout.
+
+Record exact installed producer/client revisions, real entry points, first-model
+input, original/branch readback and side-effect count. The test must reject context-label reuse, copied client history and in-place regeneration.
+It must also reject lost lineage after restart. Fixture coverage is not served acceptance.
+
+The prefix may be a host-authorized snapshot of currently rendered completed
+text. Change a parent reply between preview and submission: the digest mismatch
+must refuse. Change it after successful admission: the child must retain its
+accepted snapshot. A later source append or independent active run must not
+cancel, retarget or alter that child. Missing legacy ordering stays unavailable;
+mutable parent storage alone is not a reason to require a new EG API.
