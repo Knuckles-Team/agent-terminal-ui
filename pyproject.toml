@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "tuig"
-version = "2.3.3"
+version = "2.3.4"
 description = "Tuig: native Ratatui terminal interface for Arbora"
 readme = "README.md"
 authors = [{ name = "Project maintainers" }]
