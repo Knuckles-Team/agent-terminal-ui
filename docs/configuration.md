@@ -22,7 +22,10 @@ tuig --local-runtime --local-model PROVIDER:MODEL --headless --prompt "Hello"
 ```
 
 This path starts the separately installed internal `arbora-acp` executable at
-an absolute workspace root. It does not start another frontend. Provider
+an absolute workspace root. It first checks beside the resolved `tuig` binary,
+including when a symlink starts `tuig`. Only an absent sibling
+permits lookup on `PATH`. An invalid sibling fails closed, without a second
+lookup. Install directories and `PATH` must contain trusted executables. It does not start another frontend. Provider
 credentials stay in the child environment; the central `AGENT_BEARER_TOKEN`
 is not forwarded. Central Arbora remains the default, with no automatic fallback.
 

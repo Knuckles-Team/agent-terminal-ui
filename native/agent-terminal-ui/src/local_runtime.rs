@@ -2,7 +2,7 @@
 use agent_terminal_ui_native::acp::{TextClient, completed};
 use std::ffi::OsString;
 #[cfg(unix)]
-use std::{process::Stdio, time::Duration};
+use std::{path::PathBuf, process::Stdio, time::Duration};
 #[cfg(unix)]
 use tokio::{process::Command, time::timeout};
 
@@ -118,6 +118,24 @@ pub async fn run(_options: Options) -> Result<(), &'static str> {
 }
 
 #[cfg(unix)]
+fn backend_executable() -> Result<PathBuf, &'static str> {
+    let executable = std::env::current_exe()
+        .and_then(std::fs::canonicalize)
+        .map_err(|_| "Cannot resolve installed tuig executable")?;
+    let candidate = executable
+        .parent()
+        .ok_or("Cannot resolve installed tuig directory")?
+        .join("arbora-acp");
+    match std::fs::symlink_metadata(&candidate) {
+        Ok(_) => Ok(candidate),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            Ok(PathBuf::from("arbora-acp"))
+        }
+        Err(_) => Err("Cannot inspect installed Arbora local runtime"),
+    }
+}
+
+#[cfg(unix)]
 pub async fn run(options: Options) -> Result<(), &'static str> {
     if std::env::var_os("AGENT_TASK_ID").is_some() {
         return Err("Local runtime cannot be combined with AGENT_TASK_ID");
@@ -129,7 +147,7 @@ pub async fn run(options: Options) -> Result<(), &'static str> {
     let cwd = root
         .to_str()
         .ok_or("Local workspace must be valid Unicode")?;
-    let mut child = Command::new("arbora-acp")
+    let mut child = Command::new(backend_executable()?)
         .args([
             "--local",
             "--model",

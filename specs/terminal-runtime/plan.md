@@ -1568,3 +1568,20 @@ the sole `tuig` entry point, not the deleted Python frontend. Their approval,
 containment, host-effect and durable-resume acceptance remains open. R011.14
 implements none of those effect grants; existing native approval state remains
 a presentation model until its production attachment is qualified.
+
+
+## Amendment 2026-10-25: installed local helper lookup
+
+R011.14 resolves the actual native executable before selecting its internal
+backend. Canonicalize `current_exe` and inspect the sibling `arbora-acp` with
+symlink metadata. The client selects an existing sibling, including a symlink, before
+`PATH`. A broken or non-executable sibling must fail without a second lookup.
+Only a missing sibling permits the existing `PATH` lookup. Executable resolution
+and metadata errors fail closed. Neither the working directory nor argv[0]
+selects the installation directory. Installation directories and `PATH` remain
+trusted executable sources, not a privilege boundary.
+
+Keep central mode as the default and preserve owned-child cleanup and credential
+filtering. This adds no shell, installer, frontend, dependency or automatic
+remote fallback. Scripted installed-layout tests qualify helper lookup only;
+they do not establish a released local extra or installed Arbora/AU compatibility.

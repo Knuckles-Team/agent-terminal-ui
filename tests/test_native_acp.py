@@ -3,6 +3,7 @@
 import json
 import os
 import signal
+import shutil
 import subprocess
 import sys
 import time
@@ -180,3 +181,56 @@ def test_native_client_interoperates_with_official_python_acp_sdk(tmp_path, clos
     assert result.stdout == "official SDK reply"
     if not close_enabled:
         assert "refused" in result.stderr
+
+
+@pytest.mark.spec("TUI-RUNTIME-R011.14")
+@pytest.mark.parametrize("placement", ["sibling", "symlink", "path", "missing", "broken", "nonexecutable"])
+def test_native_acp_installed_helper_resolution(tmp_path, placement):
+    installed = tmp_path / "isolated" / "bin"
+    installed.mkdir(parents=True)
+    binary = installed / "tuig"
+    shutil.copy2(os.environ["TUI_NATIVE_TEST_BINARY"], binary)
+    exposed = tmp_path / "exposed"
+    exposed.mkdir()
+    command = exposed / "tuig"
+    command.symlink_to(binary)
+    search = tmp_path / "search"
+    search.mkdir()
+    sibling = installed / "arbora-acp"
+    fallback = search / "arbora-acp"
+    script = f"#!{sys.executable}\n{BACKEND}"
+    if placement in {"sibling", "symlink", "nonexecutable"}:
+        target = sibling if placement != "symlink" else installed / "backend"
+        target.write_text(script)
+        target.chmod(0o600 if placement == "nonexecutable" else 0o700)
+        if placement == "symlink":
+            sibling.symlink_to(target.name)
+    elif placement == "broken":
+        sibling.symlink_to("missing-backend")
+    if placement != "missing":
+        fallback.write_text(script if placement in {"path", "broken", "nonexecutable"} else f"#!{sys.executable}\nraise AssertionError('PATH backend must not run')\n")
+        fallback.chmod(0o700)
+    environment = {key: value for key, value in os.environ.items() if not key.startswith("AGENT_")}
+    environment.update(
+        PATH=str(search),
+        ACP_TEST_ROOT=str(tmp_path),
+        ACP_TEST_MODE="complete",
+        AGENT_BEARER_TOKEN=os.urandom(16).hex(),
+        AGENT_URL="invalid-central-endpoint-must-not-be-used",
+    )
+    result = subprocess.run(
+        [str(command), "--local-runtime", "--local-model", "test:model", "--headless", "--prompt", "hello"],
+        cwd=tmp_path, env=environment, capture_output=True, text=True, timeout=15,
+    )
+    succeeds = placement in {"sibling", "symlink", "path"}
+    assert (result.returncode == 0) == succeeds, result.stderr
+    if succeeds:
+        assert result.stdout == "native ACP reply[31m"
+        requests = [json.loads(line) for line in (tmp_path / "requests").read_text().splitlines()]
+        assert [item["method"] for item in requests] == ["initialize", "session/new", "session/prompt", "session/close"]
+        with pytest.raises(ProcessLookupError):
+            os.kill(int((tmp_path / "pid").read_text()), 0)
+    else:
+        assert "Cannot start arbora-acp" in result.stderr
+        assert result.stdout == ""
+        assert not (tmp_path / "pid").exists()

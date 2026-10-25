@@ -20,8 +20,9 @@ upstream. Historical Python concept descriptions remain in git history.
 
 **A2A:** the currently implemented task transport.
 
-**ACP:** Agent Client Protocol; a future connection requires explicit integration
-and acceptance, not a transport alias.
+**ACP:** Agent Client Protocol; the experimental local headless path uses it
+for one text turn through an owned backend child. Installed-backend and full
+protocol acceptance remain open.
 
 **Headless:** native unary observation without a terminal renderer.
 

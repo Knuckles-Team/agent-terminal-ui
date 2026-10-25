@@ -789,10 +789,11 @@
       "title": "Explicit local ACP text transport",
       "delivery_state": "VERIFIED",
       "landed_in": [
+        "2a40ec05a7f1",
         "57e292b1ab66"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/local_runtime.rs:209",
+        "native/agent-terminal-ui/src/local_runtime.rs:227",
         "native/agent-terminal-ui/tests/acp.rs:116",
         "native/agent-terminal-ui/tests/acp.rs:149",
         "native/agent-terminal-ui/tests/acp.rs:186",
