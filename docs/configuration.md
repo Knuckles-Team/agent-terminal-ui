@@ -7,7 +7,6 @@ Settings are managed by `settings.py`. The tables below describe the Python entr
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `agent_url` | string | `http://localhost:8000` | Agent server URL |
-| `default_mode` | choices | `ask` | Default interaction mode |
 | `show_tokens` | boolean | `true` | Display token count in status bar |
 | `auto_scroll` | boolean | `true` | Auto-scroll on new messages |
 | `approval_policy` | choices | `on-request` | Tool approval policy (on-request/auto/never) |
@@ -80,7 +79,6 @@ command = "echo 'API_KEY=secret'"
 | `message_submit` | When the user submits a message |
 | `tool_call_before` | Before a tool call executes |
 | `tool_call_after` | After a tool call completes |
-| `mode_change` | When the interaction mode changes |
 | `on_error` | When an error occurs |
 | `shell_env` | Collect environment variables for shell commands |
 
@@ -170,7 +168,6 @@ These are the current schema keys and their uppercase aliases. This lists lookup
 | `sidebar_visible` | `SIDEBAR_VISIBLE` |
 | `shell_command` | `SHELL_COMMAND` |
 | `agent_url` | `AGENT_URL` |
-| `default_mode` | `DEFAULT_MODE` |
 | `show_tokens` | `SHOW_TOKENS` |
 | `auto_scroll` | `AUTO_SCROLL` |
 | `approval_policy` | `APPROVAL_POLICY` |
@@ -210,16 +207,15 @@ Run `agent-terminal-ui --help` for the complete Python argument list.
 | `--headless` | Run `--prompt` without the widget tree. Requires a nonempty prompt. |
 | `--model ID` | Compatibility option. The A2A transport ignores it; the server selects the authorized model. |
 | `--session ID` | Reuse a context ID. This does not load prior turns for the model or provide durable conversation resume. |
-| `--mode {ask,plan,build}` | Select the typed task for a headless turn. Defaults to `ask`; interactive startup does not consume it. |
 | `--observe-task ID` | Read an existing task without submission or approval. |
 
 Observation accepts a nonblank ID of at most 512 characters. It cannot combine
-with `--prompt`, `--override`, `--bg`, `--model`, `--session`, or a non-default
-`--mode`. It can combine with `--headless`. `--override` and `--bg` have no effect
-in headless mode. Neither client mode grants permission to execute tools.
+with `--prompt`, `--override`, `--bg`, `--model`, or `--session`. It can combine
+with `--headless`. `--override` and `--bg` have no effect in headless mode.
+Requests need no mode selection. Arbora owns request handling and permissions.
 
 ```bash
-agent-terminal-ui --headless --prompt "summarize the task" --mode ask
+agent-terminal-ui --headless --prompt "summarize the task"
 agent-terminal-ui --observe-task TASK_ID
 agent-terminal-ui --headless --prompt "new turn" --session CONTEXT_ID
 ```

@@ -63,25 +63,9 @@ async def test_every_binding_action_exists_and_runs(
         await pilot.pause()
 
 
-@pytest.mark.parametrize(
-    "keys,expected_mode",
-    [
-        (["/", "p", "l", "a", "n", "enter"], "plan"),
-        (["/", "b", "u", "i", "l", "d", "enter"], "code"),
-    ],
-)
-async def test_slash_mode_switch_via_keyboard(
-    app: AgentApp, keys: list[str], expected_mode: str
-) -> None:
-    """Typing a mode slash command through the input widget switches mode."""
-    from agent_terminal_ui.tui.input_text_area import InputTextArea
-
-    async with app.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
-        await pilot.click(InputTextArea)
-        await pilot.press(*keys)
-        await pilot.pause()
-        assert app._agent_mode == expected_mode
+def test_request_modes_are_not_commands_or_shortcuts() -> None:
+    assert not {"plan", "chat", "build"} & set(_command_names())
+    assert all(action != "cycle_mode" for _, action in _binding_keys(AgentApp.BINDINGS))
 
 
 def test_agents_mode_registered() -> None:

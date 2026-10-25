@@ -66,10 +66,10 @@ async def test_run_prompt_passes_through_client_kwargs() -> None:
 
     client.stream = _stream
     await HeadlessRunner(client, StreamSink(io.StringIO())).run_prompt(
-        "hi", mode_id="plan", model="claude-opus-4-8"
+        "hi", model="claude-opus-4-8"
     )
     assert captured["prompt"] == "hi"
-    assert captured["mode_id"] == "plan"
+    assert "mode_id" not in captured
     assert captured["model"] == "claude-opus-4-8"
 
 

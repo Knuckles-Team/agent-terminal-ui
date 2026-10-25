@@ -267,7 +267,7 @@ async def test_run_agent_turn_worker_drives_client_stream(app):
 
         app._client.stream = fake_stream
         coro = app._run_agent_turn.__wrapped__(
-            app, "query", parts=[], mode_id="ask", model=None
+            app, "query", parts=[], model=None
         )
         await coro
         assert app.current_session_id == "session-created"

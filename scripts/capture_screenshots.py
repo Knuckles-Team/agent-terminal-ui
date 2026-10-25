@@ -50,7 +50,6 @@ async def populate_chat(app: AgentApp) -> None:
         "The demo checks passed. The changes are ready for review."
     )
     status = app.query_one(StatusLine)
-    status.set_mode("code")
     status.update_model("demo-model")
     workflow = app.query_one(WorkflowSidebar)
     for node in ("planner", "researcher", "verifier"):

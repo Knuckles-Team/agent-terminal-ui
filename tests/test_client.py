@@ -183,9 +183,7 @@ async def test_stream_runs_one_authenticated_a2a_task_to_its_final_state():
     assert sent["method"] == "message/stream"
     assert sent["params"]["message"]["contextId"] == "ctx-1"
     assert sent["params"]["message"]["parts"] == [{"kind": "text", "text": "hello"}]
-    assert sent["params"]["message"]["metadata"] == {
-        "arboraTaskIris": ["eg:task/communicate"]
-    }
+    assert "metadata" not in sent["params"]["message"]
     assert [event["type"] for event in events] == [
         "session_started",
         "sideband",

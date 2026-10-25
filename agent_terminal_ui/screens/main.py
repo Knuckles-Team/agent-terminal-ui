@@ -130,13 +130,13 @@ class MainScreen(Screen):
                 f"{logo_str}\n"
                 "[bold]Welcome to Agent Terminal UI[/bold]\n"
                 "Type [$primary]/help[/$primary] to see available commands "
-                "or [$primary]/plan[/$primary] to start planning.\n"
+                "or enter a request to begin.\n"
             )
         except Exception:
             logo = (
                 "[bold]Welcome to Agent Terminal UI[/bold]\n"
                 "Type [$primary]/help[/$primary] to see available commands "
-                "or [$primary]/plan[/$primary] to start planning.\n"
+                "or enter a request to begin.\n"
             )
 
         await conversation.add_welcome(logo)

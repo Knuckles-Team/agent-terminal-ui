@@ -60,14 +60,6 @@ GATEWAY_API_PREFIX = "/api"
 A2A_PATH = "/a2a"
 AGENT_CARD_PATH = "/.well-known/agent-card.json"
 
-#: The typed Arbora task a TUI mode asks for; Arbora never routes free text.
-MODE_TASK_IRIS = {
-    "ask": "eg:task/communicate",
-    "plan": "eg:task/research",
-    "build": "eg:task/implement",
-    "code": "eg:task/implement",
-}
-
 #: A2A task states that end a stream.
 _FINAL_STATES = frozenset({"completed", "canceled", "failed", "rejected"})
 _FAILED_STATES = frozenset({"failed", "rejected"})
@@ -987,15 +979,13 @@ class AgentClient:
         query: str,
         session_id: str | None = None,
         parts: list[dict[str, Any]] | None = None,
-        mode_id: str | None = None,
         model: str | None = None,
     ) -> AsyncGenerator[dict[str, Any], None]:
         """Run one conversation turn as a streamed A2A task.
 
-        ``mode_id`` selects the typed task Arbora routes on
-        (:data:`MODE_TASK_IRIS`; unknown modes use ``ask``); routing then selects
-        the authorized agent. ``model`` is not part of the A2A contract and is
-        not sent. Text and bounded inline UTF-8 files are carried.
+        Arbora forwards the ordinary message to its governed default agent.
+        ``model`` is not part of the A2A contract and is not sent. Text and
+        bounded inline UTF-8 files are carried.
 
         Yields:
             Normalized event dictionaries, starting with ``session_started``.
@@ -1019,11 +1009,6 @@ class AgentClient:
             "parts": normalized,
             "messageId": uuid.uuid4().hex,
             "contextId": session_id,
-            "metadata": {
-                "arboraTaskIris": [
-                    MODE_TASK_IRIS.get(mode_id or "ask", MODE_TASK_IRIS["ask"])
-                ]
-            },
         }
         headers = {"Idempotency-Key": uuid.uuid4().hex}
         public_binding = None

@@ -1030,7 +1030,7 @@ identifier from the other. Native inspector reads retain this same binding.
 ## Amendment 2026-10-22: Python fold keyboard access
 
 R008.2.3.2.2.2 now rolls up the focused keyboard route .1 and complete
-presentation acceptance .2. F8 leaves composer completion and mode keys intact.
+presentation acceptance .2. F8 leaves composer completion and focus-navigation keys intact.
 A keyboard test binding does not close the retained complete acceptance row.
 
 ## Amendment 2026-10-22: command dispatcher qualification
@@ -1450,3 +1450,28 @@ The compiled spatial PTY must assert all three colors and no-color resets.
 Fresh native compilation, PTY and installed startup evidence remains required
 under R008.3.2. Earlier two-color receipts do not qualify this source change.
 Broad presentation, native parity and served acceptance remain open.
+
+## Amendment 2026-10-25: requests without client modes
+
+R002 owns ordinary conversation submission in both terminal implementations.
+The interface must not ask users to select ask, plan, chat, code or build modes.
+Remove the request-mode shortcut, slash commands, status badge, setting and
+headless flag. Preserve authentication, appearance, navigation and required
+approval controls. Submit unchanged user text through the existing ordinary
+Arbora message contract, as the native client already does. Do not classify
+requests locally or turn request intent into effect authority. Transport changes
+require producer evidence that omitted task routing metadata admits ordinary
+requests; a missing producer contract remains an explicit blocking gap.
+
+Regression coverage must verify the absence of request-mode controls, plain
+request submission, and unchanged approval and permission refusal behavior.
+
+Producer inspection: Arbora origin/main `9e3e4cb2` routes messages without
+`metadata.agent_name` through its default agent. Its `OrchestratorA2ARouter`
+does not use `arboraTaskIris`. Python now matches the existing native request
+envelope; this is not evidence of end-to-end inference or effect completion.
+
+Legacy `default_mode` entries remain in user-owned settings files but have no
+consumer or visible control. Do not rewrite personal configuration merely to
+remove an obsolete selector. Regression coverage proves that stored and
+environment preferences cannot select request handling.
