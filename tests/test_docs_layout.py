@@ -55,6 +55,7 @@ def test_release_publishes_after_native_wheels_on_tags() -> None:
     )
     assert assembly_index < source_index < publish_index
     assert "manylinux_2_28" in steps[assembly_index]["run"]
+    assert steps[source_index]["env"]["SOURCE_COMMIT"] == "${{ github.sha }}"
     publish = steps[publish_index]
     assert publish["with"]["packages-dir"] == "dist/"
     assert publish["with"]["password"] == "${{ secrets.PYPI_API_TOKEN }}"
