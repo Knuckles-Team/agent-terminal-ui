@@ -1800,3 +1800,17 @@ The probe returned `hello client`, accepted advertised close and exited zero.
 Arbora was an uncommitted integration on `72fc99db`; AU used reviewed source
 `3a6adb40` (upstream merge `832d317a`). Full production-binary and installed
 release pairing remain pending. This is not live-provider qualification.
+
+
+## R011.14 installed helper resolution
+
+`tests/test_native_acp.py::test_native_acp_installed_helper_resolution` copies the
+compiled production executable into an isolated installation directory and
+starts it through an external symlink. `PATH` excludes the installation.
+A sibling helper and a valid sibling symlink must complete one ACP turn, even
+with a conflicting helper on `PATH`. An absent sibling must use the existing
+`PATH` helper. Missing helpers, broken sibling symlinks and non-executable
+siblings must fail; invalid siblings must not run a valid fallback helper.
+Preserve token filtering, the invalid central endpoint and owned-child exit
+checks. Hosted CI requires all thirteen ACP cases without skips. These scripted
+process tests do not qualify a released backend or future optional dependency.
