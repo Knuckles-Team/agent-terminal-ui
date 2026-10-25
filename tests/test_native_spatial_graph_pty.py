@@ -105,6 +105,25 @@ def test_native_spatial_map_theme_navigation_search_and_denial(
     terminal = NativeTerminal(server, requests, value["task_id"], no_color=no_color)
     shown, wait_until = terminal.shown, terminal.wait_until
 
+    def assert_palette() -> None:
+        background = "default" if no_color else "121c17"
+        stone = "default" if no_color else "f1f5eb"
+        sage = "default" if no_color else "adc99f"
+        probes = [(0, 0, sage), (0, 1, sage), (1, 1, stone)]
+        wait_until(
+            lambda: all(
+                terminal.screen.buffer[row][column].fg == foreground
+                and terminal.screen.buffer[row][column].bg == background
+                for row, column, foreground in probes
+            )
+        )
+        if no_color:
+            assert all(
+                cell.fg == "default" and cell.bg == "default"
+                for line in terminal.screen.buffer.values()
+                for cell in line.values()
+            )
+
     def capture_screen(stage: str) -> None:
         cells = [
             cell for line in terminal.screen.buffer.values() for cell in line.values()
@@ -116,6 +135,18 @@ def test_native_spatial_map_theme_navigation_search_and_denial(
             "lines": terminal.screen.lines,
             "foregrounds": sorted({cell.fg for cell in cells}),
             "backgrounds": sorted({cell.bg for cell in cells}),
+            "palette_probes": {
+                name: {
+                    "glyph": terminal.screen.buffer[row][column].data,
+                    "foreground": terminal.screen.buffer[row][column].fg,
+                    "background": terminal.screen.buffer[row][column].bg,
+                }
+                for name, row, column in [
+                    ("border", 0, 0),
+                    ("title", 0, 1),
+                    ("body", 1, 1),
+                ]
+            },
             "reversed_cells": sum(cell.reverse for cell in cells),
             "screen": shown(),
         }
@@ -123,14 +154,17 @@ def test_native_spatial_map_theme_navigation_search_and_denial(
 
     try:
         wait_until(lambda: "Bound map task" in shown())
+        assert_palette()
         terminal.send(b"i")
         wait_until(
             lambda: "Run inspector (read-only)" in shown() and "unavailable" in shown()
         )
+        assert_palette()
         terminal.send(b"g")
         wait_until(lambda: "> 1. first [running]" in shown())
         terminal.send(b"v")
         wait_until(lambda: "Selected 1: first [running]" in shown())
+        assert_palette()
         assert "selected edges" in shown()
         assert "Plan-step depends_on: predecessor -> dependent" in shown()
         before = list(requests)

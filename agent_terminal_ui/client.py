@@ -326,6 +326,51 @@ def _task_state(result: dict[str, Any]) -> str:
     return state
 
 
+def task_turn_usage(
+    result: dict[str, Any], expected_task: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    """Decode only terminal, task/context/run-bound producer measurements."""
+    unavailable = {"scope": "turn"}
+    binding = _public_run_binding(result)
+    expected = _public_run_binding(result if expected_task is None else expected_task)
+    usage = _arbora_metadata(result).get("usage")
+    if (
+        binding is None
+        or binding != expected
+        or _task_state(result) not in _FINAL_STATES
+        or result.get("final") is False
+        or not isinstance(usage, dict)
+        or usage.get("scope") != "turn"
+        or any(
+            usage.get(wire) != binding[key]
+            for wire, key in (
+                ("taskId", "task_id"),
+                ("contextId", "context_id"),
+                ("runId", "run_id"),
+            )
+        )
+    ):
+        return unavailable
+    counts = usage.get("counts")
+    if (
+        not isinstance(counts, dict)
+        or counts.keys()
+        - {"requests", "tool_calls", "input_tokens", "output_tokens", "total_tokens"}
+        or any(
+            type(value) is not int or not 0 <= value <= 9_007_199_254_740_991
+            for value in counts.values()
+        )
+    ):
+        return unavailable
+    return {
+        "scope": "turn",
+        "taskId": binding["task_id"],
+        "contextId": binding["context_id"],
+        "runId": binding["run_id"],
+        "counts": dict(counts),
+    }
+
+
 def normalize_a2a_event(
     result: dict[str, Any], session_id: str
 ) -> list[dict[str, Any]]:
@@ -362,7 +407,9 @@ def normalize_a2a_event(
     events = [status]
     if state in _FAILED_STATES:
         events.append({"type": "error", "message": f"task {state}", **common})
-    events.append({"type": "turn_end", "state": state, **common})
+    events.append(
+        {"type": "turn_end", "state": state, "usage": task_turn_usage(result), **common}
+    )
     return events
 
 
@@ -753,6 +800,8 @@ class AgentClient:
                     event.pop("public_run_binding", None)
                     event.pop("public_task_binding", None)
                     event["public_run_invalid"] = public_binding
+                    if "usage" in event:
+                        event["usage"] = {"scope": "turn"}
                 yield event
             status = result.get("status")
             if isinstance(status, dict) and status.get("state") == "input-required":

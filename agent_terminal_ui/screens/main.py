@@ -312,6 +312,7 @@ class MainScreen(Screen):
     ) -> None:
         error_message = event.get("message", "An unknown error occurred")
         await conversation.add_error(error_message)
+        self.query_one(StatusLine).update_usage({"scope": "turn"})
 
     #: Dispatch table for `handle_agent_event`, keyed by `event["type"]`.
     #: "turn_end" is handled separately
@@ -343,6 +344,7 @@ class MainScreen(Screen):
         conversation.start_thinking("Processing")
         with contextlib.suppress(Exception):
             self.query_one(StatusLine).set_thinking(True)
+            self.query_one(StatusLine).update_usage({"scope": "turn"})
 
     def stop_processing(self) -> None:
         """Hide thinking indicators."""

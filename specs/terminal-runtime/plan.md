@@ -1421,3 +1421,32 @@ Extend the existing gate tests with an ancestor-state audit. Check the full
 R008 and R010 paths, their retained acceptance, and the qualified bounded children.
 Future broad acceptance requires its own evidence and an explicit audit update.
 No terminal runtime or dependency change belongs in this correction.
+
+## Amendment 2026-10-25: Python bound turn receipts
+
+R012.6.3 consumes the existing metadata.arbora.usage receipt. Reuse the client's
+public task/run binding checks and normalized turn_end path. Display current turn
+measurements in StatusLine and all five counters in HistoryScreen after a bound
+tasks/get read. Readback does not change the active conversation or resume it.
+Invalid or absent receipts clear older values without hiding valid replies.
+Replays replace measurements, with no local sum or pricing calculation.
+Narrow status summaries retain exact counters in the existing tooltip and history.
+
+Arbora supplies receipt authority. The TUI owns only validation and display.
+The native receipt row R012.6.1 and tenant usage.read path remain unchanged.
+R012.6.2 stays open for served session totals, cost and complete producer
+acceptance; source and HTTP fixtures cannot establish that acceptance.
+
+## Amendment 2026-10-25: visible native Canopy sage
+
+R008.3.1 must render sage, not only define a token. Extend ThemeSelection with
+a border style and apply it to the existing task, inspector, map, log and
+cancellation frames. Use Python's sage `#ADC99F` for borders and their titles.
+Keep stone `#F1F5EB` body text on dark green `#121C17`. Preserve every existing
+theme, the default, F6, nonempty NO_COLOR, viewport and authority guard.
+
+Native buffer tests must check visible cells and the 4.5:1 contrast floor.
+The compiled spatial PTY must assert all three colors and no-color resets.
+Fresh native compilation, PTY and installed startup evidence remains required
+under R008.3.2. Earlier two-color receipts do not qualify this source change.
+Broad presentation, native parity and served acceptance remain open.
