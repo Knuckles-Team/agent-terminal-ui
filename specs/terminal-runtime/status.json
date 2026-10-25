@@ -229,7 +229,12 @@
     "TUI-RUNTIME-R008.4",
     "TUI-RUNTIME-R008.4.1",
     "TUI-RUNTIME-R008.4.2",
-    "TUI-RUNTIME-R012.6.3"
+    "TUI-RUNTIME-R012.6.3",
+    "TUI-RUNTIME-R012.10",
+    "TUI-RUNTIME-R012.10.1",
+    "TUI-RUNTIME-R012.10.2",
+    "TUI-RUNTIME-R012.10.3",
+    "TUI-RUNTIME-R012.10.4"
   ],
   "requirements": [
     {
@@ -1212,7 +1217,8 @@
         "TUI-RUNTIME-R012.6",
         "TUI-RUNTIME-R012.7",
         "TUI-RUNTIME-R012.8",
-        "TUI-RUNTIME-R012.9"
+        "TUI-RUNTIME-R012.9",
+        "TUI-RUNTIME-R012.10"
       ]
     },
     {
@@ -2811,6 +2817,47 @@
       "verified_by": [
         "tests/test_python_turn_usage.py:19"
       ]
+    },
+    {
+      "id": "TUI-RUNTIME-R012.10",
+      "title": "Edit and fork a conversation in both terminals",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": [],
+      "rollup_of": [
+        "TUI-RUNTIME-R012.10.1",
+        "TUI-RUNTIME-R012.10.2",
+        "TUI-RUNTIME-R012.10.3",
+        "TUI-RUNTIME-R012.10.4"
+      ]
+    },
+    {
+      "id": "TUI-RUNTIME-R012.10.1",
+      "title": "Discoverable own-message edit action",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R012.10.2",
+      "title": "Consume the same persisted fork contract",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R012.10.3",
+      "title": "Preserve lifecycle and owner boundaries",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
+    },
+    {
+      "id": "TUI-RUNTIME-R012.10.4",
+      "title": "Qualify both installed terminals with WebUI parity",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
     }
   ]
 }
