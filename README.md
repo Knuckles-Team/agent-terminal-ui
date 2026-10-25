@@ -3,6 +3,18 @@
 `tuig` is the Rust/Ratatui terminal frontend for Arbora. There is one executable
 and one UI implementation. The former Python/Textual frontend is retired.
 
+## Native terminal preview
+
+![Native tuig answer with folded public details and synthetic data](docs/assets/native/answer.svg)
+
+This capture shows the compiled Rust/Ratatui terminal with synthetic fixture data,
+not the retired Python/Textual UI. It comes from source commit `a8952ff`.
+See [all six native views and capture provenance](docs/screenshots.md).
+
+The README uses the same committed asset as the gallery. CI validates asset
+hashes; it does not automatically replace screenshots. See the
+[screenshot refresh procedure](docs/screenshots.md#refreshing-the-gallery).
+
 ## Installation
 
 The PyPI distribution is `agent-terminal-ui`; the installed command is `tuig`.
