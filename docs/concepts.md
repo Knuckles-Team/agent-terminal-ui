@@ -11,3 +11,19 @@
 `tuig` is a frontend client, not an MCP or A2A server. It consumes Arbora task
 and operation contracts. Backend orchestration and knowledge decisions remain
 upstream. Historical Python concept descriptions remain in git history.
+
+## Native terms
+
+**tuig:** the sole native Rust/Ratatui command.
+
+**Arbora:** the served task and operations authority.
+
+**A2A:** the currently implemented task transport.
+
+**ACP:** Agent Client Protocol; a future connection requires explicit integration
+and acceptance, not a transport alias.
+
+**Headless:** native unary observation without a terminal renderer.
+
+See the [ecosystem glossary](glossary.md) for shared terms. The shared Pages theme
+owns that generated glossary; keep native terms on this page.
