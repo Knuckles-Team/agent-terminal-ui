@@ -15,7 +15,7 @@ fn invalid_observation_arguments_and_missing_credentials_make_zero_requests() {
     ] {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         listener.set_nonblocking(true).unwrap();
-        let mut command = Command::new(env!("CARGO_BIN_EXE_agent-terminal-ui-native"));
+        let mut command = Command::new(env!("CARGO_BIN_EXE_tuig"));
         command
             .args(args)
             .env(
@@ -49,7 +49,7 @@ fn invalid_anonymous_configuration_makes_zero_requests() {
         for args in [["--prompt", "text"], ["--observe-task", "task-1"]] {
             let listener = TcpListener::bind("127.0.0.1:0").unwrap();
             listener.set_nonblocking(true).unwrap();
-            let mut command = Command::new(env!("CARGO_BIN_EXE_agent-terminal-ui-native"));
+            let mut command = Command::new(env!("CARGO_BIN_EXE_tuig"));
             command
                 .args(args)
                 .env(

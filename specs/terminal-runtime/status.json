@@ -1693,7 +1693,8 @@
       "delivery_state": "LANDED",
       "landed_in": [
         "2f6d1188fb53",
-        "69072e496e9b"
+        "69072e496e9b",
+        "e79cd23f71cc"
       ],
       "verified_by": [],
       "rollup_of": [
@@ -1715,7 +1716,8 @@
       "title": "Native CLI -h and --help describe supported arguments and environment settings without connecting or opening a terminal. Help works even when runtime configuration is invalid. Argument values that equal --help remain values; mixed help and operation flags remain invalid. Future argument changes must update this help contract",
       "delivery_state": "VERIFIED",
       "landed_in": [
-        "69072e496e9b"
+        "69072e496e9b",
+        "e79cd23f71cc"
       ],
       "verified_by": [
         "native/agent-terminal-ui/tests/cli_help.rs:16",
@@ -2235,14 +2237,17 @@
     {
       "id": "TUI-RUNTIME-R012.1.3",
       "title": "Native nonblocking unary observation",
-      "delivery_state": "SPECIFIED",
+      "delivery_state": "VERIFIED",
       "landed_in": [
-        "8879717e48eb"
+        "8879717e48eb",
+        "e79cd23f71cc"
       ],
       "verified_by": [
+        "native/agent-terminal-ui/src/cli.rs:38",
+        "native/agent-terminal-ui/src/headless.rs:66",
+        "native/agent-terminal-ui/src/headless.rs:90",
         "native/agent-terminal-ui/src/main.rs:1451",
-        "native/agent-terminal-ui/src/main.rs:1487",
-        "native/agent-terminal-ui/tests/recovery.rs:280"
+        "native/agent-terminal-ui/src/main.rs:1487"
       ],
       "rollup_of": [
         "TUI-RUNTIME-R012.1.3.1"
@@ -2619,8 +2624,10 @@
     {
       "id": "TUI-RUNTIME-R012.1.3.1",
       "title": "Native headless invocation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "e79cd23f71cc"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/cli.rs:38",
         "native/agent-terminal-ui/src/headless.rs:66",
