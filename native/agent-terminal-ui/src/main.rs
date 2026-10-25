@@ -19,6 +19,7 @@ mod cli;
 mod headless;
 mod host_log_view;
 mod inspector_view;
+mod local_runtime;
 use host_log_view::HostLogView;
 mod presentation;
 mod public_details_view;
@@ -673,6 +674,7 @@ async fn run(
 const CLI_HELP: &str = "tuig: native Arbora terminal
 
 Usage: tuig [--headless] [--prompt TEXT | --observe-task TASK_ID]
+       tuig --local-runtime --local-model PROVIDER:MODEL --headless --prompt TEXT
        tuig --help
 
 Options:
@@ -680,6 +682,8 @@ Options:
                           Requires --prompt or --observe-task.
   --prompt TEXT           Submit one text task (1..65536 bytes).
   --observe-task TASK_ID   Observe an existing task without remote cancellation.
+  --local-runtime         Spawn internal arbora-acp (POSIX headless, 16 KiB prompt).
+  --local-model VALUE     Provider:model for explicit local runtime only.
   -h, --help              Print this help without connecting or opening a terminal.
 
 With no arguments, discover the configured agent or read AGENT_TASK_ID.
@@ -699,6 +703,8 @@ Remote access requires TLS. Anonymous loopback mode rejects bearer credentials.
 Task streaming and approvals remain unavailable.
 Headless exits nonzero on input/auth required, failed, canceled or rejected tasks.
 Headless observation is bounded to four hours and never cancels backend work.
+Local ACP requires a separately installed compatible Arbora/AU backend.
+Local ACP has no client tools, permission grants or durable resume.
 Legacy --override, --bg, --model and --session are unsupported.
 ";
 
@@ -711,6 +717,9 @@ async fn main() -> ExitCode {
     }
     let endpoint = env::var("AGENT_URL").unwrap_or_else(|_| "http://localhost:8000".to_owned());
     let result = async {
+        if let Some(local) = local_runtime::options(&args)? {
+            return local_runtime::run(local).await;
+        }
         let (headless, args) = cli::arguments(&args)?;
         let token = match env::var("AGENT_BEARER_TOKEN") {
             Ok(value) => Some(value),
