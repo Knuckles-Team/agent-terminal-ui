@@ -149,6 +149,7 @@ jobs:
         uses: ./.pipeline-contract/.github/actions/verify-release-source
         env:
           READINESS_PYTHON: python3
+          SOURCE_COMMIT: ${{ github.sha }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
