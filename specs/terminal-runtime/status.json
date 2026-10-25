@@ -787,8 +787,10 @@
     {
       "id": "TUI-RUNTIME-R011.14",
       "title": "Explicit local ACP text transport",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "57e292b1ab66"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/local_runtime.rs:209",
         "native/agent-terminal-ui/tests/acp.rs:116",

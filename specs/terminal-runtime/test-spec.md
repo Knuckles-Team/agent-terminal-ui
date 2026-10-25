@@ -318,18 +318,18 @@ Assert that argv, stdout diagnostics, logs and exception messages contain neithe
 
 The suite is `tests/test_coding_session.py`. It uses a fake gateway and a temporary workspace directory.
 
-- TUI-RUNTIME-R011.1: Planned `tests/test_coding_session.py::test_session_model_closed_capability_set`. Unknown methods must map to a typed refusal.
-- TUI-RUNTIME-R011.2: Planned `tests/test_coding_session.py::test_capability_handlers_serve_local_host`. A read inside the root must return file text and prompt zero times.
-- TUI-RUNTIME-R011.3: Planned `tests/test_coding_session.py::test_path_containment_refuses_escape`. Parent segments, absolute paths and symlinks leaving the root must be refused with zero bytes read or written.
-- TUI-RUNTIME-R011.4: Planned `tests/test_coding_session.py::test_write_shows_diff_then_applies_on_approval`. A denied write must leave the file bytes unchanged.
-- TUI-RUNTIME-R011.5: Planned `tests/test_coding_session.py::test_command_displayed_before_run`. A denied command must spawn zero processes.
-- TUI-RUNTIME-R011.6: Planned `tests/test_coding_session.py::test_terminal_output_streams_in_order`. Output above the limit must carry the truncation marker and kill must end the process.
-- TUI-RUNTIME-R011.7: Planned `tests/test_coding_session.py::test_resume_reattaches_without_granting`. A resumed session must display the same pending write and apply no change before approval.
-- TUI-RUNTIME-R011.8: Planned `tests/test_coding_session.py::test_requests_reach_view_from_client_stream`. A request in the stream must reach `CodingSessionView` once.
-- TUI-RUNTIME-R011.9: Planned `tests/test_coding_session.py::test_entry_point_opens_session_at_cwd`. Starting in a temporary directory must send that root at `session/new`.
-- TUI-RUNTIME-R011.10: Planned `tests/test_coding_session.py::test_typed_refusals_reach_gateway`. Each reason must produce one error response and zero host effects.
-- TUI-RUNTIME-R011.11: Planned `tests/test_coding_session.py::test_evidence_record_has_no_secrets`. The record must carry the decision and omit file content.
-- TUI-RUNTIME-R011.12: Planned `tests/test_coding_session.py::test_headless_coding_session_write_and_containment`. The test must observe the diff, the approved write and the refusal.
+- TUI-RUNTIME-R011.1: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_session_model_closed_capability_set`. Unknown methods must map to a typed refusal.
+- TUI-RUNTIME-R011.2: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_capability_handlers_serve_local_host`. A read inside the root must return file text and prompt zero times.
+- TUI-RUNTIME-R011.3: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_path_containment_refuses_escape`. Parent segments, absolute paths and symlinks leaving the root must be refused with zero bytes read or written.
+- TUI-RUNTIME-R011.4: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_write_shows_diff_then_applies_on_approval`. A denied write must leave the file bytes unchanged.
+- TUI-RUNTIME-R011.5: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_command_displayed_before_run`. A denied command must spawn zero processes.
+- TUI-RUNTIME-R011.6: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_terminal_output_streams_in_order`. Output above the limit must carry the truncation marker and kill must end the process.
+- TUI-RUNTIME-R011.7: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_resume_reattaches_without_granting`. A resumed session must display the same pending write and apply no change before approval.
+- TUI-RUNTIME-R011.8: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_requests_reach_view_from_client_stream`. A request in the stream must reach `CodingSessionView` once.
+- TUI-RUNTIME-R011.9: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_entry_point_opens_session_at_cwd`. Starting in a temporary directory must send that root at `session/new`.
+- TUI-RUNTIME-R011.10: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_typed_refusals_reach_gateway`. Each reason must produce one error response and zero host effects.
+- TUI-RUNTIME-R011.11: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_evidence_record_has_no_secrets`. The record must carry the decision and omit file content.
+- TUI-RUNTIME-R011.12: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_headless_coding_session_write_and_containment`. The test must observe the diff, the approved write and the refusal.
 
 The fake gateway sends requests only; the test asserts file bytes and process counts on the host.
 

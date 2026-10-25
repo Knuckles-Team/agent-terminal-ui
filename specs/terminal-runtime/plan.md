@@ -1562,3 +1562,9 @@ References: <https://agentclientprotocol.com/protocol/v1/initialization>,
 Installed backend pairing requires the Arbora ACP entry point and compatible AU
 observer release. Source fixtures do not establish that release dependency or
 full ACP compliance. No release, tag or deployment is part of this increment.
+
+The retained R011.1 through R011.12 requirements now target Rust modules and
+the sole `tuig` entry point, not the deleted Python frontend. Their approval,
+containment, host-effect and durable-resume acceptance remains open. R011.14
+implements none of those effect grants; existing native approval state remains
+a presentation model until its production attachment is qualified.
