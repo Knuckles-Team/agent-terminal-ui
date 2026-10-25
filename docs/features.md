@@ -10,5 +10,12 @@ requests remote cancellation only after confirmation and is disabled for observe
 Arrow, page and mouse-wheel controls scroll. Tab selects public details and
 Enter or Space expands them.
 
-There is no interactive composer or Python slash-command fallback. Streaming,
-approval attachment and durable resume remain open requirements.
+With no prompt or selected task, `tuig` opens a one-task text composer. Enter
+submits; Ctrl+J adds a newline; bracketed paste preserves line breaks. Escape
+reviews status and `p` returns to the draft before submission. Normal letters,
+including `q`, remain text while composing; Ctrl+C quits. Input is bounded to
+65536 bytes. After dispatch, use the task controls above. The composer never resubmits or
+starts another turn, even if the submission outcome is unknown.
+
+There is no Python slash-command fallback. Streaming, approval attachment,
+conversation continuation and durable resume remain open requirements.

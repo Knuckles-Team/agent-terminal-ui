@@ -37,9 +37,10 @@ class NativeTerminal:
         self,
         server: ThreadingHTTPServer,
         requests: list[tuple[str, dict[str, Any] | None, str | None]],
-        task_id: str = OWNER_TASK_ID,
+        task_id: str | None = OWNER_TASK_ID,
         *,
         no_color: bool = True,
+        arguments: tuple[str, ...] = (),
     ) -> None:
         self.requests = requests
         self.trace: deque[tuple[str, object]] = deque(maxlen=64)
@@ -51,15 +52,17 @@ class NativeTerminal:
             "TERM": "xterm-256color",
             "NO_COLOR": "1" if no_color else "",
             "AGENT_URL": f"http://127.0.0.1:{server.server_port}",
-            "AGENT_TASK_ID": task_id,
             "AGENT_AUTH_MODE": "none",
             "HTTP_PROXY": "http://127.0.0.1:1",
             "HTTPS_PROXY": "http://127.0.0.1:1",
         }
         environment.pop("AGENT_BEARER_TOKEN", None)
+        environment.pop("AGENT_TASK_ID", None)
+        if task_id is not None:
+            environment["AGENT_TASK_ID"] = task_id
         try:
             self.process = subprocess.Popen(
-                [os.environ["TUI_NATIVE_TEST_BINARY"]],
+                [os.environ["TUI_NATIVE_TEST_BINARY"], *arguments],
                 stdin=slave,
                 stdout=slave,
                 stderr=slave,
