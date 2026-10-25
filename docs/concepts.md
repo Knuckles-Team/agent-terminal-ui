@@ -1,4 +1,4 @@
-# Concept Registry — agent-terminal-ui
+# Concept Registry — Tuig
 
 > **Prefix**: `CONCEPT:TUI-*`
 > **Version**: 2.3.3

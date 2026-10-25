@@ -2,9 +2,9 @@ INHERIT: .pipeline-theme/templates/mkdocs-theme/base.mkdocs.yml
 
 site_name: "Tuig"
 site_description: "Tuig: the Rust/Ratatui terminal frontend for Arbora."
-site_url: "https://knuckles-team.github.io/agent-terminal-ui/"
-repo_name: "Knuckles-Team/agent-terminal-ui"
-repo_url: "https://github.com/Knuckles-Team/agent-terminal-ui"
+site_url: "https://knuckles-team.github.io/tuig/"
+repo_name: "Knuckles-Team/tuig"
+repo_url: "https://github.com/Knuckles-Team/tuig"
 edit_uri: "edit/main/docs/"
 copyright: "Copyright &copy; Knuckles-Team — MIT licensed"
 
@@ -41,7 +41,7 @@ extra:
     current: agent-terminal-ui
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/Knuckles-Team/agent-terminal-ui
+      link: https://github.com/Knuckles-Team/tuig
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/tuig/
 
