@@ -51,10 +51,7 @@ impl TaskOutput {
                 if bytes > MAX_TEXT_BYTES {
                     return Err(INVALID);
                 }
-                output.extend(text.chars().filter(|c| {
-                    (!c.is_control() || matches!(c, '\n' | '\t'))
-                        && !matches!(c, '\u{202a}'..='\u{202e}' | '\u{2066}'..='\u{2069}')
-                }));
+                output.push_str(&terminal_text(text));
             }
         }
         Ok(Self::Text(output))
@@ -67,6 +64,15 @@ impl TaskOutput {
             Self::Text(text) => format!("Reply:\n{text}"),
         }
     }
+}
+
+pub fn terminal_text(text: &str) -> String {
+    text.chars()
+        .filter(|c| {
+            (!c.is_control() || matches!(c, '\n' | '\t'))
+                && !matches!(c, '\u{202a}'..='\u{202e}' | '\u{2066}'..='\u{2069}')
+        })
+        .collect()
 }
 
 #[cfg(test)]

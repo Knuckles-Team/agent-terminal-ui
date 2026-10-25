@@ -8,7 +8,8 @@ use tokio::{process::Command, time::timeout};
 
 pub struct Options {
     pub model: String,
-    pub prompt: String,
+    pub prompt: Option<String>,
+    pub headless: bool,
 }
 
 pub fn options(args: &[OsString]) -> Result<Option<Options>, &'static str> {
@@ -47,9 +48,9 @@ pub fn options(args: &[OsString]) -> Result<Option<Options>, &'static str> {
     if !local {
         return Ok(None);
     }
-    if other || !headless {
+    if other {
         return Err(
-            "Local runtime requires --headless --local-model PROVIDER:MODEL --prompt TEXT only",
+            "Local runtime accepts --local-model PROVIDER:MODEL, optional --prompt TEXT and --headless only",
         );
     }
     let model = model
@@ -62,21 +63,29 @@ pub fn options(args: &[OsString]) -> Result<Option<Options>, &'static str> {
                 && !value.starts_with('-')
         })
         .ok_or("Local runtime requires --local-model PROVIDER:MODEL")?;
-    let prompt = prompt
-        .filter(|value| !value.trim().is_empty() && value.len() <= 16_384)
-        .ok_or("Local runtime requires --prompt TEXT (1..16384 bytes)")?;
-    Ok(Some(Options { model, prompt }))
+    if prompt
+        .as_ref()
+        .is_some_and(|text| text.trim().is_empty() || text.len() > 16_384)
+        || (headless && prompt.is_none())
+    {
+        return Err("Local runtime requires --prompt TEXT (1..16384 bytes) in headless mode");
+    }
+    Ok(Some(Options {
+        model,
+        prompt,
+        headless,
+    }))
 }
 
 #[cfg(unix)]
-struct Output {
+pub(super) struct Output {
     stdout: std::io::Stdout,
     flags: rustix::fs::OFlags,
 }
 
 #[cfg(unix)]
 impl Output {
-    fn new() -> Result<Self, &'static str> {
+    pub(super) fn new() -> Result<Self, &'static str> {
         let stdout = std::io::stdout();
         let flags = rustix::fs::fcntl_getfl(&stdout).map_err(|_| "Cannot inspect ACP output")?;
         rustix::fs::fcntl_setfl(&stdout, flags | rustix::fs::OFlags::NONBLOCK)
@@ -85,10 +94,7 @@ impl Output {
     }
 
     async fn write(&self, text: &str) -> Result<(), &'static str> {
-        let safe: String = text
-            .chars()
-            .filter(|c| !c.is_control() || matches!(c, '\n' | '\t'))
-            .collect();
+        let safe = agent_terminal_ui_native::task_output::terminal_text(text);
         let mut remaining = safe.as_bytes();
         while !remaining.is_empty() {
             match rustix::io::write(&self.stdout, remaining) {
@@ -140,37 +146,18 @@ pub async fn run(options: Options) -> Result<(), &'static str> {
     if std::env::var_os("AGENT_TASK_ID").is_some() {
         return Err("Local runtime cannot be combined with AGENT_TASK_ID");
     }
+    if !options.headless {
+        return crate::local_session::run(options).await;
+    }
     let output = Output::new()?;
-    let root = std::env::current_dir()
-        .and_then(std::fs::canonicalize)
-        .map_err(|_| "Cannot resolve local workspace")?;
-    let cwd = root
-        .to_str()
-        .ok_or("Local workspace must be valid Unicode")?;
-    let mut child = Command::new(backend_executable()?)
-        .args([
-            "--local",
-            "--model",
-            &options.model,
-            "--workspace-root",
-            cwd,
-        ])
-        .current_dir(&root)
-        .env_remove("AGENT_BEARER_TOKEN")
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::null())
-        .kill_on_drop(true)
-        .spawn()
-        .map_err(|_| "Cannot start arbora-acp; install the compatible Arbora local runtime")?;
-    let stdout = child.stdout.take().ok_or("Missing ACP output pipe")?;
-    let stdin = child.stdin.take().ok_or("Missing ACP input pipe")?;
-    let mut client = TextClient::new(stdout, stdin);
+    let (mut child, mut client, cwd) = spawn_backend(&options.model)?;
     let exchange = async {
-        timeout(Duration::from_secs(30), client.initialize(cwd))
+        timeout(Duration::from_secs(30), client.initialize(&cwd))
             .await
             .map_err(|_| "Local ACP initialization timed out")??;
-        client.prompt(&options.prompt).await?;
+        client
+            .prompt(options.prompt.as_deref().ok_or("Missing local prompt")?)
+            .await?;
         client
             .response(3, async |text| output.write(text).await)
             .await
@@ -194,6 +181,43 @@ pub async fn run(options: Options) -> Result<(), &'static str> {
             Err(error)
         }
     };
+    finish_backend(client, &mut child, turn).await
+}
+
+#[cfg(unix)]
+pub(super) type LocalClient = TextClient<tokio::process::ChildStdout, tokio::process::ChildStdin>;
+
+#[cfg(unix)]
+pub(super) fn spawn_backend(
+    model: &str,
+) -> Result<(tokio::process::Child, LocalClient, String), &'static str> {
+    let root = std::env::current_dir()
+        .and_then(std::fs::canonicalize)
+        .map_err(|_| "Cannot resolve local workspace")?;
+    let cwd = root
+        .to_str()
+        .ok_or("Local workspace must be valid Unicode")?;
+    let mut child = Command::new(backend_executable()?)
+        .args(["--local", "--model", model, "--workspace-root", cwd])
+        .current_dir(&root)
+        .env_remove("AGENT_BEARER_TOKEN")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .kill_on_drop(true)
+        .spawn()
+        .map_err(|_| "Cannot start arbora-acp; install the compatible Arbora local runtime")?;
+    let stdout = child.stdout.take().ok_or("Missing ACP output pipe")?;
+    let stdin = child.stdin.take().ok_or("Missing ACP input pipe")?;
+    Ok((child, TextClient::new(stdout, stdin), cwd.to_owned()))
+}
+
+#[cfg(unix)]
+pub(super) async fn finish_backend(
+    mut client: LocalClient,
+    child: &mut tokio::process::Child,
+    turn: Result<(), &'static str>,
+) -> Result<(), &'static str> {
     let closed = timeout(Duration::from_secs(2), client.close())
         .await
         .unwrap_or(Err("Local ACP close timed out"));
@@ -226,6 +250,25 @@ mod tests {
 
     // spec: TUI-RUNTIME-R011.14
     #[test]
+    fn interactive_local_options_keep_headless_prompt_requirement() {
+        let interactive = options(&args(&["--local-runtime", "--local-model", "test:model"]))
+            .unwrap()
+            .unwrap();
+        assert!(!interactive.headless);
+        assert!(interactive.prompt.is_none());
+        assert!(
+            options(&args(&[
+                "--local-runtime",
+                "--local-model",
+                "test:model",
+                "--headless"
+            ]))
+            .is_err()
+        );
+    }
+
+    // spec: TUI-RUNTIME-R011.14
+    #[test]
     fn explicit_local_mode_does_not_capture_prompt_data_or_central_mode() {
         assert!(
             options(&args(&["--prompt", "--local-runtime"]))
@@ -252,7 +295,7 @@ mod tests {
         ]))
         .unwrap()
         .unwrap();
-        assert_eq!(parsed.prompt, "--headless");
+        assert_eq!(parsed.prompt.as_deref(), Some("--headless"));
         assert_eq!(parsed.model, "test:model");
         for values in [
             vec!["--local-runtime"],

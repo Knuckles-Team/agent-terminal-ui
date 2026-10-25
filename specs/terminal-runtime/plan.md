@@ -1609,3 +1609,24 @@ Use Tuig as the client display name in the primary UI, package description,
 and documentation entry points. Keep repository, distribution, import, command,
 protocol and storage identifiers unchanged. Arbora remains the backend and
 ecosystem name. Existing image assets and capture provenance remain unchanged.
+
+## Amendment 2026-10-25: interactive local ACP text sessions
+
+R011.14 adds explicit interactive local sessions beside the unchanged headless
+one-shot command. Reuse the native ACP client, helper lookup and owned-child
+cleanup. The local model and workspace remain explicit. No client capabilities,
+permission grants, central fallback, task identifiers or durable resume are added.
+
+The native UI composes bounded text and displays ACP text updates. One prompt
+may run at a time. Monotonic request identifiers bind each response. Only an
+acknowledged end_turn or cancelled response permits another prompt. Unknown
+outcomes end the session without replay. Arbora owns completed-text history;
+the bounded UI transcript is presentation only. Close, cancellation and quit
+must remain reachable when the display queue or backend pipe stops draining.
+
+Validate sequential turns, cancellation acknowledgement, late or foreign frames,
+unknown outcomes and output limits with native transport tests. Actual terminal
+tests cover text composition, updates, cancellation, repeated submission, narrow
+resizing and cleanup. An installed Arbora pairing must prove completed history,
+exclusion of canceled turns and close. This does not qualify central streaming,
+durable continuation or coding-session host effects.

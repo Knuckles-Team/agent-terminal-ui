@@ -22,6 +22,8 @@ mod headless;
 mod host_log_view;
 mod inspector_view;
 mod local_runtime;
+#[cfg(unix)]
+mod local_session;
 use host_log_view::HostLogView;
 mod presentation;
 mod public_details_view;
@@ -607,7 +609,8 @@ async fn run(
                         if !presentation::accepts_key_event(key) { continue; }
                         if key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL) { return Ok(()); }
                         if composer.open {
-                            if let Some(submission) = composer.key(key) {
+                            if let Some(text) = composer.key(key) {
+                                let submission = TaskSubmission::new(&text)?;
                                 request.abort();
                                 let client = client.clone();
                                 request = tokio::spawn(async move { client.submit_task(&submission).await.map(ReadStatus::Task) });
@@ -719,6 +722,7 @@ async fn run(
 const CLI_HELP: &str = "Tuig: native Arbora terminal
 
 Usage: tuig [--headless] [--prompt TEXT | --observe-task TASK_ID]
+       tuig --local-runtime --local-model PROVIDER:MODEL [--prompt TEXT]
        tuig --local-runtime --local-model PROVIDER:MODEL --headless --prompt TEXT
        tuig --help
 
@@ -727,7 +731,7 @@ Options:
                           Requires --prompt or --observe-task.
   --prompt TEXT           Submit one text task (1..65536 bytes).
   --observe-task TASK_ID   Observe an existing task without remote cancellation.
-  --local-runtime         Spawn internal arbora-acp (POSIX headless, 16 KiB prompt).
+  --local-runtime         Spawn internal arbora-acp (POSIX, 16 KiB prompt).
   --local-model VALUE     Provider:model for explicit local runtime only.
   -h, --help              Print this help without connecting or opening a terminal.
 
@@ -751,6 +755,7 @@ Task streaming and approvals remain unavailable.
 Headless exits nonzero on input/auth required, failed, canceled or rejected tasks.
 Headless observation is bounded to four hours and never cancels backend work.
 Local ACP requires a separately installed compatible Arbora/AU backend.
+Local ACP interactive sessions allow sequential acknowledged text turns.
 Local ACP has no client tools, permission grants or durable resume.
 Legacy --override, --bg, --model and --session are unsupported.
 ";

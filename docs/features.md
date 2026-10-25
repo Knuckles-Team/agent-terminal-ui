@@ -19,3 +19,11 @@ starts another turn, even if the submission outcome is unknown.
 
 There is no Python slash-command fallback. Streaming, approval attachment,
 conversation continuation and durable resume remain open requirements.
+
+## Local text sessions
+
+`tuig --local-runtime --local-model PROVIDER:MODEL` opens a local ACP session.
+Compose a turn with Enter. After acknowledgement, `p` opens the next draft;
+`c` cancels an active turn. The backend owns completed-text history within the
+process. Quitting closes that session. No central task inspector, permission
+grants or durable resume are available in this path. See [configuration](configuration.md).
