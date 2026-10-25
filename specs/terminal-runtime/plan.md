@@ -1630,3 +1630,20 @@ tests cover text composition, updates, cancellation, repeated submission, narrow
 resizing and cleanup. An installed Arbora pairing must prove completed history,
 exclusion of canceled turns and close. This does not qualify central streaming,
 durable continuation or coding-session host effects.
+
+## Amendment 2026-10-25: native presentation acceptance ownership
+
+R008, R008.1, R008.2, R008.3 and R008.3.1 follow the existing native-only
+CLI decision. Rust/Ratatui owns their runtime presentation. Remove the
+superseded requirement to keep a Python frontend or register a Python theme.
+Retain every token, contrast, fallback, resize, keyboard, selection, scroll,
+composer, no-color, reduced-motion, served and performance obligation.
+
+The native owners are `native/agent-terminal-ui/src/presentation.rs`,
+`main.rs`, `inspector_view.rs` and their production renderer tests. Existing
+source and buffer evidence proves only its declared scope. R008, R008.2 and
+R008.3 remain open; this amendment changes no proof binding or delivery state.
+Historical Python acceptance records are not native verification. Python
+native PTY, gallery, packaging and repository test harnesses remain valid.
+R003, R016 and R012.6.3 require separate acceptance reconciliation; this
+amendment neither removes them nor claims their native acceptance.

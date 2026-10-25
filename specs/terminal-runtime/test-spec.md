@@ -244,7 +244,7 @@ terminal restoration. These fixtures are not a served Arbora deployment receipt.
 
 ## Native presentation acceptance remainder
 
-TUI-RUNTIME-R008.2 remains pending. Test every supported theme, contrast, keyboard action, selection, scroll position and reduced-motion setting. Compare Python and native clients on the same fixture. Use the R002 render benchmark before acceptance. Discovery wrapping alone does not close this row.
+TUI-RUNTIME-R008.2 remains pending. Test every supported theme, contrast, keyboard action, selection, scroll position and reduced-motion setting. Exercise the production native client against the declared presentation fixtures. Use the R002 render benchmark before acceptance. Discovery wrapping alone does not close this row.
 
 ## Native task correlation tests (R002.1.1)
 
@@ -1624,7 +1624,7 @@ not replace native-service, released producer/SDK or nested-agent acceptance.
 
 R008.3 requires explicit Canopy selection, unchanged defaults, all existing
 theme cycles, no-color rules, resize and a 4.5:1 text contrast floor. Exercise
-the mounted Python app and native TestBackend, then the compiled entry point.
+the native TestBackend and production native interaction paths, then the compiled entry point.
 
 R010.12.1 requires stable chain, diamond, disconnected and maximum-size layout;
 pan bounds; selection focus; map/list switching; narrow and search fallback;
@@ -1814,3 +1814,17 @@ siblings must fail; invalid siblings must not run a valid fallback helper.
 Preserve token filtering, the invalid central endpoint and owned-child exit
 checks. Hosted CI requires all thirteen ACP cases without skips. These scripted
 process tests do not qualify a released backend or future optional dependency.
+
+## Native presentation acceptance amendment (2026-10-25)
+
+For R008, R008.1, R008.2, R008.3 and R008.3.1, the native-only decision
+supersedes Python frontend coexistence and cross-frontend execution. Earlier
+Python and cross-terminal receipts above remain historical evidence only.
+Use current native presentation and renderer tests for their bounded claims.
+Use Python PTY or gallery harnesses when they exercise the native executable.
+
+R008.2 still requires all supported themes, full keyboard and selection
+behavior, retained scrolling, no-color, reduced motion and R002 performance.
+R008.3 still requires selection, resize, composer retention, theme cycling,
+contrast and compiled qualification. Missing native journeys stay planned.
+A deleted Python test or a native buffer test does not close those journeys.
