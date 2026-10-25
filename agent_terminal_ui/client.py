@@ -39,7 +39,6 @@ from agent_terminal_ui.capabilities import (
     CapabilityPreflight,
     RunCatalog,
     RunEventPage,
-    RunSummary,
 )
 from agent_terminal_ui.execution_graph import (
     GRAPH_SCHEMA,
@@ -47,7 +46,12 @@ from agent_terminal_ui.execution_graph import (
     graph_identifier,
 )
 from agent_terminal_ui.host_logs import HostLogReader as HostLogReader
-from agent_terminal_ui.public_run_events import MAX_SEQUENCE, SCHEMA, identifier
+from agent_terminal_ui.public_run_events import (
+    MAX_SEQUENCE,
+    SCHEMA,
+    PublicRunSummary,
+    identifier,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -1310,11 +1314,19 @@ class AgentClient:
             requested_session_id=session_id,
         )
 
-    async def get_run_summary(self, run_id: str) -> RunSummary:
-        """Fetch a summary for one replayable canonical run."""
-        encoded = quote(run_id, safe="")
-        response = await self._http_client.get(f"{self.base_url}/api/runs/{encoded}")
-        return RunSummary.from_payload(self._gateway_body(response))
+    async def get_run_summary(
+        self, run_id: str, *, task_id: str | None = None
+    ) -> PublicRunSummary:
+        """Read one authorized overview through the generated operation client."""
+        if not identifier(run_id) or (task_id is not None and not identifier(task_id)):
+            raise ValueError("invalid public run identity")
+        params = {"run_id": run_id}
+        if task_id is not None:
+            params["task_id"] = task_id
+        result = await self.invoke_op("runs.get", params)
+        if not isinstance(result, dict):
+            raise ArboraOperationError("INVALID_ENVELOPE")
+        return PublicRunSummary.parse(result.get("value"), run_id, task_id)
 
     async def list_runs(
         self,

@@ -5,6 +5,8 @@ individual test modules previously duplicated, and isolates session state to a
 temporary directory so tests do not touch developer databases or settings.
 """
 
+import importlib
+import json
 import os
 from pathlib import Path
 from unittest.mock import AsyncMock
@@ -24,6 +26,29 @@ os.environ.setdefault("AGENT_UTILITIES_TESTING", "true")
 textual.constants.TEXTUAL_ANIMATIONS = "none"
 
 
+@pytest.fixture
+def current_public_run_schema(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Inject two pinned current-main schema lookups, not released SDK support.
+
+    Keep the installed invoker, digest check and transport unchanged. Old-SDK
+    refusal tests deliberately do not request this fixture.
+    """
+    models = importlib.import_module("arbora.client._generated_models")
+    invoker = importlib.import_module("arbora.client.invoke")
+    fixture = json.loads(
+        (Path(__file__).parents[0] / "fixtures/public_run_operations.json").read_text()
+    )
+    original = models.schema_for
+
+    def schema_for(operation):
+        if operation in fixture["operations"]:
+            return fixture["operations"][operation]
+        return original(operation)
+
+    monkeypatch.setattr(models, "schema_for", schema_for)
+    monkeypatch.setattr(invoker, "schema_for", schema_for)
+
+
 @pytest.fixture(autouse=True)
 def isolated_data_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Isolate shared persistence and settings, restoring all overrides afterward."""
@@ -31,7 +56,9 @@ def isolated_data_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.setenv("AGENT_UTILITIES_CONFIG_DIR", str(tmp_path / "global-config"))
     settings_dir = tmp_path / "terminal-config"
     monkeypatch.setattr(settings, "DEFAULT_SETTINGS_DIR", settings_dir)
-    monkeypatch.setattr(settings, "DEFAULT_SETTINGS_FILE", settings_dir / "settings.toml")
+    monkeypatch.setattr(
+        settings, "DEFAULT_SETTINGS_FILE", settings_dir / "settings.toml"
+    )
     return tmp_path
 
 

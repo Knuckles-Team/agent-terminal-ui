@@ -1005,7 +1005,13 @@ class CapabilityPaletteScreen(ModalScreen[None]):
         elif button_id == "capability-inspect-button" and self.run_id:
             from agent_terminal_ui.tui.run_inspector import RunInspectorScreen
 
-            self.app.push_screen(RunInspectorScreen(self.client, self.run_id))
+            self.app.push_screen(
+                RunInspectorScreen(
+                    self.client,
+                    self.run_id,
+                    context_id=getattr(self.app, "current_session_id", None),
+                )
+            )
         elif button_id == "capability-approve-button":
             self._set_status(
                 "Approval is available in the web console.", color="yellow"

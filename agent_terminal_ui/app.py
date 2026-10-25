@@ -921,18 +921,26 @@ class AgentApp(App):
         self.open_capability_palette()
 
     def open_run_inspector(self, run_id: str | None = None) -> None:
-        """Open run discovery or cursor-based event replay for one run."""
-        from agent_terminal_ui.tui.run_inspector import (
-            RunBrowserScreen,
-            RunInspectorScreen,
-        )
+        """Inspect an explicit run without an unserved discovery fallback."""
+        from agent_terminal_ui.tui.run_inspector import RunInspectorScreen
 
-        if run_id:
-            self.push_screen(RunInspectorScreen(self.agent_client, run_id))
-        else:
-            self.push_screen(
-                RunBrowserScreen(self.agent_client, session_id=self.current_session_id)
+        if not run_id:
+            self.notify(
+                "Run discovery unavailable: supply a run ID.", severity="warning"
             )
+            return
+        client, context_id = self.agent_client, self.current_session_id
+        main = self._get_main_screen()
+        task_id = (
+            main.query_one(
+                lazy_import("agent_terminal_ui.widgets.conversation", "Conversation")
+            ).public_run_task_id(client, context_id, run_id)
+            if main is not None
+            else None
+        )
+        self.push_screen(
+            RunInspectorScreen(client, run_id, context_id=context_id, task_id=task_id)
+        )
 
     def open_current_plan(self, run_id: str) -> None:
         """Open an expiring read-only projection for an explicit run."""

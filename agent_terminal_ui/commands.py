@@ -306,7 +306,7 @@ class CommandProcessor:
         opener(initial_query=args.strip())
 
     async def cmd_run(self, args: str) -> None:
-        """Browse a run, read its plan, or inspect its flat execution graph."""
+        """Inspect an explicit run, its plan, or its flat execution graph."""
         parts = args.strip().split(maxsplit=1)
         if parts and parts[0] == "graph":
             identities = parts[1].split() if len(parts) == 2 else []
@@ -325,12 +325,19 @@ class CommandProcessor:
                 return
             self.app.open_current_plan(parts[1].strip())
             return
-        run_id = args.strip() or getattr(self.app, "last_run_id", None)
+        run_id = args.strip()
+        if not run_id:
+            self.app.notify(
+                "Run discovery unavailable: supply a run ID with /run <run_id>. "
+                "Use /run plan <run_id> to read only its current plan.",
+                severity="warning",
+            )
+            return
         opener = getattr(self.app, "open_run_inspector", None)
         if not callable(opener):
             self.app.notify("Run inspector unavailable.", severity="warning")
             return
-        opener(str(run_id) if run_id else None)
+        opener(run_id)
 
     async def cmd_history(self, args: str) -> None:
         """Browse caller-owned task replies without changing conversations."""

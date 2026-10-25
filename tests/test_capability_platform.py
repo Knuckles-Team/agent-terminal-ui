@@ -11,6 +11,7 @@ from typing import Any, cast
 
 import httpx
 import pytest
+from arbora.client._generated_models import REGISTRY_DIGEST
 from textual.app import App, ComposeResult
 from textual.widgets import DataTable, Input, Static
 
@@ -36,6 +37,7 @@ from agent_terminal_ui.client import (
     normalize_a2a_event,
 )
 from agent_terminal_ui.commands import CommandProcessor
+from agent_terminal_ui.public_run_events import PublicRunSummary
 from agent_terminal_ui.tui.capability_palette import (
     CapabilityConfirmationScreen,
     CapabilityPaletteScreen,
@@ -388,7 +390,23 @@ def _route_graph_mine_invoke(
 
 
 def _route_run_summary(request: httpx.Request, body: dict[str, Any]) -> httpx.Response:
-    return httpx.Response(200, json=_run_summary_payload())
+    assert request.method == "POST" and body == {"run_id": "run-1"}
+    return httpx.Response(
+        200,
+        json={
+            "ok": True,
+            "meta": {"registry_digest": REGISTRY_DIGEST},
+            "result": {
+                "value": {
+                    "schema_version": "arbora-run-events-v1",
+                    "availability": "available",
+                    "run_id": "run-1",
+                    "task_id": "task-1",
+                    "status": "completed",
+                }
+            },
+        },
+    )
 
 
 def _route_runs_list(request: httpx.Request, body: dict[str, Any]) -> httpx.Response:
@@ -422,7 +440,7 @@ _MOCK_GATEWAY_ROUTES: dict[
     "/api/capabilities/demo_tool/preflight": _route_capability_preflight,
     "/api/capabilities/demo_tool/invoke": _route_demo_tool_invoke,
     "/api/capabilities/graph_mine/invoke": _route_graph_mine_invoke,
-    "/api/runs/run-1": _route_run_summary,
+    "/api/v1/ops/runs.get": _route_run_summary,
     "/api/runs": _route_runs_list,
     "/api/runs/run-1/events": _route_run_events,
     "/api/events/schema": _route_events_schema,
@@ -430,6 +448,7 @@ _MOCK_GATEWAY_ROUTES: dict[
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures("current_public_run_schema")
 async def test_client_consumes_live_capability_and_run_contracts() -> None:
     requests: list[tuple[str, str, dict[str, Any]]] = []
 
@@ -522,7 +541,11 @@ async def test_client_consumes_live_capability_and_run_contracts() -> None:
         == 1
     )
     assert runs.runs[0].status == "completed"
-    assert summary.event_count == 2
+    assert (summary.run_id, summary.task_id, summary.status) == (
+        "run-1",
+        "task-1",
+        "completed",
+    )
     assert [event.sequence for event in page.events] == [1, 2]
     assert schema["schema_version"] == "1.0"
     assert (
@@ -568,7 +591,7 @@ async def test_capability_and_run_slash_commands_open_live_screens() -> None:
 
     await processor.cmd_capabilities("graph")
     await processor.commands["capability"]("demo_tool")
-    await processor.cmd_run("")
+    await processor.cmd_run("run-latest")
 
     assert opened == [
         ("capability", {"initial_query": "graph"}),
@@ -644,8 +667,15 @@ class _FakeCapabilityClient:
             "result": {"approval_id": approval_id, "decision": decision},
         }
 
-    async def get_run_summary(self, _run_id: str) -> RunSummary:
-        return RunSummary.from_payload(_run_summary_payload())
+    async def get_run_summary(self, _run_id: str, **_kwargs: Any) -> PublicRunSummary:
+        return PublicRunSummary("run-1", "task-1", "completed")
+
+    async def get_public_run_events(
+        self, _run_id: str, **_kwargs: Any
+    ) -> dict[str, Any]:
+        return json.loads(
+            (Path(__file__).parent / "fixtures/public_run_events.json").read_text()
+        )
 
     async def list_runs(self, **_kwargs: Any) -> RunCatalog:
         return RunCatalog.from_payload(
@@ -772,23 +802,52 @@ async def test_sidebar_searches_live_catalog() -> None:
         assert sidebar.filtered == []
 
 
+def _public_event(sequence: int, kind: str) -> dict[str, Any]:
+    return {
+        "schema_version": "arbora-run-events-v1",
+        "event_id": f"event-{sequence}",
+        "sequence": sequence,
+        "run_id": "run-1",
+        "task_id": "task-1",
+        "type": kind,
+        "category": "public_summary" if kind == "public_summary" else "execution_trace",
+        "terminal": kind in {"graph_complete", "error", "run_cancelled"},
+        "payload": {"summary": "Public text"}
+        if kind == "public_summary"
+        else {"status": "running"},
+    }
+
+
+def _public_page(
+    after: int, *events: dict[str, Any], has_more: bool = False
+) -> dict[str, Any]:
+    return {
+        "schema_version": "arbora-run-events-v1",
+        "availability": "available",
+        "run_id": "run-1",
+        "after": after,
+        "next_after": events[-1]["sequence"] if events else after,
+        "events": list(events),
+        "has_more": has_more,
+        "terminal": bool(events and events[-1]["terminal"]),
+    }
+
+
 class _FollowClient:
     def __init__(self, *pages: dict[str, Any]) -> None:
         self.pages = list(pages)
         self.requested_after: list[int] = []
 
-    async def get_run_summary(self, _run_id: str) -> RunSummary:
-        payload = _run_summary_payload()
-        payload.update(status="running", last_event_type="graph_complete")
-        return RunSummary.from_payload(payload)
+    async def get_run_summary(self, _run_id: str, **_kwargs: Any) -> PublicRunSummary:
+        return PublicRunSummary("run-1", "task-1", "running")
 
-    async def get_run_events(
+    async def get_public_run_events(
         self, _run_id: str, *, after: int, **_kwargs: Any
-    ) -> RunEventPage:
+    ) -> dict[str, Any]:
         self.requested_after.append(after)
         payload = self.pages.pop(0)
         assert payload["after"] == after
-        return RunEventPage.from_payload(payload)
+        return payload
 
 
 class _RunHarness(App[None]):
@@ -805,6 +864,7 @@ class _RunHarness(App[None]):
             RunInspectorScreen(
                 self.agent_client,
                 "run-1",
+                context_id=None,
                 poll_interval=self.poll_interval,
             )
         )
@@ -817,63 +877,49 @@ async def test_run_inspector_replays_canonical_events() -> None:
         await pilot.pause(0.2)
         inspector = app.screen
         assert isinstance(inspector, RunInspectorScreen)
-        assert inspector.next_after == 2
-        assert inspector.query_one(DataTable).row_count == 2
+        assert inspector.next_after == 5
+        assert inspector.query_one(DataTable).row_count == 5
 
 
 @pytest.mark.asyncio
-async def test_mission_control_follows_through_graph_and_output_progress() -> None:
+async def test_run_inspector_follows_the_public_terminal_contract() -> None:
     client = _FollowClient(
-        _run_page(0, _run_event(1, "graph_complete")),
-        _run_page(
-            1,
-            _run_event(1, "graph_complete"),
-            _run_event(2, "final_output"),
-        ),
-        _run_page(2, _run_event(3, "run_completed")),
+        _public_page(0, _public_event(1, "node_transition"), has_more=True),
+        _public_page(1, _public_event(2, "public_summary"), has_more=True),
+        _public_page(2, _public_event(3, "graph_complete")),
     )
     app = _RunHarness(client)
-
     async with app.run_test() as pilot:
         await pilot.pause(0.2)
         inspector = app.screen
         assert isinstance(inspector, RunInspectorScreen)
         assert client.requested_after == [0, 1, 2]
-        assert [event.type for event in inspector.events] == [
+        assert [event.kind for event in inspector.events] == [
+            "node_transition",
+            "public_summary",
             "graph_complete",
-            "final_output",
-            "run_completed",
         ]
         assert inspector.query_one(DataTable).row_count == 3
-        assert inspector.terminal_event_type == "run_completed"
+        assert inspector.terminal_event_type == "graph_complete"
         assert inspector.next_after == 3
         assert not inspector.following
 
 
 @pytest.mark.asyncio
-async def test_mission_control_renders_gap_and_resumes_retained_events() -> None:
-    client = _FollowClient(
-        _run_page(
-            0,
-            _run_event(4, "graph_complete"),
-            retained_from=4,
-        ),
-        _run_page(4, _run_event(5, "run_completed"), retained_from=4),
-    )
+async def test_run_inspector_refuses_public_history_gaps_without_legacy_reset() -> None:
+    client = _FollowClient(_public_page(0, _public_event(4, "graph_complete")))
     app = _RunHarness(client)
-
     async with app.run_test() as pilot:
         await pilot.pause(0.2)
         inspector = app.screen
         assert isinstance(inspector, RunInspectorScreen)
-        assert client.requested_after == [0, 4]
-        assert len(inspector.replay_gaps) == 1
-        assert inspector.replay_gaps[0].missing_from == 1
-        assert inspector.replay_gaps[0].missing_through == 3
-        assert "Replay reset: sequences 1-3" in str(
-            inspector.query_one("#run-inspector-gap", Static).content
+        assert client.requested_after == [0]
+        assert inspector.events == [] and inspector.next_after == 0
+        assert inspector.summary is None
+        assert "unavailable" in str(
+            inspector.query_one("#run-inspector-status", Static).render()
         )
-        assert [event.sequence for event in inspector.events] == [4, 5]
+        assert not inspector.following
 
 
 class _RunBrowserHarness(App[None]):
