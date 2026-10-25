@@ -254,15 +254,8 @@ async def test_client_init_normalises_trailing_slash():
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "mode,task_iri",
-    [
-        ("plan", "eg:task/research"),
-        ("build", "eg:task/implement"),
-        ("ask", "eg:task/communicate"),
-    ],
-)
-async def test_stream_selects_typed_a2a_task(mode, task_iri):
+@pytest.mark.parametrize("prompt", ["hello", "Plan the change", "Build the feature"])
+async def test_stream_leaves_request_handling_to_arbora(prompt):
     c = AgentClient()
     sent = {}
 
@@ -273,14 +266,14 @@ async def test_stream_selects_typed_a2a_task(mode, task_iri):
 
     with patch.object(c, "_rpc_stream", fake_stream):
         events = [
-            event async for event in c.stream("hello", session_id="s1", mode_id=mode)
+            event async for event in c.stream(prompt, session_id="s1")
         ]
 
     assert events == [{"type": "session_started", "session_id": "s1"}]
     assert sent["method"] == "message/stream"
     message = sent["params"]["message"]
-    assert message["parts"] == [{"kind": "text", "text": "hello"}]
-    assert message["metadata"]["arboraTaskIris"] == [task_iri]
+    assert message["parts"] == [{"kind": "text", "text": prompt}]
+    assert "metadata" not in message
     await c.close()
 
 
@@ -521,7 +514,6 @@ def mock_app():
     app.query_one.return_value = event_log
     app._client = AsyncMock()
     app._client.list_skills = AsyncMock(return_value=[])
-    app._agent_mode = "ask"
     app.notify = MagicMock()
     app.push_screen = MagicMock()
     app.action_toggle_sidebar = MagicMock()
@@ -676,8 +668,7 @@ async def test_status_line_updates():
     app = _Host()
     async with app.run_test():
         status = app.query_one(StatusLine)
-        for m in ("plan", "code", "chat", "ask", "build", "weird"):
-            status.set_mode(m)
+        assert not status.query("#status-mode")
         status.set_thinking(True)
         status.set_thinking(False)
         status.update_usage({"total_tokens": 12345, "estimated_cost_usd": 0.125})
@@ -887,9 +878,6 @@ async def test_agent_app_action_handlers_smoke():
         app.action_toggle_fast_mode()
         app.action_rewind()
         app.action_select_all()
-        # cycle mode hits every branch
-        for _ in range(6):
-            app.action_cycle_mode()
         await pilot.pause()
 
 

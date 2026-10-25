@@ -115,7 +115,11 @@ def test_readme_operator_entry_points() -> None:
 
 
 @pytest.mark.spec("TUI-RUNTIME-R015.12")
-@pytest.mark.parametrize("entry", ["--observe-task", "--mode", "cargo run", "docker run", "--headless", "AGENT_AUTH_MODE=none"])
+@pytest.mark.parametrize(
+    "entry",
+    ["--observe-task", "--model", "cargo run", "docker run", "--headless",
+     "AGENT_AUTH_MODE=none"],
+)
 def test_readme_rejects_missing_operator_entries(entry: str) -> None:
     with pytest.raises(AssertionError):
         check_operator_entries((ROOT / "README.md").read_text().replace(entry, "missing-entry"))

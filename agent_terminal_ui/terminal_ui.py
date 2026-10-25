@@ -11,7 +11,9 @@ def terminal_ui() -> None:
     """Launch the Agent Terminal UI, or run a single prompt headlessly."""
     import argparse
 
-    parser = argparse.ArgumentParser(description="Agent Terminal UI")
+    parser = argparse.ArgumentParser(
+        description="Agent Terminal UI", allow_abbrev=False
+    )
     parser.add_argument(
         "--prompt", type=str, help="Initial prompt to send to the agent"
     )
@@ -43,12 +45,6 @@ def terminal_ui() -> None:
         help="Reuse this context ID; does not load prior turns for the model",
     )
     parser.add_argument(
-        "--mode",
-        choices=["ask", "plan", "build"],
-        default="ask",
-        help="Task mode for headless runs",
-    )
-    parser.add_argument(
         "--observe-task",
         type=str,
         help="Read an existing task without submission or approval",
@@ -64,7 +60,6 @@ def terminal_ui() -> None:
             or args.bg
             or args.model is not None
             or args.session is not None
-            or args.mode != "ask"
         ):
             parser.error(
                 "--observe-task requires a task ID and cannot combine with turn options"
@@ -91,7 +86,6 @@ def terminal_ui() -> None:
         ok = asyncio.run(
             run_headless(
                 args.prompt,
-                mode_id=args.mode,
                 model=args.model,
                 session_id=args.session,
             )

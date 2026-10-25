@@ -639,7 +639,7 @@ performance acceptance. R008 and its remaining presentation leaf stay open.
 ### Whole-app public-fold keyboard qualification
 
 R008.2.3.2.2.2.1 requires a keyboard route from the composer to the conversation
-without replacing Tab completion or Shift+Tab mode selection. F8 switches focus
+without replacing Tab completion or Shift+Tab focus navigation. F8 switches focus
 between conversation and composer. Tab reaches public fold titles; Enter and
 Space toggle them. Refresh preserves focus and fold state. This focused check
 does not close the remaining presentation or release-performance criteria.
@@ -1746,3 +1746,19 @@ Historical two-color receipts do not qualify the new sage rendering.
 R008.3.2 and broader presentation, native parity and hierarchy acceptance stay
 open. R012.6.2 still requires installed producer, served session totals and cost
 acceptance. The full configured pre-push release stage was not run locally.
+
+
+## R002 request-mode removal regression contract (2026-10-25)
+
+`test_tui.py` verifies that the mounted composer, status line, settings and
+command registry expose no request-mode selector. Ordinary text remains intact
+through reverse-tab navigation. `test_tui_components.py` verifies that chat,
+planning and implementation prompts reach A2A unchanged without routing metadata.
+`test_mounted_command_matrix.py` preserves the full command inventory and
+verifies that removed mode commands issue no request.
+`test_cli_documentation.py` verifies headless submission without a mode and
+rejects the removed flag rather than abbreviating it to `--model`.
+`test_modal_keyboard_isolation.py` retains approval dismissal and focus checks;
+`test_approval_policy.py` retains required permission policy coverage. Native
+submission already has no request-mode controls or metadata. These regressions
+qualify client behavior only, not producer inference or served task completion.

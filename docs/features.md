@@ -13,7 +13,6 @@ subcommands:
 | Area | Commands |
 |------|----------|
 | Core | `/help`, `/clear`, `/exit` (alias `/quit`), `/config`, `/keybindings` |
-| Modes | `/plan`, `/chat`, `/build` |
 | Conversation | `/compact`, `/context`, `/recap`, `/export`, `/diff`, `/focus`, `/fast`, `/image`, `/file` |
 | Models & cost | `/model`, `/stats` (alias `/cost`) |
 | Theme | `/theme` |
@@ -26,6 +25,9 @@ subcommands:
 | Project & SDD | `/init`, `/sdd`, `/memory`, `/add-dir`, `/prompts`, `/review`, `/test`, `/simplify` |
 | MCP & tools | `/mcp`, `/mcp:reload`, `/tools`, `/skills`, `/resources` |
 | Ops | `/logs`, `/cron`, `/pipeline`, `/maintenance` |
+
+Ordinary requests need no ask, plan or build mode. Enter the request directly;
+Arbora owns request handling. Required approvals remain separate.
 
 ### Unavailable session and fast-mode actions
 
@@ -193,7 +195,6 @@ Application bindings (`app.py::BINDINGS`):
 | `Alt+O` | Report unavailable fast-mode selection |
 | `Alt+D` | Service dashboard |
 | `Alt+C` | Live capability palette |
-| `Shift+Tab` | Cycle reasoning effort / mode |
 | `Esc Esc` | Rewind (experimental) |
 
 Main-screen bindings (`screens/main.py::BINDINGS`):

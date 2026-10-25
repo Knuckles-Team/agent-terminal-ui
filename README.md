@@ -310,7 +310,7 @@ running many concurrent, non-interactive sessions against one shared backend.
 
 ```bash
 agent-terminal-ui --headless --prompt "summarize the open PRs"
-agent-terminal-ui --headless --prompt "summarize the plan" --mode plan
+agent-terminal-ui --headless --prompt "summarize the plan"
 agent-terminal-ui --observe-task TASK_ID
 ```
 

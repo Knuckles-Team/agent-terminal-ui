@@ -678,7 +678,7 @@ class TestAgentApp:
 
         app = AgentApp()
         assert app.theme == "tokyo-night"
-        assert app._agent_mode == "ask"
+        assert not hasattr(app, "_agent_mode")
         assert app._is_processing is False
 
     def test_app_custom_theme(self):
@@ -688,15 +688,10 @@ class TestAgentApp:
         app = AgentApp(theme_name="dracula")
         assert app.theme == "dracula"
 
-    def test_mode_list(self):
-        """All expected modes should be available."""
-        from agent_terminal_ui.app import MODES
+    def test_request_mode_binding_is_absent(self):
+        from agent_terminal_ui.app import AgentApp
 
-        assert "ask" in MODES
-        assert "plan" in MODES
-        assert "code" in MODES
-        assert "chat" in MODES
-        assert "build" in MODES
+        assert all(binding.action != "cycle_mode" for binding in AgentApp.BINDINGS)
 
     def test_event_received_message(self):
         """AgentEventReceived should store event data."""

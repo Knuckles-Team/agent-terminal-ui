@@ -85,7 +85,7 @@ async def test_mounted_literal_content_waits_for_terminal_before_queue(
             await app.on_agent_event_received(AgentEventReceived(event))
         await pilot.pause()
         dispatch.assert_called_once_with(
-            "next prompt", parts=[], mode_id=app._agent_mode, model=app._current_model
+            "next prompt", parts=[], model=app._current_model
         )
         assert app._user_message_queue == []
         assert app._is_processing

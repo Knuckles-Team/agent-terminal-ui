@@ -190,9 +190,6 @@ async def test_legacy_dependency_inventory(command, path):
 
 
 PROMPT_COMMANDS = [
-    "plan",
-    "chat",
-    "build",
     "init",
     "review",
     "test",
@@ -240,6 +237,22 @@ async def test_prompt_shortcut_submits_a_real_client_turn(command):
         assert methods == ["message/send"]
         assert not app._is_processing
         assert "matrix answer" in str(app.query_one("Conversation").transcript)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("command", ["plan", "chat", "build"])
+async def test_removed_mode_commands_do_not_submit(command):
+    requests = []
+
+    def reply(request):
+        requests.append(request.url.path)
+        return httpx.Response(404)
+
+    async with mounted(reply) as (app, pilot):
+        requests.clear()
+        await submit(app, pilot, f"/{command} fixture")
+        assert requests == []
+        assert not app._is_processing
 
 
 READ_CASES = [
