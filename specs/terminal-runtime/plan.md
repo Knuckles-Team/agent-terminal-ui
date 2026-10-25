@@ -1368,7 +1368,7 @@ Missing prerequisites, an absent executable or a skipped journey fail the job.
 Use a bounded synthetic loopback Arbora fixture and the actual producer diamond.
 Read a real task correlation before opening `i`, then `g`. Check one row per step,
 predecessors, dependents, evidence, keyboard selection and 40-column resizing.
-Hold a refresh until old graph data and selection clear, then test denied reads,
+Hold a refresh until old graph data and selection clear. Then test denied reads,
 close/reopen and quit with terminal restoration. Assert exact root-bound graph
 parameters, anonymous reads and no effect or fallback requests.
 
@@ -1585,3 +1585,20 @@ Keep central mode as the default and preserve owned-child cleanup and credential
 filtering. This adds no shell, installer, frontend, dependency or automatic
 remote fallback. Scripted installed-layout tests qualify helper lookup only;
 they do not establish a released local extra or installed Arbora/AU compatibility.
+
+## Amendment 2026-10-25: native interactive unary composition
+
+R012.1.3 now attaches one interactive prompt to the existing native unary path.
+With no selected task or command-line prompt, open a bounded text composer.
+Enter submits once; Ctrl+J inserts a newline. Bracketed paste preserves line
+breaks without running commands. Escape reviews the agent status and p returns
+to the unchanged draft. Input keys cannot trigger inspector or cancellation
+commands while composing. F6 retains theme selection; Ctrl+C exits.
+
+Reuse TaskSubmission, message/send, bound snapshot observation and confirmed
+remote cancellation. Disable composition after dispatch, including unknown
+outcomes. Do not offer automatic retry, inferred context continuation or durable
+resume. Observation-only invocation remains read-only. Modes remain inferred
+upstream, with no ask, plan or code selector. Native unit and actual executable
+PTY fixtures qualify input routing and one-shot transport, not live producer
+streaming, approval attachment or installed-package parity.

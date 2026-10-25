@@ -55,9 +55,11 @@ Native rendering includes task state, public output details, themes, keyboard
 and mouse scrolling, run inspection and host logs. Remote cancellation in the
 interactive view requires confirmation. `--observe-task` remains read-only.
 
-Interactive prompt composition, streaming, approval attachment, context
-continuation and durable resume are not yet implemented. The removed Python
-frontend is not a fallback. `--override`, `--bg`, `--model` and `--session` are
+With no selected task or prompt, `tuig` opens a one-task text composer.
+Enter submits; Ctrl+J adds a newline; Escape reviews status and `p` returns
+to the draft before submission. It never resubmits an unknown outcome.
+Streaming, approval attachment, context continuation and durable resume
+are not yet implemented. The removed Python frontend is not a fallback. `--override`, `--bg`, `--model` and `--session` are
 rejected. Full served parity and release performance remain open in
 [the runtime specification](specs/terminal-runtime/requirements.md).
 

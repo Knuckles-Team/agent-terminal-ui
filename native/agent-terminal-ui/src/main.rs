@@ -3,7 +3,8 @@ use agent_terminal_ui_native::{
     correlation::{TaskCorrelation, TaskState},
 };
 use crossterm::event::{
-    DisableMouseCapture, EnableMouseCapture, Event, EventStream, KeyCode, KeyModifiers, MouseEvent,
+    DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture, Event,
+    EventStream, KeyCode, KeyModifiers, MouseEvent,
 };
 use futures_util::StreamExt;
 use ratatui::{
@@ -16,6 +17,7 @@ use ratatui::{
 use std::{env, ffi::OsString, process::ExitCode, sync::Arc};
 
 mod cli;
+mod composer;
 mod headless;
 mod host_log_view;
 mod inspector_view;
@@ -468,6 +470,14 @@ fn submission_completed(
     }
 }
 
+fn enable_terminal_input(writer: &mut impl std::io::Write) -> std::io::Result<()> {
+    let result = crossterm::execute!(writer, EnableMouseCapture, EnableBracketedPaste);
+    if result.is_err() {
+        let _ = crossterm::execute!(writer, DisableBracketedPaste, DisableMouseCapture);
+    }
+    result
+}
+
 async fn run(
     client: Arc<ArboraClient>,
     mut task_id: Option<String>,
@@ -478,8 +488,11 @@ async fn run(
     let no_color = env::var("NO_COLOR").unwrap_or_default();
     let mut themes = ThemeSelection::new(&theme, &no_color);
     let mut submitting = submission.is_some();
-    let automatic_observation = observe || submitting;
-    let observation_deadline = submitting
+    let mut automatic_observation = observe || submitting;
+    let mut can_compose = task_id.is_none() && submission.is_none() && !observe;
+    let mut composer = composer::Composer::default();
+    composer.open = can_compose;
+    let mut observation_deadline = submitting
         .then(|| tokio::time::Instant::now() + std::time::Duration::from_secs(4 * 60 * 60));
     let loading = if submitting {
         "Submitting Arbora task..."
@@ -489,9 +502,9 @@ async fn run(
         "Discovering Arbora..."
     };
     let mut terminal = ratatui::init();
-    if crossterm::execute!(std::io::stdout(), EnableMouseCapture).is_err() {
+    if enable_terminal_input(&mut std::io::stdout()).is_err() {
         ratatui::restore();
-        return Err("Cannot enable terminal mouse input");
+        return Err("Cannot enable terminal input");
     }
     let mut events = EventStream::new();
     let mut request = tokio::spawn({
@@ -526,7 +539,9 @@ async fn run(
             let border_style = themes.border_style();
             let mut confirmation_visible = false;
             terminal.draw(|frame| {
-                if cancellation == Cancellation::Confirming {
+                if composer.open {
+                    composer.draw(frame, style, border_style);
+                } else if cancellation == Cancellation::Confirming {
                     confirmation_visible = draw_confirmation(frame, &status, style, border_style);
                 } else if logs.is_open() {
                     logs.draw(frame, style, border_style);
@@ -550,6 +565,7 @@ async fn run(
                         submitting = false;
                     } else {
                         status = request_completed(result, &mut binding, &mut cancellation, remote_cancel);
+                        if can_compose { status.push_str("\n\np: return to prompt draft"); }
                     }
                     inspector.task_updated(if accepted { binding.as_ref() } else { None });
                     details.task_updated(if accepted { binding.as_ref() } else { None });
@@ -577,13 +593,38 @@ async fn run(
                 }
                 event = events.next() => {
                     let Some(Ok(event)) = event else { return Err("Terminal input unavailable"); };
+                    if let Event::Paste(ref text) = event {
+                        if composer.open { composer.paste(text); }
+                        continue;
+                    }
                     if let Event::Mouse(mouse) = event {
+                        if composer.open { continue; }
                         route_mouse(mouse, cancellation == Cancellation::Confirming,
                             &mut logs, &mut inspector, &mut viewport, &mut details);
                     }
                     if let Event::Key(key) = event {
                         if themes.key(key) { continue; }
                         if !presentation::accepts_key_event(key) { continue; }
+                        if key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL) { return Ok(()); }
+                        if composer.open {
+                            if let Some(submission) = composer.key(key) {
+                                request.abort();
+                                let client = client.clone();
+                                request = tokio::spawn(async move { client.submit_task(&submission).await.map(ReadStatus::Task) });
+                                composer.open = false;
+                                can_compose = false;
+                                submitting = true;
+                                pending = true;
+                                automatic_observation = true;
+                                observation_deadline = Some(tokio::time::Instant::now() + std::time::Duration::from_secs(4 * 60 * 60));
+                                status = "Submitting Arbora task...".to_owned();
+                            }
+                            continue;
+                        }
+                        if can_compose && key.code == KeyCode::Char('p') && !logs.is_open() && !inspector.is_open() {
+                            composer.open = true;
+                            continue;
+                        }
                         if cancellation != Cancellation::Confirming && !logs.is_open() && inspector.search_key(key) { continue; }
                         if key.code == KeyCode::Char('q') || (key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL)) {
                             return Ok(());
@@ -660,7 +701,11 @@ async fn run(
     inspector.close();
     logs.close();
     details.abort();
-    let _ = crossterm::execute!(std::io::stdout(), DisableMouseCapture);
+    let _ = crossterm::execute!(
+        std::io::stdout(),
+        DisableBracketedPaste,
+        DisableMouseCapture
+    );
     ratatui::restore();
     if submitting {
         status = submission_completed((&mut request).await, &mut binding, &mut cancellation);
@@ -686,7 +731,9 @@ Options:
   --local-model VALUE     Provider:model for explicit local runtime only.
   -h, --help              Print this help without connecting or opening a terminal.
 
-With no arguments, discover the configured agent or read AGENT_TASK_ID.
+With no arguments, compose one task or read AGENT_TASK_ID.
+In the composer: Enter submits, Ctrl+J adds a newline, Escape reviews status.
+Before submission, p returns to the draft. Each invocation sends at most one task.
 --prompt and --observe-task cannot be combined with each other or AGENT_TASK_ID.
 
 Environment:
@@ -786,6 +833,35 @@ mod tests {
     use ratatui::{Terminal, backend::TestBackend};
     use std::env::VarError;
     use std::ffi::OsString;
+
+    // spec: TUI-RUNTIME-R012.1.3
+    #[test]
+    fn partial_input_setup_disables_paste_and_mouse() {
+        #[derive(Default)]
+        struct FailPasteOnce {
+            bytes: Vec<u8>,
+            failed: bool,
+        }
+        impl std::io::Write for FailPasteOnce {
+            fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+                if !self.failed && bytes.windows(5).any(|part| part == b"2004h") {
+                    self.failed = true;
+                    return Err(std::io::Error::other("paste setup failed"));
+                }
+                self.bytes.extend_from_slice(bytes);
+                Ok(bytes.len())
+            }
+            fn flush(&mut self) -> std::io::Result<()> {
+                Ok(())
+            }
+        }
+        let mut writer = FailPasteOnce::default();
+        assert!(super::enable_terminal_input(&mut writer).is_err());
+        let output = String::from_utf8(writer.bytes).unwrap();
+        assert!(output.contains("?1000h"));
+        assert!(output.contains("?2004l"));
+        assert!(output.contains("?1000l"));
+    }
 
     // spec: TUI-RUNTIME-R002.1.3.1
     #[test]
