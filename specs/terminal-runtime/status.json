@@ -789,6 +789,7 @@
       "title": "Explicit local ACP text transport",
       "delivery_state": "VERIFIED",
       "landed_in": [
+        "2a40ec05a7f1",
         "57e292b1ab66"
       ],
       "verified_by": [
