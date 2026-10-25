@@ -20,6 +20,7 @@ mod inspector_view;
 use host_log_view::HostLogView;
 mod presentation;
 mod public_details_view;
+mod spatial_graph;
 use inspector_view::InspectorView;
 #[cfg(test)]
 use presentation::presentation_style;
@@ -63,6 +64,7 @@ fn draw_task_viewport(
     frame: &mut Frame,
     status: &str,
     style: Style,
+    border_style: Style,
     viewport: &mut Viewport,
     read_only: bool,
     details: &mut PublicDetailsView,
@@ -87,6 +89,8 @@ fn draw_task_viewport(
     ));
     lines.push(Line::from(format!("F6: theme | l: host logs | i: run inspector | r: refresh read | {cancel_help} | c: cancel local request | q / Ctrl+C: quit")));
     let block = Block::bordered()
+        .border_style(border_style)
+        .title_style(border_style)
         .title("Arbora")
         .title_bottom("Up/Down PgUp/PgDn Home/End");
     let inner = block.inner(frame.area());
@@ -157,7 +161,7 @@ fn route_mouse(
     viewport.mouse(event) || details.mouse(event)
 }
 
-fn draw_confirmation(frame: &mut Frame, status: &str, style: Style) -> bool {
+fn draw_confirmation(frame: &mut Frame, status: &str, style: Style, border_style: Style) -> bool {
     let fits = frame.area().width >= 34 && frame.area().height >= 5;
     let text = if fits {
         format!("Cancel selected remote task?\ny: confirm | n / Escape: dismiss\n\n{status}")
@@ -168,7 +172,12 @@ fn draw_confirmation(frame: &mut Frame, status: &str, style: Style) -> bool {
         Paragraph::new(text)
             .style(style)
             .wrap(Wrap { trim: false })
-            .block(Block::bordered().title("Confirm cancellation")),
+            .block(
+                Block::bordered()
+                    .border_style(border_style)
+                    .title_style(border_style)
+                    .title("Confirm cancellation"),
+            ),
         frame.area(),
     );
     fits
@@ -509,17 +518,19 @@ async fn run(
     redraw.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
     let result = async {
         loop {
+            inspector.client_updated(&client);
             let style = themes.style();
+            let border_style = themes.border_style();
             let mut confirmation_visible = false;
             terminal.draw(|frame| {
                 if cancellation == Cancellation::Confirming {
-                    confirmation_visible = draw_confirmation(frame, &status, style);
+                    confirmation_visible = draw_confirmation(frame, &status, style, border_style);
                 } else if logs.is_open() {
-                    logs.draw(frame, style);
+                    logs.draw(frame, style, border_style);
                 } else if inspector.is_open() {
-                    inspector.draw(frame, style, std::time::Instant::now());
+                    inspector.draw(frame, style, border_style, std::time::Instant::now());
                 } else {
-                    draw_task_viewport(frame, &status, style, &mut viewport, observe, &mut details);
+                    draw_task_viewport(frame, &status, style, border_style, &mut viewport, observe, &mut details);
                 }
             }).map_err(|_| "Cannot draw terminal")?;
             tokio::select! {
@@ -1547,7 +1558,9 @@ mod confirmation_view_tests {
             terminal.autoresize().unwrap();
             let mut visible = false;
             terminal
-                .draw(|frame| visible = draw_confirmation(frame, status, Style::default()))
+                .draw(|frame| {
+                    visible = draw_confirmation(frame, status, Style::default(), Style::default())
+                })
                 .unwrap();
             assert_eq!(visible, allowed);
             if allowed {

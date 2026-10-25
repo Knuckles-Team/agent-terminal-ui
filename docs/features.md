@@ -131,6 +131,26 @@ Provide an explicit run ID. An unknown operation, incompatible registry or denie
 stays unavailable, with no legacy REST fallback. This current-main contract
 integration does not establish support in an older released Arbora package.
 
+### Flat execution graph (Python)
+
+`/run graph <run_id> [task_id]` reads the separate `runs.execution_graph` operation.
+Provide an explicit run ID, and optionally its root task ID. Arbora resolves an omitted root.
+The screen shows each plan step once and lists `depends_on` edges from predecessor to dependent.
+Use Up/Down to select a step, Tab to reach the scrollable details, R to refresh and Escape to close.
+Selection does not change the chat target or draft.
+
+Topology is complete within the declared plan. Lifecycle data is an incomplete observed prefix.
+The view shows its cursor and whether more events exist. `unobserved` does not mean pending or complete.
+Plan steps are not child agents. Transcripts, child messages and continuation are unavailable.
+Refresh clears old details before reading. Denial or a changed connection/context clears the view.
+Unsupported installed clients fail closed without a legacy request.
+
+The companion native inspector source adds graph mode through `i`, then `g`.
+Its Rust tests, Clippy and compiled-terminal checks remain unrun for this candidate.
+Python mounted tests do not establish native parity or released producer support.
+Nested agents, public records and served end-to-end qualification remain open.
+This slice does not change the existing `/run` event inspector or `/run plan`.
+
 Machine-readable native/generated support is recorded in
 [`capability-coverage.json`](capability-coverage.json).
 

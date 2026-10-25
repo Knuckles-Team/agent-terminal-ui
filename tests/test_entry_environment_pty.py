@@ -16,15 +16,21 @@ from typing import Any
 
 import pytest
 
-from tests.test_installed_operator_entry import installed_entry
+from tests.test_installed_operator_entry import installed_entry as installed_entry
 
 pty = pytest.importorskip("pty")
 termios = pytest.importorskip("termios")
 pyte = pytest.importorskip("pyte")
-pytestmark = pytest.mark.spec("TUI-RUNTIME-R015.42.2")
+pytestmark = pytest.mark.spec(
+    "TUI-RUNTIME-R015.42.2", "TUI-RUNTIME-R008.3", "TUI-RUNTIME-R008.3.1"
+)
 BACKGROUNDS = {
-    "tokyo-night": "1a1b26", "nord": "2e3440", "gruvbox": "282828",
-    "textual-light": "e0e0e0", "unknown-theme": "1a1b26",
+    "tokyo-night": "1a1b26",
+    "nord": "2e3440",
+    "gruvbox": "282828",
+    "textual-light": "e0e0e0",
+    "canopy": "121c17",
+    "unknown-theme": "1a1b26",
 }
 
 
@@ -58,7 +64,9 @@ def watched_log(tmp_path: Path) -> Iterator[tuple[Path, LogOpenProbe]]:
         os.close(probe.fd)
 
 
-def test_log_open_probe_detects_a_counterexample(watched_log: tuple[Path, LogOpenProbe]) -> None:
+def test_log_open_probe_detects_a_counterexample(
+    watched_log: tuple[Path, LogOpenProbe],
+) -> None:
     path, probe = watched_log
     assert not probe.opened()
     assert path.read_text() == "UNBOUND_LOG_SENTINEL\n"
@@ -66,10 +74,14 @@ def test_log_open_probe_detects_a_counterexample(watched_log: tuple[Path, LogOpe
 
 
 class TerminalProbe:
-    def __init__(self, command: list[str], environment: dict[str, str], cwd: Path) -> None:
+    def __init__(
+        self, command: list[str], environment: dict[str, str], cwd: Path
+    ) -> None:
         self.master, slave = pty.openpty()
         termios.tcsetwinsize(slave, (36, 120))
-        self.process = subprocess.Popen(command, stdin=slave, stdout=slave, stderr=slave, env=environment, cwd=cwd)
+        self.process = subprocess.Popen(
+            command, stdin=slave, stdout=slave, stderr=slave, env=environment, cwd=cwd
+        )
         os.close(slave)
         self.screen = pyte.Screen(120, 36)
         self.stream = pyte.Stream(self.screen)
@@ -97,7 +109,12 @@ class TerminalProbe:
         pytest.fail(f"Terminal expectation timed out:\n{self.shown()}")
 
     def colors(self) -> set[str]:
-        return {color for line in self.screen.buffer.values() for cell in line.values() for color in (cell.fg, cell.bg)}
+        return {
+            color
+            for line in self.screen.buffer.values()
+            for cell in line.values()
+            for color in (cell.fg, cell.bg)
+        }
 
     def close(self) -> None:
         if self.process.poll() is None:
@@ -107,18 +124,34 @@ class TerminalProbe:
 
 
 @pytest.mark.parametrize("implementation", ["python", "native"])
-@pytest.mark.parametrize("theme,no_color", [
-    ("tokyo-night", None), ("nord", None), ("gruvbox", None),
-    ("textual-light", None), ("unknown-theme", None), ("nord", ""), ("nord", "1"),
-])
+@pytest.mark.parametrize(
+    "theme,no_color",
+    [
+        ("tokyo-night", None),
+        ("nord", None),
+        ("gruvbox", None),
+        ("textual-light", None),
+        ("canopy", None),
+        ("canopy", "1"),
+        ("unknown-theme", None),
+        ("nord", ""),
+        ("nord", "1"),
+    ],
+)
 def test_installed_startup_theme_and_log_refusal(
-    implementation: str, theme: str, no_color: str | None, tmp_path: Path,
-    installed_entry: tuple[Path, dict[str, str]], watched_log: tuple[Path, LogOpenProbe],
+    implementation: str,
+    theme: str,
+    no_color: str | None,
+    tmp_path: Path,
+    installed_entry: tuple[Path, dict[str, str]],
+    watched_log: tuple[Path, LogOpenProbe],
 ) -> None:
     executable, environment = installed_entry
     binary = os.environ.get("TUI_NATIVE_TEST_BINARY")
     if implementation == "native" and not binary:
-        pytest.skip("Set TUI_NATIVE_TEST_BINARY to a matching compiled native executable")
+        pytest.skip(
+            "Set TUI_NATIVE_TEST_BINARY to a matching compiled native executable"
+        )
     if implementation == "native":
         assert binary is not None and os.access(binary, os.X_OK)
     requests: list[tuple[str, str]] = []
@@ -133,7 +166,14 @@ def test_installed_startup_theme_and_log_refusal(
 
         def do_GET(self) -> None:
             requests.append((self.path, "GET"))
-            self.respond({"api_version": "v1", "registry_digest": "fixture", "ops": [], "capabilities": {"streaming": False}})
+            self.respond(
+                {
+                    "api_version": "v1",
+                    "registry_digest": "fixture",
+                    "ops": [],
+                    "capabilities": {"streaming": False},
+                }
+            )
 
         def do_POST(self) -> None:
             body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
@@ -141,11 +181,28 @@ def test_installed_startup_theme_and_log_refusal(
             if self.path == "/api/enhanced/helpers/list_skills":
                 self.respond([])
                 return
-            self.respond({"jsonrpc": "2.0", "id": body.get("id"), "result": {
-                "kind": "task", "id": "environment-task", "contextId": "environment-context",
-                "status": {"state": "completed"},
-                "artifacts": [{"parts": [{"kind": "text", "text": "Environment fixture ready"}]}],
-            }})
+            self.respond(
+                {
+                    "jsonrpc": "2.0",
+                    "id": body.get("id"),
+                    "result": {
+                        "kind": "task",
+                        "id": "environment-task",
+                        "contextId": "environment-context",
+                        "status": {"state": "completed"},
+                        "artifacts": [
+                            {
+                                "parts": [
+                                    {
+                                        "kind": "text",
+                                        "text": "Environment fixture ready",
+                                    }
+                                ]
+                            }
+                        ],
+                    },
+                }
+            )
 
         def log_message(self, *_args: object) -> None:
             pass
@@ -154,9 +211,17 @@ def test_installed_startup_theme_and_log_refusal(
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     path, probe = watched_log
-    environment.update({"TERM": "xterm-256color", "COLORTERM": "truecolor", "TEXTUAL_ANIMATIONS": "none",
-                        "AGENT_AUTH_MODE": "none", "AGENT_THEME": theme, "AGENT_LOG_FILE": str(path),
-                        "AGENT_URL": f"http://127.0.0.1:{server.server_port}"})
+    environment.update(
+        {
+            "TERM": "xterm-256color",
+            "COLORTERM": "truecolor",
+            "TEXTUAL_ANIMATIONS": "none",
+            "AGENT_AUTH_MODE": "none",
+            "AGENT_THEME": theme,
+            "AGENT_LOG_FILE": str(path),
+            "AGENT_URL": f"http://127.0.0.1:{server.server_port}",
+        }
+    )
     environment.pop("NO_COLOR", None)
     environment.pop("AGENT_TASK_ID", None)
     if no_color is not None:
@@ -171,14 +236,25 @@ def test_installed_startup_theme_and_log_refusal(
     try:
         terminal.wait(lambda: "Environment fixture ready" in terminal.shown())
         colors = terminal.colors()
-        monochrome = all(color == "default" or len(color) == 6 and color[:2] == color[2:4] == color[4:] for color in colors)
-        disabled = no_color is not None if implementation == "python" else bool(no_color)
+        monochrome = all(
+            color == "default"
+            or len(color) == 6
+            and color[:2] == color[2:4] == color[4:]
+            for color in colors
+        )
+        disabled = (
+            no_color is not None if implementation == "python" else bool(no_color)
+        )
         if disabled:
             assert monochrome, colors
         else:
             assert BACKGROUNDS[theme] in colors, colors
         os.write(terminal.master, b"\x16" if implementation == "python" else b"l")
-        refusal = "authenticated host reader is required" if implementation == "python" else "Authenticated host access is required"
+        refusal = (
+            "authenticated host reader is required"
+            if implementation == "python"
+            else "Authenticated host access is required"
+        )
         terminal.wait(lambda: refusal in terminal.shown())
         assert "UNBOUND_LOG_SENTINEL" not in terminal.output
         assert not any(path.startswith("/host/logs") for path, _ in requests)

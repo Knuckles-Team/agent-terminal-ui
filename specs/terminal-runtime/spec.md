@@ -49,7 +49,7 @@ Current delivery and acceptance state for each requirement ID above is recorded 
 
 ## Run observation
 
-`TUI-RUNTIME-R010` and its seven children define the read-only run surface.
+`TUI-RUNTIME-R010` and its inspection children define the read-only run surface.
 The owning requirements, plan and test specification define its producer dependencies and acceptance.
 The surface must distinguish unavailable values from measured zero and aggregate values from per-run values.
 
@@ -91,3 +91,12 @@ The terminal must preserve Arbora authority and must not run the tool locally.
 A server-attested matching preapproval may suppress a permission prompt; a local flag supplies no authority.
 Unavailable producer contracts must leave this mode unavailable without removing existing chat or discovery behavior.
 Success requires the served CLI acceptance and exact producer bindings in plan.md.
+
+## Nested execution explorer
+
+R010.11 through R010.14 extend read-only run inspection to nested execution and dependency navigation.
+R012.7 through R012.9 add separate, capability-gated child messaging and completed-child continuation.
+Existing public-summary and tool-fold acceptance remains unchanged.
+A graph selection supplies no execution authority and does not change the active chat target.
+Arbora owns served identity, authorization and control bindings; Agent Utilities owns run mechanics.
+The terminal must not schedule agents, reconstruct lineage or expose private reasoning.

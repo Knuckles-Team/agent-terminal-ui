@@ -1,9 +1,9 @@
-//! Native presentation tokens from the existing Textual built-in themes.
+//! Native presentation tokens from the existing registered Python themes.
 
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers, MouseEvent, MouseEventKind};
 use ratatui::style::{Color, Style};
 
-const THEMES: [&str; 4] = ["tokyo-night", "nord", "gruvbox", "textual-light"];
+const THEMES: [&str; 5] = ["tokyo-night", "nord", "gruvbox", "textual-light", "canopy"];
 
 pub struct ThemeSelection {
     index: usize,
@@ -20,6 +20,15 @@ impl ThemeSelection {
 
     pub fn style(&self) -> Style {
         presentation_style(THEMES[self.index], if self.no_color { "1" } else { "" })
+    }
+
+    pub fn border_style(&self) -> Style {
+        let style = self.style();
+        if !self.no_color && THEMES[self.index] == "canopy" {
+            style.fg(Color::from_u32(0xadc99f))
+        } else {
+            style
+        }
     }
 
     pub fn key(&mut self, key: KeyEvent) -> bool {
@@ -43,6 +52,8 @@ pub fn accepts_key_event(key: KeyEvent) -> bool {
                 key.code,
                 KeyCode::Up
                     | KeyCode::Down
+                    | KeyCode::Left
+                    | KeyCode::Right
                     | KeyCode::PageUp
                     | KeyCode::PageDown
                     | KeyCode::Home
@@ -58,6 +69,7 @@ pub fn presentation_style(theme: &str, no_color: &str) -> Style {
         "nord" => (0xd8dee9, 0x2e3440),
         "gruvbox" => (0xfbf1c7, 0x282828),
         "textual-light" => (0x1f1f1f, 0xe0e0e0),
+        "canopy" => (0xf1f5eb, 0x121c17),
         _ => (0xa9b1d6, 0x1a1b26),
     };
     Style::new()
@@ -82,7 +94,14 @@ mod tests {
             assert!(viewport.handle(key.code));
         }
         assert_eq!(viewport.offset(), 12);
-        for code in [KeyCode::Up, KeyCode::PageUp, KeyCode::Home, KeyCode::End] {
+        for code in [
+            KeyCode::Up,
+            KeyCode::Left,
+            KeyCode::Right,
+            KeyCode::PageUp,
+            KeyCode::Home,
+            KeyCode::End,
+        ] {
             assert!(accepts_key_event(KeyEvent::new_with_kind(
                 code,
                 KeyModifiers::NONE,
@@ -152,6 +171,7 @@ mod tests {
             ("nord", 0xd8dee9, 0x2e3440),
             ("gruvbox", 0xfbf1c7, 0x282828),
             ("textual-light", 0x1f1f1f, 0xe0e0e0),
+            ("canopy", 0xf1f5eb, 0x121c17),
         ] {
             let style = presentation_style(theme, "");
             let fg = Color::from_u32(foreground);
@@ -181,6 +201,25 @@ mod tests {
                         .iter()
                         .all(|cell| cell.fg == Color::Reset && cell.bg == Color::Reset)
                 );
+            }
+        }
+    }
+
+    // spec: TUI-RUNTIME-R008.3, TUI-RUNTIME-R008.3.1
+    #[test]
+    fn canopy_border_text_meets_contrast_without_changing_other_themes() {
+        for theme in THEMES.into_iter().chain(["unknown"]) {
+            for no_color in ["", "1", "0", "false"] {
+                let themes = ThemeSelection::new(theme, no_color);
+                let border = themes.border_style();
+                if theme != "canopy" || !no_color.is_empty() {
+                    assert_eq!(border, themes.style());
+                    continue;
+                }
+                assert_eq!(border.fg, Some(Color::from_u32(0xadc99f)));
+                assert_eq!(border.bg, themes.style().bg);
+                let (a, b) = (luminance(border.fg.unwrap()), luminance(border.bg.unwrap()));
+                assert!((a.max(b) + 0.05) / (a.min(b) + 0.05) >= 4.5);
             }
         }
     }
@@ -495,7 +534,8 @@ mod viewport_tests {
 mod theme_switch_tests {
     use super::*;
     use crate::{
-        draw_confirmation, draw_viewport, host_log_view::HostLogView, inspector_view::InspectorView,
+        draw_confirmation, draw_task_viewport, host_log_view::HostLogView,
+        inspector_view::InspectorView, public_details_view::PublicDetailsView,
     };
     use ratatui::{Terminal, backend::TestBackend};
     use std::time::Instant;
@@ -505,38 +545,74 @@ mod theme_switch_tests {
     }
 
     // spec: TUI-RUNTIME-R008.2.3.2.1
+    // spec: TUI-RUNTIME-R008.3, TUI-RUNTIME-R008.3.1
     #[test]
     fn runtime_switch_renders_each_palette_in_all_views() {
-        let mut themes = ThemeSelection::new("unknown", "");
         let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
         let mut inspector = InspectorView::default();
         let mut logs = HostLogView::default();
         let mut viewport = Viewport::default();
-        for theme in THEMES.into_iter().chain([THEMES[0]]) {
-            let expected = presentation_style(theme, "");
-            assert_eq!(themes.style(), expected);
-            for view in 0..4 {
-                terminal
-                    .draw(|frame| match view {
-                        0 => draw_viewport(
-                            frame,
-                            "Task: working",
-                            themes.style(),
-                            &mut viewport,
-                            false,
-                        ),
-                        1 => inspector.draw(frame, themes.style(), Instant::now()),
-                        2 => logs.draw(frame, themes.style()),
-                        _ => {
-                            draw_confirmation(frame, "Task: working", themes.style());
+        let mut details = PublicDetailsView::default();
+        for no_color in ["", "1", "0", "false"] {
+            let mut themes = ThemeSelection::new("unknown", no_color);
+            for theme in THEMES.into_iter().chain([THEMES[0]]) {
+                let expected = presentation_style(theme, no_color);
+                assert_eq!(themes.style(), expected);
+                for (width, height) in [(80, 24), (40, 16)] {
+                    terminal.backend_mut().resize(width, height);
+                    terminal.autoresize().unwrap();
+                    for view in 0..4 {
+                        terminal
+                            .draw(|frame| match view {
+                                0 => draw_task_viewport(
+                                    frame,
+                                    "Task: working",
+                                    themes.style(),
+                                    themes.border_style(),
+                                    &mut viewport,
+                                    false,
+                                    &mut details,
+                                ),
+                                1 => inspector.draw(
+                                    frame,
+                                    themes.style(),
+                                    themes.border_style(),
+                                    Instant::now(),
+                                ),
+                                2 => logs.draw(frame, themes.style(), themes.border_style()),
+                                _ => {
+                                    draw_confirmation(
+                                        frame,
+                                        "Task: working",
+                                        themes.style(),
+                                        themes.border_style(),
+                                    );
+                                }
+                            })
+                            .unwrap();
+                        let cell = &terminal.backend().buffer()[(1, 1)];
+                        assert_eq!(cell.fg, expected.fg.unwrap());
+                        assert_eq!(cell.bg, expected.bg.unwrap());
+                        for position in [(0, 0), (1, 0)] {
+                            let cell = &terminal.backend().buffer()[position];
+                            let foreground = if theme == "canopy" && no_color.is_empty() {
+                                Color::from_u32(0xadc99f)
+                            } else {
+                                expected.fg.unwrap()
+                            };
+                            assert_eq!(cell.fg, foreground, "{theme} view {view}");
+                            assert_eq!(cell.bg, expected.bg.unwrap());
+                            assert_ne!(cell.symbol(), " ");
                         }
-                    })
-                    .unwrap();
-                let cell = &terminal.backend().buffer()[(1, 1)];
-                assert_eq!(cell.fg, expected.fg.unwrap());
-                assert_eq!(cell.bg, expected.bg.unwrap());
+                        if !no_color.is_empty() {
+                            assert!(terminal.backend().buffer().content().iter().all(|cell| {
+                                cell.fg == Color::Reset && cell.bg == Color::Reset
+                            }));
+                        }
+                    }
+                }
+                switch(&mut themes);
             }
-            switch(&mut themes);
         }
     }
 
@@ -545,11 +621,22 @@ mod theme_switch_tests {
     fn runtime_switch_preserves_scroll_and_no_color() {
         let status = (0..100).map(|n| format!("row {n}\n")).collect::<String>();
         let mut terminal = Terminal::new(TestBackend::new(40, 10)).unwrap();
+        let mut details = PublicDetailsView::default();
         for no_color in ["", "1", "0", "false"] {
             let mut themes = ThemeSelection::new("gruvbox", no_color);
             let mut viewport = Viewport::default();
             terminal
-                .draw(|frame| draw_viewport(frame, &status, themes.style(), &mut viewport, false))
+                .draw(|frame| {
+                    draw_task_viewport(
+                        frame,
+                        &status,
+                        themes.style(),
+                        themes.border_style(),
+                        &mut viewport,
+                        false,
+                        &mut details,
+                    )
+                })
                 .unwrap();
             viewport.handle(KeyCode::PageDown);
             let offset = viewport.offset();
@@ -557,7 +644,15 @@ mod theme_switch_tests {
                 switch(&mut themes);
                 terminal
                     .draw(|frame| {
-                        draw_viewport(frame, &status, themes.style(), &mut viewport, false)
+                        draw_task_viewport(
+                            frame,
+                            &status,
+                            themes.style(),
+                            themes.border_style(),
+                            &mut viewport,
+                            false,
+                            &mut details,
+                        )
                     })
                     .unwrap();
                 assert_eq!(viewport.offset(), offset);

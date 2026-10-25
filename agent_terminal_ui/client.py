@@ -25,6 +25,7 @@ import re
 import sys
 import uuid
 from collections.abc import AsyncGenerator, Mapping
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote, urlsplit
@@ -38,6 +39,11 @@ from agent_terminal_ui.capabilities import (
     CapabilityPreflight,
     RunCatalog,
     RunEventPage,
+)
+from agent_terminal_ui.execution_graph import (
+    GRAPH_SCHEMA,
+    ExecutionGraph,
+    graph_identifier,
 )
 from agent_terminal_ui.host_logs import HostLogReader as HostLogReader
 from agent_terminal_ui.public_run_events import (
@@ -324,6 +330,51 @@ def _task_state(result: dict[str, Any]) -> str:
     return state
 
 
+def task_turn_usage(
+    result: dict[str, Any], expected_task: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    """Decode only terminal, task/context/run-bound producer measurements."""
+    unavailable = {"scope": "turn"}
+    binding = _public_run_binding(result)
+    expected = _public_run_binding(result if expected_task is None else expected_task)
+    usage = _arbora_metadata(result).get("usage")
+    if (
+        binding is None
+        or binding != expected
+        or _task_state(result) not in _FINAL_STATES
+        or result.get("final") is False
+        or not isinstance(usage, dict)
+        or usage.get("scope") != "turn"
+        or any(
+            usage.get(wire) != binding[key]
+            for wire, key in (
+                ("taskId", "task_id"),
+                ("contextId", "context_id"),
+                ("runId", "run_id"),
+            )
+        )
+    ):
+        return unavailable
+    counts = usage.get("counts")
+    if (
+        not isinstance(counts, dict)
+        or counts.keys()
+        - {"requests", "tool_calls", "input_tokens", "output_tokens", "total_tokens"}
+        or any(
+            type(value) is not int or not 0 <= value <= 9_007_199_254_740_991
+            for value in counts.values()
+        )
+    ):
+        return unavailable
+    return {
+        "scope": "turn",
+        "taskId": binding["task_id"],
+        "contextId": binding["context_id"],
+        "runId": binding["run_id"],
+        "counts": dict(counts),
+    }
+
+
 def normalize_a2a_event(
     result: dict[str, Any], session_id: str
 ) -> list[dict[str, Any]]:
@@ -360,7 +411,9 @@ def normalize_a2a_event(
     events = [status]
     if state in _FAILED_STATES:
         events.append({"type": "error", "message": f"task {state}", **common})
-    events.append({"type": "turn_end", "state": state, **common})
+    events.append(
+        {"type": "turn_end", "state": state, "usage": task_turn_usage(result), **common}
+    )
     return events
 
 
@@ -751,6 +804,8 @@ class AgentClient:
                     event.pop("public_run_binding", None)
                     event.pop("public_task_binding", None)
                     event["public_run_invalid"] = public_binding
+                    if "usage" in event:
+                        event["usage"] = {"scope": "turn"}
                 yield event
             status = result.get("status")
             if isinstance(status, dict) and status.get("state") == "input-required":
@@ -865,6 +920,35 @@ class AgentClient:
         if not isinstance(result, dict) or not isinstance(result.get("value"), dict):
             raise ArboraOperationError("INVALID_ENVELOPE")
         return result["value"]
+
+    @property
+    def read_scope(self) -> tuple[str, int, str]:
+        """Bind protected views to a connection without exposing credentials."""
+        return (
+            self.base_url,
+            id(self._http_client),
+            sha256(
+                json.dumps(self._http_client.headers.multi_items()).encode()
+            ).hexdigest(),
+        )
+
+    async def get_execution_graph(
+        self, run_id: str, *, task_id: str | None = None
+    ) -> ExecutionGraph:
+        """Read one explicit run's authorized, flat plan-step graph."""
+        if not graph_identifier(run_id) or (
+            task_id is not None and not graph_identifier(task_id)
+        ):
+            raise ValueError(
+                "an explicit run ID and optional root task ID are required"
+            )
+        params = {"run_id": run_id, "schema_version": GRAPH_SCHEMA}
+        if task_id is not None:
+            params["task_id"] = task_id
+        result = await self.invoke_op("runs.execution_graph", params)
+        if not isinstance(result, dict):
+            raise ArboraOperationError("INVALID_ENVELOPE")
+        return ExecutionGraph.parse(result.get("value"), run_id, task_id)
 
     async def get_public_run_events(
         self, run_id: str, *, task_id: str, after: int = 0

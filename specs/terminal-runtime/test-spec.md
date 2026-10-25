@@ -130,7 +130,7 @@ No application runtime behavior or user configuration changed.
 | TUI-RUNTIME-R006 | File-level unit test in `tests/test_precommit_hooks.py` | Both sections present | A missing section fails |
 | TUI-RUNTIME-R007 | File-level unit test in `tests/test_docs_layout.py` | Workflow calls pipelines at main | A SHA pin fails |
 | TUI-RUNTIME-R008 | File-level unit test in `tests/test_app_handlers.py` | Default theme and no-colour fallback hold | An unknown theme name falls back, not crashes |
-| TUI-RUNTIME-R008.1 | Production native draw function with Ratatui TestBackend | Resize from 100 to 40 columns preserves wrapped discovery status and complete keyboard help; Tokyo Night tokens render | Nonempty NO_COLOR resets foreground and background; unsupported AGENT_THEME falls back without panic |
+| TUI-RUNTIME-R008.1 | Production native draw function with Ratatui TestBackend. | Resize from 100 to 40 columns preserves wrapped discovery status and complete keyboard help. Tokyo Night tokens render. | Nonempty NO_COLOR resets foreground and background. Unsupported AGENT_THEME falls back without panic. |
 | TUI-RUNTIME-R009 | File-level unit test in `tests/test_docs_layout.py` | Four headings present | A missing heading fails |
 
 ## Cross-terminal presentation inventory
@@ -202,8 +202,8 @@ No benchmark has run for this definition.
 These are acceptance targets, not measured claims. If hardware cannot meet a
 target, revise it with baseline evidence before acceptance. Report raw samples,
 percentile method and failures; do not average away a slow client. Broker trials
-must include broker RSS/CPU in totals and demonstrate at least 20% lower total RSS or
-upstream request count at 16 clients, with no latency regression. Otherwise keep
+must include broker RSS/CPU in totals. At 16 clients, require at least 20%
+lower total RSS or upstream request count, with no latency regression. Otherwise keep
 direct access. Limit each transport subscriber to 128 events and 2 MiB; exceeding
 either produces explicit backpressure/gap handling rather than silent loss.
 
@@ -474,7 +474,7 @@ Permitted fallback preserves message identity and the idempotency key.
 | `TUI-RUNTIME-R015.51` | The client maintenance batch receipt below records adapters, tests, completed gates and residual acceptance. |
 | `TUI-RUNTIME-R015.52` | Fresh bounded client and mounted test execution plus configured all-file maintenance gates; record commands and results below. |
 | `TUI-RUNTIME-R015.53` | Planned `tests/test_source_quality.py::test_source_quality_53` must enter the owning path and prove the requirement. |
-| `TUI-RUNTIME-R015.54` | Planned `tests/test_source_quality.py::test_source_quality_54` must enter the owning path and prove the requirement. |
+| `TUI-RUNTIME-R015.54` | Source-linked assessment below, with the current environment example and production client refusal checked against its claims. Remaining served authority and coding-session requirements stay open. |
 | `TUI-RUNTIME-R015.55` | Run project checks in the quality acceptance v1 matrix. Record the complete tracked-file scope and every finding. See quality acceptance v1 below; this amendment supplies no result receipt. |
 | `TUI-RUNTIME-R015.56` | Measure the full source and test tree against R015.1–R015.7, R015.19–R015.20 and R015.34–R015.35. A changed-file baseline does not prove acceptance. See quality acceptance v1 below; this amendment supplies no result receipt. |
 | `TUI-RUNTIME-R015.57` | Run source, secret and dependency scans. Retain raw reports, database dates and all severities; resolve every actionable finding. See quality acceptance v1 below; this amendment supplies no result receipt. |
@@ -509,7 +509,7 @@ not replace the remaining served parity and performance checks.
 
 | Requirement | Layer and fixture | Expected positive result | Required negative proof |
 |---|---|---|---|
-| TUI-RUNTIME-R012.2 | Rollup of R012.2.1 and R012.2.2 | Both legacy client regression coverage and governed served model choice meet their child criteria | Legacy reads and selection refusal alone cannot close model-choice acceptance |
+| TUI-RUNTIME-R012.2 | Rollup of R012.2.1 and R012.2.2. | Both legacy client regression coverage and governed served model choice meet their child criteria. | Legacy reads and selection refusal alone cannot close model-choice acceptance. |
 | TUI-RUNTIME-R012.2.1 | `tests/test_tui_widgets.py::TestModelConfiguration::test_model_registry_metadata_crosses_client_boundary` and `test_model_registry_failure_does_not_reuse_or_route`; Real AgentClient with HTTP fixtures. | Registry metadata survives authenticated GET /models unchanged. | After success, missing or denied routes, invalid JSON, non-object responses and timeouts raise errors. No stale data or alternate requests. |
 | TUI-RUNTIME-R012.2.2 | Planned served fixture through the model picker, /model and the real client; actual models.list operation from ARBORA-A2A-R016.6 | Discover profiles, send arboraModelProfile preference and display the producer-selected profile from task metadata | When Arbora does not honour the preference, display its different selected profile without local model routing. Legacy reads and selection refusal are not evidence for this child |
 
@@ -840,8 +840,8 @@ transport, native release or full terminal cutover qualification.
 ## Exit-modal keyboard access
 
 Partial evidence for TUI-RUNTIME-R008.2.3.2.2.2.2.2.2:
-`tests/test_exit_confirm_keyboard.py` checks all four arrow keys, cyclic focus,
-Space activation exactly once, and the production Ctrl+D cancellation path.
+`tests/test_exit_confirm_keyboard.py` checks all four arrow keys and cyclic focus.
+It checks Space activation exactly once and the production Ctrl+D cancellation path.
 Space, Enter and N preserve the unfinished composer text and restore focus.
 The arrow and Space cases fail before the handler repair. This bounded change
 does not close full keyboard parity, native presentation, served journeys or
@@ -1495,3 +1495,254 @@ mappings from production source and checks their owning table and execution rece
 It rejects missing or wrong mappings, narrowed commands, missing outcomes and false live-proof claims.
 A fresh combined run passed all 11 enforcement and documentation cases without skips in 1.71 seconds.
 R015.29.2, R015.52 and quality acceptance v1 remain open.
+
+## Environment and tool-guard assessment (R015.54)
+
+Source: [missing-client task at b4e5940](https://github.com/Knuckles-Team/agent-terminal-ui/blob/b4e5940acc4b21df406eeb115c0f422b0b084901/plans/spec-source-history/tasks/fix_missing_client_methods.md).
+The original next step is “Consider implementing quick wins (.env.example, tool guards)”.
+It is a suggestion to assess, not a defined guard implementation contract.
+The source does not identify shared development hooks as the intended tool guards.
+
+- Environment example: available under R015.43. The tracked `.env.example`
+  contains only AGENT_URL and AGENT_THEME defaults and no credential. The real
+  environment factory uses the loopback URL without an Authorization header.
+  The file is not loaded automatically; README.md documents explicit export.
+- Runtime tool guards: refusal only. `AgentClient.invoke_op` rejects approvals.*
+  operations with APPROVAL_UNAVAILABLE before transport. `confirm_plan` refuses
+  unsigned confirmation, including with a caller credential. Local danger
+  classification and approval screens are not proof of served authorization.
+- Remaining acceptance: R001.5 verifies pending display and local refusal, not
+  enabled approvals. R001.3 retains signed exact-plan confirmation acceptance.
+  R011.4 and R011.5 retain diff-before-write
+  and command-before-run acceptance. R002.8.4 retains scoped preapproval refusal.
+  This assessment does not close any of these requirements or enable tool effects.
+
+R015.52 remains separate: its source says “Run self-improvement scripts if available”.
+The existing client receipt is not a new execution of that obligation.
+R015.29.1 covers shared development guards separately; it does not resolve the
+source's undefined “tool guards” suggestion.
+
+Assessment qualification used base `8ef729851afc790174422f3f33c04e9aa347d042`
+and Python 3.12.14 with the current checkout explicitly on PYTHONPATH.
+The following fresh bounded run passed 185 tests without skips in 1.95 seconds:
+
+```bash
+python -m pytest tests/test_source_quality.py tests/test_client.py tests/test_commands.py -q -n 2 -p no:randomly
+```
+
+The assessment test reads the original suggestion from full Git history.
+It applies the actual environment example and checks authenticated production
+client refusal with a recording HTTP transport. Five altered assessments reject
+false guard ownership, granted approval, omitted workspace obligations and
+false completion. This is source-fixture evidence, not live authorization proof.
+
+The complete configured commit-stage `pre-commit run --all-files` passed with
+pre-commit 4.7.0 and the pinned pipelines revision
+`a2dd609d494364daf26fdb3b18abbffa10095993`. The first run failed to create uv's
+default tool directory. Existing writable tool and cache locations resolved that error.
+Hook definitions stayed unchanged. The regression rerun passed 185 tests without
+skips in 1.93 seconds. This does not qualify native builds, installed wheels,
+live services or the complete pre-push stage.
+
+## Nested execution explorer acceptance
+
+All tests below are planned; this specification change supplies no runtime acceptance.
+Retain all earlier source receipts and outstanding served, native and release gates.
+
+| Requirement | Planned proving test | Required counterexamples |
+|---|---|---|
+| TUI-RUNTIME-R010.11 | `tests/test_execution_explorer_contract.py::test_snapshot_identity_and_recovery` | Root task versus step ID, replay-v1 preservation, shared run IDs, foreign owners, unknown versions, replay gaps and stale snapshots. |
+| TUI-RUNTIME-R010.12 | `tests/test_execution_explorer.py::test_nested_navigation` | Parent/child/grandchild, fan-in dependencies, invalid locator, narrow viewport and missing ancestor. |
+| TUI-RUNTIME-R010.13 | `tests/test_execution_explorer.py::test_public_records_and_folds` | Unavailable transcript, repeated and late tool events, private fields, denied refresh and changed node binding. |
+| TUI-RUNTIME-R010.14 | `tests/test_execution_explorer_served.py::test_nested_graph_journey` | Real nested producer, reconnect, concurrent branches, cancellation and two-principal isolation. |
+| TUI-RUNTIME-R012.7 | `tests/test_execution_explorer_controls.py::test_active_child_target` | Wrong target, disabled capability, stale state, duplicate submit and unknown outcome after connection loss. |
+| TUI-RUNTIME-R012.8 | `tests/test_execution_explorer_controls.py::test_completed_child_continuation` | Unsupported history, still-active child, unbound continuation and root-chat fallback. |
+| TUI-RUNTIME-R012.9 | `tests/test_execution_explorer_served.py::test_targeted_child_controls` | Child completion during review, revoked access, cancellation race and sibling isolation. |
+
+The served fixture must actually spawn parent, child and grandchild executions through Agent Utilities and Arbora.
+It must include two parallel children and an explicit fan-in dependency.
+A tree drawn from fabricated events or a screenshot is not producer proof.
+Run identical topology and control scenarios through the Python and native production terminals.
+Record producer and consumer revisions, distribution versions, schema digest, node identities and per-run replay cursors.
+Verify keyboard-only navigation, node selection, public folds, locator reopen and return to the original composer at 40 columns.
+Verify one active-child message reaches only the chosen child, not its parent, grandchild or siblings.
+Complete that child, invoke the separate continuation action and verify the producer-returned continuation identity.
+Disconnect after submission; reconcile without duplicate delivery or a fabricated success.
+Revoke access after successful display and verify stale records and actions disappear.
+Cancel the selected authorized target; verify acknowledgement, eventual state and the producer-defined impact on related executions.
+
+### Flat graph source-contract evidence
+
+`tests/test_execution_graph.py` covers the bounded Python slice of R010.11 and R010.12.
+It mounts the production screen through the command and application entry, with the real client and transport.
+Only the graph schema lookup uses the pinned source fixture; the installed invoker and digest check remain active.
+Coverage includes a 40-column diamond, shared dependencies, keyboard selection, resize and close.
+Negative tests cover identity, topology, evidence, bounds, refusal, credential/context changes and late results.
+The missing-operation regression makes zero network requests, without a fallback or skip.
+Actual installed-SDK qualification remains separate from this source fixture.
+These mounted Python tests do not close R010.11 through R010.14.
+Native compilation, tests and Clippy passed in hosted CI on `612def9`.
+The compiled-terminal journey below must qualify the exact candidate executable.
+Nested and released-stack acceptance also remain required.
+
+## Native flat graph source-contract coverage
+
+The native execution graph module and loopback test file use the actual Arbora
+source-contract fixture. It includes non-ASCII and maximum-length Unicode keys.
+The decoder tests cover typed bounds, exact run/root binding and semantic tuple identity.
+They reject duplicate evidence, cycles, unknown fields and raised child capabilities.
+The public-client tests require registry advertisement and matching digests.
+Missing registration makes no POST.
+Malformed or denied responses do not fall back to legacy routes or direct engine calls.
+
+Inspector TestBackend cases cover the `g` mode switch, Tab selection, 40-column
+scrolling, resize, search isolation, local cancellation and stale replies.
+A deterministic test cancels the awaiting completion future, then resumes its retained read handle. Each
+read is scoped to the full task correlation, immutable client and generation.
+Python source-contract tests check fixture provenance and schema limits only;
+they do not run native code. Hosted native tests and Clippy passed on `612def9`;
+actual compiled-terminal qualification uses the required journey below. R010.11 through
+R010.14 and R012.7 through R012.9 remain open. No older native binary qualifies
+this new graph source, and the held release prerequisite is unchanged.
+
+## Required compiled-native graph PTY journey
+
+`tests/test_native_public_details_pty.py` runs the real binary built by the same
+native CI job. Both public-details and graph journeys must pass without skips.
+The graph fixture serves only loopback registry, task and graph reads; it does
+not advertise `runs.get`. Verify the validated root task/context/run, diamond
+rows, separate edge details, public evidence and unavailable child controls.
+Exercise Tab and Shift+Tab, then resize to 40 by 24 and back.
+Hold a refresh to inspect clearing, return HTTP 403, close/reopen and quit with terminal modes restored.
+Request assertions reject fallback routes, credentials, effects and any step ID
+used as a root task. Each screen expectation and held response has a bounded wait.
+
+The fixture qualifies the compiled terminal and public client path only. It does
+not replace native-service, released producer/SDK or nested-agent acceptance.
+
+## Canopy and spatial presentation acceptance
+
+R008.3 requires explicit Canopy selection, unchanged defaults, all existing
+theme cycles, no-color rules, resize and a 4.5:1 text contrast floor. Exercise
+the mounted Python app and native TestBackend, then the compiled entry point.
+
+R010.12.1 requires stable chain, diamond, disconnected and maximum-size layout;
+pan bounds; selection focus; map/list switching; narrow and search fallback;
+literal hostile labels; redraw stability; and clearing after denial, close,
+refresh or changed binding. Existing transport guards and effect-key isolation
+remain required. Compiled PTY and served qualification are separate gates.
+
+The entry-point matrix in `tests/test_entry_environment_pty.py` includes Canopy
+startup and no-color cases for both clients. It is opt-in locally; the native
+CI job requires all 18 cases and the log-open probe check without skips. Build
+and install the wheel from the same checkout as the native executable. Verify
+isolated import provenance and installed bytes against the wheel, then retain
+source and artifact hashes with JUnit results. CI wiring regressions in
+`tests/test_installed_startup_ci.py` do not qualify the actual matrix. The
+spatial helper and InspectorView tests require compiled native execution.
+`tests/test_native_spatial_graph_pty.py` covers resize, selection, pan, search,
+denial, no-color and local effect isolation through the compiled entry point.
+The native CI job requires both color cases and both existing PTY journeys
+without skips. See the compiled qualification receipt below.
+
+The spatial view labels its edge filter: only the selected step's incident
+dependencies appear. All nodes and exact adjacency lists remain available.
+A buffer regression distinguishes crossed pairs from the fully connected graph.
+Both previously used identical terminal edge cells.
+
+The selected-edge legend identifies graph-local plan-step `depends_on` direction.
+The crossing regression changes selection and checks exact predecessor/dependent lists.
+It also covers no selected card without invented edges. Held horizontal
+arrows share the navigation-only repeat allowance; action repeats remain ignored.
+
+
+## Native resize/input readiness acceptance
+
+R008.4 requires keys queued with resize to arrive without another key.
+Keep the existing unfenced resize, End and Tab assertion. Add a bounded
+controlled case that pauses the child, queues resize and navigation, then
+resumes it. The expected selection must appear without sentinel input.
+Always resume or reap the child during cleanup and retain termios checks.
+
+The first Canopy hosted run passed 184 native tests and Clippy but failed the
+ordinary rapid assertion. A prior graph run passed, so that result was intermittent.
+[Crossterm issue 1126](https://github.com/crossterm-rs/crossterm/issues/1126)
+describes the matching readiness failure. Older-binary diagnostics are not
+current acceptance. R008.4.2 requires repeated compiled runs after the correction.
+
+
+## Canopy compiled qualification receipt (2026-10-24)
+
+Source [8a05dc0](https://github.com/Knuckles-Team/agent-terminal-ui/commit/8a05dc0bd03beb6034ec8ab2bc244bff8cf7ac6b)
+passed [native job 121002855836](https://github.com/Knuckles-Team/agent-terminal-ui/actions/runs/40137776795/job/121002855836):
+185 native tests, Clippy, checkout build and all four required PTY cases.
+No required PTY case skipped. The original rapid resize assertion and six
+controlled combined/split readiness cycles passed without sentinel input.
+Both Canopy color modes passed map/list, selection, resize, focus, search,
+denial and effect-isolation checks. Native buffer tests covered bounds,
+hostile labels and the selected-edge crossing regression.
+
+This qualifies R010.12.1.2 and R008.4.2 for the tested Linux checkout.
+The prior head 6d44a03 failed three PTY cases in run 40134463396.
+Keep that intermittent input failure and fixture error in the evidence history.
+The receipt update also captures real terminal cells and observed colors in
+bounded PTY output. Inspect those screens and repeat the compiled gate before merge.
+Installed palette, cross-terminal, served hierarchy and release qualification remain open.
+
+
+## Ancestor acceptance audit regression (2026-10-24)
+
+The bounded native evidence remains valid. Completing the flat-map child must
+not mark complete hierarchy navigation as qualified. R010.12.2 retains every
+unmet hierarchy criterion; the parent prose remains unchanged.
+
+Existing gate tests assert both bounded and retained children in the hierarchy rollup.
+They keep broad R008, native parity, installed Canopy, R010 and hierarchy acceptance open.
+They also retain R010.14 and verify the bounded native children remain qualified.
+The audit is metadata validation, not evidence for the unmet hierarchy row.
+Bind it only to the existing gate requirement, never to R010.12.2.
+
+## Python bound turn receipt coverage
+
+`TUI-RUNTIME-R012.6.3`: Test terminal task and status normalization, exact task,
+context and run binding, malformed and unknown counters, safe integer bounds,
+zero versus absence, empty counts and failed turns. Mounted status/history
+tests must cover replacement on replay, stale-value clearing, fresh-client
+tasks/get readback, refused reads and close during a pending read. Verify that
+only the existing A2A methods are used and that history never changes the
+active conversation. Resize from wide to 40 by 12 and back without covering
+the footer or losing exact tooltip values. Keep installed producer and
+session/cost acceptance open.
+
+
+## Grouped source integration receipt (2026-10-25)
+
+Source `706cd3661212` integrates Python turn receipts and native Canopy sage on
+main `8eeb2bffa338`. Original source commits are `b89278b8093f` and `995a885f8f62`.
+Production and test files retain their exact bytes. Both plan amendments remain.
+The old generated receipt commits are not copied into this integration.
+
+The combined checkout passes 393 focused Python tests with Python 3.12.14,
+pytest 9.1.1 and Textual 8.2.8. The command uses `pytest -q` and
+`--override-ini addopts=''` with these modules:
+
+- `test_python_turn_usage`, `test_status_line_usage`, `test_status_line_layout`;
+- `test_task_history`, `test_precommit_hooks`, `test_client`;
+- `test_native_task_correlation`, `test_turn_completion`, `test_app_workers`;
+- `test_tui_components`, `test_headless`, `test_canopy_theme`;
+- `test_history_initial_load`, `test_history_navigation`, `test_history_refresh`;
+- `test_theme_keyboard`, `test_installed_startup_ci`;
+- `test_native_execution_graph_contract`;
+- the theme-token and baseline-contrast cases in `test_app_handlers`.
+
+Module names above refer to files under `tests/` with the `.py` extension.
+The configured all-files pre-commit stage and Rust 1.96.0 format check pass.
+Both enhanced spatial PTY cases collect; collection is not execution.
+Imports come from this checkout, not from an installed product qualification.
+
+Fresh native compilation, Rust tests, Clippy, all compiled PTY cases and the
+installed startup matrix remain required for this exact native source.
+Historical two-color receipts do not qualify the new sage rendering.
+R008.3.2 and broader presentation, native parity and hierarchy acceptance stay
+open. R012.6.2 still requires installed producer, served session totals and cost
+acceptance. The full configured pre-push release stage was not run locally.

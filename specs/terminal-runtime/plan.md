@@ -1160,8 +1160,8 @@ Clear staged files with `/clear` or interruption. Send the prompt exactly once.
 R015.32 and R015.33 retain the JSON and Markdown analysis in immutable Git
 history, not in the current source tree or release version configuration.
 The existing Git read path and `.bumpversion.cfg` own this qualification.
-Tests verify the original byte digests and reject modified bytes and version
-registration under either the original or migrated report path.
+Tests verify the original byte digests and reject modified bytes.
+They also reject version registration under the original or migrated report path.
 A full checkout with missing evidence fails. A shallow checkout or source
 export reports unavailable history explicitly; that skip is not acceptance.
 This work restores no report and treats no historical conclusion as a current finding.
@@ -1215,3 +1215,254 @@ at idle. Do not fall back to legacy REST.
 Old clients and servers may refuse the newer operations. Fixture qualification
 against the current public contract does not establish released-stack, native
 or live producer acceptance. R010.6 and the full command matrix remain open.
+### 2026-10-24: Refreshable documentation screenshots
+
+TUI-RUNTIME-R016 adds a local capture command for the Python Textual app.
+The existing R005 documentation-layout obligation remains unchanged.
+Use the production widget tree, fixed synthetic chat content and isolated settings.
+Export SVGs at compact and wide sizes to stable documentation paths. The command
+must support a read-only freshness check. Tests must verify repeatable output and
+that capture does not read private sessions or contact a live service. Label all
+images as demo captures, not native-terminal or live-service qualification.
+
+## Amendment 2026-10-24: environment and tool-guard assessment
+
+R015.54 assesses the two suggestions in the archived missing-client task.
+Its original next step says “Consider implementing quick wins (.env.example, tool guards)”.
+This is an assessment, not acceptance of an unspecified new guard implementation.
+The source does not define “tool guards” or identify shared development hooks.
+Use the existing runtime approval and coding-session requirements for remaining
+permission work; do not infer a new local grant path.
+Record current environment behavior, runtime refusal evidence and the unresolved
+served approval and workspace-effect obligations in the owning test specification.
+
+## Amendment 2026-10-24: nested execution explorer
+
+### Existing scope and reuse
+
+R010 owns run inspection; R012 owns conversational actions.
+R008.2.3.2.2.1 and R012.1.4 retain their delivered public-summary and tool-fold behavior.
+Those consumer tests do not establish nested execution, a served dependency graph or child messaging.
+`GraphTree` currently has no production `add_agent_node` caller.
+`AgentViewScreen` receives no production session inventory, and `ChatModal` has no composer or send action.
+`WorkflowSidebar` presents a flat list, not dependency edges.
+The `/bg` and `/attach` refusals remain until their upstream contracts qualify.
+This amendment introduces no runtime change or release claim.
+
+### Producer contract
+
+Depends-on: [Execution projections](https://github.com/Knuckles-Team/arbora/blob/main/specs/hosted-api-operations/spec.md), [Served child controls](https://github.com/Knuckles-Team/arbora/blob/main/specs/dependency-ordered-release/spec.md)
+
+The owning rows are `ARBORA-OPS-R021.4.8`, `ARBORA-OPS-R021.4.9`, `ARBORA-RELEASE-R003.4.12` and `ARBORA-RELEASE-R003.4.13`.
+Use their released generated schema, not a client-authored operation or guessed payload.
+Preserve existing public replay v1 semantics and decoder invariants.
+Version or capability-negotiate graph, lineage and transcript projections separately; refuse unsupported versions without reinterpreting old events.
+The request `task_id` identifies the root WorkItem/A2A task.
+The event `task_id` identifies a run-local step and must never replace that root identifier.
+The producer defines each node key as `(run_id, node_kind, local_id)`.
+A node key, trace reference, plan identifier or agent name grants no chat authority.
+The producer supplies the owner binding and any conversation or target binding separately.
+Current shared child `run_id` values alone do not distinguish executions or prove a child mailbox.
+
+Snapshots carry a schema version, covered cursor, completeness and explicit edge kinds.
+Nested runs use per-run cursor maps, not an invented global order.
+Apply updates only within their validated snapshot and owner binding.
+Recover gaps through the producer's resnapshot path; never infer missing nodes or lifecycle transitions.
+Label partial, unavailable, denied and available-empty graphs distinctly.
+Bound rendered nodes and records through producer pagination and local viewport limits.
+A truncated graph must disclose its partial scope.
+
+### Production attachment points
+
+| Existing path | Planned extension |
+|---|---|
+| `commands.py:1117` `cmd_agents` -> `AgentViewScreen` | Open the served execution explorer rather than claim a local session inventory. |
+| `screens/main.py:96` -> `GraphTree`; `app.py:975` -> `ChatModal` | Replace supplied-message inspection with validated node selection and public record reads. |
+| `client.py:802` `invoke_op`; `client.py:865` `get_public_run_events` | Consume registered graph, record and control contracts through the same transport. |
+| `native/agent-terminal-ui/src/main.rs:459` -> `inspector_view.rs:236` `draw` | Render the same contract, identity checks and accessible navigation without another execution model. |
+
+These are planned attachments, not claims that production callers already reach the new behavior.
+The existing generated-client admission remains authoritative.
+No direct engine access, local agent runner, scheduler, mailbox or transcript store is added.
+
+### Navigation and public detail
+
+Display hierarchy edges labelled `spawned_child` separately from dependency edges labelled `depends_on`.
+A shared dependency may have more than one incoming edge without acquiring invented spawn parents.
+Node selection opens details. An explicit chat action selects a target only after capability validation.
+Keep the root conversation draft intact while inspecting children.
+A typed locator contains the root binding and node key, never transcript text or credentials.
+Reopening must reauthorize the locator before reading protected details.
+Breadcrumbs follow explicit hierarchy edges; dependency navigation retains a separate return path.
+Support keyboard selection, ancestor return and a searchable adjacency list without relying on color or mouse input.
+At 40 columns, the list and detail views must retain all navigation and control actions.
+Retain focus, scroll and fold choice through resize and valid replay.
+
+Public records may include model summaries, permitted tool arguments/results and user-visible conversation turns.
+Raw tool arguments/results are not public unless the producer explicitly marks their visibility.
+Display each record under its producer-issued node and event identity.
+Absent transcript capability means unavailable history, not an empty successful conversation.
+Unknown fields and private reasoning must not appear.
+Render untrusted control sequences inertly through the existing literal-display safeguards.
+
+### Targeted actions and failure states
+
+`can_read_events`, `can_read_transcript`, `can_message_active` and `can_continue_completed` default to false.
+Capabilities describe availability; the backend must authorize every request again.
+`Message active child` and `Continue completed child` are distinct actions with distinct producer bindings.
+Never pass a step ID, span ID or graph key as the existing root `task_id` argument.
+A continuation returns its own authoritative identity and history relationship without rewriting the completed child.
+Unsupported actions display an explicit reason and make zero effect requests.
+Retire target reviews after selection, principal, lifecycle or capability changes.
+A lost response remains unknown; reconnect must reconcile the original operation before any retry.
+Cancellation uses only an admitted cancellation target and reports acknowledgement separately from terminal state.
+The backend defines cancellation scope; the client must not infer recursive cancellation from a drawn subtree.
+
+## Amendment: bounded flat native graph (2026-10-24)
+
+This source-only slice contributes to R010.11 and R010.12 without closing them.
+Reuse the native inspector and its registry-backed run transport. The `g` key
+switches between the run summary and an independent `runs.execution_graph` read.
+A validated task, context and run binding and an immutable client identity scope
+each read. Refresh, close, refusal and binding changes clear graph data and node
+selection. Abort outstanding reads and reject stale generations.
+
+Admit only `arbora-execution-graph-v1`, with the producer's bounded flat plan
+steps, dependency edges and public event evidence. Parse the JSON tuple keys by
+value so Unicode escaping does not change identity. Reject private fields,
+duplicate identities or evidence, cycles, dangling edges and raised child
+capabilities. Display one row per step, separate predecessor and dependent lists,
+and explicit incomplete lifecycle coverage. Tab and Shift+Tab select steps;
+existing scroll and search controls remain available at 40 columns.
+
+Use the actual producer schema and Unicode and diamond fixtures in native tests.
+Loopback transport tests exercise the real public client and registry refusal;
+TestBackend tests cover input, resizing and protected-state invalidation. Native
+compilation, Clippy and a compiled terminal journey remain required before native
+qualification. These tests do not prove nested execution, transcripts, child
+messaging, a released producer, or the held release prerequisite.
+
+## Amendment: bounded flat Python graph (2026-10-24)
+
+R010.11 and R010.12 start with `/run graph <run_id> [task_id]` in the Python terminal.
+The command requires an explicit run ID. Only Arbora can resolve an omitted root task ID.
+The existing generated client reads `runs.execution_graph` with schema `arbora-execution-graph-v1`.
+Display each declared plan step once, with explicit predecessor-to-dependent edges and keyboard selection.
+Display the observed lifecycle prefix, cursor, unobserved steps and unavailable child actions.
+Clear protected data before refresh, after refusal and when client, context or selection changes.
+Do not infer child agents, transcripts, root identities or lifecycle completion from this flat graph.
+Python mounted source-contract tests qualify this consumer slice, not installed producer support or served acceptance.
+Native graph source is present in the companion amendment.
+Native compilation, Rust tests and Clippy passed in hosted CI on `612def9`.
+Compiled-terminal qualification still requires the exact-checkout PTY journey below.
+Nested execution, public records and released-stack proof remain open.
+This slice leaves existing `/run` behavior and its separate canonical-read migration unchanged.
+
+## Amendment: compiled-native flat graph journey (2026-10-24)
+
+Extend the existing native public-details PTY harness for R010.11 and R010.12.
+The native CI job builds its checkout, then runs both terminal journeys with that
+explicit executable. Pin the terminal decoder in the test extra and locked environment.
+Missing prerequisites, an absent executable or a skipped journey fail the job.
+
+Use a bounded synthetic loopback Arbora fixture and the actual producer diamond.
+Read a real task correlation before opening `i`, then `g`. Check one row per step,
+predecessors, dependents, evidence, keyboard selection and 40-column resizing.
+Hold a refresh until old graph data and selection clear, then test denied reads,
+close/reopen and quit with terminal restoration. Assert exact root-bound graph
+parameters, anonymous reads and no effect or fallback requests.
+
+This is compiled client/terminal proof, not a production Arbora service or
+released-stack receipt. Nested execution and broad acceptance rows remain open.
+
+## Amendment 2026-10-24: Canopy and spatial flat-DAG presentation
+
+Extend existing theme registration and native presentation tokens. Canopy is an
+explicit option, not a replacement default. Adapt the nature palette to opaque
+terminal colors and stable borders. Do not add blur, transparency or animation.
+
+Add a small presentation-only layout for the validated flat ExecutionGraph.
+Use deterministic dependency layers and source order within each layer. Reuse
+InspectorView, its selected step and its authority and lifecycle guards. Keep
+the full accessible list as the default; a local key selects the spatial view.
+Narrow terminals and text search use the list. Selection focus and bounded pan
+make large graphs readable without physics or persistent background updates.
+
+The map adds no producer, transport, child interaction or dependency changes.
+The readiness amendment below changes only the native input backend closure.
+Keep R008, R010.12 and R010.14 open. Local fixtures do not prove compiled
+PTY behavior, served hierarchy parity or release performance.
+
+Separate source implementation from compiled acceptance in child rows.
+R008.3.2 and R010.12.1.2 retain every pending parent criterion. Generated
+source bindings are not evidence that a native executable or PTY test ran.
+
+
+## Amendment 2026-10-24: resize/input readiness
+
+The first Canopy hosted run passed 184 native tests and Clippy, but failed the
+existing rapid resize/navigation PTY assertion. A previous run had passed it.
+This intermittent result does not establish reliable input delivery.
+
+[Crossterm issue 1126](https://github.com/crossterm-rs/crossterm/issues/1126)
+describes lost readiness after simultaneous resize and terminal input.
+Use the existing version's supported `use-dev-tty` backend, not a renderer or
+application-input workaround. Keep the locked closure and terminal ownership
+explicit. Preserve the ordinary rapid assertion and add a bounded controlled
+case that queues resize and input together. Send no sentinel to release input.
+
+R008.4.1 records the source correction. R008.4.2 requires repeated current
+compiled PTY evidence. An older executable is useful only for diagnosis.
+
+## Amendment 2026-10-24: installed startup CI qualification
+
+Extend the existing native CI job after its compiled PTY journeys. Build the
+Python wheel from the same checkout and replace only the editable project in
+the locked test environment. Verify the isolated import, console entry point,
+distribution metadata and installed file hashes against that wheel from
+outside the checkout. Record source, wheel and native executable hashes.
+
+Require all 18 startup cases and the log-open probe check without skips. Retain
+the result and provenance receipts. This gate wiring provides no passing receipt;
+R008.3.2 remains open until the matching hosted job passes. Cross-terminal,
+served-service and release qualification remain separate.
+
+## Amendment 2026-10-24: retain hierarchy acceptance in rollups
+
+Completing the bounded flat-map child must not close complete hierarchy acceptance.
+R010.12.2 retains every unmet parent criterion in the generated rollup.
+Keep the original parent requirement and bounded native evidence unchanged.
+
+Extend the existing gate tests with an ancestor-state audit. Check the full
+R008 and R010 paths, their retained acceptance, and the qualified bounded children.
+Future broad acceptance requires its own evidence and an explicit audit update.
+No terminal runtime or dependency change belongs in this correction.
+
+## Amendment 2026-10-25: Python bound turn receipts
+
+R012.6.3 consumes the existing metadata.arbora.usage receipt. Reuse the client's
+public task/run binding checks and normalized turn_end path. Display current turn
+measurements in StatusLine and all five counters in HistoryScreen after a bound
+tasks/get read. Readback does not change the active conversation or resume it.
+Invalid or absent receipts clear older values without hiding valid replies.
+Replays replace measurements, with no local sum or pricing calculation.
+Narrow status summaries retain exact counters in the existing tooltip and history.
+
+Arbora supplies receipt authority. The TUI owns only validation and display.
+The native receipt row R012.6.1 and tenant usage.read path remain unchanged.
+R012.6.2 stays open for served session totals, cost and complete producer
+acceptance; source and HTTP fixtures cannot establish that acceptance.
+
+## Amendment 2026-10-25: visible native Canopy sage
+
+R008.3.1 must render sage, not only define a token. Extend ThemeSelection with
+a border style and apply it to the existing task, inspector, map, log and
+cancellation frames. Use Python's sage `#ADC99F` for borders and their titles.
+Keep stone `#F1F5EB` body text on dark green `#121C17`. Preserve every existing
+theme, the default, F6, nonempty NO_COLOR, viewport and authority guard.
+
+Native buffer tests must check visible cells and the 4.5:1 contrast floor.
+The compiled spatial PTY must assert all three colors and no-color resets.
+Fresh native compilation, PTY and installed startup evidence remains required
+under R008.3.2. Earlier two-color receipts do not qualify this source change.
+Broad presentation, native parity and served acceptance remain open.

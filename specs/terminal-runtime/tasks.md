@@ -154,7 +154,7 @@ Record deferred validation as deferred, never passed.
 
 - [ ] **TUI-RUNTIME-R010.4.1:** Wire the Python current-plan command and expiring read-only view.
 - [ ] **TUI-RUNTIME-R012.4.2:** Wire fleet and tenant usage reads; preserve unavailable and pagination boundaries.
-- [ ] **TUI-RUNTIME-R004.1:** Consolidate spec checks while preserving stages and trailer fallback.
+- [x] **TUI-RUNTIME-R004.1:** Consolidate spec checks while preserving stages, trailer fallback and retained acceptance boundaries.
 - [ ] **TUI-RUNTIME-R012.4.1:** Refuse unavailable management command families before transport.
 
 - [ ] **TUI-RUNTIME-R004.2:** Preserve blocking spec coverage and wire repository checks at their shared-policy stages.
@@ -223,7 +223,7 @@ Record deferred validation as deferred, never passed.
 - [x] **TUI-RUNTIME-R015.51:** The owning client contract must record the method implementation and its acceptance evidence. Source obligation: `missing-client-methods next step 1`.
 - [ ] **TUI-RUNTIME-R015.52:** The repository must run available client maintenance checks. Source obligation: `missing-client-methods next step 2`.
 - [x] **TUI-RUNTIME-R015.53:** Restore Alt+Shift+T theme cycling on the main screen. Mounted tests cover every registered theme, wraparound, composer focus and text, and no-color preservation. Source obligation: `missing-client-methods next step 3`.
-- [ ] **TUI-RUNTIME-R015.54:** The terminal must assess the remaining environment-example and tool-guard obligations. Source obligation: `missing-client-methods next step 4`.
+- [x] **TUI-RUNTIME-R015.54:** The terminal must assess the remaining environment-example and tool-guard obligations. Source obligation: `missing-client-methods next step 4`.
 - [ ] **TUI-RUNTIME-R015.55:** The repository must pass project metadata, layout and public-surface checks under quality acceptance v1. Source obligation: `CHECKLIST non-FR checkbox 44`.
 - [ ] **TUI-RUNTIME-R015.56:** Terminal source must meet the shared structural limits under quality acceptance v1. Source obligation: `CHECKLIST non-FR checkbox 45`.
 - [ ] **TUI-RUNTIME-R015.57:** Terminal source and locked dependencies must pass actual security scans under quality acceptance v1. Source obligation: `CHECKLIST non-FR checkbox 46`.
@@ -302,3 +302,40 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R012.4.1:** Review named pre-transport refusal for legacy config, resources and maintenance commands.
 
 - [ ] **TUI-RUNTIME-R012.4.3.1:** Review composer-focus restoration after `/focus` while preserving Ctrl+B sidebar keyboard navigation.
+
+## Nested execution explorer
+
+Complete producer contracts and released client availability before consumer effects.
+Existing inspection, presentation and daily-workflow obligations remain open where their evidence is incomplete.
+
+- [ ] **TUI-RUNTIME-R010.11:** Validate authoritative node bindings, snapshots and ordered updates in both clients.
+- [ ] **TUI-RUNTIME-R010.12:** Wire hierarchy, dependency navigation, locators and narrow-screen keyboard access.
+- [ ] **TUI-RUNTIME-R010.13:** Reuse public detail folds for node-bound records and transcripts.
+- [ ] **TUI-RUNTIME-R010.14:** Qualify nested production journeys against the released producer.
+- [ ] **TUI-RUNTIME-R012.7:** Wire explicitly targeted active-child messaging with capability refusal.
+- [ ] **TUI-RUNTIME-R012.8:** Wire completed-child continuation as a separate producer-owned action.
+- [ ] **TUI-RUNTIME-R012.9:** Qualify targeted delivery, continuation, reconnect and cancellation through both terminals.
+
+## Canopy presentation slice
+
+- [ ] **TUI-RUNTIME-R008.3:** Add and qualify the optional Canopy palette in both existing theme systems. Preserve all existing presentation obligations.
+- [x] **TUI-RUNTIME-R010.12.1:** Add and qualify a bounded spatial flat-DAG view. Retain full R010.12 hierarchy and R010.14 served acceptance.
+
+- [x] **TUI-RUNTIME-R008.3.1:** Review the optional palette source and local mounted evidence.
+- [ ] **TUI-RUNTIME-R008.3.2:** Complete compiled and installed Canopy qualification without skips.
+- [x] **TUI-RUNTIME-R010.12.1.1:** Review the spatial layout, controls and authored native tests.
+- [x] **TUI-RUNTIME-R010.12.1.2:** Complete exact-source native and real PTY spatial qualification.
+
+
+## Native resize/input readiness
+
+- [x] **TUI-RUNTIME-R008.4.1:** Select the existing supported input backend and lock its dependency closure. Bind source checks and the controlled regression.
+- [x] **TUI-RUNTIME-R008.4.2:** Repeat exact compiled rapid and controlled resize/input journeys. Preserve all existing PTY assertions and terminal restoration.
+
+
+## Retained acceptance rollup correction
+
+- [ ] **TUI-RUNTIME-R010.12.2:** Complete all remaining hierarchy navigation criteria. Bounded flat-map proof does not close this task.
+- [x] **TUI-RUNTIME-R008.4:** Qualify bounded native resize/input delivery in the tested Linux checkout. Broader native parity remains open.
+
+- [x] **TUI-RUNTIME-R012.6.3:** Decode and display bound Python turn receipts through the existing status line and read-only task history. Retain session, cost and installed producer acceptance under R012.6.2.

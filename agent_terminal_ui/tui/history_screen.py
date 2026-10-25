@@ -11,7 +11,8 @@ from textual.screen import ModalScreen
 from textual.widgets import DataTable, Label, Static
 from textual.worker import get_current_worker
 
-from agent_terminal_ui.client import A2ATransportError, AgentClient
+from agent_terminal_ui.client import A2ATransportError, AgentClient, task_turn_usage
+from agent_terminal_ui.tui.status_line import turn_usage_text
 
 
 def task_reply(task: dict[str, Any]) -> str:
@@ -64,7 +65,9 @@ class HistoryScreen(ModalScreen[None]):
     def compose(self) -> ComposeResult:
         with Vertical(id="history-dialog"):
             yield Label("Task history (read-only)")
-            yield Label("Task replies only. Prior user turns and resume unavailable.")
+            yield Label(
+                "Replies and turn usage. Prior user turns and resume unavailable."
+            )
             yield DataTable(id="history-table")
             yield Label(
                 "Enter: read reply | P: previous | N: next page | "
@@ -75,6 +78,7 @@ class HistoryScreen(ModalScreen[None]):
                 yield Static(
                     "Select a task to read its reply.", id="history-reply", markup=False
                 )
+                yield Static("", id="history-usage", markup=False)
 
     def on_mount(self) -> None:
         table = self.query_one(DataTable)
@@ -87,6 +91,7 @@ class HistoryScreen(ModalScreen[None]):
     def _render_page(self) -> None:
         table = self.query_one(DataTable)
         table.clear()
+        self.query_one("#history-usage", Static).update("")
         for task in self.page["tasks"]:
             table.add_row(
                 Text(str(task["status"].get("timestamp") or "Unavailable")),
@@ -185,14 +190,22 @@ class HistoryScreen(ModalScreen[None]):
             return
         selected = self.page["tasks"][event.cursor_row]
         self._reading = True
+        worker = get_current_worker()
         reply = self.query_one("#history-reply", Static)
+        usage = self.query_one("#history-usage", Static)
+        usage.update(turn_usage_text({}))
         reply.update("Reading task reply...")
         try:
             task = await self.client.get_history_task(
                 selected["id"], selected["contextId"]
             )
+            if worker.is_cancelled or not self.is_mounted:
+                return
             reply.update(task_reply(task))
+            usage.update(turn_usage_text(task_turn_usage(task, selected)))
         except (httpx.HTTPError, A2ATransportError, ValueError):
+            if worker.is_cancelled or not self.is_mounted:
+                return
             reply.update("Task reply unavailable.")
         finally:
             self._reading = False

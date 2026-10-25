@@ -9,7 +9,9 @@ Concept: AU-018 (TUI Status Line)
 """
 
 import math
+from typing import Any
 
+from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Horizontal
 from textual.widgets import Static
@@ -22,6 +24,8 @@ class StatusLine(Horizontal):
     including agent processing status and configured operational mode,
     using Textual design tokens for theme consistency.
     """
+
+    _turn_usage: dict[str, Any] | None = None
 
     DEFAULT_CSS = """
     StatusLine {
@@ -125,9 +129,35 @@ class StatusLine(Horizontal):
         """Replace token and cost measurements, preserving unavailable fields.
 
         Args:
-            usage: A dictionary containing 'total_tokens' and 'estimated_cost_usd'.
+            usage: A decoded turn receipt or legacy token/cost measurements.
         """
         values = usage if isinstance(usage, dict) else {}
+        widget = self.query_one("#status-tokens", Static)
+        self._turn_usage = values if values.get("scope") == "turn" else None
+        if self._turn_usage is not None:
+            counts = values.get("counts")
+            summary = "Turn usage: unavailable"
+            if isinstance(counts, dict):
+                summary = "Turn tokens: " + ", ".join(
+                    f"{counts.get(key, 'unavailable')} {label}"
+                    for key, label in (
+                        ("input_tokens", "in"),
+                        ("output_tokens", "out"),
+                        ("total_tokens", "total"),
+                    )
+                )
+            summary += " | Session usage: unavailable | Cost: unavailable"
+            if self.size.width < 60:
+                total = (
+                    counts.get("total_tokens", "unavailable")
+                    if isinstance(counts, dict)
+                    else "unavailable"
+                )
+                summary = f"Turn tokens: {total}"
+            widget.update(Text(summary, style="dim"))
+            widget.tooltip = turn_usage_text(values)
+            return
+        widget.tooltip = None
         tokens = values.get("total_tokens")
         cost = values.get("estimated_cost_usd")
         tokens_text = "tokens unavailable"
@@ -150,6 +180,11 @@ class StatusLine(Horizontal):
         )
         self.query_one("#status-tokens", Static).update(f"[dim]{usage_text}[/dim]")
 
+    def on_resize(self) -> None:
+        """Keep narrow turn summaries bounded while retaining exact details."""
+        if self._turn_usage is not None:
+            self.update_usage(self._turn_usage)
+
     def update_model(self, model_name: str) -> None:
         """Update the displayed model name.
 
@@ -170,3 +205,22 @@ def _is_valid_usage_number(value: object) -> bool:
         return value >= 0 and math.isfinite(value)
     except OverflowError:
         return False
+
+
+def turn_usage_text(usage: dict[str, Any]) -> str:
+    """Render a decoded turn receipt without deriving session totals or cost."""
+    counts = usage.get("counts")
+    lines = ["Turn usage: unavailable"]
+    if isinstance(counts, dict):
+        lines = ["Turn usage:"]
+        lines.extend(
+            f"{label}: {counts.get(key, 'unavailable')}"
+            for key, label in (
+                ("requests", "Requests"),
+                ("tool_calls", "Tool calls"),
+                ("input_tokens", "Input tokens"),
+                ("output_tokens", "Output tokens"),
+                ("total_tokens", "Total tokens"),
+            )
+        )
+    return "\n".join([*lines, "Session usage: unavailable", "Cost: unavailable"])
