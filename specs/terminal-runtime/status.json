@@ -2480,7 +2480,9 @@
       "id": "TUI-RUNTIME-R008.3",
       "title": "Add an optional Canopy palette",
       "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "landed_in": [
+        "489292f90ac6"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/inspector_view.rs:936",
         "native/agent-terminal-ui/src/presentation.rs:208",
