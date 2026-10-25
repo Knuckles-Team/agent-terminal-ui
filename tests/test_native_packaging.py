@@ -23,7 +23,8 @@ class NativePackagingTests(unittest.TestCase):
     def test_binary_only_metadata(self):
         project = tomllib.loads((ROOT / "pyproject.toml").read_text())
         self.assertEqual(project["project"]["name"], "tuig")
-        self.assertEqual(project["project"]["version"], "2.3.3")
+        version = project["project"]["version"]
+        self.assertRegex(version, r"^\d+\.\d+\.\d+$")
         self.assertEqual(project["project"]["dependencies"], [])
         self.assertNotIn("scripts", project["project"])
         self.assertEqual(project["tool"]["maturin"]["bindings"], "bin")
@@ -34,6 +35,9 @@ class NativePackagingTests(unittest.TestCase):
         self.assertEqual([item["name"] for item in cargo["bin"]], ["tuig"])
 
     def test_rejects_python_launcher_and_dependencies(self):
+        version = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"][
+            "version"
+        ]
         for extra, dependencies, executable in [
             ("", "", b"\x7fELFfixture"),
             ("agent_terminal_ui/__init__.py", "", b"\x7fELFfixture"),
@@ -47,10 +51,11 @@ class NativePackagingTests(unittest.TestCase):
                     wheel = Path(directory) / "fixture.whl"
                     with zipfile.ZipFile(wheel, "w") as archive:
                         archive.writestr(
-                            "tuig-2.3.3.data/scripts/tuig", executable
+                            f"tuig-{version}.data/scripts/tuig",
+                            executable,
                         )
                         archive.writestr(
-                            "tuig-2.3.3.dist-info/METADATA",
+                            f"tuig-{version}.dist-info/METADATA",
                             "Name: tuig\n" + dependencies,
                         )
                         if extra:
