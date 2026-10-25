@@ -229,12 +229,7 @@
     "TUI-RUNTIME-R008.4",
     "TUI-RUNTIME-R008.4.1",
     "TUI-RUNTIME-R008.4.2",
-    "TUI-RUNTIME-R012.6.3",
-    "TUI-RUNTIME-R012.10",
-    "TUI-RUNTIME-R012.10.1",
-    "TUI-RUNTIME-R012.10.2",
-    "TUI-RUNTIME-R012.10.3",
-    "TUI-RUNTIME-R012.10.4"
+    "TUI-RUNTIME-R012.6.3"
   ],
   "requirements": [
     {
@@ -265,11 +260,11 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:540",
-        "tests/test_client.py:560",
-        "tests/test_client.py:579",
-        "tests/test_client.py:622",
-        "tests/test_client.py:655"
+        "tests/test_client.py:538",
+        "tests/test_client.py:558",
+        "tests/test_client.py:577",
+        "tests/test_client.py:620",
+        "tests/test_client.py:653"
       ]
     },
     {
@@ -306,9 +301,9 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:210",
-        "tests/test_client.py:222",
-        "tests/test_client.py:246"
+        "tests/test_client.py:208",
+        "tests/test_client.py:220",
+        "tests/test_client.py:244"
       ]
     },
     {
@@ -319,11 +314,11 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:717",
-        "tests/test_client.py:750",
-        "tests/test_client.py:773",
-        "tests/test_client.py:787",
-        "tests/test_client.py:810"
+        "tests/test_client.py:715",
+        "tests/test_client.py:748",
+        "tests/test_client.py:771",
+        "tests/test_client.py:785",
+        "tests/test_client.py:808"
       ]
     },
     {
@@ -335,9 +330,9 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:590",
-        "tests/test_client.py:606",
-        "tests/test_commands.py:740"
+        "tests/test_client.py:588",
+        "tests/test_client.py:604",
+        "tests/test_commands.py:703"
       ]
     },
     {
@@ -349,8 +344,8 @@
         "d309979d133f"
       ],
       "verified_by": [
-        "tests/test_client.py:871",
-        "tests/test_commands.py:771",
+        "tests/test_client.py:869",
+        "tests/test_commands.py:734",
         "tests/test_import_guard.py:46",
         "tests/test_import_guard.py:53",
         "tests/test_import_guard.py:63"
@@ -368,15 +363,16 @@
       "title": "Terminal chat transport is reconciled with the current Arbora boundary",
       "delivery_state": "SPECIFIED",
       "landed_in": [
+        "2385409cff2d",
         "d2b5cea055c8",
         "d309979d133f"
       ],
       "verified_by": [
         "tests/test_client.py:146",
-        "tests/test_client.py:442",
-        "tests/test_client.py:466",
-        "tests/test_client.py:494",
-        "tests/test_client.py:937"
+        "tests/test_client.py:440",
+        "tests/test_client.py:464",
+        "tests/test_client.py:492",
+        "tests/test_client.py:935"
       ],
       "rollup_of": [
         "TUI-RUNTIME-R002.1",
@@ -568,7 +564,9 @@
       "title": "Run operation wiring",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [
+        "tests/test_run_inspector_contract.py:25"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R010.2",
@@ -1217,8 +1215,7 @@
         "TUI-RUNTIME-R012.6",
         "TUI-RUNTIME-R012.7",
         "TUI-RUNTIME-R012.8",
-        "TUI-RUNTIME-R012.9",
-        "TUI-RUNTIME-R012.10"
+        "TUI-RUNTIME-R012.9"
       ]
     },
     {
@@ -1255,10 +1252,10 @@
         "3ea65009beab"
       ],
       "verified_by": [
-        "tests/test_mounted_command_matrix.py:490",
-        "tests/test_mounted_command_matrix.py:585",
-        "tests/test_tui_widgets.py:877",
-        "tests/test_tui_widgets.py:914"
+        "tests/test_mounted_command_matrix.py:545",
+        "tests/test_mounted_command_matrix.py:640",
+        "tests/test_tui_widgets.py:872",
+        "tests/test_tui_widgets.py:909"
       ]
     },
     {
@@ -1300,7 +1297,7 @@
         "b0cc25d210bc"
       ],
       "verified_by": [
-        "tests/test_mounted_command_matrix.py:552",
+        "tests/test_mounted_command_matrix.py:607",
         "tests/test_unavailable_commands.py:12"
       ]
     },
@@ -1323,9 +1320,9 @@
         "4a0636949d36"
       ],
       "verified_by": [
-        "tests/test_client.py:261",
-        "tests/test_client.py:404",
-        "tests/test_commands.py:246"
+        "tests/test_client.py:259",
+        "tests/test_client.py:402",
+        "tests/test_commands.py:244"
       ]
     },
     {
@@ -1334,11 +1331,11 @@
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [
-        "tests/test_client.py:298",
-        "tests/test_client.py:322",
-        "tests/test_client.py:350",
-        "tests/test_client.py:369",
-        "tests/test_client.py:388"
+        "tests/test_client.py:296",
+        "tests/test_client.py:320",
+        "tests/test_client.py:348",
+        "tests/test_client.py:367",
+        "tests/test_client.py:386"
       ]
     },
     {
@@ -1418,8 +1415,8 @@
       ],
       "verified_by": [
         "tests/test_command_completion_contract.py:9",
-        "tests/test_mounted_command_matrix.py:449",
-        "tests/test_mounted_command_matrix.py:608",
+        "tests/test_mounted_command_matrix.py:504",
+        "tests/test_mounted_command_matrix.py:663",
         "tests/test_registered_command_contract.py:19"
       ]
     },
@@ -1679,8 +1676,8 @@
         "2f8561f36c43"
       ],
       "verified_by": [
-        "tests/test_operator_documentation.py:130",
-        "tests/test_operator_documentation.py:135"
+        "tests/test_operator_documentation.py:134",
+        "tests/test_operator_documentation.py:139"
       ]
     },
     {
@@ -2407,11 +2404,11 @@
         "ad7aa10ab43c"
       ],
       "verified_by": [
-        "tests/test_client.py:1005",
-        "tests/test_client.py:1038",
-        "tests/test_client.py:1068",
-        "tests/test_client.py:1095",
-        "tests/test_client.py:985"
+        "tests/test_client.py:1003",
+        "tests/test_client.py:1036",
+        "tests/test_client.py:1066",
+        "tests/test_client.py:1093",
+        "tests/test_client.py:983"
       ]
     },
     {
@@ -2817,47 +2814,6 @@
       "verified_by": [
         "tests/test_python_turn_usage.py:19"
       ]
-    },
-    {
-      "id": "TUI-RUNTIME-R012.10",
-      "title": "Edit and fork a conversation in both terminals",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": [],
-      "rollup_of": [
-        "TUI-RUNTIME-R012.10.1",
-        "TUI-RUNTIME-R012.10.2",
-        "TUI-RUNTIME-R012.10.3",
-        "TUI-RUNTIME-R012.10.4"
-      ]
-    },
-    {
-      "id": "TUI-RUNTIME-R012.10.1",
-      "title": "Discoverable own-message edit action",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
-    },
-    {
-      "id": "TUI-RUNTIME-R012.10.2",
-      "title": "Consume the same persisted fork contract",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
-    },
-    {
-      "id": "TUI-RUNTIME-R012.10.3",
-      "title": "Preserve lifecycle and owner boundaries",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
-    },
-    {
-      "id": "TUI-RUNTIME-R012.10.4",
-      "title": "Qualify both installed terminals with WebUI parity",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
-      "verified_by": []
     }
   ]
 }

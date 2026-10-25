@@ -342,8 +342,8 @@ Existing inspection, presentation and daily-workflow obligations remain open whe
 
 ## Edit-and-fork implementation order
 
-- [ ] **TUI-RUNTIME-R012.10:** Complete all child acceptance in both terminals. Producer history and immutable fork admission are blockers, not delivered UI features.
-- [ ] **TUI-RUNTIME-R012.10.2:** First qualify the producer contract linked in plan.md. Then extend the Python/native Arbora clients without a local transcript store.
+- [ ] **TUI-RUNTIME-R012.10:** Complete all child acceptance in the native terminal. Producer history and immutable fork admission are blockers, not delivered UI features.
+- [ ] **TUI-RUNTIME-R012.10.2:** First qualify the producer contract linked in plan.md. Then extend the native Arbora client without a local transcript store.
 - [ ] **TUI-RUNTIME-R012.10.1:** Add discoverable own-turn selection, the editor and boundary preview through the existing composer/focus paths.
-- [ ] **TUI-RUNTIME-R012.10.3:** Add duplicate protection, read-only outcome reconciliation and stale/owner invalidation in both request lifecycles.
-- [ ] **TUI-RUNTIME-R012.10.4:** Run both installed terminal journeys and WebUI restart/readback parity against actual producers before claiming delivery.
+- [ ] **TUI-RUNTIME-R012.10.3:** Add duplicate protection, read-only outcome reconciliation and stale/owner invalidation in the request lifecycle.
+- [ ] **TUI-RUNTIME-R012.10.4:** Run the installed native terminal journey and WebUI restart/readback parity against actual producers before claiming delivery.

@@ -21,13 +21,11 @@ async def test_exit_modal_reverse_tab_and_escape_restore_composer(fake_client: A
     async with app.run_test() as pilot:
         composer = app.screen.query_one(InputTextArea)
         composer.load_text("Unfinished prompt")
-        mode = app._agent_mode
         await pilot.press("ctrl+d")
         assert isinstance(app.screen, ExitConfirmScreen)
         assert app.focused is app.screen.query_one("#no")
         await pilot.press("shift+tab")
         assert app.focused is app.screen.query_one("#yes")
-        assert app._agent_mode == mode
         await pilot.press("escape")
         assert not isinstance(app.screen, ExitConfirmScreen)
         assert app.focused is composer
@@ -71,10 +69,8 @@ async def test_approval_input_owns_editing_keys_and_escape_denies(
         assert isinstance(screen, ToolApprovalScreen)
         feedback = screen.query_one("#feedback-input", Input)
         feedback.focus()
-        mode = app._agent_mode
         await pilot.press("shift+tab")
         assert app.focused is screen.query_one("#reject-c1")
-        assert app._agent_mode == mode
         await pilot.press("tab")
         assert app.focused is feedback
         feedback.value = "review this"
@@ -116,9 +112,9 @@ async def test_main_composer_shortcuts_remain_available(fake_client: AsyncMock) 
         assert composer.text == ""
         await pilot.press("ctrl+y")
         assert composer.text == "Main prompt"
-        mode = app._agent_mode
         await pilot.press("shift+tab")
-        assert app._agent_mode != mode
+        assert composer.text == "Main prompt"
+        composer.focus()
         composer.move_cursor((0, len(composer.text)))
         await pilot.press("ctrl+c")
         assert isinstance(app.screen, ExitConfirmScreen)

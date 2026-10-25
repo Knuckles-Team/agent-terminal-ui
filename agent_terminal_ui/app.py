@@ -60,7 +60,6 @@ from agent_terminal_ui.themes import CANOPY
 from agent_terminal_ui.tui.chat_modal import ChatModal
 from agent_terminal_ui.tui.exit_confirm_screen import ExitConfirmScreen
 from agent_terminal_ui.tui.input_text_area import InputTextArea
-from agent_terminal_ui.tui.status_line import StatusLine
 from agent_terminal_ui.tui.tool_approval_screen import (
     ToolApprovalResult,
     ToolApprovalScreen,
@@ -72,7 +71,6 @@ from agent_terminal_ui.widgets.graph_tree import GraphTree
 logger = logging.getLogger(__name__)
 
 DOUBLE_TAP_SECONDS: float = 0.25
-MODES: list[str] = ["ask", "plan", "code", "chat", "build"]
 
 #: Directory names never descended into by `_iter_workspace_candidate_files`,
 #: on top of any dotdir (hidden) skip.
@@ -129,7 +127,6 @@ class AgentApp(App):
         Binding("ctrl+c", "interrupt", "Interrupt", show=False, priority=True),
         Binding("ctrl+d", "quit_session", "Exit", show=False, priority=True),
         Binding("ctrl+a", "select_all", "Select All", show=False, priority=True),
-        Binding("shift+tab", "cycle_mode", "Cycle Mode", show=False, priority=True),
         Binding("ctrl+q", "quit", "Quit", show=False, priority=True),
         Binding("ctrl+h", "show_help", "Help", show=True, priority=True),
         Binding("ctrl+u", "clear_input", "Clear Input", show=False, priority=True),
@@ -173,7 +170,6 @@ class AgentApp(App):
         """
         super().__init__()
         self._last_ctrl_c: float = 0.0
-        self._agent_mode: str = "ask"
         self._is_processing: bool = False
         self._processing_permissions: bool = False
         self._pending_tool_calls: dict[str, dict[str, Any]] = {}
@@ -390,7 +386,6 @@ class AgentApp(App):
         self._run_agent_turn(
             message,
             parts=parts,
-            mode_id=self._agent_mode,
             model=self._current_model,
             **attachment_kwargs,
         )
@@ -514,7 +509,6 @@ class AgentApp(App):
             value,
             parts=parts,
             attachment_owner=owner,
-            mode_id=self._agent_mode,
             model=self._current_model,
         )
 
@@ -525,9 +519,7 @@ class AgentApp(App):
             main_screen.start_processing()
 
         self._is_processing = True
-        self._run_agent_turn(
-            prompt, parts=[], mode_id=self._agent_mode, model=self._current_model
-        )
+        self._run_agent_turn(prompt, parts=[], model=self._current_model)
 
     # ── Protocol Communication ──
 
@@ -536,7 +528,6 @@ class AgentApp(App):
         self,
         query: str,
         parts: list[dict[str, Any]] | None = None,
-        mode_id: str = "ask",
         model: str | None = None,
         attachment_owner: tuple[AgentClient, str | None] | None = None,
     ) -> None:
@@ -545,7 +536,6 @@ class AgentApp(App):
         Args:
             query: The user prompt to send.
             parts: Optional list of multi-modal parts.
-            mode_id: The interactive mode requested.
             model: Optional model identifier.
             attachment_owner: Client and context that accepted staged files.
         """
@@ -565,7 +555,6 @@ class AgentApp(App):
             query,
             session_id=self._current_session_id,
             parts=parts,
-            mode_id=mode_id,
             model=model,
         ):
             self._remember_session_identity(event)
@@ -801,7 +790,6 @@ class AgentApp(App):
             and action
             in {
                 "rewind",
-                "cycle_mode",
                 "select_all",
                 "clear_input",
                 "restore_input",
@@ -816,15 +804,6 @@ class AgentApp(App):
         """Perform a select-all action in the input text area."""
         with contextlib.suppress(Exception):
             self.query_one(InputTextArea).action_select_all()
-
-    def action_cycle_mode(self) -> None:
-        """Cycle through available agent interaction modes."""
-        current_idx = MODES.index(self._agent_mode) if self._agent_mode in MODES else 0
-        self._agent_mode = MODES[(current_idx + 1) % len(MODES)]
-
-        display_mode = self._agent_mode if self._agent_mode != "ask" else "chat"
-        with contextlib.suppress(Exception):
-            self.query_one(StatusLine).set_mode(display_mode)
 
     def action_clear_input(self) -> None:
         """Clear the entire input buffer (Ctrl+U)."""
@@ -921,18 +900,26 @@ class AgentApp(App):
         self.open_capability_palette()
 
     def open_run_inspector(self, run_id: str | None = None) -> None:
-        """Open run discovery or cursor-based event replay for one run."""
-        from agent_terminal_ui.tui.run_inspector import (
-            RunBrowserScreen,
-            RunInspectorScreen,
-        )
+        """Inspect an explicit run without an unserved discovery fallback."""
+        from agent_terminal_ui.tui.run_inspector import RunInspectorScreen
 
-        if run_id:
-            self.push_screen(RunInspectorScreen(self.agent_client, run_id))
-        else:
-            self.push_screen(
-                RunBrowserScreen(self.agent_client, session_id=self.current_session_id)
+        if not run_id:
+            self.notify(
+                "Run discovery unavailable: supply a run ID.", severity="warning"
             )
+            return
+        client, context_id = self.agent_client, self.current_session_id
+        main = self._get_main_screen()
+        task_id = (
+            main.query_one(
+                lazy_import("agent_terminal_ui.widgets.conversation", "Conversation")
+            ).public_run_task_id(client, context_id, run_id)
+            if main is not None
+            else None
+        )
+        self.push_screen(
+            RunInspectorScreen(client, run_id, context_id=context_id, task_id=task_id)
+        )
 
     def open_current_plan(self, run_id: str) -> None:
         """Open an expiring read-only projection for an explicit run."""

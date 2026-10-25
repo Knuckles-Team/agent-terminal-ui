@@ -104,12 +104,12 @@ The terminal must not schedule agents, reconstruct lineage or expose private rea
 ## Edit a prompt and keep both conversations
 
 TUI-RUNTIME-R012.10 adds discoverable selection and editing of an earlier own
-user message in Python and native terminals. A boundary preview explains which
+user message in the Rust/Ratatui terminal, `tuig`. A boundary preview explains which
 completed context survives and which replies are excluded. The original stays
 intact; the edited prompt starts a new persisted branch with a return path.
 Forking neither undoes nor replays earlier external actions.
 
-The same Arbora contract serves WebUI and both terminals. Task-output browsing,
+The same Arbora contract serves WebUI and the native terminal. Task-output browsing,
 local transcript copies and completed-child continuation cannot stand in for
 that contract. The new rows remain SPECIFIED until producer and installed
 client proof passes. Existing complete-history and resume gaps remain open.

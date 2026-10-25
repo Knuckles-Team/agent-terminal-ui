@@ -102,9 +102,6 @@ class CommandProcessor:
             "history": self.cmd_history,
             "image": self.cmd_image,
             "file": self.cmd_file,
-            "plan": self.cmd_plan,
-            "chat": self.cmd_chat,
-            "build": self.cmd_build,
             "init": self.cmd_init,
             "review": self.cmd_review,
             "test": self.cmd_test,
@@ -306,7 +303,7 @@ class CommandProcessor:
         opener(initial_query=args.strip())
 
     async def cmd_run(self, args: str) -> None:
-        """Browse a run, read its plan, or inspect its flat execution graph."""
+        """Inspect an explicit run, its plan, or its flat execution graph."""
         parts = args.strip().split(maxsplit=1)
         if parts and parts[0] == "graph":
             identities = parts[1].split() if len(parts) == 2 else []
@@ -325,12 +322,19 @@ class CommandProcessor:
                 return
             self.app.open_current_plan(parts[1].strip())
             return
-        run_id = args.strip() or getattr(self.app, "last_run_id", None)
+        run_id = args.strip()
+        if not run_id:
+            self.app.notify(
+                "Run discovery unavailable: supply a run ID with /run <run_id>. "
+                "Use /run plan <run_id> to read only its current plan.",
+                severity="warning",
+            )
+            return
         opener = getattr(self.app, "open_run_inspector", None)
         if not callable(opener):
             self.app.notify("Run inspector unavailable.", severity="warning")
             return
-        opener(str(run_id) if run_id else None)
+        opener(run_id)
 
     async def cmd_history(self, args: str) -> None:
         """Browse caller-owned task replies without changing conversations."""
@@ -392,41 +396,6 @@ class CommandProcessor:
             f"Staged {escape(repr(part['file']['name']))} for the next prompt. "
             "Use /file --clear to remove."
         )
-
-    async def cmd_plan(self, args: str) -> None:
-        """Switch agent to planning mode. Usage: /plan [optional prompt]"""
-        await self._switch_mode("plan", args)
-
-    async def cmd_chat(self, args: str) -> None:
-        """Switch agent to chat (ask) mode. Usage: /chat [optional prompt]"""
-        await self._switch_mode("ask", args)
-
-    async def cmd_build(self, args: str) -> None:
-        """Switch agent to build/code mode. Usage: /build [optional prompt]"""
-        await self._switch_mode("code", args)
-
-    async def _switch_mode(self, new_mode: str, args: str) -> None:
-        """Helper to switch mode, update UI, and optionally submit a prompt."""
-        self.app._agent_mode = new_mode
-        # The mode visually might be labelled differently
-        display_mode = new_mode if new_mode != "ask" else "chat"
-
-        # update status line
-        from agent_terminal_ui.tui.status_line import StatusLine
-
-        self.app.query_one(StatusLine).set_mode(display_mode)
-        self.app.notify(f"Switched to [{display_mode}] mode", severity="information")
-        await self.app.query_one("Conversation").add_info(
-            f"[dim]Switched to {display_mode} mode.[/dim]"
-        )
-
-        if args:
-            # Manually trigger the text area submission logic
-            class MockSubmitEvent:
-                def __init__(self, value: str):
-                    self.value = value
-
-            await self.app.on_input_text_area_submitted(MockSubmitEvent(args))
 
     async def cmd_init(self, args: str) -> None:
         """Initialize the project using Spec-Driven Development (SDD)."""

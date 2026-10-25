@@ -40,6 +40,34 @@ def identifier(value: object, maximum: int = 512) -> bool:
 
 
 @dataclass(frozen=True)
+class PublicRunSummary:
+    """Only the identity and lifecycle facts supplied by the public run read."""
+
+    run_id: str
+    task_id: str
+    status: str
+
+    @classmethod
+    def parse(
+        cls, value: object, run_id: str, task_id: str | None = None
+    ) -> PublicRunSummary:
+        if (
+            not identifier(run_id)
+            or (task_id is not None and not identifier(task_id))
+            or not isinstance(value, dict)
+            or value.get("schema_version") != SCHEMA
+            or value.get("availability") != "available"
+            or value.get("run_id") != run_id
+            or not identifier(value.get("task_id"))
+            or (task_id is not None and value["task_id"] != task_id)
+            or value.get("status")
+            not in ("pending", "running", "completed", "failed", "cancelled")
+        ):
+            raise ValueError("public run overview unavailable")
+        return cls(run_id, value["task_id"], value["status"])
+
+
+@dataclass(frozen=True)
 class PublicRunEvent:
     event_id: str
     sequence: int

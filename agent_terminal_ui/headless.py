@@ -109,7 +109,6 @@ class HeadlessRunner:
         prompt: str,
         *,
         session_id: str | None = None,
-        mode_id: str = "ask",
         model: str | None = None,
     ) -> None:
         """Stream one agent turn for ``prompt`` and render it, then return."""
@@ -117,7 +116,6 @@ class HeadlessRunner:
             prompt,
             session_id=session_id,
             parts=None,
-            mode_id=mode_id,
             model=model,
         ):
             if self._dispatch(event):
@@ -165,7 +163,6 @@ def _summarize(value: Any, limit: int = 120) -> str:
 async def run_headless(
     prompt: str,
     *,
-    mode_id: str = "ask",
     model: str | None = None,
     session_id: str | None = None,
 ) -> bool:
@@ -181,9 +178,7 @@ async def run_headless(
     client = client_from_environment()
     runner = HeadlessRunner(client)
     try:
-        await runner.run_prompt(
-            prompt, session_id=session_id, mode_id=mode_id, model=model
-        )
+        await runner.run_prompt(prompt, session_id=session_id, model=model)
     finally:
         await client.aclose()
     if client.current_session_id:

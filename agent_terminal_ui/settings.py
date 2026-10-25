@@ -91,14 +91,6 @@ SETTINGS_SCHEMA: list[SettingDef] = [
         default="http://localhost:8000",
     ),
     SettingDef(
-        key="default_mode",
-        title="Default Mode",
-        help="Default interaction mode on startup",
-        type="choices",
-        default="ask",
-        choices=["ask", "plan", "code", "chat", "build"],
-    ),
-    SettingDef(
         key="show_tokens",
         title="Show Token Usage",
         help="Display token count and cost in status bar",

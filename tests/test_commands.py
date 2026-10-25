@@ -62,13 +62,11 @@ def mock_app():
 
     # Mock status line
     status_line = MagicMock()
-    status_line.set_mode = MagicMock()
     app.query_one.side_effect = lambda selector: (
         status_line if "StatusLine" in str(selector) else event_log
     )
 
     # Mock mode attribute
-    app._agent_mode = "ask"
 
     return app
 
@@ -265,43 +263,8 @@ class TestImageCommand:
         mock_app.on_input_text_area_submitted.assert_not_awaited()
 
 
-class TestModeCommands:
-    """Test mode switching commands (/plan, /chat, /build)."""
-
-    @pytest.mark.asyncio
-    async def test_cmd_plan(self, command_processor, mock_app):
-        """Test the plan command switches to plan mode."""
-        await command_processor.cmd_plan("")
-
-        assert mock_app._agent_mode == "plan"
-        status_line = mock_app.query_one("StatusLine")
-        status_line.set_mode.assert_called_with("plan")
-
-    @pytest.mark.asyncio
-    async def test_cmd_plan_with_args(self, command_processor, mock_app):
-        """Test the plan command with arguments submits prompt."""
-        await command_processor.cmd_plan("create a plan")
-
-        assert mock_app._agent_mode == "plan"
-        mock_app.on_input_text_area_submitted.assert_called()
-
-    @pytest.mark.asyncio
-    async def test_cmd_chat(self, command_processor, mock_app):
-        """Test the chat command switches to chat mode."""
-        await command_processor.cmd_chat("")
-
-        assert mock_app._agent_mode == "ask"
-        status_line = mock_app.query_one("StatusLine")
-        status_line.set_mode.assert_called_with("chat")
-
-    @pytest.mark.asyncio
-    async def test_cmd_build(self, command_processor, mock_app):
-        """Test the build command switches to code mode."""
-        await command_processor.cmd_build("")
-
-        assert mock_app._agent_mode == "code"
-        status_line = mock_app.query_one("StatusLine")
-        status_line.set_mode.assert_called_with("code")
+def test_mode_commands_are_not_registered(command_processor):
+    assert not {"plan", "chat", "build"} & command_processor.commands.keys()
 
 
 class TestWorkflowCommands:

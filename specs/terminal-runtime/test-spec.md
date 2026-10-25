@@ -564,6 +564,26 @@ It rejects invalid observer combinations and checks documented directory precede
 Existing theme fallback and mounted log refusal tests remain behavior evidence.
 These tests do not prove model selection, history loading or backend authority.
 
+## Canonical run-inspection consumer evidence
+
+`tests/test_run_inspector_contract.py` enters the generated `runs.get` and
+`runs.events` paths through the real client and mounted inspector. It covers
+strict overview identity, old-client refusal, exact requests, literal payloads
+and bounded replay. It also covers denial clearing and stale reads after
+refresh, close or owner changes. Owner changes before mount issue no request. Row and follow
+events before idle clear paused or completed views. The command matrix covers
+explicit run aliases and no-ID refusal without legacy requests.
+`/run plan` retains its separate tests.
+Current-contract transport cases inject two schema lookups from the pinned
+`tests/fixtures/public_run_operations.json` fixture. Its source is Arbora
+`45b8d1d8bae4e3621f9432030769803a659671fc`. The installed invoker, digest check
+and HTTP transport remain unchanged. This seam does not alter the production
+SDK or its operation enum. Separate tests use the untouched installed SDK to
+verify missing operations refuse before HTTP. Those tests skip when the local
+SDK already includes the operations; skips are not old-release acceptance.
+This is partial evidence for R010.1, R010.6 and R012.4.3.2. Full harness fields,
+released-stack and live producer acceptance remain open.
+
 ## Unsupported image input boundary
 
 - `TUI-RUNTIME-R012.5.1`: `tests/test_commands.py::TestImageCommand::test_cmd_image_refuses_without_reading` proves that empty, quoted, missing and malformed paths receive an unsupported notice with no reads or pending-part changes. `tests/test_client.py::test_image_command_refusal_preserves_next_text_submission` uses the real command, application part collector and client to prove the next text turn still submits existing text attachments. `test_non_text_parts_are_refused_before_any_request` rejects typed, legacy untyped, mixed and malformed unsupported parts before network access.
@@ -619,7 +639,7 @@ performance acceptance. R008 and its remaining presentation leaf stay open.
 ### Whole-app public-fold keyboard qualification
 
 R008.2.3.2.2.2.1 requires a keyboard route from the composer to the conversation
-without replacing Tab completion or Shift+Tab mode selection. F8 switches focus
+without replacing Tab completion or Shift+Tab focus navigation. F8 switches focus
 between conversation and composer. Tab reaches public fold titles; Enter and
 Space toggle them. Refresh preserves focus and fold state. This focused check
 does not close the remaining presentation or release-performance criteria.
@@ -1592,8 +1612,8 @@ native CI job. Both public-details and graph journeys must pass without skips.
 The graph fixture serves only loopback registry, task and graph reads; it does
 not advertise `runs.get`. Verify the validated root task/context/run, diamond
 rows, separate edge details, public evidence and unavailable child controls.
-Exercise Tab and Shift+Tab, resize to 40 by 24 and back, hold a refresh to inspect
-clearing, return HTTP 403, close/reopen and quit with terminal modes restored.
+Exercise Tab and Shift+Tab, then resize to 40 by 24 and back.
+Hold a refresh to inspect clearing, return HTTP 403, close/reopen and quit with terminal modes restored.
 Request assertions reject fallback routes, credentials, effects and any step ID
 used as a root task. Each screen expectation and held response has a bounded wait.
 
@@ -1726,15 +1746,31 @@ R008.3.2 and broader presentation, native parity and hierarchy acceptance stay
 open. R012.6.2 still requires installed producer, served session totals and cost
 acceptance. The full configured pre-push release stage was not run locally.
 
+
+## R002 request-mode removal regression contract (2026-10-25)
+
+`test_tui.py` verifies that the mounted composer, status line, settings and
+command registry expose no request-mode selector. Ordinary text remains intact
+through reverse-tab navigation. `test_tui_components.py` verifies that chat,
+planning and implementation prompts reach A2A unchanged without routing metadata.
+`test_mounted_command_matrix.py` preserves the full command inventory and
+verifies that removed mode commands issue no request.
+`test_cli_documentation.py` verifies headless submission without a mode and
+rejects the removed flag rather than abbreviating it to `--model`.
+`test_modal_keyboard_isolation.py` retains approval dismissal and focus checks;
+`test_approval_policy.py` retains required permission policy coverage. Native
+submission already has no request-mode controls or metadata. These regressions
+qualify client behavior only, not producer inference or served task completion.
+
 ## Persisted edit-and-fork acceptance (planned)
 
 | Requirement | Planned proving test | Required observation |
 |---|---|---|
-| TUI-RUNTIME-R012.10 | All four child journeys below | Both Python and native clients pass; neither substitutes for the other. |
-| TUI-RUNTIME-R012.10.1 | `tests/test_conversation_fork_ui.py::test_own_message_editor`; native `tests/conversation_fork.rs::own_message_editor` | Discoverable focused-turn action, preview, composer preservation and cancel. |
-| TUI-RUNTIME-R012.10.2 | `tests/test_client_conversation_fork.py::test_bound_fork_request`; native `tests/conversation_fork.rs::bound_fork_request` | Same bound Arbora contract, exact lineage and zero-request unsupported refusal. |
-| TUI-RUNTIME-R012.10.3 | `tests/test_client_conversation_fork.py::test_fork_lifecycle`; native `tests/conversation_fork.rs::fork_lifecycle` | Duplicate, unknown, stale, pending, restart and owner outcomes. |
-| TUI-RUNTIME-R012.10.4 | `tests/test_conversation_fork_served.py::test_python_and_native_fork_parity` | Installed terminal journeys and WebUI readback against real producers. |
+| TUI-RUNTIME-R012.10 | All four child journeys below | The installed native terminal passes every child journey. |
+| TUI-RUNTIME-R012.10.1 | native `tests/conversation_fork.rs::own_message_editor` | Discoverable focused-turn action, preview, composer preservation and cancel. |
+| TUI-RUNTIME-R012.10.2 | native `tests/conversation_fork.rs::bound_fork_request` | Same bound Arbora contract, exact lineage and zero-request unsupported refusal. |
+| TUI-RUNTIME-R012.10.3 | native `tests/conversation_fork.rs::fork_lifecycle` | Duplicate, unknown, stale, pending, restart and owner outcomes. |
+| TUI-RUNTIME-R012.10.4 | native `tests/conversation_fork_served.rs::native_fork_parity` | Installed native terminal journey and WebUI readback against real producers. |
 
 
 Use one synthetic three-turn conversation with distinct prompts and replies.

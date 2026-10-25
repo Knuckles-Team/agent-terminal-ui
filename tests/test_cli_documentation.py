@@ -32,7 +32,7 @@ def test_actual_help_matches_operator_documentation(
     flags = set(re.findall(r"--[a-z][a-z-]*", help_text))
     assert flags == {
         "--help", "--prompt", "--override", "--bg", "--headless", "--model",
-        "--session", "--mode", "--observe-task",
+        "--session", "--observe-task",
     }
     assert all(flag in docs and flag in readme for flag in flags)
     assert "ignored by the A2A transport" in help_text
@@ -44,24 +44,24 @@ def test_actual_help_matches_operator_documentation(
     assert "does not load prior turns" in docs
 
 
-@pytest.mark.parametrize("mode", ["ask", "plan", "build"])
 def test_documented_headless_mode_and_context_dispatch(
-    mode: str, monkeypatch: pytest.MonkeyPatch
+    monkeypatch: pytest.MonkeyPatch
 ) -> None:
     run = AsyncMock(return_value=True)
     monkeypatch.setattr(headless, "run_headless", run)
     monkeypatch.setattr(sys, "argv", [
         "agent-terminal-ui", "--headless", "--prompt", "new turn",
-        "--session", "context-1", "--mode", mode, "--model", "compatibility-id",
+        "--session", "context-1", "--model", "compatibility-id",
     ])
     terminal_ui()
     run.assert_awaited_once_with(
-        "new turn", mode_id=mode, model="compatibility-id", session_id="context-1"
+        "new turn", model="compatibility-id", session_id="context-1"
     )
 
 
 @pytest.mark.parametrize("args", [
     ["--headless"], ["--mode", "invalid"],
+    ["--mode", "ask"], ["--mode", "plan"], ["--mode", "build"],
     ["--observe-task", " "], ["--observe-task", "x" * 513],
     ["--observe-task", "task", "--prompt", "new"],
     ["--observe-task", "task", "--session", "context"],

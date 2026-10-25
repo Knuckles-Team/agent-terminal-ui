@@ -39,7 +39,6 @@ from agent_terminal_ui.capabilities import (
     CapabilityPreflight,
     RunCatalog,
     RunEventPage,
-    RunSummary,
 )
 from agent_terminal_ui.execution_graph import (
     GRAPH_SCHEMA,
@@ -47,7 +46,12 @@ from agent_terminal_ui.execution_graph import (
     graph_identifier,
 )
 from agent_terminal_ui.host_logs import HostLogReader as HostLogReader
-from agent_terminal_ui.public_run_events import MAX_SEQUENCE, SCHEMA, identifier
+from agent_terminal_ui.public_run_events import (
+    MAX_SEQUENCE,
+    SCHEMA,
+    PublicRunSummary,
+    identifier,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -59,14 +63,6 @@ GATEWAY_API_PREFIX = "/api"
 #: The Arbora A2A JSON-RPC endpoint and its Agent Card.
 A2A_PATH = "/a2a"
 AGENT_CARD_PATH = "/.well-known/agent-card.json"
-
-#: The typed Arbora task a TUI mode asks for; Arbora never routes free text.
-MODE_TASK_IRIS = {
-    "ask": "eg:task/communicate",
-    "plan": "eg:task/research",
-    "build": "eg:task/implement",
-    "code": "eg:task/implement",
-}
 
 #: A2A task states that end a stream.
 _FINAL_STATES = frozenset({"completed", "canceled", "failed", "rejected"})
@@ -987,15 +983,13 @@ class AgentClient:
         query: str,
         session_id: str | None = None,
         parts: list[dict[str, Any]] | None = None,
-        mode_id: str | None = None,
         model: str | None = None,
     ) -> AsyncGenerator[dict[str, Any], None]:
         """Run one conversation turn as a streamed A2A task.
 
-        ``mode_id`` selects the typed task Arbora routes on
-        (:data:`MODE_TASK_IRIS`; unknown modes use ``ask``); routing then selects
-        the authorized agent. ``model`` is not part of the A2A contract and is
-        not sent. Text and bounded inline UTF-8 files are carried.
+        Arbora forwards the ordinary message to its governed default agent.
+        ``model`` is not part of the A2A contract and is not sent. Text and
+        bounded inline UTF-8 files are carried.
 
         Yields:
             Normalized event dictionaries, starting with ``session_started``.
@@ -1019,11 +1013,6 @@ class AgentClient:
             "parts": normalized,
             "messageId": uuid.uuid4().hex,
             "contextId": session_id,
-            "metadata": {
-                "arboraTaskIris": [
-                    MODE_TASK_IRIS.get(mode_id or "ask", MODE_TASK_IRIS["ask"])
-                ]
-            },
         }
         headers = {"Idempotency-Key": uuid.uuid4().hex}
         public_binding = None
@@ -1310,11 +1299,19 @@ class AgentClient:
             requested_session_id=session_id,
         )
 
-    async def get_run_summary(self, run_id: str) -> RunSummary:
-        """Fetch a summary for one replayable canonical run."""
-        encoded = quote(run_id, safe="")
-        response = await self._http_client.get(f"{self.base_url}/api/runs/{encoded}")
-        return RunSummary.from_payload(self._gateway_body(response))
+    async def get_run_summary(
+        self, run_id: str, *, task_id: str | None = None
+    ) -> PublicRunSummary:
+        """Read one authorized overview through the generated operation client."""
+        if not identifier(run_id) or (task_id is not None and not identifier(task_id)):
+            raise ValueError("invalid public run identity")
+        params = {"run_id": run_id}
+        if task_id is not None:
+            params["task_id"] = task_id
+        result = await self.invoke_op("runs.get", params)
+        if not isinstance(result, dict):
+            raise ArboraOperationError("INVALID_ENVELOPE")
+        return PublicRunSummary.parse(result.get("value"), run_id, task_id)
 
     async def list_runs(
         self,

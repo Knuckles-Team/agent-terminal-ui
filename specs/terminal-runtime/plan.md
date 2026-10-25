@@ -1029,7 +1029,7 @@ identifier from the other. Native inspector reads retain this same binding.
 ## Amendment 2026-10-22: Python fold keyboard access
 
 R008.2.3.2.2.2 now rolls up the focused keyboard route .1 and complete
-presentation acceptance .2. F8 leaves composer completion and mode keys intact.
+presentation acceptance .2. F8 leaves composer completion and focus-navigation keys intact.
 A keyboard test binding does not close the retained complete acceptance row.
 
 ## Amendment 2026-10-22: command dispatcher qualification
@@ -1160,7 +1160,7 @@ R015.32 and R015.33 retain the JSON and Markdown analysis in immutable Git
 history, not in the current source tree or release version configuration.
 The existing Git read path and `.bumpversion.cfg` own this qualification.
 Tests verify the original byte digests and reject modified bytes.
-They reject version registration under either the original or migrated report path.
+They also reject version registration under the original or migrated report path.
 A full checkout with missing evidence fails. A shallow checkout or source
 export reports unavailable history explicitly; that skip is not acceptance.
 This work restores no report and treats no historical conclusion as a current finding.
@@ -1198,6 +1198,22 @@ map and completed acceptance commands. Derive mappings from the client source;
 reject missing or wrong mappings, absent or narrowed receipts, and false live-proof claims.
 R015.52 retains its separate maintenance obligation.
 
+## Amendment 2026-10-24: canonical run inspection
+
+R010.1 and R012.4.3.2 extend the existing Python run inspector to `runs.get`
+and `runs.events` through the generated Arbora client. Keep `/run plan`
+separate. A selected run displays its authorized task and status, bounded public
+events and public summaries. Configuration, context use and cost remain
+unavailable when the producer does not supply them. Arbora does not expose a
+run-list operation. A missing run ID receives a notice without a request.
+Reuse the existing public-event validators and literal rendering. Clear
+protected values after refusal, refresh or an owner change. Closed and
+superseded reads cannot restore content. Capture the client and context before
+mount. Check ownership before cached row selection or follow actions, not only
+at idle. Do not fall back to legacy REST.
+Old clients and servers may refuse the newer operations. Fixture qualification
+against the current public contract does not establish released-stack, native
+or live producer acceptance. R010.6 and the full command matrix remain open.
 ### 2026-10-24: Refreshable documentation screenshots
 
 TUI-RUNTIME-R016 adds a local capture command for the Python Textual app.
@@ -1450,6 +1466,31 @@ Fresh native compilation, PTY and installed startup evidence remains required
 under R008.3.2. Earlier two-color receipts do not qualify this source change.
 Broad presentation, native parity and served acceptance remain open.
 
+## Amendment 2026-10-25: requests without client modes
+
+R002 owns ordinary conversation submission in both terminal implementations.
+The interface must not ask users to select ask, plan, chat, code or build modes.
+Remove the request-mode shortcut, slash commands, status badge, setting and
+headless flag. Preserve authentication, appearance, navigation and required
+approval controls. Submit unchanged user text through the existing ordinary
+Arbora message contract, as the native client already does. Do not classify
+requests locally or turn request intent into effect authority. Transport changes
+require producer evidence that omitted task routing metadata admits ordinary
+requests. A missing producer contract remains an explicit blocking gap.
+
+Regression coverage must verify the absence of request-mode controls, plain
+request submission, and unchanged approval and permission refusal behavior.
+
+Producer inspection: Arbora origin/main `9e3e4cb2` routes messages without
+`metadata.agent_name` through its default agent. Its `OrchestratorA2ARouter`
+does not use `arboraTaskIris`. Python now matches the existing native request
+envelope; this is not evidence of end-to-end inference or effect completion.
+
+Legacy `default_mode` entries remain in user-owned settings files but have no
+consumer or visible control. Do not rewrite personal configuration merely to
+remove an obsolete selector. Regression coverage proves that stored and
+environment preferences cannot select request handling.
+
 ## Amendment 2026-10-25: edit an earlier own prompt and fork
 
 Scope: TUI-RUNTIME-R012.10 and its four children, extending daily coding parity.
@@ -1457,16 +1498,14 @@ Keep R012.3.1's read-only task-history proof and R012.3.2's remaining complete
 history/resume acceptance. At TUI `09fe97ef01c412c6b3b301aeedca3eeb1bc15965`,
 `client.py::list_history_tasks` and `get_history_task` return caller task rows
 and reply artifacts; they do not supply a complete editable turn ledger.
-`widgets/conversation.py`, `app.py::_submit_prompt` and `tui/history_screen.py`
-own the Python presentation and submission path. Native `src/main.rs` and
-`src/lib.rs::ArboraClient` own the equivalent terminal path. Extend these, not
-`SessionManager` or a new local transcript store.
+The target is the Rust/Ratatui terminal, `tuig`. Native `src/main.rs` and
+`src/lib.rs::ArboraClient` own its presentation and submission path. Extend these,
+not `SessionManager` or a new local transcript store. Historical Python paths
+above describe the inspected baseline, not a requirement to retain Python or Textual.
 
-Expose the same named Edit and fork action from focused own messages in both
-terminals. Reuse the composer and existing keyboard-help/focus conventions.
+Expose the named Edit and fork action from focused own messages in the native terminal. Reuse the composer and existing keyboard-help/focus conventions.
 Do not overload Up while typing or scrolling; selection must be discoverable
-without memorizing an undocumented shortcut. Native and Python evidence are
-separate obligations, not interchangeable source tests.
+without memorizing an undocumented shortcut. Installed native evidence remains mandatory; source fixtures cannot replace it.
 
 ### Shared invariant and producer prerequisites
 
