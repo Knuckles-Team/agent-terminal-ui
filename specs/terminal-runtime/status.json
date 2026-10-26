@@ -603,8 +603,8 @@
         "6a80a934e3d9"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/tests/host_logs.rs:188",
-        "native/agent-terminal-ui/tests/host_logs.rs:216"
+        "native/agent-terminal-ui/tests/host_logs.rs:185",
+        "native/agent-terminal-ui/tests/host_logs.rs:210"
       ]
     },
     {
