@@ -1,4 +1,4 @@
-use agent_terminal_ui_native::{ArboraClient, host_logs::HostLogs};
+use agent_terminal_ui_native::{ArboraClient, app::run_host_terminal, host_logs::HostLogs};
 use serde_json::{Value, json};
 use std::{
     sync::Arc,
@@ -15,7 +15,7 @@ fn receipt() -> Value {
         .unwrap()
         .as_millis() as u64
         + 60000;
-    json!({"version":1,"log_ref":"opaque","host_instance":"host","workspace":"/fixture","tenant":"tenant","principal":"principal","session_ref":"session","policy_revision":"policy","grant_revision":"grant","expires_at_ms":expires,"interface_mode":"both","web_logs":true,"ready":true})
+    json!({"version":1,"log_ref":"opaque","host_instance":"host","endpoint":"http://127.0.0.1:1/","workspace":"/fixture","tenant":"tenant","principal":"principal","session_ref":"session","policy_revision":"policy","grant_revision":"grant","expires_at_ms":expires,"interface_mode":"both","web_logs":true,"ready":true,"source_generations":["host"]})
 }
 
 fn response(status: u16, body: Value) -> String {
@@ -33,6 +33,11 @@ async fn serve(responses: Vec<String>) -> (ArboraClient, tokio::task::JoinHandle
         Some("fixture-token"),
     )
     .unwrap();
+    let endpoint = client.endpoint();
+    let responses = responses
+        .into_iter()
+        .map(|response| response.replace("http://127.0.0.1:1/", &endpoint))
+        .collect::<Vec<_>>();
     let server = tokio::spawn(async move {
         for response in responses {
             let (mut socket, _) = tokio::time::timeout(Duration::from_secs(2), listener.accept())
@@ -93,7 +98,7 @@ async fn authenticated_reads_clear_authority_after_denial_without_effect_replay(
         response(200, receipt()),
         response(
             200,
-            json!({"version":2,"records":[{"host_instance":"original-host","sequence":7,"request":"original-request","timestamp":123.5,"severity":"WARN","message":"[literal]\u{1b}[31m"}],"cursor":"next","gap":true}),
+            json!({"version":2,"records":[{"host_instance":"host","sequence":7,"request":"original-request","timestamp":123.5,"severity":"WARN","message":"[literal]\u{1b}[31m"}],"cursor":"next","gap":true}),
         ),
         response(403, json!({})),
     ])
@@ -103,7 +108,7 @@ async fn authenticated_reads_clear_authority_after_denial_without_effect_replay(
     assert_eq!(batch.records[0].message, "[literal][31m");
     assert_eq!(
         batch.records[0].display(),
-        "[123.5 WARN host=original-host seq=7 request=original-request] [literal][31m"
+        "[123.5 WARN host=host seq=7 request=original-request] [literal][31m"
     );
     assert!(batch.gap);
     assert!(reader.read().await.is_err());
@@ -121,6 +126,8 @@ async fn disabled_expired_and_malformed_receipts_never_read() {
         ("expires_at_ms", json!(0)),
         ("version", json!(true)),
         ("tenant", json!("")),
+        ("endpoint", json!("")),
+        ("source_generations", json!([])),
     ] {
         let mut payload = receipt();
         payload[key] = value;
@@ -161,4 +168,80 @@ async fn exact_retention_gap_stops_without_retry_and_other_conflicts_refuse() {
         assert_eq!(reader.read().await.err(), Some(REFUSED));
         server.await.unwrap();
     }
+}
+
+// spec: TUI-RUNTIME-R002.2
+#[tokio::test]
+async fn changed_receipt_binding_is_rejected_before_reader_use() {
+    let (client, server) = serve(vec![response(200, receipt())]).await;
+    let client = Arc::new(client);
+    let logs = HostLogs::bind(client.clone()).await.unwrap();
+    let mut changed = receipt();
+    changed["endpoint"] = json!(client.endpoint());
+    changed["tenant"] = json!("foreign-tenant");
+    let changed = agent_terminal_ui_native::host_logs::HostLaunchReceipt::parse(&changed).unwrap();
+    let matching = logs.receipt().clone();
+    let reader = logs.into_reader();
+    assert!(run_host_terminal(changed, client.as_ref(), Some(reader)).is_err());
+    assert!(matching.expires_at_ms() > 0);
+    server.await.unwrap();
+}
+
+// spec: TUI-RUNTIME-R002.3
+#[tokio::test]
+async fn adapter_reads_only_the_bound_opaque_reference() {
+    let (client, server) = serve(vec![
+        response(200, receipt()),
+        response(
+            200,
+            json!({"version":2,"records":[],"cursor":null,"gap":false}),
+        ),
+    ])
+    .await;
+    let client = Arc::new(client);
+    let logs = HostLogs::bind(client.clone()).await.unwrap();
+    let receipt = logs.receipt().clone();
+    let mut reader =
+        run_host_terminal(receipt.clone(), client.as_ref(), Some(logs.into_reader())).unwrap();
+    let batch = reader.read(&receipt.log_ref, None, 128).await.unwrap();
+    assert!(batch.records.is_empty());
+    server.await.unwrap();
+}
+
+// spec: TUI-RUNTIME-R002.3
+#[tokio::test]
+async fn missing_reader_refuses_without_a_network_read() {
+    let client = Arc::new(ArboraClient::new("http://127.0.0.1:9", Some("fixture-token")).unwrap());
+    let mut payload = receipt();
+    payload["endpoint"] = json!(client.endpoint());
+    let receipt = agent_terminal_ui_native::host_logs::HostLaunchReceipt::parse(&payload).unwrap();
+    assert!(run_host_terminal(receipt, client.as_ref(), None).is_err());
+}
+
+#[tokio::test]
+async fn endpoint_binding_is_checked_before_reader_use() {
+    let (client, server) = serve(vec![response(200, receipt())]).await;
+    let client = Arc::new(client);
+    let logs = HostLogs::bind(client.clone()).await.unwrap();
+    let mut changed = receipt();
+    changed["endpoint"] = json!("http://127.0.0.1:2/");
+    let changed = agent_terminal_ui_native::host_logs::HostLaunchReceipt::parse(&changed).unwrap();
+    assert!(run_host_terminal(changed, client.as_ref(), Some(logs.into_reader())).is_err());
+    server.await.unwrap();
+}
+
+#[tokio::test]
+async fn records_from_another_generation_are_refused() {
+    let (client, server) = serve(vec![
+        response(200, receipt()),
+        response(
+            200,
+            json!({"version":2,"records":[{"host_instance":"foreign-host","sequence":1,"request":"request","timestamp":1.0,"severity":"INFO","message":"foreign"}],"cursor":null,"gap":false}),
+        ),
+    ])
+    .await;
+    let mut reader = HostLogs::bind(Arc::new(client)).await.unwrap();
+    assert!(reader.read().await.is_err());
+    assert!(!reader.valid());
+    server.await.unwrap();
 }

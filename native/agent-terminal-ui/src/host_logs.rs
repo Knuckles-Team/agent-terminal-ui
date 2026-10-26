@@ -1,5 +1,6 @@
 //! Authenticated, read-only host log transport. Bindings cannot be constructed by callers.
 use crate::ArboraClient;
+use reqwest::Url;
 use serde_json::{Value, json};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -8,11 +9,188 @@ pub const REFUSED: &str = "Host logs unavailable. Authenticated host access is r
 pub const RETENTION_GAP: &str =
     "Host log history gap: the resume position is no longer retained. Fresh admission is required.";
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct HostLaunchReceipt {
+    version: u64,
+    pub log_ref: String,
+    host_instance: String,
+    endpoint: String,
+    workspace: String,
+    tenant: String,
+    principal: String,
+    session_ref: String,
+    policy_revision: String,
+    grant_revision: String,
+    expires_at_ms: u64,
+    interface_mode: String,
+    web_logs: bool,
+    ready: bool,
+    source_generations: Vec<String>,
+}
+
+impl HostLaunchReceipt {
+    pub fn parse(value: &Value) -> Result<Self, &'static str> {
+        let object = value.as_object().ok_or(REFUSED)?;
+        let text = |key: &str, max: usize| -> Result<String, &'static str> {
+            let value = value[key].as_str().ok_or(REFUSED)?;
+            if value.is_empty() || value.len() > max || value.chars().any(char::is_control) {
+                return Err(REFUSED);
+            }
+            Ok(value.to_owned())
+        };
+        if object.len() != 15
+            || value["version"].as_u64() != Some(1)
+            || value["ready"].as_bool() != Some(true)
+            || value["web_logs"].as_bool() != Some(true)
+            || !matches!(value["interface_mode"].as_str(), Some("terminal" | "both"))
+        {
+            return Err(REFUSED);
+        }
+        let endpoint = text("endpoint", 2048)?;
+        let endpoint_url = Url::parse(&endpoint).map_err(|_| REFUSED)?;
+        if !matches!(endpoint_url.scheme(), "http" | "https")
+            || endpoint_url.host_str().is_none()
+            || !endpoint_url.username().is_empty()
+            || endpoint_url.password().is_some()
+            || endpoint_url.query().is_some()
+            || endpoint_url.fragment().is_some()
+            || !matches!(endpoint_url.path(), "" | "/")
+            || endpoint_url.port() == Some(0)
+        {
+            return Err(REFUSED);
+        }
+        let mut endpoint_url = endpoint_url;
+        endpoint_url.set_path("/");
+        let source_generations = value["source_generations"]
+            .as_array()
+            .filter(|values| (1..=32).contains(&values.len()))
+            .ok_or(REFUSED)?
+            .iter()
+            .map(|value| {
+                let generation = value.as_str().ok_or(REFUSED)?;
+                if generation.is_empty()
+                    || generation.len() > 128
+                    || matches!(generation, "*" | "latest" | "prior")
+                    || generation
+                        .chars()
+                        .any(|character| character.is_whitespace() || character.is_control())
+                {
+                    return Err(REFUSED);
+                }
+                Ok(generation.to_owned())
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        if source_generations
+            .iter()
+            .enumerate()
+            .any(|(index, generation)| source_generations[..index].contains(generation))
+        {
+            return Err(REFUSED);
+        }
+        let receipt = Self {
+            version: 1,
+            log_ref: text("log_ref", 128)?,
+            host_instance: text("host_instance", 4096)?,
+            endpoint: endpoint_url.to_string(),
+            workspace: text("workspace", 4096)?,
+            tenant: text("tenant", 4096)?,
+            principal: text("principal", 4096)?,
+            session_ref: text("session_ref", 4096)?,
+            policy_revision: text("policy_revision", 4096)?,
+            grant_revision: text("grant_revision", 4096)?,
+            expires_at_ms: value["expires_at_ms"].as_u64().ok_or(REFUSED)?,
+            interface_mode: value["interface_mode"].as_str().unwrap().to_owned(),
+            web_logs: true,
+            ready: true,
+            source_generations,
+        };
+        if receipt.expires_at_ms <= now_ms() {
+            return Err(REFUSED);
+        }
+        Ok(receipt)
+    }
+
+    pub fn expires_at_ms(&self) -> u64 {
+        self.expires_at_ms
+    }
+
+    pub fn endpoint(&self) -> &str {
+        &self.endpoint
+    }
+
+    pub fn source_generations(&self) -> &[String] {
+        &self.source_generations
+    }
+
+    pub fn allows_terminal_logs(&self) -> bool {
+        self.ready && self.web_logs && matches!(self.interface_mode.as_str(), "terminal" | "both")
+    }
+}
+
+pub struct HostLogReader {
+    logs: HostLogs,
+}
+
+impl HostLogReader {
+    fn from_logs(logs: HostLogs) -> Self {
+        Self { logs }
+    }
+
+    fn receipt(&self) -> &HostLaunchReceipt {
+        &self.logs.receipt
+    }
+
+    pub async fn read(
+        &mut self,
+        log_ref: &str,
+        cursor: Option<&str>,
+        limit: usize,
+    ) -> Result<LogBatch, &'static str> {
+        if log_ref != self.receipt().log_ref || cursor != self.logs.cursor.as_deref() {
+            return Err(REFUSED);
+        }
+        self.logs.read_with_limit(limit).await
+    }
+
+    pub async fn read_next(&mut self) -> Result<LogBatch, &'static str> {
+        let log_ref = self.receipt().log_ref.clone();
+        let cursor = self.logs.cursor.clone();
+        self.read(&log_ref, cursor.as_deref(), 128).await
+    }
+
+    pub fn valid(&self) -> bool {
+        self.logs.valid()
+    }
+
+    pub fn expires_at_ms(&self) -> u64 {
+        self.logs.expires_at_ms()
+    }
+}
+
+pub fn run_host_terminal(
+    receipt: HostLaunchReceipt,
+    client: &ArboraClient,
+    log_reader: Option<HostLogReader>,
+) -> Result<HostLogReader, &'static str> {
+    if !client.authenticated
+        || !receipt.allows_terminal_logs()
+        || receipt.endpoint() != client.endpoint()
+    {
+        return Err(REFUSED);
+    }
+    let reader = log_reader.ok_or(REFUSED)?;
+    if !std::ptr::eq(reader.logs.client.as_ref(), client) || reader.receipt() != &receipt {
+        return Err(REFUSED);
+    }
+    Ok(reader)
+}
+
 pub struct HostLogs {
     reference: String,
     expires: u64,
     cursor: Option<String>,
     client: std::sync::Arc<ArboraClient>,
+    receipt: HostLaunchReceipt,
 }
 
 pub struct LogBatch {
@@ -49,39 +227,6 @@ fn now_ms() -> u64 {
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_millis() as u64
-}
-
-fn receipt(value: &Value) -> Result<(String, u64), &'static str> {
-    let object = value.as_object().ok_or(REFUSED)?;
-    let fields = [
-        "log_ref",
-        "host_instance",
-        "workspace",
-        "tenant",
-        "principal",
-        "session_ref",
-        "policy_revision",
-        "grant_revision",
-    ];
-    if object.len() != 13
-        || fields.iter().any(|key| {
-            value[*key]
-                .as_str()
-                .is_none_or(|s| s.is_empty() || s.len() > 4096)
-        })
-        || value["version"].as_u64() != Some(1)
-        || value["ready"].as_bool() != Some(true)
-        || value["web_logs"].as_bool() != Some(true)
-        || !matches!(value["interface_mode"].as_str(), Some("terminal" | "both"))
-    {
-        return Err(REFUSED);
-    }
-    let reference = value["log_ref"].as_str().ok_or(REFUSED)?;
-    let expires = value["expires_at_ms"].as_u64().ok_or(REFUSED)?;
-    if reference.len() > 128 || expires <= now_ms() {
-        return Err(REFUSED);
-    }
-    Ok((reference.to_owned(), expires))
 }
 
 async fn post(client: &ArboraClient, path: &str, body: Value) -> Result<Value, &'static str> {
@@ -122,13 +267,22 @@ async fn post(client: &ArboraClient, path: &str, body: Value) -> Result<Value, &
 impl HostLogs {
     pub async fn bind(client: std::sync::Arc<ArboraClient>) -> Result<Self, &'static str> {
         let value = post(&client, "/host/logs/reference", json!({})).await?;
-        let (reference, expires) = receipt(&value)?;
+        let receipt = HostLaunchReceipt::parse(&value)?;
         Ok(Self {
-            reference,
-            expires,
+            reference: receipt.log_ref.clone(),
+            expires: receipt.expires_at_ms(),
             cursor: None,
             client,
+            receipt,
         })
+    }
+
+    pub fn receipt(&self) -> &HostLaunchReceipt {
+        &self.receipt
+    }
+
+    pub fn into_reader(self) -> HostLogReader {
+        HostLogReader::from_logs(self)
     }
 
     pub fn expires_at_ms(&self) -> u64 {
@@ -144,7 +298,14 @@ impl HostLogs {
     }
 
     pub async fn read(&mut self) -> Result<LogBatch, &'static str> {
-        let result = self.read_inner().await;
+        self.read_with_limit(128).await
+    }
+
+    async fn read_with_limit(&mut self, limit: usize) -> Result<LogBatch, &'static str> {
+        if !(1..=128).contains(&limit) {
+            return Err(REFUSED);
+        }
+        let result = self.read_inner(limit).await;
         if result.is_err() {
             self.expires = 0;
             self.cursor = None;
@@ -152,26 +313,29 @@ impl HostLogs {
         result
     }
 
-    async fn read_inner(&mut self) -> Result<LogBatch, &'static str> {
+    async fn read_inner(&mut self, limit: usize) -> Result<LogBatch, &'static str> {
         if !self.valid() {
             return Err(REFUSED);
         }
         let value = post(
             &self.client,
             "/host/logs/read",
-            json!({"version":2,"log_ref":self.reference,"cursor":self.cursor,"limit":128}),
+            json!({"version":2,"log_ref":self.reference,"cursor":self.cursor,"limit":limit}),
         )
         .await?;
         if !self.valid() {
             return Err(REFUSED);
         }
-        let (batch, cursor) = batch(&value)?;
+        let (batch, cursor) = batch(&value, &self.receipt.source_generations)?;
         self.cursor = cursor;
         Ok(batch)
     }
 }
 
-fn batch(value: &Value) -> Result<(LogBatch, Option<String>), &'static str> {
+fn batch(
+    value: &Value,
+    source_generations: &[String],
+) -> Result<(LogBatch, Option<String>), &'static str> {
     if value
         .as_object()
         .is_none_or(|v| v.len() != 4 || !v.contains_key("cursor"))
@@ -216,7 +380,10 @@ fn batch(value: &Value) -> Result<(LogBatch, Option<String>), &'static str> {
             .as_f64()
             .filter(|n| n.is_finite() && *n >= 0.0)
             .ok_or(REFUSED)?;
-        if host_instance.is_empty() || severity.is_empty() {
+        if host_instance.is_empty()
+            || severity.is_empty()
+            || !source_generations.contains(&host_instance)
+        {
             return Err(REFUSED);
         }
         records.push(LogRecord {

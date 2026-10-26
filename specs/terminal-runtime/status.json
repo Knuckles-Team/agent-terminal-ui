@@ -372,11 +372,11 @@
         "b90eb520052a"
       ],
       "verified_by": [
-        "tests/test_precommit_hooks.py:120",
+        "tests/test_precommit_hooks.py:103",
+        "tests/test_precommit_hooks.py:134",
         "tests/test_precommit_hooks.py:19",
-        "tests/test_precommit_hooks.py:43",
-        "tests/test_precommit_hooks.py:63",
-        "tests/test_precommit_hooks.py:89"
+        "tests/test_precommit_hooks.py:57",
+        "tests/test_precommit_hooks.py:77"
       ],
       "rollup_of": [
         "TUI-RUNTIME-R004.1",
@@ -393,9 +393,9 @@
         "b90eb520052a"
       ],
       "verified_by": [
-        "tests/test_precommit_hooks.py:120",
-        "tests/test_precommit_hooks.py:19",
-        "tests/test_precommit_hooks.py:89"
+        "tests/test_precommit_hooks.py:103",
+        "tests/test_precommit_hooks.py:134",
+        "tests/test_precommit_hooks.py:19"
       ]
     },
     {
@@ -588,14 +588,19 @@
       "title": "Validate the host receipt and scope",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [
+        "native/agent-terminal-ui/tests/host_logs.rs:173"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R002.3",
       "title": "Define the terminal consumer adapter",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [
+        "native/agent-terminal-ui/tests/host_logs.rs:190",
+        "native/agent-terminal-ui/tests/host_logs.rs:211"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R002.4",
@@ -1143,11 +1148,11 @@
         "a96dc581da0f"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/host_log_view.rs:162",
-        "native/agent-terminal-ui/src/host_log_view.rs:186",
-        "native/agent-terminal-ui/src/host_log_view.rs:210",
-        "native/agent-terminal-ui/tests/host_logs.rs:115",
-        "native/agent-terminal-ui/tests/host_logs.rs:133"
+        "native/agent-terminal-ui/src/host_log_view.rs:165",
+        "native/agent-terminal-ui/src/host_log_view.rs:189",
+        "native/agent-terminal-ui/src/host_log_view.rs:213",
+        "native/agent-terminal-ui/tests/host_logs.rs:120",
+        "native/agent-terminal-ui/tests/host_logs.rs:140"
       ]
     },
     {
@@ -1327,8 +1332,8 @@
         "417e3a75f217"
       ],
       "verified_by": [
-        "tests/test_precommit_hooks.py:43",
-        "tests/test_precommit_hooks.py:63"
+        "tests/test_precommit_hooks.py:57",
+        "tests/test_precommit_hooks.py:77"
       ]
     },
     {
@@ -1770,9 +1775,9 @@
         "e3eca3dd39dc"
       ],
       "verified_by": [
-        "tests/test_historical_analysis.py:17",
-        "tests/test_historical_analysis.py:91",
-        "tests/test_historical_analysis.py:97"
+        "tests/test_historical_analysis.py:102",
+        "tests/test_historical_analysis.py:18",
+        "tests/test_historical_analysis.py:96"
       ]
     },
     {
@@ -1783,9 +1788,9 @@
         "e3eca3dd39dc"
       ],
       "verified_by": [
-        "tests/test_historical_analysis.py:22",
-        "tests/test_historical_analysis.py:91",
-        "tests/test_historical_analysis.py:97"
+        "tests/test_historical_analysis.py:102",
+        "tests/test_historical_analysis.py:23",
+        "tests/test_historical_analysis.py:96"
       ]
     },
     {

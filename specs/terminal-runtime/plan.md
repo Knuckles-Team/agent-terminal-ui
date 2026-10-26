@@ -139,6 +139,18 @@ AU:116 SHA-256 08a22602bd677e4fc39260d058503fa73a2216ad40bbe817c17d3bef256722ef.
 AU:117 SHA-256 fddbc1b35588be4427396a7aa827414d9d7bba01a8837f905a8b1c9b1eac4694. Map its remaining mode and unified-view obligation to R002.2 through .6, especially .4. R002.1 preserves the parent acceptance. These are definition mappings only.
 <!-- /spec-definition-patch -->
 
+## Amendment 2026-10-26: host receipt consumer fields
+
+The native consumer uses the existing Arbora generation fence name
+`source_generations`, which is the immutable grant tuple checked against each
+record's `host_instance`. The v1 receipt extension also requires `endpoint` as
+the normalized HTTP origin. The TUI parser and public adapter refuse missing,
+malformed or mismatched values before any log read. These local fixtures cover
+consumer refusal and binding only; producer publication and the served journey
+remain prerequisites for R002.2 through R002.6.
+
+Native fixtures validate local binding only; served producer fields and the public adapter journey remain unproven.
+
 ## Amendments
 
 ### 2026-10-13: Rust thin-client migration (R002, R001, R008, R010)
