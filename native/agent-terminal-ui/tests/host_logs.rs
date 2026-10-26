@@ -162,3 +162,62 @@ async fn exact_retention_gap_stops_without_retry_and_other_conflicts_refuse() {
         server.await.unwrap();
     }
 }
+
+// spec: TUI-RUNTIME-R002.2
+#[tokio::test]
+async fn changed_receipt_binding_is_rejected_before_reader_use() {
+    let (client, server) = serve(vec![response(200, receipt())]).await;
+    let mut logs = HostLogs::bind(Arc::new(client)).await.unwrap();
+    let mut changed = receipt();
+    changed["tenant"] = json!("foreign-tenant");
+    let changed = agent_terminal_ui_native::host_logs::HostLaunchReceipt::parse(&changed)
+        .unwrap();
+    let matching = logs.receipt().clone();
+    let reader = logs.into_reader();
+    assert!(agent_terminal_ui_native::host_logs::run_host_terminal(
+        changed,
+        Arc::new(ArboraClient::new("http://127.0.0.1:9", Some("fixture-token")).unwrap()),
+        Some(reader),
+    )
+    .is_err());
+    assert!(matching.expires_at_ms() > 0);
+    server.await.unwrap();
+}
+
+// spec: TUI-RUNTIME-R002.3
+#[tokio::test]
+async fn adapter_reads_only_the_bound_opaque_reference() {
+    let (client, server) = serve(vec![
+        response(200, receipt()),
+        response(
+            200,
+            json!({"version":2,"records":[],"cursor":null,"gap":false}),
+        ),
+    ])
+    .await;
+    let client = Arc::new(client);
+    let logs = HostLogs::bind(client.clone()).await.unwrap();
+    let receipt = logs.receipt().clone();
+    let mut reader = agent_terminal_ui_native::host_logs::run_host_terminal(
+        receipt.clone(),
+        client,
+        Some(logs.into_reader()),
+    )
+    .unwrap();
+    let batch = reader
+        .read(&receipt.log_ref, None, 128)
+        .await
+        .unwrap();
+    assert!(batch.records.is_empty());
+    server.await.unwrap();
+}
+
+// spec: TUI-RUNTIME-R002.3
+#[tokio::test]
+async fn missing_reader_refuses_without_a_network_read() {
+    let receipt = agent_terminal_ui_native::host_logs::HostLaunchReceipt::parse(&receipt()).unwrap();
+    let client = Arc::new(
+        ArboraClient::new("http://127.0.0.1:9", Some("fixture-token")).unwrap(),
+    );
+    assert!(agent_terminal_ui_native::host_logs::run_host_terminal(receipt, client, None).is_err());
+}

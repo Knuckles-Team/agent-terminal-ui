@@ -3,6 +3,9 @@ pub mod coding_approval;
 pub mod correlation;
 pub mod execution_graph;
 pub mod host_logs;
+pub mod app {
+    pub use crate::host_logs::{HostLaunchReceipt, HostLogReader, run_host_terminal};
+}
 pub mod public_run_events;
 pub mod recovery;
 pub mod run_inspector;

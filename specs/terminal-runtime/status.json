@@ -588,14 +588,19 @@
       "title": "Validate the host receipt and scope",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [
+        "native/agent-terminal-ui/tests/host_logs.rs:166"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R002.3",
       "title": "Define the terminal consumer adapter",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
-      "verified_by": []
+      "verified_by": [
+        "native/agent-terminal-ui/tests/host_logs.rs:187",
+        "native/agent-terminal-ui/tests/host_logs.rs:215"
+      ]
     },
     {
       "id": "TUI-RUNTIME-R002.4",
@@ -1143,9 +1148,9 @@
         "a96dc581da0f"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/host_log_view.rs:162",
-        "native/agent-terminal-ui/src/host_log_view.rs:186",
-        "native/agent-terminal-ui/src/host_log_view.rs:210",
+        "native/agent-terminal-ui/src/host_log_view.rs:164",
+        "native/agent-terminal-ui/src/host_log_view.rs:188",
+        "native/agent-terminal-ui/src/host_log_view.rs:212",
         "native/agent-terminal-ui/tests/host_logs.rs:115",
         "native/agent-terminal-ui/tests/host_logs.rs:133"
       ]
