@@ -586,8 +586,10 @@
     {
       "id": "TUI-RUNTIME-R002.2",
       "title": "Validate the host receipt and scope",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "abbdc268b7d0"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/tests/host_logs.rs:173"
       ]
@@ -595,8 +597,10 @@
     {
       "id": "TUI-RUNTIME-R002.3",
       "title": "Define the terminal consumer adapter",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "abbdc268b7d0"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/tests/host_logs.rs:190",
         "native/agent-terminal-ui/tests/host_logs.rs:211"
