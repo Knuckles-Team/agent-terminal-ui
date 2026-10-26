@@ -37,7 +37,7 @@ fn encode_response(fixture: FixtureResponse, endpoint: &str) -> String {
     format!(
         "HTTP/1.1 {} Fixture\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
         fixture.status,
-        body.as_bytes().len()
+        body.len()
     )
 }
 
@@ -61,7 +61,7 @@ async fn serve(responses: Vec<FixtureResponse>) -> (ArboraClient, tokio::task::J
                         .then(|| value.trim().parse().unwrap())
                 })
                 .unwrap();
-            assert_eq!(declared_length, body.as_bytes().len());
+            assert_eq!(declared_length, body.len());
             let (mut socket, _) = tokio::time::timeout(Duration::from_secs(2), listener.accept())
                 .await
                 .unwrap()
