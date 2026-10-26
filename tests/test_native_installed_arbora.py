@@ -7,13 +7,19 @@ bearer uses a fresh terminal; this does not prove same-process stale clearing.
 import asyncio
 import importlib
 import os
+import re
+import secrets
 import subprocess
-import uuid
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 import pytest
+
+
+def native_context_id() -> str:
+    """Generate the public A2A context shape, not a display label."""
+    return "a2a-context-" + secrets.token_hex(32)
 
 
 def submit_with_context(
@@ -47,7 +53,15 @@ def test_installed_native_reads_real_admitted_plan(
     boot = importlib.import_module("test_real_boot")
     work_items = importlib.import_module("arbora.work_items")
     original = boot._check_served_native_reads
-    context_id = "native-pty-context-" + uuid.uuid4().hex
+    context_id = native_context_id()
+    models = importlib.import_module("arbora.a2a.models")
+    models.A2ATask.model_validate(
+        {
+            "id": "work-item:" + "0" * 64,
+            "contextId": context_id,
+            "status": {"state": "working"},
+        }
+    )
     # The immutable provider fixture omits context metadata because its own
     # operation reads do not use A2A. Supply it before the real durable submit;
     # never alter the served task response, registry or authority readers.
@@ -122,3 +136,10 @@ def test_context_admission_delegates_without_replacing_the_provider() -> None:
         )
     ]
     assert "a2a_context_id" not in metadata
+
+
+@pytest.mark.spec("TUI-RUNTIME-R010.8")
+def test_native_context_id_matches_the_public_a2a_contract() -> None:
+    contexts = [native_context_id(), native_context_id()]
+    assert contexts[0] != contexts[1]
+    assert all(re.fullmatch(r"a2a-context-[0-9a-f]{64}", value) for value in contexts)

@@ -7,6 +7,7 @@ may invoke ``exercise_served_current_plan`` directly from its boot qualification
 
 import json
 import os
+import uuid
 from urllib.parse import urlsplit
 from urllib.request import ProxyHandler, Request, build_opener
 
@@ -64,7 +65,7 @@ def exercise_served_current_plan(
         terminal.close()
 
     refused = NativeTerminal(
-        base_url, [], task_id, bearer_token="invalid-disposable-qualification-token"
+        base_url, [], task_id, bearer_token=f"invalid-{uuid.uuid4().hex}"
     )
     try:
         refused.wait_until(
