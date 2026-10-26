@@ -1,7 +1,8 @@
 use crate::presentation::Viewport;
 use agent_terminal_ui_native::{
     ArboraClient,
-    host_logs::{HostLogs, LogBatch, REFUSED, RETENTION_GAP},
+    app::run_host_terminal,
+    host_logs::{HostLogReader, HostLogs, LogBatch, REFUSED, RETENTION_GAP},
 };
 use crossterm::event::{KeyCode, MouseEvent};
 use ratatui::{
@@ -12,13 +13,13 @@ use ratatui::{
 use std::{collections::VecDeque, sync::Arc};
 use tokio::task::JoinHandle;
 
-type Read = JoinHandle<Result<(HostLogs, LogBatch), &'static str>>;
+type Read = JoinHandle<Result<(HostLogReader, LogBatch), &'static str>>;
 
 #[derive(Default)]
 pub struct HostLogView {
     open: bool,
     request: Option<Read>,
-    reader: Option<HostLogs>,
+    reader: Option<HostLogReader>,
     lines: VecDeque<String>,
     status: &'static str,
     expires: u64,
@@ -37,8 +38,10 @@ impl HostLogView {
         self.open = true;
         self.status = "Reading authenticated host logs...";
         self.request = Some(tokio::spawn(async move {
-            let mut reader = HostLogs::bind(client).await?;
-            let batch = reader.read().await?;
+            let logs = HostLogs::bind(client.clone()).await?;
+            let receipt = logs.receipt().clone();
+            let mut reader = run_host_terminal(receipt, client.as_ref(), Some(logs.into_reader()))?;
+            let batch = reader.read_next().await?;
             Ok((reader, batch))
         }));
     }
@@ -65,7 +68,7 @@ impl HostLogView {
         }
         if let Some(mut reader) = self.reader.take() {
             self.request = Some(tokio::spawn(async move {
-                let batch = reader.read().await?;
+                let batch = reader.read_next().await?;
                 Ok((reader, batch))
             }));
         }

@@ -1,7 +1,7 @@
 # Concept Registry — Tuig
 
 > **Prefix**: `CONCEPT:TUI-*`
-> **Version**: 2.3.5
+> **Version**: 2.3.6
 > **Bridge**: [`CONCEPT:AU-ECO.messaging.native-backend-abstraction`](https://github.com/Knuckles-Team/agent-utilities/blob/main/docs/concepts.md) (Unified Toolkit Ingestion)
 
 ---

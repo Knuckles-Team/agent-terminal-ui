@@ -3,6 +3,9 @@ pub mod coding_approval;
 pub mod correlation;
 pub mod execution_graph;
 pub mod host_logs;
+pub mod app {
+    pub use crate::host_logs::{HostLaunchReceipt, HostLogReader, run_host_terminal};
+}
 pub mod public_run_events;
 pub mod recovery;
 pub mod run_inspector;
@@ -159,6 +162,12 @@ impl ArboraClient {
         }
         self.submission_timeout = timeout;
         Ok(self)
+    }
+
+    pub fn endpoint(&self) -> String {
+        let mut endpoint = self.card_url.clone();
+        endpoint.set_path("/");
+        endpoint.to_string()
     }
 
     pub fn with_committed_event_reads(mut self, enabled: bool) -> Self {
