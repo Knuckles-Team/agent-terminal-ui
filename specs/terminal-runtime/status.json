@@ -588,6 +588,7 @@
       "title": "Validate the host receipt and scope",
       "delivery_state": "VERIFIED",
       "landed_in": [
+        "871095ea232a",
         "abbdc268b7d0"
       ],
       "verified_by": [
@@ -599,6 +600,7 @@
       "title": "Define the terminal consumer adapter",
       "delivery_state": "VERIFIED",
       "landed_in": [
+        "871095ea232a",
         "abbdc268b7d0"
       ],
       "verified_by": [
