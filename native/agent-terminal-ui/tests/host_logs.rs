@@ -167,7 +167,8 @@ async fn exact_retention_gap_stops_without_retry_and_other_conflicts_refuse() {
 #[tokio::test]
 async fn changed_receipt_binding_is_rejected_before_reader_use() {
     let (client, server) = serve(vec![response(200, receipt())]).await;
-    let mut logs = HostLogs::bind(Arc::new(client)).await.unwrap();
+    let client = Arc::new(client);
+    let logs = HostLogs::bind(client.clone()).await.unwrap();
     let mut changed = receipt();
     changed["tenant"] = json!("foreign-tenant");
     let changed = agent_terminal_ui_native::host_logs::HostLaunchReceipt::parse(&changed)
@@ -176,7 +177,7 @@ async fn changed_receipt_binding_is_rejected_before_reader_use() {
     let reader = logs.into_reader();
     assert!(agent_terminal_ui_native::host_logs::run_host_terminal(
         changed,
-        Arc::new(ArboraClient::new("http://127.0.0.1:9", Some("fixture-token")).unwrap()),
+        client,
         Some(reader),
     )
     .is_err());
