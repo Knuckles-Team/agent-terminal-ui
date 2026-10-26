@@ -30,7 +30,10 @@ fn response(status: u16, body: Value) -> FixtureResponse {
 }
 
 fn encode_response(fixture: FixtureResponse, endpoint: &str) -> String {
-    let body = fixture.body.to_string().replace(ENDPOINT_SENTINEL, endpoint);
+    let body = fixture
+        .body
+        .to_string()
+        .replace(ENDPOINT_SENTINEL, endpoint);
     format!(
         "HTTP/1.1 {} Fixture\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
         fixture.status,

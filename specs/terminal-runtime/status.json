@@ -591,7 +591,7 @@
         "abbdc268b7d0"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/tests/host_logs.rs:192"
+        "native/agent-terminal-ui/tests/host_logs.rs:195"
       ]
     },
     {
@@ -602,8 +602,8 @@
         "abbdc268b7d0"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/tests/host_logs.rs:209",
-        "native/agent-terminal-ui/tests/host_logs.rs:230"
+        "native/agent-terminal-ui/tests/host_logs.rs:212",
+        "native/agent-terminal-ui/tests/host_logs.rs:233"
       ]
     },
     {
@@ -1155,8 +1155,8 @@
         "native/agent-terminal-ui/src/host_log_view.rs:165",
         "native/agent-terminal-ui/src/host_log_view.rs:189",
         "native/agent-terminal-ui/src/host_log_view.rs:213",
-        "native/agent-terminal-ui/tests/host_logs.rs:113",
-        "native/agent-terminal-ui/tests/host_logs.rs:139"
+        "native/agent-terminal-ui/tests/host_logs.rs:116",
+        "native/agent-terminal-ui/tests/host_logs.rs:142"
       ]
     },
     {
