@@ -9,24 +9,36 @@ use tokio::{
     net::TcpListener,
 };
 
+const ENDPOINT_SENTINEL: &str = "http://127.0.0.1:1/";
+
 fn receipt() -> Value {
     let expires = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_millis() as u64
         + 60000;
-    json!({"version":1,"log_ref":"opaque","host_instance":"host","endpoint":"http://127.0.0.1:1/","workspace":"/fixture","tenant":"tenant","principal":"principal","session_ref":"session","policy_revision":"policy","grant_revision":"grant","expires_at_ms":expires,"interface_mode":"both","web_logs":true,"ready":true,"source_generations":["host"]})
+    json!({"version":1,"log_ref":"opaque","host_instance":"host","endpoint":"http://127.0.0.1:1/","workspace":"/fixture","tenant":"tenant","principal":"principal-π🙂","session_ref":"session","policy_revision":"policy","grant_revision":"grant","expires_at_ms":expires,"interface_mode":"both","web_logs":true,"ready":true,"source_generations":["host"]})
 }
 
-fn response(status: u16, body: Value) -> String {
-    let body = body.to_string();
+struct FixtureResponse {
+    status: u16,
+    body: Value,
+}
+
+fn response(status: u16, body: Value) -> FixtureResponse {
+    FixtureResponse { status, body }
+}
+
+fn encode_response(fixture: FixtureResponse, endpoint: &str) -> String {
+    let body = fixture.body.to_string().replace(ENDPOINT_SENTINEL, endpoint);
     format!(
-        "HTTP/1.1 {status} Fixture\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
-        body.len()
+        "HTTP/1.1 {} Fixture\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+        fixture.status,
+        body.as_bytes().len()
     )
 }
 
-async fn serve(responses: Vec<String>) -> (ArboraClient, tokio::task::JoinHandle<()>) {
+async fn serve(responses: Vec<FixtureResponse>) -> (ArboraClient, tokio::task::JoinHandle<()>) {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let client = ArboraClient::new(
         &format!("http://{}", listener.local_addr().unwrap()),
@@ -34,12 +46,19 @@ async fn serve(responses: Vec<String>) -> (ArboraClient, tokio::task::JoinHandle
     )
     .unwrap();
     let endpoint = client.endpoint();
-    let responses = responses
-        .into_iter()
-        .map(|response| response.replace("http://127.0.0.1:1/", &endpoint))
-        .collect::<Vec<_>>();
     let server = tokio::spawn(async move {
-        for response in responses {
+        for fixture in responses {
+            let response = encode_response(fixture, &endpoint);
+            let (headers, body) = response.split_once("\r\n\r\n").unwrap();
+            let declared_length: usize = headers
+                .lines()
+                .find_map(|line| {
+                    let (key, value) = line.split_once(':')?;
+                    key.eq_ignore_ascii_case("content-length")
+                        .then(|| value.trim().parse().unwrap())
+                })
+                .unwrap();
+            assert_eq!(declared_length, body.as_bytes().len());
             let (mut socket, _) = tokio::time::timeout(Duration::from_secs(2), listener.accept())
                 .await
                 .unwrap()
