@@ -40,6 +40,20 @@ def test_ci_setup_uses_the_selected_python():
     assert f"uv sync --python {selected} " in inputs["setup-command"]
 
 
+def test_pytest_hook_uses_uv_run_flags_supported_by_the_runner():
+    data = yaml.safe_load((ROOT / ".pre-commit-config.yaml").read_text())
+    hook = next(
+        item
+        for repo in data["repos"]
+        if repo["repo"] == "local"
+        for item in repo["hooks"]
+        if item["id"] == "pytest"
+    )
+    entry = hook["entry"]
+    assert "uv run --frozen --group test pytest" in entry
+    assert "--no-install-project" not in entry
+
+
 @pytest.mark.spec("TUI-RUNTIME-R004.2")
 def test_layout_and_surface_checks_follow_shared_advisory_policy():
     data = yaml.safe_load((ROOT / ".github/workflows/advisory.yml").read_text())
