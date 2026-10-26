@@ -151,6 +151,12 @@ remain prerequisites for R002.2 through R002.6.
 
 Native fixtures validate local binding only; served producer fields and the public adapter journey remain unproven.
 
+Follow-up 2026-10-26: this candidate now delivers the native receipt parser,
+public adapter, and focused refusal fixtures. The generated VERIFIED state
+records those source and test bindings. The producer response and served mode
+journey remain open. The acceptance owner must close them through the R002
+served matrix in test-spec.md.
+
 ## Amendments
 
 ### 2026-10-13: Rust thin-client migration (R002, R001, R008, R010)
