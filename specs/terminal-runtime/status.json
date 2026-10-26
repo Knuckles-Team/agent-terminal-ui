@@ -588,6 +588,7 @@
       "title": "Validate the host receipt and scope",
       "delivery_state": "VERIFIED",
       "landed_in": [
+        "30c8402ef356",
         "6a80a934e3d9"
       ],
       "verified_by": [
