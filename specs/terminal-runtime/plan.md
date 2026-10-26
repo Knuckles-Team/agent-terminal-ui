@@ -553,9 +553,13 @@ boundary, not a running Arbora server or native query delivery.
 
 The native inspector adapter prefers the registered `runs.get` route.
 If the registry only offers `runs.current_plan`, it reads that plan and marks the summary unavailable.
-Both routes receive only the run ID. A failed summary read does not trigger another route.
+The summary route receives the validated task and run IDs. The current-plan route receives only the run ID. A failed summary read does not trigger another route.
+The summary availability is read from `result.value`, with the run fields and current plan.
 The adapter checks credentials, availability and the response digest before projecting fields. Plan deadlines use validated UTC expiry and a monotonic clock.
 The coordinator owns main-loop attachment. AU execution admission and Arbora trace-reader composition remain required for served acceptance.
+
+The opt-in `test_native_served_reads_pty.py` bridge uses an installed native executable and a live disposable Arbora fixture. It requires the advertised summary route, displays the admitted run plan and checks invalid-bearer refusal. The bridge requires explicit credentials and removes inherited bearer tokens. The fresh invalid-bearer process proves refusal, not clearing of a previously displayed plan in the same process. This bridge alone does not qualify the installed provider stack.
+The Linux x86_64 wheel job pairs the installed candidate with immutable Arbora source and its hash-locked dependencies. The qualification adds a distinct context ID to the fixture input before real durable admission. It does not replace served responses or authority readers. Separate provider and PTY environments preserve both dependency locks. The paired provider and terminal tests must each pass with no skips. Hosted results are required before claiming this acceptance.
 
 ### R010.9 native inspector loop attachment
 

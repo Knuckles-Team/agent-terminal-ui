@@ -35,12 +35,13 @@ class NativeTerminal:
 
     def __init__(
         self,
-        server: ThreadingHTTPServer,
+        server: ThreadingHTTPServer | str,
         requests: list[tuple[str, dict[str, Any] | None, str | None]],
         task_id: str | None = OWNER_TASK_ID,
         *,
         no_color: bool = True,
         arguments: tuple[str, ...] = (),
+        bearer_token: str | None = None,
     ) -> None:
         self.requests = requests
         self.trace: deque[tuple[str, object]] = deque(maxlen=64)
@@ -51,12 +52,19 @@ class NativeTerminal:
             **os.environ,
             "TERM": "xterm-256color",
             "NO_COLOR": "1" if no_color else "",
-            "AGENT_URL": f"http://127.0.0.1:{server.server_port}",
-            "AGENT_AUTH_MODE": "none",
+            "AGENT_URL": (
+                server if isinstance(server, str)
+                else f"http://127.0.0.1:{server.server_port}"
+            ),
+            "AGENT_AUTH_MODE": "bearer" if bearer_token is not None else "none",
             "HTTP_PROXY": "http://127.0.0.1:1",
             "HTTPS_PROXY": "http://127.0.0.1:1",
         }
         environment.pop("AGENT_BEARER_TOKEN", None)
+        if bearer_token is not None:
+            environment["AGENT_BEARER_TOKEN"] = bearer_token
+            environment["NO_PROXY"] = "localhost,127.0.0.1,::1"
+            environment["no_proxy"] = "localhost,127.0.0.1,::1"
         environment.pop("AGENT_TASK_ID", None)
         if task_id is not None:
             environment["AGENT_TASK_ID"] = task_id
