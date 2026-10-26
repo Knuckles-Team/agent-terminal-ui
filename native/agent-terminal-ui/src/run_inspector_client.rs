@@ -83,9 +83,14 @@ impl ArboraClient {
         }
         let (operation, result) = self
             .read_run_operation_choice(
-                &["runs.get", "runs.current_plan"],
+                &[
+                    (
+                        "runs.get",
+                        serde_json::json!({"run_id": run_id, "task_id": task_id}),
+                    ),
+                    ("runs.current_plan", serde_json::json!({"run_id": run_id})),
+                ],
                 run_id,
-                serde_json::json!({"run_id": run_id}),
             )
             .await?;
         let wall = OffsetDateTime::now_utc();
@@ -94,7 +99,7 @@ impl ArboraClient {
         if operation == "runs.current_plan" {
             return decode_plan_only(value, run_id, wall, now);
         }
-        if result.get("availability").and_then(Value::as_str) != Some("available") {
+        if value.get("availability").and_then(Value::as_str) != Some("available") {
             return Err(ReadRefusal::Unavailable);
         }
         decode_run(value, run_id, wall, now)
@@ -106,16 +111,15 @@ impl ArboraClient {
         run_id: &str,
         params: Value,
     ) -> Result<Value, ReadRefusal> {
-        self.read_run_operation_choice(&[operation], run_id, params)
+        self.read_run_operation_choice(&[(operation, params)], run_id)
             .await
             .and_then(|(_, result)| result.get("value").cloned().ok_or(ReadRefusal::Unavailable))
     }
 
     async fn read_run_operation_choice(
         &self,
-        operations: &[&str],
+        operations: &[(&str, Value)],
         run_id: &str,
-        params: Value,
     ) -> Result<(String, Value), ReadRefusal> {
         if !self.authenticated && self.auth_mode != crate::AuthMode::None {
             return Err(ReadRefusal::Denied);
@@ -139,16 +143,16 @@ impl ArboraClient {
             .get("ops")
             .and_then(Value::as_array)
             .ok_or(ReadRefusal::Unavailable)?;
-        let operation = operations
+        let (operation, params) = operations
             .iter()
-            .find(|operation| {
+            .find(|(operation, _)| {
                 advertised
                     .iter()
-                    .any(|op| op.get("id").and_then(Value::as_str) == Some(**operation))
+                    .any(|op| op.get("id").and_then(Value::as_str) == Some(*operation))
             })
             .ok_or(ReadRefusal::Unavailable)?;
         url.set_path(&format!("/api/v1/ops/{operation}"));
-        let body = response_json(self.http.post(url).json(&params).send().await).await?;
+        let body = response_json(self.http.post(url).json(params).send().await).await?;
         if body
             .pointer("/meta/registry_digest")
             .and_then(Value::as_str)
@@ -546,7 +550,7 @@ mod transport_tests {
     // spec: TUI-RUNTIME-R010.8
     #[tokio::test]
     async fn advertised_read_uses_credentials_exact_run_and_digest() {
-        let body = serde_json::json!({"ok":true,"meta":{"api_version":"v1","registry_digest":"d"},"result":{"availability":"available","value":{"run_id":"r","peak_context_tokens":0,"current_plan":{"availability":"unavailable","snapshot":null}}}});
+        let body = serde_json::json!({"ok":true,"meta":{"api_version":"v1","registry_digest":"d"},"result":{"value":{"availability":"available","run_id":"r","peak_context_tokens":0,"current_plan":{"availability":"unavailable","snapshot":null}}}});
         let (endpoint, server) = server(vec![
             (200, registry(serde_json::json!([{"id":"runs.get"}]))),
             (200, body),
@@ -571,13 +575,16 @@ mod transport_tests {
         }));
         let params: Value =
             serde_json::from_str(requests[1].split_once("\r\n\r\n").unwrap().1).unwrap();
-        assert_eq!(params, serde_json::json!({"run_id":"r"}));
+        assert_eq!(
+            params,
+            serde_json::json!({"run_id":"r","task_id":"work-item:owner"})
+        );
     }
 
     // spec: TUI-RUNTIME-R002.1.3.3
     #[tokio::test]
     async fn anonymous_advertised_read_preserves_run_and_digest() {
-        let body = serde_json::json!({"ok":true,"meta":{"api_version":"v1","registry_digest":"d"},"result":{"availability":"available","value":{"run_id":"r","peak_context_tokens":0,"current_plan":{"availability":"unavailable","snapshot":null}}}});
+        let body = serde_json::json!({"ok":true,"meta":{"api_version":"v1","registry_digest":"d"},"result":{"value":{"availability":"available","run_id":"r","peak_context_tokens":0,"current_plan":{"availability":"unavailable","snapshot":null}}}});
         let (endpoint, server) = server(vec![
             (200, registry(serde_json::json!([{"id":"runs.get"}]))),
             (200, body),
@@ -603,7 +610,10 @@ mod transport_tests {
         );
         let params: Value =
             serde_json::from_str(requests[1].split_once("\r\n\r\n").unwrap().1).unwrap();
-        assert_eq!(params, serde_json::json!({"run_id":"r"}));
+        assert_eq!(
+            params,
+            serde_json::json!({"run_id":"r","task_id":"work-item:owner"})
+        );
     }
 
     // spec: TUI-RUNTIME-R010.4
@@ -651,6 +661,42 @@ mod transport_tests {
 
     // spec: TUI-RUNTIME-R010.8
     #[tokio::test]
+    async fn summary_preferred_with_nested_current_plan() {
+        let body = json!({"ok":true,"meta":{"api_version":"v1","registry_digest":"d"},
+            "result":{"value":{"availability":"available","run_id":"r",
+                "task_id":"work-item:owner","current_plan":{"availability":"available",
+                    "snapshot":{"run_id":"r","revision":1,
+                        "observed_at":"2020-01-01T00:00:00Z",
+                        "expires_at":"2099-01-01T00:00:00Z",
+                        "items":[{"text":"served summary plan","status":"pending"}]}}}}});
+        let (endpoint, task) = server(vec![
+            (
+                200,
+                registry(json!([{"id":"runs.current_plan"},{"id":"runs.get"}])),
+            ),
+            (200, body),
+        ])
+        .await;
+        let client = ArboraClient::new(&endpoint, Some("fixture-credential")).unwrap();
+        let mut inspector = RunInspector::new("r".into());
+        inspector
+            .accept_read(client.get_run("r", "work-item:owner").await, Instant::now())
+            .unwrap();
+        assert!(
+            inspector
+                .text(Instant::now())
+                .contains("served summary plan")
+        );
+        let requests = task.await.unwrap();
+        assert_eq!(requests.len(), 2);
+        assert!(requests[1].starts_with("POST /api/v1/ops/runs.get "));
+        let params: Value =
+            serde_json::from_str(requests[1].split_once("\r\n\r\n").unwrap().1).unwrap();
+        assert_eq!(params, json!({"run_id":"r","task_id":"work-item:owner"}));
+    }
+
+    // spec: TUI-RUNTIME-R010.8
+    #[tokio::test]
     async fn summary_denial_never_dispatches_plan_fallback() {
         let (endpoint, task) = server(vec![
             (
@@ -675,10 +721,11 @@ mod transport_tests {
     async fn malformed_or_unavailable_summary_clears_without_another_read() {
         for result in [
             json!({"availability":"unavailable","value":null}),
-            json!({"availability":"unavailable","value":{"run_id":"r"}}),
+            json!({"value":{"availability":"unavailable","run_id":"r"}}),
             json!({"value":{"run_id":"r"}}),
             json!({"availability":"available","value":null}),
-            json!({"availability":"available","value":{"run_id":"other"}}),
+            json!({"value":{"availability":"available","run_id":"other"}}),
+            json!({"availability":"available","value":{"run_id":"r"}}),
         ] {
             let body = json!({"ok":true,"meta":{"api_version":"v1","registry_digest":"d"},"result":result});
             let (endpoint, task) = server(vec![
@@ -715,7 +762,7 @@ mod transport_tests {
             Err(ReadRefusal::Unavailable)
         ));
         assert_eq!(task.await.unwrap().len(), 1);
-        let body = serde_json::json!({"ok":true,"meta":{"api_version":"v1","registry_digest":"other"},"result":{"availability":"available","value":{"run_id":"r","peak_context_tokens":44}}});
+        let body = serde_json::json!({"ok":true,"meta":{"api_version":"v1","registry_digest":"other"},"result":{"value":{"availability":"available","run_id":"r","peak_context_tokens":44}}});
         let (endpoint, task) = server(vec![
             (200, registry(serde_json::json!([{"id":"runs.get"}]))),
             (200, body),

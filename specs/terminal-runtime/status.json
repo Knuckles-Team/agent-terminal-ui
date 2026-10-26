@@ -545,8 +545,8 @@
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [
-        "native/agent-terminal-ui/src/run_inspector_client.rs:445",
-        "native/agent-terminal-ui/src/run_inspector_client.rs:609"
+        "native/agent-terminal-ui/src/run_inspector_client.rs:449",
+        "native/agent-terminal-ui/src/run_inspector_client.rs:619"
       ],
       "rollup_of": [
         "TUI-RUNTIME-R010.4.1",
@@ -1088,14 +1088,16 @@
       "delivery_state": "VERIFIED",
       "landed_in": [
         "14a4f6e68157",
-        "c2e571cd0f64"
+        "87cbcc937f7a",
+        "c2e571cd0f64",
+        "f47ae1f16fda"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/run_inspector_client.rs:355",
-        "native/agent-terminal-ui/src/run_inspector_client.rs:393",
-        "native/agent-terminal-ui/src/run_inspector_client.rs:426",
-        "native/agent-terminal-ui/src/run_inspector_client.rs:546",
-        "native/agent-terminal-ui/src/run_inspector_client.rs:610"
+        "native/agent-terminal-ui/src/run_inspector_client.rs:359",
+        "native/agent-terminal-ui/src/run_inspector_client.rs:397",
+        "native/agent-terminal-ui/src/run_inspector_client.rs:430",
+        "native/agent-terminal-ui/src/run_inspector_client.rs:550",
+        "native/agent-terminal-ui/src/run_inspector_client.rs:620"
       ]
     },
     {
@@ -2291,7 +2293,7 @@
         "65d859ac8296"
       ],
       "verified_by": [
-        "native/agent-terminal-ui/src/run_inspector_client.rs:577",
+        "native/agent-terminal-ui/src/run_inspector_client.rs:584",
         "native/agent-terminal-ui/tests/anonymous.rs:107",
         "native/agent-terminal-ui/tests/anonymous.rs:13",
         "native/agent-terminal-ui/tests/anonymous.rs:40",
@@ -2616,7 +2618,7 @@
       ],
       "verified_by": [
         "tests/test_native_execution_graph_contract.py:20",
-        "tests/test_native_public_details_pty.py:272"
+        "tests/test_native_public_details_pty.py:280"
       ],
       "rollup_of": [
         "TUI-RUNTIME-R008.4.1",
@@ -2642,7 +2644,7 @@
         "659152bb71ad"
       ],
       "verified_by": [
-        "tests/test_native_public_details_pty.py:272"
+        "tests/test_native_public_details_pty.py:280"
       ]
     },
     {

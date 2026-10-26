@@ -63,6 +63,80 @@ jobs:
           uv sync --frozen --no-install-project --group test --python 3.14
           uv run --frozen --no-sync pytest tests/test_native_local_session_pty.py tests/test_native_composer_pty.py tests/test_native_public_details_pty.py tests/test_native_spatial_graph_pty.py tests/test_native_headless.py -q -rP --no-cov --junitxml="$PTY_RESULTS"
           uv run --frozen --no-sync python -c 'import os, xml.etree.ElementTree as ET; cases = ET.parse(os.environ["PTY_RESULTS"]).findall(".//testcase"); assert len(cases) == 25 and all(case.find(tag) is None for case in cases for tag in ("skipped", "failure", "error")), "All twenty-five installed-native cases must pass without skips"'
+      - name: Check out the immutable installed-provider fixture
+        if: matrix.arch == 'x86_64'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: Knuckles-Team/arbora
+          ref: a286653b8a448477bf044317b6a3a157a7afdaa5
+          path: provider
+          persist-credentials: false
+      - name: Pair the installed candidate with real Arbora reads
+        if: matrix.arch == 'x86_64'
+        shell: bash
+        env:
+          ARBORA_SOURCE_REVISION: a286653b8a448477bf044317b6a3a157a7afdaa5
+        run: |
+          set -euo pipefail
+          root="$PWD"
+          test "$(git -C provider rev-parse HEAD)" = "$ARBORA_SOURCE_REVISION"
+          export TUI_NATIVE_TEST_BINARY="$RUNNER_TEMP/wheel-3.14/bin/tuig"
+          export TUI_PTY_PYTHON="$root/.venv/bin/python"
+          export TUI_PTY_ROOT="$RUNNER_TEMP/paired-pty"
+          export TUI_PAIRED_PTY_RESULTS="$RUNNER_TEMP/paired-pty-results.xml"
+          provider_python="$RUNNER_TEMP/provider-env/bin/python"
+          uv venv --python 3.14 "$RUNNER_TEMP/provider-env"
+          (
+            cd provider
+            uv export --frozen --no-emit-project --no-dev --extra webui --extra test --extra acp \
+              --format requirements.txt --output-file "$RUNNER_TEMP/provider-locked.txt"
+            uv build --wheel --out-dir "$RUNNER_TEMP/provider-dist"
+          )
+          uv pip install --no-config --python "$provider_python" --require-hashes --no-deps \
+            --only-binary epistemic-graph --only-binary epistemic-graph-server \
+            --index-url https://pypi.org/simple -r "$RUNNER_TEMP/provider-locked.txt"
+          uv pip install --no-config --python "$provider_python" --no-deps "$RUNNER_TEMP"/provider-dist/arbora-*.whl
+          uv pip check --no-config --python "$provider_python"
+          boot="$RUNNER_TEMP/paired-provider"
+          mkdir -p "$boot" "$TUI_PTY_ROOT/tests"
+          cp provider/tests/test_real_boot.py provider/tests/_boot_connector.py \
+            provider/tests/_boot_model.py provider/tests/_boot_ingest_connector.py \
+            provider/tests/conftest.py tests/test_native_installed_arbora.py "$boot/"
+          cp tests/__init__.py tests/test_native_public_details_pty.py \
+            tests/test_native_served_reads_pty.py "$TUI_PTY_ROOT/tests/"
+          printf '%s\n' '[pytest]' 'asyncio_mode = auto' 'markers =' \
+            '    spec: binds a test to a spec requirement ID' \
+            '    real_boot: boots a real Arbora process against a real EG server' > "$boot/pytest.ini"
+          cp "$boot/pytest.ini" "$TUI_PTY_ROOT/pytest.ini"
+          export TUI_TEST_SOURCE_REVISION="$(git rev-parse HEAD)"
+          export TUI_TEST_SOURCE_TREE="$(git rev-parse HEAD^{tree})"
+          "$TUI_PTY_PYTHON" scripts/verify_native_wheel.py dist/*.whl "$TUI_NATIVE_TEST_BINARY" "$RUNNER_TEMP/paired-native-provenance.json"
+          export ARBORA_LOCK_SHA256="$(sha256sum provider/uv.lock | cut -d ' ' -f 1)"
+          export ARBORA_WHEEL_SHA256="$(sha256sum "$RUNNER_TEMP"/provider-dist/arbora-*.whl | cut -d ' ' -f 1)"
+          cd "$boot"
+          "$provider_python" -I -c '
+          import hashlib, importlib.metadata as md, json, os, sys
+          from pathlib import Path
+          import arbora, agent_utilities, agent_connector_sdk, epistemic_graph
+          modules = (arbora, agent_utilities, agent_connector_sdk, epistemic_graph)
+          imports = {module.__name__: str(Path(module.__file__).resolve()) for module in modules}
+          assert all(Path(sys.prefix).resolve() in Path(path).parents for path in imports.values()), imports
+          names = ("arbora", "agent-utilities", "agent-connector-sdk", "epistemic-graph", "epistemic-graph-server")
+          versions = {name: md.version(name) for name in names}
+          assert versions["epistemic-graph"] == "2.27.7", versions
+          assert versions["epistemic-graph-server"] == "2.27.7", versions
+          receipt = {"arbora_source_revision": os.environ["ARBORA_SOURCE_REVISION"], "arbora_lock_sha256": os.environ["ARBORA_LOCK_SHA256"], "arbora_wheel_sha256": os.environ["ARBORA_WHEEL_SHA256"], "imports": imports, "versions": versions, "native_sha256": hashlib.sha256(Path(os.environ["TUI_NATIVE_TEST_BINARY"]).read_bytes()).hexdigest(), "refusal_scope": "fresh invalid-bearer terminal; not same-process stale clearing"}
+          Path(os.environ["RUNNER_TEMP"], "paired-provider-provenance.json").write_text(json.dumps(receipt, indent=2) + "\n")
+          '
+          "$provider_python" -I -m pytest -p no:cacheprovider -q -rA \
+            --junitxml="$RUNNER_TEMP/paired-provider-results.xml" test_native_installed_arbora.py::test_installed_native_reads_real_admitted_plan
+          "$provider_python" -I -c '
+          import os, xml.etree.ElementTree as ET
+          from pathlib import Path
+          for name in ("paired-provider-results.xml", "paired-pty-results.xml"):
+              cases = ET.parse(Path(os.environ["RUNNER_TEMP"], name)).findall(".//testcase")
+              assert len(cases) == 1 and all(case.find(tag) is None for case in cases for tag in ("skipped", "failure", "error")), (name, "One required paired case must pass without skips")
+          '
       - name: Retain wheels and qualification receipts (not a release)
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -72,4 +146,6 @@ jobs:
             dist/*
             ${{ runner.temp }}/provenance-*.json
             ${{ runner.temp }}/wheel-pty-results.xml
+            ${{ runner.temp }}/paired-*-provenance.json
+            ${{ runner.temp }}/paired-*-results.xml
           if-no-files-found: error
