@@ -2,6 +2,7 @@
 
 import configparser
 import hashlib
+import os
 import subprocess
 from pathlib import Path
 
@@ -25,11 +26,15 @@ REPORTS = [
 
 
 def _git(repository: Path, *arguments: str) -> subprocess.CompletedProcess[bytes]:
+    environment = {
+        key: value for key, value in os.environ.items() if not key.startswith("GIT_")
+    }
     return subprocess.run(
         ["git", "-C", str(repository), *arguments],
         capture_output=True,
         timeout=10,
         check=False,
+        env=environment,
     )
 
 

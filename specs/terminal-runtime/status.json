@@ -1780,9 +1780,9 @@
         "e3eca3dd39dc"
       ],
       "verified_by": [
-        "tests/test_historical_analysis.py:17",
-        "tests/test_historical_analysis.py:91",
-        "tests/test_historical_analysis.py:97"
+        "tests/test_historical_analysis.py:102",
+        "tests/test_historical_analysis.py:18",
+        "tests/test_historical_analysis.py:96"
       ]
     },
     {
@@ -1793,9 +1793,9 @@
         "e3eca3dd39dc"
       ],
       "verified_by": [
-        "tests/test_historical_analysis.py:22",
-        "tests/test_historical_analysis.py:91",
-        "tests/test_historical_analysis.py:97"
+        "tests/test_historical_analysis.py:102",
+        "tests/test_historical_analysis.py:23",
+        "tests/test_historical_analysis.py:96"
       ]
     },
     {
