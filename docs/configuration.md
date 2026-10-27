@@ -48,3 +48,20 @@ paths use nonblocking terminal output. Unwritable interactive output closes
 the session and reaps the backend instead of blocking cancellation. Initialization allows 30 seconds; each response
 allows 330 seconds. Local mode cannot observe a central task or resume after
 restart. Installed-candidate tests do not qualify a released dependency stack.
+
+## Explicit context continuation
+
+Use `tuig --continue CONTEXT_ID --prompt TEXT` (optionally `--headless`) to
+submit a new turn to a known durable context. The identifier must be
+`a2a-context-` followed by 64 lowercase hexadecimal digits. Observation,
+`AGENT_TASK_ID`, duplicate flags and local ACP cannot be combined with this mode.
+
+The server must advertise and activate the versioned completed-text-history
+extension. Without that capability, Tuig submits nothing. A missing activation
+response or changed returned context leaves the submission outcome unknown.
+Tuig never retries it or starts a fresh context as a fallback. This check cannot
+undo effects if discovery and submission reach different server versions.
+
+Each invocation sends only the new prompt and generates a new message and
+idempotency identifier. History remains upstream. This entry point does not
+provide a history picker, prior-turn display or qualified restart recovery.

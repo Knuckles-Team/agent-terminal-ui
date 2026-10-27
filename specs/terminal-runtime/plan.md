@@ -1669,3 +1669,24 @@ Historical Python acceptance records are not native verification. Python
 native PTY, gallery, packaging and repository test harnesses remain valid.
 R003, R016 and R012.6.3 require separate acceptance reconciliation; this
 amendment neither removes them nor claims their native acceptance.
+
+## Amendment: explicit context continuation (2026-10-27)
+
+TUI-RUNTIME-R012.3.2.1 adds a native `--continue CONTEXT_ID --prompt TEXT`
+entry point. Accept only `a2a-context-` followed by 64 lowercase hexadecimal
+digits. Reject duplicate flags, observation, AGENT_TASK_ID and local ACP mode.
+Each turn sends only its new prompt with a fresh message and idempotency ID.
+The terminal owns no transcript store.
+
+Before each continuation, read the authorized Agent Card at
+`/.well-known/agent-card.json`. Require one optional extension with URI
+`https://knuckles-team.github.io/arbora/extensions/completed-text-history/v1`.
+Send that URI in `X-A2A-Extensions` and require its response echo and the exact
+requested context ID. Missing capability makes no submission. Missing activation
+or a changed returned context after submission leaves an unknown outcome, with
+no retry or fresh-context fallback. A client check cannot undo effects on an old
+server reached after discovery. The server owns history selection and refusal.
+
+This source slice does not close R012.3.2. Hosted native checks, the actual
+client/backend restart journey and the full history-selection UI remain open.
+Agent Card stateTransitionHistory does not advertise model-history continuation.

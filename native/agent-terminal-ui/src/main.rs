@@ -730,6 +730,7 @@ Options:
   --headless              Print unary snapshots without opening a terminal.
                           Requires --prompt or --observe-task.
   --prompt TEXT           Submit one text task (1..65536 bytes).
+  --continue CONTEXT_ID   Continue an advertised durable context with --prompt.
   --observe-task TASK_ID   Observe an existing task without remote cancellation.
   --local-runtime         Spawn internal arbora-acp (POSIX, 16 KiB prompt).
   --local-model VALUE     Provider:model for explicit local runtime only.
@@ -787,6 +788,7 @@ async fn main() -> ExitCode {
         };
         let auth_mode = AuthMode::parse(mode_value.as_deref())?;
         let task_id = selected_task(env::var("AGENT_TASK_ID"))?;
+        let (context_id, args) = cli::continuation(&args, task_id.is_some())?;
         let observation = selected_observation(&args, task_id.is_some())?;
         let observe = observation.is_some();
         if observe && token.is_none() && auth_mode != AuthMode::None {
@@ -801,7 +803,13 @@ async fn main() -> ExitCode {
         if prompt.is_some() && token.is_none() && auth_mode != AuthMode::None {
             return Err("Submission requires a caller credential");
         }
-        let submission = prompt.as_deref().map(TaskSubmission::new).transpose()?;
+        let submission = prompt
+            .as_deref()
+            .map(|text| match context_id.as_deref() {
+                Some(context) => TaskSubmission::continuing(text, context),
+                None => TaskSubmission::new(text),
+            })
+            .transpose()?;
         let timeout = submission_timeout(env::var("AGENT_SUBMISSION_TIMEOUT_SECONDS"))?;
         let include_event = committed_event_reads(env::var("AGENT_INCLUDE_COMMITTED_EVENT"))?;
         let client = ArboraClient::with_auth_mode(&endpoint, token.as_deref(), auth_mode)?
