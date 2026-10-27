@@ -1828,3 +1828,19 @@ behavior, retained scrolling, no-color, reduced motion and R002 performance.
 R008.3 still requires selection, resize, composer retention, theme cycling,
 contrast and compiled qualification. Missing native journeys stay planned.
 A deleted Python test or a native buffer test does not close those journeys.
+
+## Native explicit-context submission
+
+TUI-RUNTIME-R012.3.2.1 uses `native/agent-terminal-ui/tests/continuation.rs`
+and `cli.rs` unit tests. `tests/test_native_continuation.py` checks the compiled
+headless entry point with two fresh client processes against a wire fixture.
+This fixture is not a durable backend restart test. Verify canonical IDs, one prompt, fresh turn identities
+and exact context forwarding. Missing, malformed or duplicate capabilities make
+zero submissions. Missing, wrong or duplicate activation echoes and changed
+returned contexts leave an unknown outcome with no retry. Reject observation,
+AGENT_TASK_ID and local ACP combinations. Keep actual restart proof separate.
+
+TUI-RUNTIME-R012.3.2.2 remains open for the actual installed client and backend
+restart journey, context selection and prior-turn display. Record exact producer
+and consumer revisions. Refuse foreign contexts and incomplete history without
+submitting a fresh replacement. A wire fixture cannot close this row.

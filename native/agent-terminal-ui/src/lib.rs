@@ -22,9 +22,29 @@ use std::time::Duration;
 const MAX_RESPONSE_BYTES: usize = 1024 * 1024;
 pub const SUBMISSION_UNKNOWN: &str = "Submission outcome unknown. It will not be resubmitted. No task identifier is available to refresh.";
 
+pub const CONTINUATION_EXTENSION: &str =
+    "https://knuckles-team.github.io/arbora/extensions/completed-text-history/v1";
+pub const CONTINUATION_UNAVAILABLE: &str =
+    "Durable context continuation is unavailable; no turn was submitted";
+
+pub fn validate_context_id(value: &str) -> Result<(), &'static str> {
+    let suffix = value
+        .strip_prefix("a2a-context-")
+        .ok_or("Invalid continuation context identifier")?;
+    if suffix.len() != 64
+        || !suffix
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+    {
+        return Err("Invalid continuation context identifier");
+    }
+    Ok(())
+}
+
 pub struct TaskSubmission {
     prompt: String,
     message_id: String,
+    context_id: Option<String>,
 }
 
 impl TaskSubmission {
@@ -38,7 +58,15 @@ impl TaskSubmission {
         Ok(Self {
             prompt: prompt.to_owned(),
             message_id,
+            context_id: None,
         })
+    }
+
+    pub fn continuing(prompt: &str, context_id: &str) -> Result<Self, &'static str> {
+        validate_context_id(context_id)?;
+        let mut submission = Self::new(prompt)?;
+        submission.context_id = Some(context_id.to_owned());
+        Ok(submission)
     }
 
     pub fn message_id(&self) -> &str {
@@ -182,22 +210,33 @@ impl ArboraClient {
         if !self.authenticated && self.auth_mode != AuthMode::None {
             return Err("Submission requires a caller credential");
         }
+        if submission.context_id.is_some() {
+            self.require_continuation().await?;
+        }
+        let mut message = serde_json::json!({
+            "kind": "message", "role": "user",
+            "messageId": submission.message_id(),
+            "parts": [{"kind": "text", "text": submission.prompt}],
+        });
+        if let Some(context_id) = &submission.context_id {
+            message["contextId"] = serde_json::json!(context_id);
+        }
         let mut url = self.card_url.clone();
         url.set_path("/a2a");
-        let response = self
+        let mut request = self
             .http
             .post(url)
             .timeout(self.submission_timeout)
-            .header("Idempotency-Key", submission.message_id())
+            .header("Idempotency-Key", submission.message_id());
+        if submission.context_id.is_some() {
+            request = request.header("X-A2A-Extensions", CONTINUATION_EXTENSION);
+        }
+        let response = request
             .json(&serde_json::json!({
                 "jsonrpc": "2.0",
                 "id": submission.message_id(),
                 "method": "message/send",
-                "params": {"configuration": {"blocking": false}, "message": {
-                    "kind": "message", "role": "user",
-                    "messageId": submission.message_id(),
-                    "parts": [{"kind": "text", "text": submission.prompt}],
-                }},
+                "params": {"configuration": {"blocking": false}, "message": message},
             }))
             .send()
             .await
@@ -205,10 +244,59 @@ impl ArboraClient {
         if !response.status().is_success() {
             return Err(SUBMISSION_UNKNOWN);
         }
+        if submission.context_id.is_some() {
+            let mut activations = response.headers().get_all("X-A2A-Extensions").iter();
+            if activations.next().and_then(|value| value.to_str().ok())
+                != Some(CONTINUATION_EXTENSION)
+                || activations.next().is_some()
+            {
+                return Err(SUBMISSION_UNKNOWN);
+            }
+        }
         let bytes = read_task_response(response)
             .await
             .map_err(|_| SUBMISSION_UNKNOWN)?;
-        parse_returned_task(submission.message_id(), &bytes).map_err(|_| SUBMISSION_UNKNOWN)
+        let task =
+            parse_returned_task(submission.message_id(), &bytes).map_err(|_| SUBMISSION_UNKNOWN)?;
+        if submission
+            .context_id
+            .as_deref()
+            .is_some_and(|context_id| task.correlation.context_id() != context_id)
+        {
+            return Err(SUBMISSION_UNKNOWN);
+        }
+        Ok(task)
+    }
+
+    async fn require_continuation(&self) -> Result<(), &'static str> {
+        let response = self
+            .http
+            .get(self.card_url.clone())
+            .send()
+            .await
+            .map_err(|_| CONTINUATION_UNAVAILABLE)?;
+        if !response.status().is_success() {
+            return Err(CONTINUATION_UNAVAILABLE);
+        }
+        let bytes = read_task_response(response)
+            .await
+            .map_err(|_| CONTINUATION_UNAVAILABLE)?;
+        let card: serde_json::Value =
+            serde_json::from_slice(&bytes).map_err(|_| CONTINUATION_UNAVAILABLE)?;
+        let extensions = card
+            .pointer("/capabilities/extensions")
+            .and_then(|value| value.as_array())
+            .ok_or(CONTINUATION_UNAVAILABLE)?;
+        let mut matching = extensions.iter().filter(|extension| {
+            extension.get("uri").and_then(|value| value.as_str()) == Some(CONTINUATION_EXTENSION)
+        });
+        let extension = matching.next().ok_or(CONTINUATION_UNAVAILABLE)?;
+        if matching.next().is_some()
+            || extension.get("required").and_then(|value| value.as_bool()) != Some(false)
+        {
+            return Err(CONTINUATION_UNAVAILABLE);
+        }
+        Ok(())
     }
 
     pub async fn get_task(&self, task_id: &str) -> Result<TaskSnapshot, &'static str> {

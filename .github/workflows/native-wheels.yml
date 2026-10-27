@@ -61,8 +61,8 @@ jobs:
           set -euo pipefail
           export TUI_NATIVE_TEST_BINARY="$RUNNER_TEMP/wheel-3.14/bin/tuig"
           uv sync --frozen --no-install-project --group test --python 3.14
-          uv run --frozen --no-sync pytest tests/test_native_local_session_pty.py tests/test_native_composer_pty.py tests/test_native_public_details_pty.py tests/test_native_spatial_graph_pty.py tests/test_native_headless.py -q -rP --no-cov --junitxml="$PTY_RESULTS"
-          uv run --frozen --no-sync python -c 'import os, xml.etree.ElementTree as ET; cases = ET.parse(os.environ["PTY_RESULTS"]).findall(".//testcase"); assert len(cases) == 25 and all(case.find(tag) is None for case in cases for tag in ("skipped", "failure", "error")), "All twenty-five installed-native cases must pass without skips"'
+          uv run --frozen --no-sync pytest tests/test_native_local_session_pty.py tests/test_native_composer_pty.py tests/test_native_public_details_pty.py tests/test_native_spatial_graph_pty.py tests/test_native_headless.py tests/test_native_continuation.py -q -rP --no-cov --junitxml="$PTY_RESULTS"
+          uv run --frozen --no-sync python -c 'import os, xml.etree.ElementTree as ET; cases = ET.parse(os.environ["PTY_RESULTS"]).findall(".//testcase"); assert len(cases) == 29 and all(case.find(tag) is None for case in cases for tag in ("skipped", "failure", "error")), "All twenty-nine installed-native cases must pass without skips"'
       - name: Check out the immutable installed-provider fixture
         if: matrix.arch == 'x86_64'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

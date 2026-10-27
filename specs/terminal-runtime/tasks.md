@@ -349,3 +349,6 @@ Existing inspection, presentation and daily-workflow obligations remain open whe
 
 These tasks replace only Python frontend execution, not product obligations.
 Do not restore the removed frontend. Keep native Python test harnesses.
+
+- [ ] **TUI-RUNTIME-R012.3.2.1:** Qualify native explicit-context continuation with hosted CLI and HTTP tests. Preserve open parent history UI and restart acceptance.
+- [ ] **TUI-RUNTIME-R012.3.2.2:** Deliver history selection and prior-turn display. Qualify actual client and backend restart with model-history continuation and refusal evidence.
