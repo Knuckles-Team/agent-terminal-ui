@@ -1,5 +1,16 @@
 # TUI-RUNTIME test specification
 
+## Current native acceptance target
+
+All frontend acceptance targets the Rust/Ratatui `tuig` executable. The native-only
+cutover amendments and the 2026-10-27 mapping in `plan.md` supersede historical
+Python/Textual implementation pointers below. Preserve their positive and negative
+behavioral obligations. Historical fixture receipts remain explicitly historical;
+Python may still implement test harnesses and packaging checks. Port unfulfilled
+frontend cases to native contract/PTY/installed-binary tests without restoring the
+removed frontend. Source fixtures alone do not establish a served journey, and
+this documentation reconciliation advances no delivery state.
+
 | Requirement | Layer and fixture | Expected positive result | Required negative proof |
 |---|---|---|---|
 | TUI-RUNTIME-R001.1 | Unit command parser plus `httpx.MockTransport`; installed generated registry artifact | Known op and object params produce one versioned request with correct envelope | Empty ID, malformed JSON, array input, unknown op, missing registry file and digest mismatch make zero effect requests |

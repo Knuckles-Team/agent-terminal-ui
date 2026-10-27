@@ -1,10 +1,16 @@
 # TUI-RUNTIME implementation tasks
 
+Current work targets the single native Rust/Ratatui `tuig` frontend. See the
+2026-10-27 native mapping in `plan.md`. Checked historical Python tasks below
+record their original source completion only. They neither authorize restoring
+that frontend nor close native or served acceptance gaps. Retain their requirement
+IDs and obligations when replacing historical fixture pointers.
+
 - [ ] Review the existing isolated TUI-RUNTIME-R001 source candidate against current main and this spec; preserve unrelated concurrent edits.
-- [ ] Confirm Arbora's public generated registry, endpoint and A2A plan methods in an installed wheel. Align the optional client dependency and Python support matrix.
-- [ ] Wire `/op` and `/confirm` through `CommandProcessor` and the single `AgentClient`; keep chat and existing read-only screens usable.
+- [ ] Confirm Arbora's public generated registry, endpoint and A2A plan methods in an installed wheel. Align the native client contract, installed wheel and supported packaging matrix.
+- [ ] Wire `/op` and `/confirm` through the existing native entry and shared `ArboraClient`; keep chat and existing read-only screens usable.
 - [ ] Enforce TLS, verified caller identity, exact one-use PLAN binding and stable error handling. Keep approval/grant routes closed until Arbora's signed pending-call exchange is served and tested.
-- [ ] Add the positive and negative unit, contract, Textual and installed-wheel tests in `test-spec.md`.
+- [ ] Add the positive and negative native unit, contract, PTY and installed-wheel tests in `test-spec.md`.
 - [ ] Run the configured language checks; define and run CCCC, `jscpd` and Dupehound commands/thresholds or document their explicit acceptance exception. Review KISS and remove duplicate transport paths.
 - [ ] Publish the exact merged TUI revision, Arbora service revision, checks and consumer receipts in `status.json`. Move to LANDED only after merge, ACCEPTED only after the served proof.
 
@@ -239,7 +245,7 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUI-RUNTIME-R015.67:** Terminal source quality must satisfy every quality acceptance v1 domain without averaging failures. Source obligation: `CHECKLIST non-FR checkbox 56`.
 - [ ] **TUI-RUNTIME-R015.68:** Terminal source quality must provide separate reproducible evidence for all 17 quality acceptance v1 domains. Source obligation: `CHECKLIST non-FR checkbox 57`.
 - [ ] **TUI-RUNTIME-R015.69:** The repository must resolve every actionable finding in the current quality acceptance v1 inventory. Source obligation: `CHECKLIST non-FR checkbox 58`.
-- [x] **TUI-RUNTIME-R015.70:** Source-quality repairs must preserve the installed command path through `agent_terminal_ui/terminal_ui.py:10`.
+- [x] **TUI-RUNTIME-R015.70:** Source-quality repairs must preserve the installed native `tuig` command path through `native/agent-terminal-ui/src/main.rs`.
 - [x] **TUI-RUNTIME-R015.71:** A served integration test must start the installed command and observe client behavior after source-quality repairs. It must distinguish a denied request from an authenticated empty result.
 
 - [ ] `TUI-RUNTIME-R008.2.3.2.1`: Deliver native runtime baseline palette switching with focused production-handler and rendering coverage.

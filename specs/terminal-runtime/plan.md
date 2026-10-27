@@ -2,18 +2,44 @@
 
 ## Existing wiring and architecture
 
-At the current public main revision, `CommandProcessor` in `agent_terminal_ui/commands.py` owns slash-command dispatch and the `/capabilities` and `/run` commands. `AgentClient` in `agent_terminal_ui/client.py` owns HTTP transport, session events and the older `/api/capabilities/*` and `/api/runs/*` routes. `agent_terminal_ui/app.py`, `screens/main.py`, `tui/input_text_area.py`, `tui/capability_palette.py` and `tui/run_inspector.py` are presentation consumers. This is the path to extend; no parallel command router, HTTP client or local Arbora gateway should be created.
+The current implementation baseline is `4f53111e53f6179312995883f4f62c8bb584d502`.
+`native/agent-terminal-ui/src/main.rs` owns the sole `tuig` executable;
+`cli.rs` parses headless selection, `lib.rs::ArboraClient` owns the shared public
+HTTP/A2A boundary, and `headless.rs` observes normalized task snapshots. Interactive
+presentation lives in `main.rs`, `presentation.rs` and the native view modules.
+Local ACP launch is handled separately by `local_runtime.rs` and `local_session.rs`.
+Extend these existing native paths. Do not recreate a Python frontend, second
+command executable, local Arbora gateway or competing transport authority.
 
-At main 5ac5e3fec4d590f167d2c6bd694683dbd8950c26, the TUI-RUNTIME-R001 client implementation is present. Its unit tests do not establish served acceptance. It implements `/op`, `/confirm`, a lazy generated-client import and fail-closed approval behavior. Review and compose its exact changes rather than rebuilding the same transport from scratch. The current main package targets Python `>=3.11,<3.15`; Arbora generated-client compatibility must be handled without raising that base floor silently.
+The former `CommandProcessor`, `AgentClient` and Textual source paths in dated
+amendments below are historical receipts, not current extension points. In
+particular, the `/op` and `/confirm` implementation recorded at historical commit
+`5ac5e3fec4d590f167d2c6bd694683dbd8950c26` does not establish those commands in
+native Tuig. Their acceptance obligations remain open until native wiring and
+served proof exist. Python package metadata describes installation/tooling
+compatibility, not a second application runtime.
 
 ```text
-keyboard / slash command
-    -> CommandProcessor
-    -> AgentClient (one session, caller credential, HTTP/A2A transport)
-    -> Arbora versioned operation API or A2A plan confirmation
+native CLI / terminal input
+    -> existing native client and normalized task state
+    -> Arbora public HTTP/A2A boundary (or the selected local ACP session)
     -> server authorization, registry and effect gate
-    -> typed result/error -> existing conversation and run widgets
+    -> typed result/refusal -> native terminal or headless view
 ```
+
+### Native mapping and evidence boundary (2026-10-27)
+
+| Concern | Current native source | Qualification boundary |
+|---|---|---|
+| Submission and observation | `lib.rs::ArboraClient::{submit_task,get_task,refresh_task,cancel_task}`, `headless.rs::run` | Text submission and unary observation do not establish typed tool tasks or preapproval. Resubscription and durable continuation also remain open. |
+| Run and current-plan reads | `run_inspector_client.rs::ArboraClient::get_run`, `run_inspector.rs`, `inspector_view.rs` | Existing native reads use `runs.get` and `runs.current_plan`; historical Python command receipts do not qualify native served journeys. |
+| Presentation | `presentation.rs`, `composer.rs`, native view modules | R008 and the native-only amendments govern native scope. Do not revive Textual to satisfy historical fixture names. |
+
+Paths in this table are relative to `native/agent-terminal-ui/src`. This mapping
+changes no requirement ID, delivery state or acceptance gate. Historical fixture
+names elsewhere are migration obligations, not instructions to restore deleted
+code. Unmapped behavior must receive native acceptance before its original
+obligation can be closed.
 
 ## Contracts and decisions
 
@@ -29,15 +55,25 @@ keyboard / slash command
 
 ## Compatibility and migration
 
-Keep the TUI's base chat install working at the supported Python floor. The 2026-10-18 support amendment below records its accepted change. Put a generated Arbora operation client behind a compatible optional extra or runtime capability check. Document the precise supported Python range in package metadata and lock. Where legacy capability/run APIs remain, inventory their callers and retire each only after a public replacement is served. The GeniusBot consumer must independently prove the same versioned envelope and identity rules. This repository only supplies its contract expectations.
+Keep the installed native `tuig` base chat path working. Validate the Rust binary
+and PyPI wheel together with the pinned public Arbora contracts. Any generated
+operation-client integration must fit that native boundary; an unavailable or
+incompatible client must fail closed. Do not require a Python frontend or untyped
+fallback. Historical Python support amendments below record their original
+packaging context only. Inventory remaining legacy APIs and retire each only
+after its public replacement is served. Axil must independently prove the same
+versioned envelope and identity rules. This repository supplies its contract
+expectations, not its acceptance evidence.
 
 ## Quality and reuse
 
-Use the existing command registry, `AgentClient`, `httpx`, Textual widgets, and Arbora generated models. Keep one transport normalization path and no duplicated request envelope construction. Run the repository's configured Ruff, type and pytest checks. The current repository has no configured CCCC, `jscpd` or Dupehound command or threshold. Before acceptance, either add shared ecosystem invocations with an explicit baseline or record an agreed exception. Do not claim a numerical pass without a configured tool. Apply KISS through a single client and one-use confirmation state. No unrelated `/docs` edit is required. Update README/configuration only where command or credential setup changes, and update AGENTS/constitution only if the contract itself changes.
+Use the existing native client, normalized task models and Ratatui views. Integrate public generated Arbora contracts without restoring a Python frontend. Keep one transport normalization path and no duplicated request envelope construction. Run the repository's configured Ruff, type and pytest tooling checks, alongside locked Cargo format/test/Clippy gates. The current repository has no configured CCCC, `jscpd` or Dupehound command or threshold. Before acceptance, either add shared ecosystem invocations with an explicit baseline or record an agreed exception. Do not claim a numerical pass without a configured tool. Apply KISS through a single client and one-use confirmation state. No unrelated `/docs` edit is required. Update README/configuration only where command or credential setup changes, and update AGENTS/constitution only if the contract itself changes.
 
 ## Structure parity with Overstory (2026-10-11)
 
-The operator requires Tuig to use the same structure as Overstory. The table compares structure only.
+The operator requires Tuig to use the same structure as Overstory. The following
+tables preserve the 2026-10-11 historical inventory, not current implementation
+paths. Use the native mapping above for all new work.
 
 | Element | Overstory | Tuig | Action |
 |---|---|---|---|
@@ -67,13 +103,13 @@ Area decisions, from the terminal code:
 
 ### Existing source and planned wiring
 
-`CommandProcessor.cmd_run` (`agent_terminal_ui/commands.py:244`) → `open_run_inspector` (`app.py:869`) → `RunInspectorScreen._poll_once` (`tui/run_inspector.py:399`) → `AgentClient.get_run_summary` (`client.py:804`).
-
-Current source ends at `GET /api/runs/{id}`. It does not invoke `runs.get` or `runs.metrics`.
-The implementation must migrate this existing path only when the registered replacement has served proof.
-
-The client must use the versioned Arbora operation transport and its generated envelope.
-It must not add another HTTP stack or call the engine directly.
+The native inspector uses `run_inspector_client.rs::ArboraClient::get_run` and
+`run_inspector.rs` to validate run/current-plan projections for `inspector_view.rs`.
+It consumes the public versioned `runs.get` and `runs.current_plan` operations.
+Do not extend the removed Python `/api/runs/{id}` reader or infer `runs.metrics`
+acceptance from these reads. Preserve the remaining generated-envelope, lifecycle
+and served-journey requirements below; no second HTTP stack or direct engine call
+is permitted.
 
 ### Model and wire-to-view mapping
 
