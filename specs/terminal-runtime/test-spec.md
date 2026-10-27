@@ -1839,3 +1839,8 @@ and exact context forwarding. Missing, malformed or duplicate capabilities make
 zero submissions. Missing, wrong or duplicate activation echoes and changed
 returned contexts leave an unknown outcome with no retry. Reject observation,
 AGENT_TASK_ID and local ACP combinations. Keep actual restart proof separate.
+
+TUI-RUNTIME-R012.3.2.2 remains open for the actual installed client and backend
+restart journey, context selection and prior-turn display. Record exact producer
+and consumer revisions. Refuse foreign contexts and incomplete history without
+submitting a fresh replacement. A wire fixture cannot close this row.

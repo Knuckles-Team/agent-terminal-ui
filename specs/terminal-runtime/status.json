@@ -189,6 +189,7 @@
     "TUI-RUNTIME-R012.3.1",
     "TUI-RUNTIME-R012.3.2",
     "TUI-RUNTIME-R012.3.2.1",
+    "TUI-RUNTIME-R012.3.2.2",
     "TUI-RUNTIME-R002.1.3.2.2.2.1",
     "TUI-RUNTIME-R008.2.3.2.2.3",
     "TUI-RUNTIME-R012.6.1",
@@ -1241,7 +1242,13 @@
       "id": "TUI-RUNTIME-R012.3",
       "title": "Conversation list and resume",
       "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "landed_in": [
+        "0d315dab9c4c",
+        "2423325a6ff1",
+        "452ee3eae931",
+        "655161ef1a11",
+        "9dae309b58c9"
+      ],
       "verified_by": [],
       "rollup_of": [
         "TUI-RUNTIME-R012.3.1",
@@ -2164,17 +2171,22 @@
       "id": "TUI-RUNTIME-R012.3.2",
       "title": "Remaining conversation resume acceptance",
       "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "landed_in": [
+        "be006433efc8"
+      ],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R012.3.2.1"
+        "TUI-RUNTIME-R012.3.2.1",
+        "TUI-RUNTIME-R012.3.2.2"
       ]
     },
     {
       "id": "TUI-RUNTIME-R012.3.2.1",
       "title": "Explicit native context continuation",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "VERIFIED",
+      "landed_in": [
+        "be006433efc8"
+      ],
       "verified_by": [
         "native/agent-terminal-ui/src/cli.rs:106",
         "native/agent-terminal-ui/tests/continuation.rs:111",
@@ -2182,6 +2194,13 @@
         "native/agent-terminal-ui/tests/continuation.rs:89",
         "tests/test_native_continuation.py:22"
       ]
+    },
+    {
+      "id": "TUI-RUNTIME-R012.3.2.2",
+      "title": "Qualify complete conversation resume after restart",
+      "delivery_state": "SPECIFIED",
+      "landed_in": [],
+      "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R002.1.3.2.2.2.1",
