@@ -21,13 +21,13 @@ def fixture():
 def test_native_graph_input_uses_level_triggered_supported_backend():
     manifest = tomllib.loads((NATIVE / "Cargo.toml").read_text())
     dependencies = manifest["dependencies"]
-    assert dependencies["crossterm"]["version"] == "0.28"
+    assert dependencies["crossterm"]["version"] == "0.29"
     assert set(dependencies["crossterm"]["features"]) == {
         "event-stream",
         "use-dev-tty",
         "libc",
     }
-    assert dependencies["ratatui"]["version"] == "0.29"
+    assert dependencies["ratatui"]["version"] == "0.30"
 
 
 @pytest.mark.spec("TUI-RUNTIME-R010", "TUI-RUNTIME-R010.11")
