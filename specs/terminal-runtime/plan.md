@@ -895,9 +895,8 @@ The shared workflow resolves its own immutable revision and records each result 
 Locally, the same gates run through `pipelines-hook` with their ordinary exit codes.
 Malformed surface, layout and ignore fixtures must produce findings rather than clean results.
 
-Documentation and spec changes enter `ci-skip.yml` through its existing path filter.
-The job now checks out full history and runs the configured shared spec hook against the PR base.
-The command propagates failure; it has no skip list or continue-on-error setting.
+Documentation and spec changes run the shared `gates` job in `ci.yml`, which passes right after checkout for a docs-only diff (`docs-only-paths`) and runs the full gates for a mixed diff.
+The aggregate `CI required` job is the one required check; native wheels run on main and nightly only.
 The shared spec group validates names, decomposition, generated status and commit trailers.
 The existing code CI and all existing blocking hook entries remain unchanged.
 ### 2026-10-20: Python selection during startup
