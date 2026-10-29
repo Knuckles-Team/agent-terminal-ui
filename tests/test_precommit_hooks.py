@@ -75,29 +75,46 @@ def test_layout_and_surface_checks_follow_shared_advisory_policy():
 
 
 @pytest.mark.spec("TUI-RUNTIME-R004.2")
-def test_docs_ci_enforces_spec_checks_with_full_history_and_range():
-    data = yaml.safe_load((ROOT / ".github/workflows/ci-skip.yml").read_text())
+def test_docs_only_pull_requests_run_the_spec_gate_in_the_shared_job():
+    workflows = ROOT / ".github/workflows"
+    assert not (workflows / "ci-skip.yml").exists()
+    data = yaml.safe_load((workflows / "ci.yml").read_text())
     triggers = data.get("on", data.get(True))
-    assert "specs/**" in triggers["pull_request"]["paths"]
+    assert triggers["pull_request"] == {"branches": ["main"]}
     job = data["jobs"]["gates"]
-    assert not job.get("continue-on-error")
-    steps = job["steps"]
-    checkout = next(
-        step for step in steps if step.get("uses", "").startswith("actions/checkout@")
+    assert (
+        job["uses"]
+        == "Knuckles-Team/pipelines/.github/workflows/gates_pipeline.yml@main"
     )
-    assert checkout["with"]["fetch-depth"] == 0
-    commands = [step for step in steps if "run" in step]
-    assert len(commands) == 1
-    check = commands[0]
-    assert not check.get("continue-on-error")
-    assert check["env"]["BASE_SHA"] == "${{ github.event.pull_request.base.sha }}"
-    assert check["run"] == (
-        "uvx --from pre-commit==4.6.2 pre-commit run spec "
-        "--config .pre-commit-config.yaml "
-        '--hook-stage pre-commit --from-ref "$BASE_SHA" --to-ref HEAD'
-    )
-    assert "SKIP" not in check.get("env", {})
-    assert "SKIP" not in job.get("env", {})
+    assert job["if"] == "github.event_name == 'pull_request'"
+    assert job["with"]["docs-only-paths"].split() == [
+        "specs/*",
+        "docs/*",
+        "*.md",
+        "plans/*",
+        "LICENSE",
+    ]
+    assert "spec" not in job["with"]["skip-hooks"].split(",")
+
+
+def test_ci_required_aggregates_every_blocking_job_and_skips_native_on_prs():
+    data = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text())
+    jobs = data["jobs"]
+    required = jobs["ci-required"]
+    assert required["name"] == "CI required"
+    assert required["if"] == "always()"
+    assert set(required["needs"]) == {
+        "gates",
+        "main-gates",
+        "full",
+        "native-wheels",
+        "native-checks",
+    }
+    assert "ste-advisory" not in required["needs"]
+    assert jobs["native-wheels"]["if"] == "github.event_name != 'pull_request'"
+    assert jobs["full"]["with"]["backward-python"] == "3.12"
+    release = yaml.safe_load((ROOT / ".github/workflows/release.yml").read_text())
+    assert "pull_request" not in release.get("on", release.get(True))
 
 
 @pytest.mark.spec("TUI-RUNTIME-R004.1")

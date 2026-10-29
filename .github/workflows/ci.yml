@@ -1,23 +1,26 @@
 name: CI
 
+# The fleet fast-PR standard (pipelines reference/ci-standard.md). A pull request
+# runs the diff-scoped `gates` job (Python 3.14, affected tests) and, only when
+# native sources change, `native-checks`. The caller aggregate `CI required` is
+# the one required status check. Main and nightly add the full-tree gates, the
+# full suite with the Python 3.12 backward smoke, and the native wheels.
+# ste-advisory is report-only and not part of `CI required`.
+
 on:
   pull_request:
     branches: [main]
-    paths-ignore: &docs
-      - specs/**
-      - docs/**
-      - '**/*.md'
-      - plans/**
-      - LICENSE
   push:
     branches: [main]
-    paths-ignore: *docs
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.event_name == 'pull_request' && format('pr-{0}-{1}', github.workflow, github.event.pull_request.number) || format('main-{0}', github.workflow) }}
+  group: ${{ github.event_name == 'pull_request' && format('pr-{0}-{1}', github.workflow, github.event.pull_request.number) || format('main-{0}-{1}', github.workflow, github.ref) }}
   cancel-in-progress: true
 
 jobs:
@@ -38,9 +41,33 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: uvx --from pre-commit==4.6.2 pre-commit run ste-staged --config .pre-commit-config.yaml --hook-stage pre-commit --from-ref "$BASE_SHA" --to-ref HEAD
 
+  changes:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      native: ${{ steps.f.outputs.native }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - id: f
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            native:
+              - 'native/**'
+              - 'tests/test_native*.py'
+              - 'scripts/verify_native_wheel.py'
+              - 'pyproject.toml'
+              - 'uv.lock'
+              - '.github/workflows/ci.yml'
+
   gates:
+    if: github.event_name == 'pull_request'
     uses: Knuckles-Team/pipelines/.github/workflows/gates_pipeline.yml@main
     with:
+      docs-only-paths: 'specs/* docs/* *.md plans/* LICENSE'
       config: .pre-commit-config.yaml
       python-version: '3.14'
       setup-command: |
@@ -50,13 +77,36 @@ jobs:
       # ste-staged (STE-lite prose lint) is advisory: the ste-advisory job runs it
       # report-only (operator gate cut).
       skip-hooks: okf-no-legacy-concepts,lane-guard,dependency-readiness,pytest,ste-staged
-      all-files: ${{ github.event_name == 'push' }}
-      timeout-minutes: ${{ github.event_name == 'push' && 60 || 15 }}
+      timeout-minutes: 15
+
+  main-gates:
+    # Full-tree gates on main and nightly.
+    if: github.event_name != 'pull_request'
+    uses: Knuckles-Team/pipelines/.github/workflows/gates_pipeline.yml@main
+    with:
+      config: .pre-commit-config.yaml
+      python-version: '3.14'
+      setup-command: |
+        uv sync --python 3.14 --frozen --no-install-project --group test
+      rust: true
+      skip-hooks: okf-no-legacy-concepts,lane-guard,dependency-readiness,pytest,ste-staged
+      all-files: true
+      timeout-minutes: 60
+
+  full:
+    if: github.event_name != 'pull_request'
+    uses: Knuckles-Team/pipelines/.github/workflows/main_pipeline.yml@main
+    with:
+      backward-python: "3.12"
+      rust: true
 
   native-wheels:
+    if: github.event_name != 'pull_request'
     uses: ./.github/workflows/native-wheels.yml
 
   native-checks:
+    needs: [changes]
+    if: always() && (github.event_name != 'pull_request' || needs.changes.outputs.native == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: ${{ github.event_name == 'pull_request' && 10 || 60 }}
     env:
@@ -97,3 +147,19 @@ jobs:
         run: |
           uv run --frozen --no-sync --with agent-client-protocol==0.11.0 python -m pytest tests/test_native_acp.py -q -rP --no-cov --junitxml="$ACP_RESULTS"
           uv run --frozen --no-sync python -c 'import os, xml.etree.ElementTree as ET; cases = ET.parse(os.environ["ACP_RESULTS"]).findall(".//testcase"); assert len(cases) == 13 and all(case.find(tag) is None for case in cases for tag in ("skipped", "failure", "error")), "All thirteen ACP lifecycle and helper-resolution cases must pass without skips"'
+
+  ci-required:
+    name: CI required
+    if: always()
+    needs: [gates, main-gates, full, native-wheels, native-checks]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fail on any failed or cancelled job (skipped is fine)
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "needed job results: $RESULTS"
+          for r in $RESULTS; do
+            case "$r" in failure|cancelled) echo "::error::a required job ended $r"; exit 1;; esac
+          done

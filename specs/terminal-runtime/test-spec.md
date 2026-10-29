@@ -402,7 +402,7 @@ Renderer tests display literal commit identity and clear it after failed reads. 
 | TUI-RUNTIME-R004.1 | `tests/test_precommit_hooks.py::test_spec_group_preserves_stages_and_trailer_fallback` | Group runs at commit, push and manual stages; explicit trailer fallback remains | Missing stage, fallback or retained blocking hook fails |
 | TUI-RUNTIME-R012.4.1 | Command dispatcher with real AgentClient and recording transport | One named unavailable notice | No REST or mutation request for any management subcommand |
 
-| TUI-RUNTIME-R004.2 | `tests/test_precommit_hooks.py::test_layout_and_surface_checks_follow_shared_advisory_policy` and `test_docs_ci_enforces_spec_checks_with_full_history_and_range` | Weekly checks and blocking spec CI cover documentation changes | Missing gate, shallow checkout, absent range or suppressed failure fails |
+| TUI-RUNTIME-R004.2 | `tests/test_precommit_hooks.py::test_layout_and_surface_checks_follow_shared_advisory_policy` and `test_docs_only_pull_requests_run_the_spec_gate_in_the_shared_job` | Weekly checks and blocking spec CI cover documentation changes | Missing gate, a skip companion workflow or a suppressed failure fails |
 
 | TUI-RUNTIME-R012.4.3.1 | Partial dispatcher and usage entry-point coverage | `tests/test_registered_command_contract.py` checks every handler signature and real mounted AgentApp keyboard focus dispatch. Focus commands start no model turn. Exact command names survive Enter unchanged; ambiguous prefixes cannot select a sibling. A unique partial name completes before submission. Mounted usage aliases use real HTTP transport fixtures. Full served command-family coverage remains pending. | These fixtures establish only this narrow child, not complete matrix or live producer acceptance |
 
