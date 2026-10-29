@@ -55,8 +55,8 @@ fn snapshot() -> Value {
     })
 }
 
-// spec: TUI-RUNTIME-R002.1.2
-// spec: TUI-RUNTIME-R002.1.3.2.2.2.3
+// spec: TUIG-RUNTIME-R002.1.2
+// spec: TUIG-RUNTIME-R002.1.3.2.2.2.3
 #[tokio::test]
 async fn reads_task_snapshot_over_authenticated_json_rpc() {
     for include_run in [true, false] {
@@ -96,7 +96,7 @@ async fn reads_task_snapshot_over_authenticated_json_rpc() {
     }
 }
 
-// spec: TUI-RUNTIME-R002.1.2
+// spec: TUIG-RUNTIME-R002.1.2
 #[tokio::test]
 async fn rejects_invalid_task_ids_before_network() {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -115,7 +115,7 @@ async fn rejects_invalid_task_ids_before_network() {
     );
 }
 
-// spec: TUI-RUNTIME-R002.1.2
+// spec: TUIG-RUNTIME-R002.1.2
 #[tokio::test]
 async fn rejects_malformed_mismatched_and_error_envelopes() {
     let mut responses = vec![json!(null), json!({}), json!([])];
@@ -152,8 +152,8 @@ async fn rejects_malformed_mismatched_and_error_envelopes() {
     }
 }
 
-// spec: TUI-RUNTIME-R002.1.2
-// spec: TUI-RUNTIME-R002.1.3.2.2.2.3
+// spec: TUIG-RUNTIME-R002.1.2
+// spec: TUIG-RUNTIME-R002.1.3.2.2.2.3
 #[tokio::test]
 async fn rejects_http_failure_redirect_unknown_task_and_invalid_json() {
     for status in [
@@ -177,7 +177,7 @@ async fn rejects_http_failure_redirect_unknown_task_and_invalid_json() {
     }
 }
 
-// spec: TUI-RUNTIME-R002.1.2
+// spec: TUIG-RUNTIME-R002.1.2
 #[tokio::test]
 async fn bounds_snapshot_response_size() {
     let (url, server) = serve("200 OK", &"x".repeat(1024 * 1024 + 1)).await;
@@ -192,8 +192,8 @@ async fn bounds_snapshot_response_size() {
     server.await.unwrap();
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2.2.3
-// spec: TUI-RUNTIME-R002.1.3.2.2.2.3
+// spec: TUIG-RUNTIME-R002.1.3.2.2.3
+// spec: TUIG-RUNTIME-R002.1.3.2.2.2.3
 #[tokio::test]
 async fn point_read_preserves_identity_and_rejects_retained_binding_mismatch() {
     let mut response = snapshot();
@@ -231,8 +231,8 @@ async fn point_read_preserves_identity_and_rejects_retained_binding_mismatch() {
     server.await.unwrap();
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2.2.3
-// spec: TUI-RUNTIME-R002.1.3.2.2.2.3
+// spec: TUIG-RUNTIME-R002.1.3.2.2.3
+// spec: TUIG-RUNTIME-R002.1.3.2.2.2.3
 #[tokio::test]
 async fn point_read_omission_and_refusal_remain_unavailable_over_http() {
     for reason in [None, Some("legacy_unbound"), Some("producer_unavailable")] {
@@ -264,7 +264,7 @@ async fn point_read_omission_and_refusal_remain_unavailable_over_http() {
     }
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2.2.3
+// spec: TUIG-RUNTIME-R002.1.3.2.2.3
 #[tokio::test]
 async fn point_read_malformed_projection_refuses_the_whole_http_snapshot() {
     for event in [

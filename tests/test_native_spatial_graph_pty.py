@@ -13,11 +13,11 @@ from tests.test_native_public_details_pty import NativeTerminal
 
 pytestmark = [
     pytest.mark.spec(
-        "TUI-RUNTIME-R008.3",
-        "TUI-RUNTIME-R008.3.1",
-        "TUI-RUNTIME-R010.12.1",
-        "TUI-RUNTIME-R010.12.1.1",
-        "TUI-RUNTIME-R010.12.1.2",
+        "TUIG-RUNTIME-R008.3",
+        "TUIG-RUNTIME-R008.3.1",
+        "TUIG-RUNTIME-R010.12.1",
+        "TUIG-RUNTIME-R010.12.1.1",
+        "TUIG-RUNTIME-R010.12.1.2",
     ),
     pytest.mark.skipif(
         not os.environ.get("TUI_NATIVE_TEST_BINARY"),
@@ -26,7 +26,7 @@ pytestmark = [
 ]
 
 
-# spec: TUI-RUNTIME-R010.12.1.2
+# spec: TUIG-RUNTIME-R010.12.1.2
 @pytest.mark.parametrize("no_color", [False, True])
 def test_native_spatial_map_theme_navigation_search_and_denial(
     no_color: bool,

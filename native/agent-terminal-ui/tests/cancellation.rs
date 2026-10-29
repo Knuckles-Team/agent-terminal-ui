@@ -27,7 +27,7 @@ fn binding() -> TaskCorrelation {
     TaskCorrelation::from_task(&acknowledgement()["result"]).unwrap()
 }
 
-// spec: TUI-RUNTIME-R002.1.5
+// spec: TUIG-RUNTIME-R002.1.5
 #[tokio::test]
 async fn cancellation_requires_authenticated_matching_server_acknowledgement() {
     for include_run in [true, false] {
@@ -66,7 +66,7 @@ async fn cancellation_requires_authenticated_matching_server_acknowledgement() {
     }
 }
 
-// spec: TUI-RUNTIME-R002.1.5
+// spec: TUIG-RUNTIME-R002.1.5
 #[tokio::test]
 async fn cancellation_refuses_non_canceled_mismatched_and_malformed_results() {
     let mut responses = vec![json!(null), json!({}), json!([])];
@@ -116,7 +116,7 @@ async fn cancellation_refuses_non_canceled_mismatched_and_malformed_results() {
     }
 }
 
-// spec: TUI-RUNTIME-R002.1.5
+// spec: TUIG-RUNTIME-R002.1.5
 #[tokio::test]
 async fn cancellation_preserves_absent_run_and_refuses_new_run() {
     let mut response = acknowledgement();
@@ -144,7 +144,7 @@ async fn cancellation_preserves_absent_run_and_refuses_new_run() {
     server.await.unwrap();
 }
 
-// spec: TUI-RUNTIME-R002.1.5
+// spec: TUIG-RUNTIME-R002.1.5
 #[tokio::test]
 async fn cancellation_refuses_http_failure_redirect_invalid_json_and_oversized_response() {
     for status in [
@@ -176,7 +176,7 @@ async fn cancellation_refuses_http_failure_redirect_invalid_json_and_oversized_r
     server.await.unwrap();
 }
 
-// spec: TUI-RUNTIME-R002.1.5
+// spec: TUIG-RUNTIME-R002.1.5
 #[tokio::test]
 async fn interrupted_cancellation_is_not_acknowledged_or_retried() {
     for response in ["", "HTTP/1.1 200 OK\r\nContent-Length: 1000\r\n\r\n{"] {
@@ -192,7 +192,7 @@ async fn interrupted_cancellation_is_not_acknowledged_or_retried() {
     }
 }
 
-// spec: TUI-RUNTIME-R002.1.5
+// spec: TUIG-RUNTIME-R002.1.5
 #[tokio::test]
 async fn timed_out_cancellation_has_unknown_outcome_without_retry() {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();

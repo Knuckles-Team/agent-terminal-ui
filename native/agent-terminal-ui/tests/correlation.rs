@@ -8,7 +8,7 @@ fn events() -> Vec<Value> {
     .unwrap()
 }
 
-// spec: TUI-RUNTIME-R002.1.1
+// spec: TUIG-RUNTIME-R002.1.1
 #[test]
 fn shared_wire_events_preserve_distinct_server_identifiers() {
     let events = events();
@@ -38,7 +38,7 @@ fn shared_wire_events_preserve_distinct_server_identifiers() {
     assert_eq!(binding, before);
 }
 
-// spec: TUI-RUNTIME-R002.1.1
+// spec: TUIG-RUNTIME-R002.1.1
 #[test]
 fn missing_run_remains_unavailable_and_is_never_inferred() {
     let mut initial = events()[0].clone();
@@ -50,7 +50,7 @@ fn missing_run_remains_unavailable_and_is_never_inferred() {
     assert_eq!(binding.run_id(), None);
 }
 
-// spec: TUI-RUNTIME-R002.1.1
+// spec: TUIG-RUNTIME-R002.1.1
 #[test]
 fn missing_invalid_and_conflicting_identifiers_are_refused() {
     let fixture = events();
@@ -84,7 +84,7 @@ fn missing_invalid_and_conflicting_identifiers_are_refused() {
     assert_eq!(binding, before);
 }
 
-// spec: TUI-RUNTIME-R002.1.1
+// spec: TUIG-RUNTIME-R002.1.1
 #[test]
 fn malformed_and_unsupported_events_are_refused_without_mutation() {
     let fixture = events();

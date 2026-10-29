@@ -248,7 +248,7 @@ mod tests {
         values.iter().map(OsString::from).collect()
     }
 
-    // spec: TUI-RUNTIME-R011.14
+    // spec: TUIG-RUNTIME-R011.14
     #[test]
     fn interactive_local_options_keep_headless_prompt_requirement() {
         let interactive = options(&args(&["--local-runtime", "--local-model", "test:model"]))
@@ -267,7 +267,7 @@ mod tests {
         );
     }
 
-    // spec: TUI-RUNTIME-R011.14
+    // spec: TUIG-RUNTIME-R011.14
     #[test]
     fn explicit_local_mode_does_not_capture_prompt_data_or_central_mode() {
         assert!(

@@ -42,7 +42,7 @@ def submit_with_context(
     return admitted
 
 
-@pytest.mark.spec("TUI-RUNTIME-R010.8")
+@pytest.mark.spec("TUIG-RUNTIME-R010.8")
 @pytest.mark.skipif(
     not os.environ.get("TUI_PTY_PYTHON"),
     reason="Requires the isolated installed-provider qualification job",
@@ -109,7 +109,7 @@ def test_installed_native_reads_real_admitted_plan(
     boot.test_native_current_plan_lifecycle_uses_installed_engine(monkeypatch)
 
 
-@pytest.mark.spec("TUI-RUNTIME-R010.8")
+@pytest.mark.spec("TUIG-RUNTIME-R010.8")
 def test_context_admission_delegates_without_replacing_the_provider() -> None:
     calls: list[tuple[tuple[Any, ...], dict[str, Any]]] = []
     engine = object()
@@ -138,7 +138,7 @@ def test_context_admission_delegates_without_replacing_the_provider() -> None:
     assert "a2a_context_id" not in metadata
 
 
-@pytest.mark.spec("TUI-RUNTIME-R010.8")
+@pytest.mark.spec("TUIG-RUNTIME-R010.8")
 def test_native_context_id_matches_the_public_a2a_contract() -> None:
     contexts = [native_context_id(), native_context_id()]
     assert contexts[0] != contexts[1]

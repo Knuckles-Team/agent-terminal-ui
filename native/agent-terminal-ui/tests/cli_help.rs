@@ -13,7 +13,7 @@ fn invoke(args: &[&str], invalid_configuration: bool) -> Output {
     command.output().expect("native CLI must execute")
 }
 
-// spec: TUI-RUNTIME-R015.30.2
+// spec: TUIG-RUNTIME-R015.30.2
 #[test]
 fn help_is_available_without_runtime_configuration_or_a_terminal() {
     for invalid_configuration in [false, true] {
@@ -48,7 +48,7 @@ fn help_is_available_without_runtime_configuration_or_a_terminal() {
     }
 }
 
-// spec: TUI-RUNTIME-R015.30.2
+// spec: TUIG-RUNTIME-R015.30.2
 #[test]
 fn help_does_not_swallow_values_or_invalid_argument_combinations() {
     for args in [

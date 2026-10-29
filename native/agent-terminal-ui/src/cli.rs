@@ -74,7 +74,7 @@ mod tests {
         values.iter().map(OsString::from).collect()
     }
 
-    // spec: TUI-RUNTIME-R012.1.3.1
+    // spec: TUIG-RUNTIME-R012.1.3.1
     #[test]
     fn headless_is_explicit_and_preserves_argument_data() {
         for values in [
@@ -103,7 +103,7 @@ mod continuation_tests {
         values.iter().map(OsString::from).collect()
     }
 
-    // spec: TUI-RUNTIME-R012.3.2.1
+    // spec: TUIG-RUNTIME-R012.3.2.1
     #[test]
     fn continuation_requires_one_canonical_context_and_new_prompt() {
         let context = format!("a2a-context-{}", "a".repeat(64));

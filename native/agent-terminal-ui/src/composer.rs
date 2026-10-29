@@ -115,7 +115,7 @@ mod tests {
         KeyEvent::new(code, KeyModifiers::NONE)
     }
 
-    // spec: TUI-RUNTIME-R011.14
+    // spec: TUIG-RUNTIME-R011.14
     #[test]
     fn local_composer_has_the_backend_byte_limit_and_can_clear_completed_drafts() {
         let mut composer = Composer::local();
@@ -129,7 +129,7 @@ mod tests {
         assert_eq!(composer.key(key(KeyCode::Enter)).unwrap(), "next turn");
     }
 
-    // spec: TUI-RUNTIME-R012.1.3
+    // spec: TUIG-RUNTIME-R012.1.3
     #[test]
     fn input_keys_stay_text_and_escape_preserves_draft() {
         let mut composer = Composer {
@@ -146,7 +146,7 @@ mod tests {
         assert!(composer.key(key(KeyCode::Enter)).is_some());
     }
 
-    // spec: TUI-RUNTIME-R012.1.3
+    // spec: TUIG-RUNTIME-R012.1.3
     #[test]
     fn paste_is_atomic_bounded_and_normalizes_newlines() {
         let mut composer = Composer::default();

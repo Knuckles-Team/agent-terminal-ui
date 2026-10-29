@@ -16,7 +16,7 @@ fn decode(task: &Value, state: TaskState) -> Result<TerminalEvent, &'static str>
     TerminalEvent::from_task(task, &TaskCorrelation::from_task(task)?, state)
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2.2.3
+// spec: TUIG-RUNTIME-R002.1.3.2.2.3
 #[test]
 fn actual_identity_and_outcome_are_preserved_without_cursor() {
     for (outcome, state) in [
@@ -45,7 +45,7 @@ fn actual_identity_and_outcome_are_preserved_without_cursor() {
     }
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2.2.3
+// spec: TUIG-RUNTIME-R002.1.3.2.2.3
 #[test]
 fn omission_and_known_refusals_do_not_disclose_identity() {
     let mut task = task();
@@ -66,7 +66,7 @@ fn omission_and_known_refusals_do_not_disclose_identity() {
     }
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2.2.3
+// spec: TUIG-RUNTIME-R002.1.3.2.2.3
 #[test]
 fn malformed_unsafe_and_unbound_events_are_refused() {
     for (path, value) in [
@@ -107,7 +107,7 @@ fn malformed_unsafe_and_unbound_events_are_refused() {
     assert!(decode(&task, TaskState::Completed).is_err());
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2.2.3
+// spec: TUIG-RUNTIME-R002.1.3.2.2.3
 #[test]
 fn retained_binding_cannot_acquire_or_switch_run() {
     let event = decode(&task(), TaskState::Completed).unwrap();
@@ -128,7 +128,7 @@ fn retained_binding_cannot_acquire_or_switch_run() {
     }
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2.2.3
+// spec: TUIG-RUNTIME-R002.1.3.2.2.3
 #[test]
 fn physical_scope_tenant_and_actual_producer_kind_are_preserved() {
     for kind in ["outcome", "tool_call", "degraded", "reconciled"] {
@@ -143,7 +143,7 @@ fn physical_scope_tenant_and_actual_producer_kind_are_preserved() {
     }
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2.2.3
+// spec: TUIG-RUNTIME-R002.1.3.2.2.3
 #[test]
 fn result_reference_preserves_producer_limit() {
     let mut task = task();
@@ -157,7 +157,7 @@ fn result_reference_preserves_producer_limit() {
     );
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2.2.3
+// spec: TUIG-RUNTIME-R002.1.3.2.2.3
 #[test]
 fn scope_digest_requires_exact_integer_bytes() {
     for digest in [

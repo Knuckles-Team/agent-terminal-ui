@@ -1,4 +1,4 @@
-//! Explicit user choices for TUI-RUNTIME-R011. No host effects or policy grants.
+//! Explicit user choices for TUIG-RUNTIME-R011. No host effects or policy grants.
 use ratatui::{
     Frame,
     layout::Rect,

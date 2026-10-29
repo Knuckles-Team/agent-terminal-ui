@@ -78,7 +78,7 @@ def exercise_served_current_plan(
         refused.close()
 
 
-@pytest.mark.spec("TUI-RUNTIME-R010.8")
+@pytest.mark.spec("TUIG-RUNTIME-R010.8")
 def test_installed_arbora_current_plan_read_and_refusal() -> None:
     names = (
         "TUI_SERVED_TEST_URL",
@@ -97,7 +97,7 @@ def test_installed_arbora_current_plan_read_and_refusal() -> None:
     exercise_served_current_plan(*(os.environ[name] for name in names))
 
 
-@pytest.mark.spec("TUI-RUNTIME-R010.8")
+@pytest.mark.spec("TUIG-RUNTIME-R010.8")
 def test_terminal_credentials_are_explicit_not_inherited(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

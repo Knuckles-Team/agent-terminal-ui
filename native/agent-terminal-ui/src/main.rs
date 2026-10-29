@@ -855,7 +855,7 @@ fn write_error(output: impl std::os::fd::AsFd, error: &str) {
 
 #[cfg(test)]
 mod tests {
-    // spec: TUI-RUNTIME-R011.14
+    // spec: TUIG-RUNTIME-R011.14
     #[cfg(unix)]
     #[test]
     fn error_reporting_does_not_block_and_restores_flags() {
@@ -882,7 +882,7 @@ mod tests {
     use std::env::VarError;
     use std::ffi::OsString;
 
-    // spec: TUI-RUNTIME-R012.1.3
+    // spec: TUIG-RUNTIME-R012.1.3
     #[test]
     fn partial_input_setup_disables_paste_and_mouse() {
         #[derive(Default)]
@@ -911,7 +911,7 @@ mod tests {
         assert!(output.contains("?1000l"));
     }
 
-    // spec: TUI-RUNTIME-R002.1.3.1
+    // spec: TUIG-RUNTIME-R002.1.3.1
     #[test]
     fn prompt_arguments_allow_only_one_text_submission() {
         let arguments = |values: &[&str]| values.iter().map(OsString::from).collect::<Vec<_>>();
@@ -936,7 +936,7 @@ mod tests {
         assert!(selected_prompt(&arguments(&["--prompt", &"x".repeat(65_537)]), false).is_err());
     }
 
-    // spec: TUI-RUNTIME-R002.1.3.1
+    // spec: TUIG-RUNTIME-R002.1.3.1
     #[test]
     fn accepted_submission_binds_returned_task_and_enables_cancellation() {
         let mut binding = None;
@@ -955,7 +955,7 @@ mod tests {
         assert_eq!(cancellation, Cancellation::Ready);
     }
 
-    // spec: TUI-RUNTIME-R002.1.3.1
+    // spec: TUIG-RUNTIME-R002.1.3.1
     #[tokio::test]
     async fn uncertain_submission_never_supplies_task_authority() {
         let mut binding = None;
@@ -982,7 +982,7 @@ mod tests {
         assert!(binding.is_none());
     }
 
-    // spec: TUI-RUNTIME-R002.1.3.1
+    // spec: TUIG-RUNTIME-R002.1.3.1
     #[tokio::test]
     async fn abort_after_submission_completes_retains_known_binding() {
         let request = tokio::spawn(async {
@@ -1025,7 +1025,7 @@ mod tests {
         })
     }
 
-    // spec: TUI-RUNTIME-R012.6.1
+    // spec: TUIG-RUNTIME-R012.6.1
     #[test]
     fn turn_usage_renders_missing_values_and_clears_after_read_refusal() {
         let ReadStatus::Task(mut snapshot) =
@@ -1078,7 +1078,7 @@ mod tests {
         assert!(text.contains("read refused"));
     }
 
-    // spec: TUI-RUNTIME-R002.1.3.2.2.2.1
+    // spec: TUIG-RUNTIME-R002.1.3.2.2.2.1
     #[test]
     fn completed_reply_renders_literally_and_failed_read_clears_it() {
         let ReadStatus::Task(mut snapshot) =
@@ -1121,7 +1121,7 @@ mod tests {
         assert!(text.contains("read refused"));
     }
 
-    // spec: TUI-RUNTIME-R002.1.4
+    // spec: TUIG-RUNTIME-R002.1.4
     #[test]
     fn refresh_rejects_changed_binding_and_retains_omitted_run() {
         let mut binding = None;
@@ -1147,7 +1147,7 @@ mod tests {
         assert_eq!(binding, initial);
     }
 
-    // spec: TUI-RUNTIME-R002.1.4
+    // spec: TUIG-RUNTIME-R002.1.4
     #[test]
     fn refresh_does_not_acquire_a_later_run_binding() {
         let mut binding = None;
@@ -1163,7 +1163,7 @@ mod tests {
         assert_eq!(binding.as_ref().unwrap().run_id(), None);
     }
 
-    // spec: TUI-RUNTIME-R002.1.4
+    // spec: TUIG-RUNTIME-R002.1.4
     #[tokio::test]
     async fn denial_and_local_cancellation_preserve_initial_binding() {
         let mut binding = None;
@@ -1200,7 +1200,7 @@ mod tests {
         );
     }
 
-    // spec: TUI-RUNTIME-R002.7
+    // spec: TUIG-RUNTIME-R002.7
     #[test]
     fn renders_refusal_without_enabling_task_actions() {
         let mut terminal = Terminal::new(TestBackend::new(100, 10)).unwrap();
@@ -1224,7 +1224,7 @@ mod tests {
         assert!(text.contains("Task streaming and approvals remain unavailable"));
     }
 
-    // spec: TUI-RUNTIME-R008.1
+    // spec: TUIG-RUNTIME-R008.1
     #[test]
     fn resize_preserves_wrapped_status_and_keyboard_help() {
         let mut terminal = Terminal::new(TestBackend::new(100, 16)).unwrap();
@@ -1261,7 +1261,7 @@ mod tests {
         }
     }
 
-    // spec: TUI-RUNTIME-R008.1
+    // spec: TUIG-RUNTIME-R008.1
     #[test]
     fn renderer_honors_no_color_and_unknown_theme_fallback() {
         let default_style = presentation_style("tokyo-night", "");
@@ -1299,7 +1299,7 @@ mod tests {
         }
     }
 
-    // spec: TUI-RUNTIME-R002.1.4
+    // spec: TUIG-RUNTIME-R002.1.4
     #[test]
     fn task_view_renders_distinct_identifiers_and_missing_run() {
         let mut terminal = Terminal::new(TestBackend::new(100, 16)).unwrap();
@@ -1353,7 +1353,7 @@ mod tests {
         }
     }
 
-    // spec: TUI-RUNTIME-R002.1.4
+    // spec: TUIG-RUNTIME-R002.1.4
     #[test]
     fn task_selection_rejects_empty_and_control_identifiers() {
         assert_eq!(selected_task(Err(VarError::NotPresent)), Ok(None));
@@ -1366,7 +1366,7 @@ mod tests {
         }
     }
 
-    // spec: TUI-RUNTIME-R002.1.5
+    // spec: TUIG-RUNTIME-R002.1.5
     #[test]
     fn cancellation_requires_confirmation_and_consumes_it_once() {
         let mut cancellation = Cancellation::Unavailable;
@@ -1383,7 +1383,7 @@ mod tests {
         assert_eq!(cancellation, Cancellation::Pending);
     }
 
-    // spec: TUI-RUNTIME-R002.1.5
+    // spec: TUIG-RUNTIME-R002.1.5
     #[tokio::test]
     async fn uncertain_cancellation_requires_successful_read_and_hides_snapshot() {
         let mut binding = None;
@@ -1422,7 +1422,7 @@ mod tests {
         assert_eq!(binding, initial);
     }
 
-    // spec: TUI-RUNTIME-R002.1.5
+    // spec: TUIG-RUNTIME-R002.1.5
     #[test]
     fn only_bound_canceled_response_confirms_remote_cancellation() {
         let mut binding = None;
@@ -1482,7 +1482,7 @@ mod tests {
         assert!(!cancellation.confirm());
     }
 
-    // spec: TUI-RUNTIME-R002.1.5
+    // spec: TUIG-RUNTIME-R002.1.5
     #[test]
     fn discovery_failed_reads_and_terminal_tasks_do_not_arm_cancellation() {
         let mut binding = None;
@@ -1581,7 +1581,7 @@ mod tests {
         ));
     }
 
-    // spec: TUI-RUNTIME-R012.1.3
+    // spec: TUIG-RUNTIME-R012.1.3
     #[test]
     fn automatic_observation_preserves_confirmation_and_bounds_waiting() {
         let now = tokio::time::Instant::now();
@@ -1617,7 +1617,7 @@ mod tests {
         assert!(super::observation_ready(true, false, cancellation));
     }
 
-    // spec: TUI-RUNTIME-R012.1.3
+    // spec: TUIG-RUNTIME-R012.1.3
     #[test]
     fn automatic_observation_tracks_terminal_results_without_rebinding() {
         for terminal in [TaskState::Completed, TaskState::Failed, TaskState::Canceled] {
@@ -1682,7 +1682,7 @@ mod confirmation_view_tests {
     use super::*;
     use ratatui::{Terminal, backend::TestBackend};
 
-    // spec: TUI-RUNTIME-R008.2.2
+    // spec: TUIG-RUNTIME-R008.2.2
     #[test]
     fn confirmation_is_pinned_and_small_terminals_cannot_confirm() {
         let status =
@@ -1747,7 +1747,7 @@ mod terminal_point_view_tests {
     use ratatui::{Terminal, backend::TestBackend};
     use serde_json::json;
 
-    // spec: TUI-RUNTIME-R002.1.3.2.2.3
+    // spec: TUIG-RUNTIME-R002.1.3.2.2.3
     #[test]
     fn committed_identity_renders_literally_and_failed_read_clears_it() {
         let task = json!({"kind":"task","id":"task","contextId":"ctx","status":{"state":"completed"},
@@ -1798,7 +1798,7 @@ mod terminal_point_view_tests {
 #[cfg(test)]
 mod request_settings_tests {
     use super::*;
-    // spec: TUI-RUNTIME-R002.1.3.2.2.2.2
+    // spec: TUIG-RUNTIME-R002.1.3.2.2.2.2
     #[test]
     fn queue_timeout_is_bounded_and_does_not_accept_ambiguous_values() {
         assert_eq!(
@@ -1826,7 +1826,7 @@ mod request_settings_tests {
             assert!(submission_timeout(Ok(value.into())).is_err());
         }
     }
-    // spec: TUI-RUNTIME-R002.1.3.2.2.2.3
+    // spec: TUIG-RUNTIME-R002.1.3.2.2.2.3
     #[test]
     fn committed_events_require_explicit_true() {
         assert!(!committed_event_reads(Err(env::VarError::NotPresent)).unwrap());

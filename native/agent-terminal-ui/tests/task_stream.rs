@@ -22,7 +22,7 @@ fn frame(value: Value, cursor: &str) -> Vec<u8> {
     format!("id: {cursor}\ndata: {value}\n\n").into_bytes()
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2.2.1
+// spec: TUIG-RUNTIME-R002.1.3.2.2.1
 #[test]
 fn every_utf8_split_and_line_ending_delivers_the_same_correlated_event() {
     let result = json!({"kind":"artifact-update","taskId":"task-1","contextId":"ctx-1",
@@ -49,7 +49,7 @@ fn every_utf8_split_and_line_ending_delivers_the_same_correlated_event() {
     }
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2.2.1
+// spec: TUIG-RUNTIME-R002.1.3.2.2.1
 #[test]
 fn multiline_data_and_id_only_inheritance_do_not_acknowledge_until_valid_data() {
     let mut decoder = make_decoder();
@@ -76,7 +76,7 @@ fn multiline_data_and_id_only_inheritance_do_not_acknowledge_until_valid_data() 
     assert_eq!(events[2].cursor.as_deref(), Some(""));
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2.2.1
+// spec: TUIG-RUNTIME-R002.1.3.2.2.1
 #[test]
 fn malformed_envelopes_and_foreign_bindings_never_advance_cursor() {
     let mut foreign = task();
@@ -109,7 +109,7 @@ fn malformed_envelopes_and_foreign_bindings_never_advance_cursor() {
     }
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2.2.1
+// spec: TUIG-RUNTIME-R002.1.3.2.2.1
 #[test]
 fn refusal_truncation_invalid_utf8_and_nul_cursor_fail_closed() {
     let mut decoder = make_decoder();
@@ -133,7 +133,7 @@ fn refusal_truncation_invalid_utf8_and_nul_cursor_fail_closed() {
     assert_eq!(partial.finish(), Err(StreamError::Truncated));
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2.2.1
+// spec: TUIG-RUNTIME-R002.1.3.2.2.1
 #[test]
 fn limits_cover_fragmented_lines_comments_and_unknown_fields() {
     let mut decoder = make_decoder();
@@ -157,7 +157,7 @@ fn limits_cover_fragmented_lines_comments_and_unknown_fields() {
     }
 }
 
-// spec: TUI-RUNTIME-R002.1.3.2.2.1
+// spec: TUIG-RUNTIME-R002.1.3.2.2.1
 #[test]
 fn bytewise_bom_and_eof_preserve_only_complete_events() {
     let input = format!("\u{feff}id: cursor\r\ndata: {}\r\n\r\n", envelope(task()));

@@ -10,7 +10,7 @@ fn task(id: &str, state: &str) -> Value {
     }})
 }
 
-// spec: TUI-RUNTIME-R002.1.3.3
+// spec: TUIG-RUNTIME-R002.1.3.3
 #[test]
 fn anonymous_mode_is_explicit_and_loopback_only() {
     assert_eq!(AuthMode::parse(None), Ok(AuthMode::Bearer));
@@ -37,7 +37,7 @@ fn anonymous_mode_is_explicit_and_loopback_only() {
     }
 }
 
-// spec: TUI-RUNTIME-R002.1.3.3
+// spec: TUIG-RUNTIME-R002.1.3.3
 #[tokio::test]
 async fn anonymous_submit_read_and_cancel_never_send_authorization() {
     let submission = TaskSubmission::new("Local anonymous task").unwrap();
@@ -81,7 +81,7 @@ async fn anonymous_submit_read_and_cancel_never_send_authorization() {
     assert!(request.contains("tasks/cancel"));
 }
 
-// spec: TUI-RUNTIME-R002.1.3.3
+// spec: TUIG-RUNTIME-R002.1.3.3
 #[tokio::test]
 async fn neither_mode_retries_refusal_or_follows_redirects() {
     for mode in [AuthMode::None, AuthMode::Bearer] {
@@ -104,7 +104,7 @@ async fn neither_mode_retries_refusal_or_follows_redirects() {
     }
 }
 
-// spec: TUI-RUNTIME-R002.1.3.3
+// spec: TUIG-RUNTIME-R002.1.3.3
 #[tokio::test]
 async fn anonymous_tasks_do_not_grant_authenticated_host_log_authority() {
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();

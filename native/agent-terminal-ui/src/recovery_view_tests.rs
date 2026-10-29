@@ -5,7 +5,7 @@ use tokio::{
     net::TcpListener,
 };
 
-// spec: TUI-RUNTIME-R002.1.3.2.1
+// spec: TUIG-RUNTIME-R002.1.3.2.1
 #[tokio::test]
 async fn http_denial_clears_rendered_snapshot_and_disarms_cancel_until_refresh() {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();

@@ -8,7 +8,7 @@ import yaml
 ROOT = Path(__file__).parents[1]
 
 
-@pytest.mark.spec("TUI-RUNTIME-R006")
+@pytest.mark.spec("TUIG-RUNTIME-R006")
 def test_pipelines_hook_sections():
     data = tomllib.loads((ROOT / "pyproject.toml").read_text())
     hooks = data["tool"]["pipelines_hooks"]
@@ -16,7 +16,7 @@ def test_pipelines_hook_sections():
     assert "specs" in hooks["ste"]["paths"]
 
 
-@pytest.mark.spec("TUI-RUNTIME-R004.1")
+@pytest.mark.spec("TUIG-RUNTIME-R004.1")
 def test_spec_group_preserves_stages_and_trailer_fallback():
     data = yaml.safe_load((ROOT / ".pre-commit-config.yaml").read_text())
     shared = next(
@@ -54,7 +54,7 @@ def test_pytest_hook_uses_uv_run_flags_supported_by_the_runner():
     assert "--no-install-project" not in entry
 
 
-@pytest.mark.spec("TUI-RUNTIME-R004.2")
+@pytest.mark.spec("TUIG-RUNTIME-R004.2")
 def test_layout_and_surface_checks_follow_shared_advisory_policy():
     data = yaml.safe_load((ROOT / ".github/workflows/advisory.yml").read_text())
     # YAML 1.1 loads the Actions `on` key as True.
@@ -74,7 +74,7 @@ def test_layout_and_surface_checks_follow_shared_advisory_policy():
     }
 
 
-@pytest.mark.spec("TUI-RUNTIME-R004.2")
+@pytest.mark.spec("TUIG-RUNTIME-R004.2")
 def test_docs_only_pull_requests_run_the_spec_gate_in_the_shared_job():
     workflows = ROOT / ".github/workflows"
     assert not (workflows / "ci-skip.yml").exists()
@@ -117,16 +117,16 @@ def test_ci_required_aggregates_every_blocking_job_and_skips_native_on_prs():
     assert "pull_request" not in release.get("on", release.get(True))
 
 
-@pytest.mark.spec("TUI-RUNTIME-R004.1")
+@pytest.mark.spec("TUIG-RUNTIME-R004.1")
 @pytest.mark.parametrize(
     ("ancestor", "retained"),
     [
-        ("TUI-RUNTIME-R008", "TUI-RUNTIME-R008.3.2"),
-        ("TUI-RUNTIME-R008.2", "TUI-RUNTIME-R008.2.3.2.2.2.2.2.2"),
-        ("TUI-RUNTIME-R008.3", "TUI-RUNTIME-R008.3.2"),
-        ("TUI-RUNTIME-R010", "TUI-RUNTIME-R010.12.2"),
-        ("TUI-RUNTIME-R010", "TUI-RUNTIME-R010.14"),
-        ("TUI-RUNTIME-R010.12", "TUI-RUNTIME-R010.12.2"),
+        ("TUIG-RUNTIME-R008", "TUIG-RUNTIME-R008.3.2"),
+        ("TUIG-RUNTIME-R008.2", "TUIG-RUNTIME-R008.2.3.2.2.2.2.2.2"),
+        ("TUIG-RUNTIME-R008.3", "TUIG-RUNTIME-R008.3.2"),
+        ("TUIG-RUNTIME-R010", "TUIG-RUNTIME-R010.12.2"),
+        ("TUIG-RUNTIME-R010", "TUIG-RUNTIME-R010.14"),
+        ("TUIG-RUNTIME-R010.12", "TUIG-RUNTIME-R010.12.2"),
     ],
 )
 def test_bounded_completion_keeps_unqualified_ancestor_acceptance_open(
@@ -148,20 +148,20 @@ def test_bounded_completion_keeps_unqualified_ancestor_acceptance_open(
     assert retained in descendants, f"{ancestor} lost its retained acceptance"
 
 
-@pytest.mark.spec("TUI-RUNTIME-R004.1")
+@pytest.mark.spec("TUIG-RUNTIME-R004.1")
 def test_ledger_preserves_actual_bounded_native_qualification() -> None:
     status = json.loads((ROOT / "specs/terminal-runtime/status.json").read_text())
     rows = {row["id"]: row for row in status["requirements"]}
-    assert {"TUI-RUNTIME-R010.12.1", "TUI-RUNTIME-R010.12.2"} <= set(
-        rows["TUI-RUNTIME-R010.12"]["rollup_of"]
+    assert {"TUIG-RUNTIME-R010.12.1", "TUIG-RUNTIME-R010.12.2"} <= set(
+        rows["TUIG-RUNTIME-R010.12"]["rollup_of"]
     )
     for identifier in (
-        "TUI-RUNTIME-R008.3.1",
-        "TUI-RUNTIME-R008.4.1",
-        "TUI-RUNTIME-R008.4.2",
-        "TUI-RUNTIME-R010.12.1",
-        "TUI-RUNTIME-R010.12.1.1",
-        "TUI-RUNTIME-R010.12.1.2",
+        "TUIG-RUNTIME-R008.3.1",
+        "TUIG-RUNTIME-R008.4.1",
+        "TUIG-RUNTIME-R008.4.2",
+        "TUIG-RUNTIME-R010.12.1",
+        "TUIG-RUNTIME-R010.12.1.1",
+        "TUIG-RUNTIME-R010.12.1.2",
     ):
         row = rows[identifier]
         assert row["delivery_state"] == "VERIFIED", identifier

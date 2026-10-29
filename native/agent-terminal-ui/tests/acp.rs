@@ -41,7 +41,7 @@ fn update(session: &str, text: &str) -> Value {
     json!({"jsonrpc":"2.0","method":"session/update","params":{"sessionId":session,"update":{"sessionUpdate":"agent_message_chunk","content":{"type":"text","text":text}}}})
 }
 
-// spec: TUI-RUNTIME-R011.14
+// spec: TUIG-RUNTIME-R011.14
 #[tokio::test]
 async fn scripted_v1_text_turn_and_close_preserve_wire_order() {
     let (local, remote) = tokio::io::duplex(4096);
@@ -83,7 +83,7 @@ async fn scripted_v1_text_turn_and_close_preserve_wire_order() {
     backend.await.unwrap();
 }
 
-// spec: TUI-RUNTIME-R011.14
+// spec: TUIG-RUNTIME-R011.14
 #[tokio::test]
 async fn cancellation_is_notification_and_requires_prompt_response() {
     let (local, remote) = tokio::io::duplex(4096);
@@ -113,7 +113,7 @@ async fn cancellation_is_notification_and_requires_prompt_response() {
     backend.await.unwrap();
 }
 
-// spec: TUI-RUNTIME-R011.14
+// spec: TUIG-RUNTIME-R011.14
 #[tokio::test]
 async fn rejects_foreign_ids_sessions_errors_and_unsupported_updates() {
     for bad in [
@@ -146,7 +146,7 @@ async fn rejects_foreign_ids_sessions_errors_and_unsupported_updates() {
     }
 }
 
-// spec: TUI-RUNTIME-R011.14
+// spec: TUIG-RUNTIME-R011.14
 #[tokio::test]
 async fn client_requests_fail_closed_without_permission_or_host_effects() {
     for method in [
@@ -183,7 +183,7 @@ async fn client_requests_fail_closed_without_permission_or_host_effects() {
     }
 }
 
-// spec: TUI-RUNTIME-R011.14
+// spec: TUIG-RUNTIME-R011.14
 #[tokio::test]
 async fn initialization_rejects_version_mismatch_eof_and_oversized_frames() {
     for bytes in [
@@ -197,7 +197,7 @@ async fn initialization_rejects_version_mismatch_eof_and_oversized_frames() {
     }
 }
 
-// spec: TUI-RUNTIME-R011.14
+// spec: TUIG-RUNTIME-R011.14
 #[tokio::test]
 async fn interrupted_read_preserves_partial_frame_during_cancel_drain() {
     let (local, remote) = tokio::io::duplex(4096);
@@ -242,7 +242,7 @@ async fn interrupted_read_preserves_partial_frame_during_cancel_drain() {
     backend.await.unwrap();
 }
 
-// spec: TUI-RUNTIME-R011.14
+// spec: TUIG-RUNTIME-R011.14
 #[tokio::test]
 async fn cumulative_text_limit_stops_before_delivering_excess_output() {
     let mut wire = String::from(
@@ -267,7 +267,7 @@ async fn cumulative_text_limit_stops_before_delivering_excess_output() {
     assert_eq!(delivered, 4_000_000);
 }
 
-// spec: TUI-RUNTIME-R011.14
+// spec: TUIG-RUNTIME-R011.14
 #[tokio::test]
 async fn local_prompt_and_encoded_request_respect_backend_limits() {
     for prompt in ["x".repeat(16_385), "\0".repeat(16_384)] {
@@ -279,7 +279,7 @@ async fn local_prompt_and_encoded_request_respect_backend_limits() {
     }
 }
 
-// spec: TUI-RUNTIME-R011.14
+// spec: TUIG-RUNTIME-R011.14
 #[tokio::test]
 async fn sequential_turns_require_acknowledgement_and_monotonic_ids() {
     let (local, remote) = tokio::io::duplex(4096);
@@ -324,7 +324,7 @@ async fn sequential_turns_require_acknowledgement_and_monotonic_ids() {
     backend.await.unwrap();
 }
 
-// spec: TUI-RUNTIME-R011.14
+// spec: TUIG-RUNTIME-R011.14
 #[tokio::test]
 async fn unknown_or_refused_turn_never_permits_sequential_replay() {
     for response in [
@@ -350,7 +350,7 @@ async fn unknown_or_refused_turn_never_permits_sequential_replay() {
     }
 }
 
-// spec: TUI-RUNTIME-R011.14
+// spec: TUIG-RUNTIME-R011.14
 #[tokio::test]
 async fn sequential_output_budget_resets_only_for_an_acknowledged_next_turn() {
     let mut wire = String::from(
@@ -381,7 +381,7 @@ async fn sequential_output_budget_resets_only_for_an_acknowledged_next_turn() {
     }
 }
 
-// spec: TUI-RUNTIME-R011.14
+// spec: TUIG-RUNTIME-R011.14
 #[tokio::test]
 async fn unsolicited_idle_frames_cannot_become_the_next_turn() {
     let mut wire = String::from(
@@ -397,7 +397,7 @@ async fn unsolicited_idle_frames_cannot_become_the_next_turn() {
     assert!(client.prompt("must not send").await.is_err());
 }
 
-// spec: TUI-RUNTIME-R011.14
+// spec: TUIG-RUNTIME-R011.14
 #[tokio::test]
 async fn partial_idle_frame_is_not_attached_to_a_new_prompt() {
     let (local, mut remote) = tokio::io::duplex(4096);

@@ -13,4 +13,4 @@ An explicit local ACP v1 path supports interactive text sessions and headless
 one-shot text through an internal Arbora child process. It advertises no host tools or
 permission grants. Its scripted and SDK transport checks are not proof of
 a released Arbora/AU pairing or durable history. These remain
-open under `TUI-RUNTIME-R011.14` and the existing coding-session requirements.
+open under `TUIG-RUNTIME-R011.14` and the existing coding-session requirements.

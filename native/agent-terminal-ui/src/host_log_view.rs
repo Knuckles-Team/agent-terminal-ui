@@ -162,7 +162,7 @@ impl Drop for HostLogView {
 mod tests {
     use super::*;
 
-    // spec: TUI-RUNTIME-R002.11
+    // spec: TUIG-RUNTIME-R002.11
     #[tokio::test]
     async fn close_aborts_pending_read_and_clears_protected_lines() {
         let mut view = HostLogView {
@@ -186,7 +186,7 @@ mod tests {
         assert!(!view.pending());
     }
 
-    // spec: TUI-RUNTIME-R002.11
+    // spec: TUIG-RUNTIME-R002.11
     #[tokio::test]
     async fn denial_and_idle_expiry_clear_display_without_task_actions() {
         let mut view = HostLogView {
@@ -210,7 +210,7 @@ mod tests {
         assert!(view.lines.is_empty());
         assert!(!view.pending());
     }
-    // spec: TUI-RUNTIME-R002.11
+    // spec: TUIG-RUNTIME-R002.11
     #[tokio::test]
     async fn retention_gap_clears_lines_and_renders_distinct_status() {
         let mut view = HostLogView::default();

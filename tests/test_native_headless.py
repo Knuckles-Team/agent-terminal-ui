@@ -15,7 +15,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-@pytest.mark.spec("TUI-RUNTIME-R012.1.3.1")
+@pytest.mark.spec("TUIG-RUNTIME-R012.1.3.1")
 @pytest.mark.parametrize(
     ("outcome", "success", "methods"),
     [

@@ -26,7 +26,7 @@ async fn serve(status: &str, body: &str) -> (String, tokio::task::JoinHandle<Str
     (url, server)
 }
 
-// spec: TUI-RUNTIME-R002.7
+// spec: TUIG-RUNTIME-R002.7
 #[tokio::test]
 async fn reads_real_http_card_with_caller_credential() {
     let (url, server) = serve("200 OK", r#"{"name":"Arbora"}"#).await;
@@ -47,7 +47,7 @@ async fn reads_real_http_card_with_caller_credential() {
     );
 }
 
-// spec: TUI-RUNTIME-R002.7
+// spec: TUIG-RUNTIME-R002.7
 #[tokio::test]
 async fn refuses_http_errors_redirects_and_malformed_cards() {
     for (status, body) in [
@@ -70,7 +70,7 @@ async fn refuses_http_errors_redirects_and_malformed_cards() {
     }
 }
 
-// spec: TUI-RUNTIME-R002.7
+// spec: TUIG-RUNTIME-R002.7
 #[test]
 fn rejects_unsafe_configuration_without_network() {
     for url in [
@@ -87,7 +87,7 @@ fn rejects_unsafe_configuration_without_network() {
     assert!(ArboraClient::new("https://example.com", Some("bad\ncredential")).is_err());
 }
 
-// spec: TUI-RUNTIME-R002.7
+// spec: TUIG-RUNTIME-R002.7
 #[tokio::test]
 async fn cancels_pending_local_discovery() {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -107,7 +107,7 @@ async fn cancels_pending_local_discovery() {
     .unwrap();
 }
 
-// spec: TUI-RUNTIME-R002.7
+// spec: TUIG-RUNTIME-R002.7
 #[tokio::test]
 async fn bounds_card_bytes_and_removes_terminal_control_characters() {
     let large = "x".repeat(1024 * 1024 + 1);

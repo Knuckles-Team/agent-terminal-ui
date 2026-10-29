@@ -17,7 +17,7 @@ def fixture():
     )
 
 
-@pytest.mark.spec("TUI-RUNTIME-R008.4.1")
+@pytest.mark.spec("TUIG-RUNTIME-R008.4.1")
 def test_native_graph_input_uses_level_triggered_supported_backend():
     manifest = tomllib.loads((NATIVE / "Cargo.toml").read_text())
     dependencies = manifest["dependencies"]
@@ -30,7 +30,7 @@ def test_native_graph_input_uses_level_triggered_supported_backend():
     assert dependencies["ratatui"]["version"] == "0.30"
 
 
-@pytest.mark.spec("TUI-RUNTIME-R010", "TUI-RUNTIME-R010.11")
+@pytest.mark.spec("TUIG-RUNTIME-R010", "TUIG-RUNTIME-R010.11")
 def test_native_graph_source_limits_match_producer_fixture():
     contract = fixture()
     source = (NATIVE / "src/execution_graph.rs").read_text()
@@ -60,7 +60,7 @@ def test_native_graph_source_limits_match_producer_fixture():
     assert ".http." not in source
 
 
-@pytest.mark.spec("TUI-RUNTIME-R010.11")
+@pytest.mark.spec("TUIG-RUNTIME-R010.11")
 @pytest.mark.parametrize("field", ["value", "unicode_value", "max_unicode_value"])
 def test_native_producer_fixture_preserves_semantic_tuple_and_root_identity(field):
     contract = fixture()

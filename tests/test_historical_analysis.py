@@ -15,12 +15,12 @@ REPORTS = [
     pytest.param(
         "results.json",
         "28ecaab72f6eedf75d3df249e5f05052dfb05472a32d36dc987e49dcd506521f",
-        marks=pytest.mark.spec("TUI-RUNTIME-R015.32"),
+        marks=pytest.mark.spec("TUIG-RUNTIME-R015.32"),
     ),
     pytest.param(
         "code_enhancement_report.md",
         "2ba4a62a4333f2dc616e7b1315e5a28e982ba224db4929489a3acac1a22074f6",
-        marks=pytest.mark.spec("TUI-RUNTIME-R015.33"),
+        marks=pytest.mark.spec("TUIG-RUNTIME-R015.33"),
     ),
 ]
 
@@ -93,13 +93,13 @@ def test_historical_report_rejects_release_rewriting(filename: str, digest: str,
         _assert_not_a_version_mirror(config, filename)
 
 
-@pytest.mark.spec("TUI-RUNTIME-R015.32", "TUI-RUNTIME-R015.33")
+@pytest.mark.spec("TUIG-RUNTIME-R015.32", "TUIG-RUNTIME-R015.33")
 def test_source_export_does_not_claim_history_qualification(tmp_path: Path) -> None:
     with pytest.raises(pytest.skip.Exception, match="not a source export"):
         _historical_report(tmp_path, "results.json")
 
 
-@pytest.mark.spec("TUI-RUNTIME-R015.32", "TUI-RUNTIME-R015.33")
+@pytest.mark.spec("TUIG-RUNTIME-R015.32", "TUIG-RUNTIME-R015.33")
 def test_shallow_history_is_unqualified_but_missing_full_history_fails(tmp_path: Path) -> None:
     source = tmp_path / "source"
     source.mkdir()
