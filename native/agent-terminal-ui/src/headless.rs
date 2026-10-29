@@ -63,7 +63,7 @@ mod tests {
         values.iter().map(OsString::from).collect()
     }
 
-    // spec: TUI-RUNTIME-R012.1.3.1
+    // spec: TUIG-RUNTIME-R012.1.3.1
     #[test]
     fn unsupported_flags_and_turn_combinations_are_rejected() {
         for values in [
@@ -87,7 +87,7 @@ mod tests {
         assert!(super::super::selected_observation(&remaining, false).is_err());
     }
 
-    // spec: TUI-RUNTIME-R012.1.3.1
+    // spec: TUIG-RUNTIME-R012.1.3.1
     #[test]
     fn only_completed_is_success_and_approvals_fail_closed() {
         assert_eq!(result(TaskState::Completed), Ok(true));

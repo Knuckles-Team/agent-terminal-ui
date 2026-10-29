@@ -13,7 +13,7 @@ fn context() -> String {
     format!("a2a-context-{}", "a".repeat(64))
 }
 
-// spec: TUI-RUNTIME-R012.3.2.1
+// spec: TUIG-RUNTIME-R012.3.2.1
 #[test]
 fn canonical_context_and_fresh_turn_identity() {
     let first = TaskSubmission::continuing("first", &context()).unwrap();
@@ -86,7 +86,7 @@ fn card() -> Value {
     json!({"capabilities": {"extensions": [{"uri": CONTINUATION_EXTENSION, "required": false}]}})
 }
 
-// spec: TUI-RUNTIME-R012.3.2.1
+// spec: TUIG-RUNTIME-R012.3.2.1
 #[tokio::test]
 async fn absent_or_malformed_capability_never_submits() {
     for card in [
@@ -108,7 +108,7 @@ async fn absent_or_malformed_capability_never_submits() {
     }
 }
 
-// spec: TUI-RUNTIME-R012.3.2.1
+// spec: TUIG-RUNTIME-R012.3.2.1
 #[tokio::test]
 async fn continuation_requires_activation_and_exact_returned_context_without_retry() {
     for (echo, returned, success) in [

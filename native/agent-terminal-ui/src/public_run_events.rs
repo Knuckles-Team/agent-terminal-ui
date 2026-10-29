@@ -217,7 +217,7 @@ mod tests {
         .unwrap()
     }
 
-    // spec: TUI-RUNTIME-R008.2.3.2.2.1
+    // spec: TUIG-RUNTIME-R008.2.3.2.2.1
     #[test]
     fn shared_fixture_renders_public_summary_separately_and_ignores_private_fields() {
         let mut value = fixture();
@@ -237,7 +237,7 @@ mod tests {
         assert_eq!(page.next_after, 5);
     }
 
-    // spec: TUI-RUNTIME-R008.2.3.2.2.1
+    // spec: TUIG-RUNTIME-R008.2.3.2.2.1
     #[test]
     fn resumed_empty_terminal_page_uses_authoritative_cursor_without_invented_events() {
         let mut value = fixture();
@@ -254,7 +254,7 @@ mod tests {
         assert!(PublicPage::parse(&value, "run-1", 0).is_err());
     }
 
-    // spec: TUI-RUNTIME-R008.2.3.2.2.1
+    // spec: TUIG-RUNTIME-R008.2.3.2.2.1
     #[test]
     fn malformed_identity_order_cursor_category_and_terminal_are_refused() {
         for (pointer, change) in [

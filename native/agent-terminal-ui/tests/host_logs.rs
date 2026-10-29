@@ -113,7 +113,7 @@ async fn serve(responses: Vec<FixtureResponse>) -> (ArboraClient, tokio::task::J
     (client, server)
 }
 
-// spec: TUI-RUNTIME-R002.11
+// spec: TUIG-RUNTIME-R002.11
 #[tokio::test]
 async fn authenticated_reads_clear_authority_after_denial_without_effect_replay() {
     let (client, server) = serve(vec![
@@ -139,7 +139,7 @@ async fn authenticated_reads_clear_authority_after_denial_without_effect_replay(
     server.await.unwrap();
 }
 
-// spec: TUI-RUNTIME-R002.11
+// spec: TUIG-RUNTIME-R002.11
 #[tokio::test]
 async fn disabled_expired_and_malformed_receipts_never_read() {
     for (key, value) in [
@@ -159,7 +159,7 @@ async fn disabled_expired_and_malformed_receipts_never_read() {
     }
 }
 
-// spec: TUI-RUNTIME-R002.11
+// spec: TUIG-RUNTIME-R002.11
 #[tokio::test]
 async fn oversized_and_malformed_batches_invalidate_binding() {
     for payload in [
@@ -175,7 +175,7 @@ async fn oversized_and_malformed_batches_invalidate_binding() {
     }
 }
 
-// spec: TUI-RUNTIME-R002.11
+// spec: TUIG-RUNTIME-R002.11
 #[tokio::test]
 async fn exact_retention_gap_stops_without_retry_and_other_conflicts_refuse() {
     use agent_terminal_ui_native::host_logs::{REFUSED, RETENTION_GAP};
@@ -192,7 +192,7 @@ async fn exact_retention_gap_stops_without_retry_and_other_conflicts_refuse() {
     }
 }
 
-// spec: TUI-RUNTIME-R002.2
+// spec: TUIG-RUNTIME-R002.2
 #[tokio::test]
 async fn changed_receipt_binding_is_rejected_before_reader_use() {
     let (client, server) = serve(vec![response(200, receipt())]).await;
@@ -209,7 +209,7 @@ async fn changed_receipt_binding_is_rejected_before_reader_use() {
     server.await.unwrap();
 }
 
-// spec: TUI-RUNTIME-R002.3
+// spec: TUIG-RUNTIME-R002.3
 #[tokio::test]
 async fn adapter_reads_only_the_bound_opaque_reference() {
     let (client, server) = serve(vec![
@@ -230,7 +230,7 @@ async fn adapter_reads_only_the_bound_opaque_reference() {
     server.await.unwrap();
 }
 
-// spec: TUI-RUNTIME-R002.3
+// spec: TUIG-RUNTIME-R002.3
 #[tokio::test]
 async fn missing_reader_refuses_without_a_network_read() {
     let client = Arc::new(ArboraClient::new("http://127.0.0.1:9", Some("fixture-token")).unwrap());

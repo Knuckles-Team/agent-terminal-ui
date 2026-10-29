@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-pytestmark = pytest.mark.spec("TUI-RUNTIME-R015.29.1")
+pytestmark = pytest.mark.spec("TUIG-RUNTIME-R015.29.1")
 
 OWNERS = {
     "no-legacy-concepts": ("pipelines", "5f151c60c25212da9ec67c8bbd26de5f5e6c91f4"),

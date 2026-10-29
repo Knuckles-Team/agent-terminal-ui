@@ -1,4 +1,4 @@
-# TUI-RUNTIME design and integration plan
+# TUIG-RUNTIME design and integration plan
 
 ## Existing wiring and architecture
 
@@ -92,14 +92,14 @@ Area decisions, from the terminal code:
 
 | webui area | Terminal client has it? | Decision |
 |---|---|---|
-| Design system | Yes: `app.py` selects a Textual theme (`tokyo-night`) | New rollup `TUI-RUNTIME-R008` in the existing spec |
+| Design system | Yes: `app.py` selects a Textual theme (`tokyo-night`) | New rollup `TUIG-RUNTIME-R008` in the existing spec |
 | Decision evidence | Partly: `app.py` approval decisions, covered by `R001.5` | No new row |
 | Finance asset manager | No: `git grep` for finance and asset finds nothing | No spec |
 | API consumer | Yes: `client.py` Arbora boundary, owned by `R001` and `R002` | No new row |
 | App surfaces | Yes: `screens/`, owned by `R001.7` | No new row |
 | Identity and access | Yes: bearer caller identity, owned by `R001.2` | No new row |
 
-## Run harness surface (TUI-RUNTIME-R010)
+## Run harness surface (TUIG-RUNTIME-R010)
 
 ### Existing source and planned wiring
 
@@ -128,13 +128,13 @@ is permitted.
 
 The client must not accept RDF camelCase fields as alternate wire names.
 The client must preserve null availability and measured zero as different values.
-The engine defines solved tasks and computes aggregates under `EG-ORCH-VOCAB-R010`.
+The engine defines solved tasks and computes aggregates under `MEDULLA-ORCH-VOCAB-R010`.
 Zero-solved cost abstention must display unavailable, never zero or per-run cost.
 Pair-level rates and configuration-level costs must retain separate group labels.
 
 ### Current-plan prerequisite and refusals
 
-`AU-HARNESS-R014.1` through `.5` own mutable `PlanState` outside stored message history.
+`MERISTEM-HARNESS-R014.1` through `.5` own mutable `PlanState` outside stored message history.
 Those rows supply no public snapshot read contract today.
 `ARBORA-OPS-R021.4.5` defines the required cross-boundary snapshot and blocks availability until the AU producer exists.
 The client must not derive a plan from messages, reconstruct state, or add a plan writer.
@@ -153,10 +153,10 @@ Each row requires its own positive and negative served case through the producti
 
 ### Amendments
 
-- 2026-10-11, rows `TUI-RUNTIME-R003` to `TUI-RUNTIME-R009`: the operator required Tuig to match Overstory structure. The old state had no structure rows. The new state adds seven rollups. Evidence: the comparison table above.
+- 2026-10-11, rows `TUIG-RUNTIME-R003` to `TUIG-RUNTIME-R009`: the operator required Tuig to match Overstory structure. The old state had no structure rows. The new state adds seven rollups. Evidence: the comparison table above.
 
 <!-- spec-definition-patch:r002-consumer-plan -->
-## TUI-RUNTIME-R002 consumer boundary
+## TUIG-RUNTIME-R002 consumer boundary
 
 The Arbora owner must publish contracts R009.2 through R009.6 and R010.7. Those contracts bind a versioned HostLaunchReceipt, interface mode, workspace and opaque tenant-authorized log reference. Arbora authorizes each read and reconnect. It supplies record order and rotation gaps. These IDs are producer prerequisites. They do not claim existing runtime exports. The terminal never grants authority or reads a local log path. R010.7 places web_logs in HostLaunchRequest, but the current HostLaunchReceipt v1 contract omits it. Arbora must bind the effective boolean into an authenticated receipt or handoff, scoped to host, workspace, tenant and principal. Until Arbora supplies that field, TUI log reads stay disabled. The required host redacted sink remains enabled. This is a producer prerequisite, not a claim of an existing export.
 
@@ -169,7 +169,7 @@ Dependency order:
 6. Bound reads, queued bytes, lines, timeouts and cancellation as requirements.md states. On rotation, expose a tenant-local gap. On denial, clear protected state. Never stop Arbora resources.
 7. Exercise the full served path on a real host, client and TUI. Use the fixed seed and two tenants after producer contracts are available.
 
-The TUI defines consumer interfaces here. It does not claim existing exports. Extend AgentClient, the application, CommandProcessor.cmd_logs and MainScreen.action_toggle_logs. Do not add another router, transport, local gateway or file reader. This slice leaves the TUI-RUNTIME-R010 inspector obligations intact.
+The TUI defines consumer interfaces here. It does not claim existing exports. Extend AgentClient, the application, CommandProcessor.cmd_logs and MainScreen.action_toggle_logs. Do not add another router, transport, local gateway or file reader. This slice leaves the TUIG-RUNTIME-R010 inspector obligations intact.
 
 AU:116 SHA-256 08a22602bd677e4fc39260d058503fa73a2216ad40bbe817c17d3bef256722ef. Map the remaining TUI obligation to R002.2, .3, .5 and .6.
 AU:117 SHA-256 fddbc1b35588be4427396a7aa827414d9d7bba01a8837f905a8b1c9b1eac4694. Map its remaining mode and unified-view obligation to R002.2 through .6, especially .4. R002.1 preserves the parent acceptance. These are definition mappings only.
@@ -372,7 +372,7 @@ rows remain pending. Keep the incumbent coding terminal until served parity and 
 ## One-shot tool-task consumer
 
 Component: Terminal task view
-Depends-on: TUI-RUNTIME-R001.2, TUI-RUNTIME-R001.3, TUI-RUNTIME-R001.5, [Arbora A2A](https://github.com/Knuckles-Team/arbora/blob/331044ed7daec51a3633e0a7ea712293b2063bf3/specs/a2a/spec.md)
+Depends-on: TUIG-RUNTIME-R001.2, TUIG-RUNTIME-R001.3, TUIG-RUNTIME-R001.5, [Arbora A2A](https://github.com/Knuckles-Team/arbora/blob/331044ed7daec51a3633e0a7ea712293b2063bf3/specs/a2a/spec.md)
 
 Code: ../../agent_terminal_ui/terminal_ui.py:10
 
@@ -443,11 +443,11 @@ Decision: reuse the existing task transport and renderer; reject local task exec
 Implement the producer binding first, then the typed input, observation, refusal, evidence and served proof children.
 The planned tests must cover both frontend implementations before native cutover, using identical task and scope fixtures.
 
-## TUI-RUNTIME-R001.8
+## TUIG-RUNTIME-R001.8
 
-`TUI-RUNTIME-R001.8`: Extend command/client contract for one-shot background tool-task submission with Arbora preapproval binding gate.
+`TUIG-RUNTIME-R001.8`: Extend command/client contract for one-shot background tool-task submission with Arbora preapproval binding gate.
 
-## Coding session (TUI-RUNTIME-R011)
+## Coding session (TUIG-RUNTIME-R011)
 
 Extended or new: new rollup; no existing rollup owns the coding session (search terms: coding, workspace root, diff, resume).
 
@@ -507,7 +507,7 @@ The library exports `run_inspector` through its public API. Focused tests import
 that API, so normal crate compilation includes the module. Production view/key
 attachment and authorized producer adapters remain deferred.
 
-Boundary tests bind only to `TUI-RUNTIME-R010.7`. The earlier served requirements
+Boundary tests bind only to `TUIG-RUNTIME-R010.7`. The earlier served requirements
 and their checkboxes stay pending. This child requires no production activation.
 ### 2026-10-16: Native approval state boundary (R011.13)
 
@@ -535,7 +535,7 @@ The library exports `coding_approval` through its public API. Focused tests impo
 that API, so normal crate compilation includes the module. Production view/key
 attachment and authorized producer adapters remain deferred.
 
-Boundary tests bind only to `TUI-RUNTIME-R011.13`. The earlier served requirements
+Boundary tests bind only to `TUIG-RUNTIME-R011.13`. The earlier served requirements
 and their checkboxes stay pending. This child requires no production activation.
 
 ### 2026-10-16: Unambiguous approval previews
@@ -672,7 +672,7 @@ Controlled and producer-backed fixtures remain distinct from deployed grant or n
 
 ### Native host logs
 
-Implement TUI-RUNTIME-R002.11 through the existing Arbora client and native event loop. Reuse authenticated producer endpoints without filesystem reads or credential storage.
+Implement TUIG-RUNTIME-R002.11 through the existing Arbora client and native event loop. Reuse authenticated producer endpoints without filesystem reads or credential storage.
 
 ### R002.1.3.2.2.3 committed terminal point-read
 
@@ -686,7 +686,7 @@ Presentation identifiers have a 512-byte bound. Result references allow 4096 byt
 
 ### 2026-10-17: Retained host-log metadata and gap display
 
-TUI-RUNTIME-R002.11 consumes Arbora HOST-R009.8.2.2 read version two in both
+TUIG-RUNTIME-R002.11 consumes Arbora HOST-R009.8.2.2 read version two in both
 clients. Preserve original source generation, sequence, request, timestamp and
 severity in literal bounded display. Reject malformed metadata and unsupported
 versions. Exact HTTP 409 retention_gap stops polling and clears retained lines
@@ -823,19 +823,19 @@ policy change. Preserve the source and blocking checks until that decision.
 
 ### Unary card discovery
 
-TUI-RUNTIME-R002.1.6 reuses get_metadata for transport selection. The root card
+TUIG-RUNTIME-R002.1.6 reuses get_metadata for transport selection. The root card
 path precedes the scoped path. Only HTTP 404 and 405 permit scoped fallback.
 This slice qualifies basic unary conversation, not native prompt startup,
 selected-interface host admission, streaming or cancellation.
 
 ### Safe unsupported-stream fallback
 
-TUI-RUNTIME-R002.1.7 tracks raw results before presentation normalization.
+TUIG-RUNTIME-R002.1.7 tracks raw results before presentation normalization.
 Only an explicit unsupported response before any result permits unary fallback.
 This preserves R002.1.6 discovery. It does not recover uncertain submissions,
 retry transport failures or replay acknowledged tasks.
 
-### 2026-10-18 packaged terminal styles (TUI-RUNTIME-R001.7)
+### 2026-10-18 packaged terminal styles (TUIG-RUNTIME-R001.7)
 
 Ship every Textual stylesheet with the Python package. Validate the built wheel outside the source checkout before release; source-tree rendering alone cannot prove package assets are present. Preserve the existing screen and authority behavior.
 
@@ -854,7 +854,7 @@ This feedback repair does not complete R012.2 or qualify served model choice.
 
 ## Source quality contract
 
-TUI-RUNTIME-R015 preserves unresolved source-quality obligations in this owning specification.
+TUIG-RUNTIME-R015 preserves unresolved source-quality obligations in this owning specification.
 Git retains prior spec sources and historical completion claims.
 Those claims supply no current acceptance evidence.
 Each repair must name its production or tooling call path before implementation.
@@ -979,7 +979,7 @@ remain open under R008.2.3.2.2. No broader acceptance is claimed by this increme
 
 ## Amendment 2026-10-22: credential-free environment example
 
-TUI-RUNTIME-R015.43 adds a tracked `.env.example` for local onboarding.
+TUIG-RUNTIME-R015.43 adds a tracked `.env.example` for local onboarding.
 It contains only the loopback URL and supported startup theme defaults.
 The terminal does not load dotenv files; the documentation gives explicit shell
 export steps. Credentials stay outside this tracked example. Remote connections
@@ -992,7 +992,7 @@ configuration loader, authentication policy or other source-quality requirement.
 
 ## Amendment 2026-10-22: model client boundary regression coverage
 
-TUI-RUNTIME-R012.2 remains open. R012.2.1 replaces the retired in-process model-registry
+TUIG-RUNTIME-R012.2 remains open. R012.2.1 replaces the retired in-process model-registry
 and tier-routing tests with coverage of AgentClient.list_configured_models.
 R012.2.2 retains every original governed model-choice acceptance criterion.
 The parent rolls up both children; legacy test coverage cannot close it.
@@ -1018,16 +1018,16 @@ R012.3 rolls up the bounded read-only child R012.3.1 and the remaining
 full conversation acceptance R012.3.2. Both are required for parent completion.
 ## Native reply and metadata ownership
 
-- `TUI-RUNTIME-R002.1.3.2.2.2.1` owns bounded native unary reply display.
-- `TUI-RUNTIME-R008.2.3.2.2.3` owns native single-row keyboard scrolling.
-- `TUI-RUNTIME-R012.6.1` owns transient native turn usage receipt.
-- `TUI-RUNTIME-R002.1.3.2.2.2.2` owns bounded queued unary submission deadline.
-- `TUI-RUNTIME-R002.1.3.2.2.2.3` owns explicit committed-event read enrichment.
+- `TUIG-RUNTIME-R002.1.3.2.2.2.1` owns bounded native unary reply display.
+- `TUIG-RUNTIME-R008.2.3.2.2.3` owns native single-row keyboard scrolling.
+- `TUIG-RUNTIME-R012.6.1` owns transient native turn usage receipt.
+- `TUIG-RUNTIME-R002.1.3.2.2.2.2` owns bounded queued unary submission deadline.
+- `TUIG-RUNTIME-R002.1.3.2.2.2.3` owns explicit committed-event read enrichment.
 
 These bounded contracts leave every broader parent acceptance criterion in force.
 ## Amendment 2026-10-22: shared development hook owners
 
-TUI-RUNTIME-R015.29 owns development hook dependency validation. R015.29.1
+TUIG-RUNTIME-R015.29 owns development hook dependency validation. R015.29.1
 binds only the two shared guard consumers. R015.29.2 retains validation of all
 remaining formatter and dependency hooks. The terminal
 consumes the no-legacy-concepts hook from pipelines and lane-guard from
@@ -1049,7 +1049,7 @@ entry-point, environment inventory and served resume requirements open.
 
 ## Amendment: nonblocking unary turns
 
-Consume Arbora ARBORA-A2A-R001.6 through the existing Python polling path. Bind reads to the returned task and bound the observation period. Keep native parity and served streaming acceptance open under TUI-RUNTIME-R012.1.2.
+Consume Arbora ARBORA-A2A-R001.6 through the existing Python polling path. Bind reads to the returned task and bound the observation period. Keep native parity and served streaming acceptance open under TUIG-RUNTIME-R012.1.2.
 
 ## Amendment: native unary observation
 
@@ -1057,7 +1057,7 @@ Reuse native task reads and the existing observation interval for admitted submi
 
 ## Amendment 2026-10-22: explicit native loopback anonymous tasks
 
-TUI-RUNTIME-R002.1.3.3 adds AGENT_AUTH_MODE=none as an explicit local-only
+TUIG-RUNTIME-R002.1.3.3 adds AGENT_AUTH_MODE=none as an explicit local-only
 opt-in. The default bearer mode retains credential refusals. Anonymous mode
 rejects credentials, remote endpoints and redirects, disables proxies and pins
 localhost to loopback. One central client transports discovery, submission,
@@ -1274,7 +1274,7 @@ against the current public contract does not establish released-stack, native
 or live producer acceptance. R010.6 and the full command matrix remain open.
 ### 2026-10-24: Refreshable documentation screenshots
 
-TUI-RUNTIME-R016 adds a local capture command for the Python Textual app.
+TUIG-RUNTIME-R016 adds a local capture command for the Python Textual app.
 The existing R005 documentation-layout obligation remains unchanged.
 Use the production widget tree, fixed synthetic chat content and isolated settings.
 Export SVGs at compact and wide sizes to stable documentation paths. The command
@@ -1707,7 +1707,7 @@ amendment neither removes them nor claims their native acceptance.
 
 ## Amendment: explicit context continuation (2026-10-27)
 
-TUI-RUNTIME-R012.3.2.1 adds a native `--continue CONTEXT_ID --prompt TEXT`
+TUIG-RUNTIME-R012.3.2.1 adds a native `--continue CONTEXT_ID --prompt TEXT`
 entry point. Accept only `a2a-context-` followed by 64 lowercase hexadecimal
 digits. Reject duplicate flags, observation, AGENT_TASK_ID and local ACP mode.
 Each turn sends only its new prompt with a fresh message and idempotency ID.

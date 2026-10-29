@@ -19,7 +19,7 @@ SPEC.loader.exec_module(VERIFIER)
 
 
 class NativePackagingTests(unittest.TestCase):
-    @pytest.mark.spec("TUI-RUNTIME-R015.31")
+    @pytest.mark.spec("TUIG-RUNTIME-R015.31")
     def test_binary_only_metadata(self):
         project = tomllib.loads((ROOT / "pyproject.toml").read_text())
         self.assertEqual(project["project"]["name"], "tuig")

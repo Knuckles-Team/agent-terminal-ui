@@ -1,243 +1,243 @@
 {
   "schema_version": 2,
-  "spec_id": "TUI-RUNTIME",
+  "spec_id": "TUIG-RUNTIME",
   "owner_repo": "tuig",
   "delivery_state": "SPECIFIED",
   "requirement_ids": [
-    "TUI-RUNTIME-R001",
-    "TUI-RUNTIME-R001.1",
-    "TUI-RUNTIME-R001.2",
-    "TUI-RUNTIME-R001.3",
-    "TUI-RUNTIME-R001.4",
-    "TUI-RUNTIME-R001.5",
-    "TUI-RUNTIME-R001.6",
-    "TUI-RUNTIME-R001.7",
-    "TUI-RUNTIME-R001.8",
-    "TUI-RUNTIME-R002",
-    "TUI-RUNTIME-R003",
-    "TUI-RUNTIME-R004",
-    "TUI-RUNTIME-R004.1",
-    "TUI-RUNTIME-R005",
-    "TUI-RUNTIME-R006",
-    "TUI-RUNTIME-R007",
-    "TUI-RUNTIME-R008",
-    "TUI-RUNTIME-R008.1",
-    "TUI-RUNTIME-R008.2",
-    "TUI-RUNTIME-R009",
-    "TUI-RUNTIME-R010",
-    "TUI-RUNTIME-R010.1",
-    "TUI-RUNTIME-R010.2",
-    "TUI-RUNTIME-R010.3",
-    "TUI-RUNTIME-R010.4",
-    "TUI-RUNTIME-R010.5",
-    "TUI-RUNTIME-R010.6",
-    "TUI-RUNTIME-R002.1",
-    "TUI-RUNTIME-R002.2",
-    "TUI-RUNTIME-R002.3",
-    "TUI-RUNTIME-R002.4",
-    "TUI-RUNTIME-R002.5",
-    "TUI-RUNTIME-R002.6",
-    "TUI-RUNTIME-R002.7",
-    "TUI-RUNTIME-R002.1.1",
-    "TUI-RUNTIME-R002.1.2",
-    "TUI-RUNTIME-R002.1.3",
-    "TUI-RUNTIME-R002.1.3.1",
-    "TUI-RUNTIME-R002.1.3.2",
-    "TUI-RUNTIME-R002.1.4",
-    "TUI-RUNTIME-R002.1.5",
-    "TUI-RUNTIME-R002.8",
-    "TUI-RUNTIME-R002.8.1",
-    "TUI-RUNTIME-R002.8.2",
-    "TUI-RUNTIME-R002.8.3",
-    "TUI-RUNTIME-R002.8.4",
-    "TUI-RUNTIME-R002.8.5",
-    "TUI-RUNTIME-R002.8.6",
-    "TUI-RUNTIME-R011.14",
-    "TUI-RUNTIME-R011",
-    "TUI-RUNTIME-R011.1",
-    "TUI-RUNTIME-R011.2",
-    "TUI-RUNTIME-R011.3",
-    "TUI-RUNTIME-R011.4",
-    "TUI-RUNTIME-R011.5",
-    "TUI-RUNTIME-R011.6",
-    "TUI-RUNTIME-R011.7",
-    "TUI-RUNTIME-R011.8",
-    "TUI-RUNTIME-R011.9",
-    "TUI-RUNTIME-R011.10",
-    "TUI-RUNTIME-R011.11",
-    "TUI-RUNTIME-R011.12",
-    "TUI-RUNTIME-R010.7",
-    "TUI-RUNTIME-R011.13",
-    "TUI-RUNTIME-R008.2.1",
-    "TUI-RUNTIME-R008.2.2",
-    "TUI-RUNTIME-R008.2.3",
-    "TUI-RUNTIME-R008.2.3.1",
-    "TUI-RUNTIME-R008.2.3.2",
-    "TUI-RUNTIME-R008.2.3.2.1",
-    "TUI-RUNTIME-R008.2.3.2.2",
-    "TUI-RUNTIME-R002.1.3.2.1",
-    "TUI-RUNTIME-R002.1.3.2.2",
-    "TUI-RUNTIME-R002.1.3.2.2.1",
-    "TUI-RUNTIME-R002.1.3.2.2.2",
-    "TUI-RUNTIME-R010.8",
-    "TUI-RUNTIME-R010.9",
-    "TUI-RUNTIME-R002.9",
-    "TUI-RUNTIME-R002.10",
-    "TUI-RUNTIME-R002.11",
-    "TUI-RUNTIME-R002.1.3.2.2.3",
-    "TUI-RUNTIME-R012",
-    "TUI-RUNTIME-R012.1",
-    "TUI-RUNTIME-R012.2",
-    "TUI-RUNTIME-R012.2.1",
-    "TUI-RUNTIME-R012.2.2",
-    "TUI-RUNTIME-R012.3",
-    "TUI-RUNTIME-R012.4",
-    "TUI-RUNTIME-R012.4.1",
-    "TUI-RUNTIME-R012.5",
-    "TUI-RUNTIME-R012.5.1",
-    "TUI-RUNTIME-R012.5.2",
-    "TUI-RUNTIME-R012.6",
-    "TUI-RUNTIME-R010.4.1",
-    "TUI-RUNTIME-R012.4.2",
-    "TUI-RUNTIME-R004.2",
-    "TUI-RUNTIME-R012.4.3",
-    "TUI-RUNTIME-R012.4.3.1",
-    "TUI-RUNTIME-R012.4.3.2",
-    "TUI-RUNTIME-R010.4.2",
-    "TUI-RUNTIME-R002.1.6",
-    "TUI-RUNTIME-R002.1.7",
-    "TUI-RUNTIME-R015",
-    "TUI-RUNTIME-R015.1",
-    "TUI-RUNTIME-R015.2",
-    "TUI-RUNTIME-R015.3",
-    "TUI-RUNTIME-R015.4",
-    "TUI-RUNTIME-R015.5",
-    "TUI-RUNTIME-R015.6",
-    "TUI-RUNTIME-R015.7",
-    "TUI-RUNTIME-R015.8",
-    "TUI-RUNTIME-R015.9",
-    "TUI-RUNTIME-R015.10",
-    "TUI-RUNTIME-R015.11",
-    "TUI-RUNTIME-R015.12",
-    "TUI-RUNTIME-R015.13",
-    "TUI-RUNTIME-R015.14",
-    "TUI-RUNTIME-R015.15",
-    "TUI-RUNTIME-R015.16",
-    "TUI-RUNTIME-R015.17",
-    "TUI-RUNTIME-R015.18",
-    "TUI-RUNTIME-R015.19",
-    "TUI-RUNTIME-R015.20",
-    "TUI-RUNTIME-R015.21",
-    "TUI-RUNTIME-R015.22",
-    "TUI-RUNTIME-R015.23",
-    "TUI-RUNTIME-R015.24",
-    "TUI-RUNTIME-R015.25",
-    "TUI-RUNTIME-R015.26",
-    "TUI-RUNTIME-R015.27",
-    "TUI-RUNTIME-R015.28",
-    "TUI-RUNTIME-R015.29",
-    "TUI-RUNTIME-R015.29.1",
-    "TUI-RUNTIME-R015.29.2",
-    "TUI-RUNTIME-R015.30",
-    "TUI-RUNTIME-R015.30.1",
-    "TUI-RUNTIME-R015.30.2",
-    "TUI-RUNTIME-R015.31",
-    "TUI-RUNTIME-R015.32",
-    "TUI-RUNTIME-R015.33",
-    "TUI-RUNTIME-R015.34",
-    "TUI-RUNTIME-R015.35",
-    "TUI-RUNTIME-R015.36",
-    "TUI-RUNTIME-R015.37",
-    "TUI-RUNTIME-R015.38",
-    "TUI-RUNTIME-R015.39",
-    "TUI-RUNTIME-R015.40",
-    "TUI-RUNTIME-R015.41",
-    "TUI-RUNTIME-R015.41.1",
-    "TUI-RUNTIME-R015.41.2",
-    "TUI-RUNTIME-R015.42",
-    "TUI-RUNTIME-R015.42.1",
-    "TUI-RUNTIME-R015.42.2",
-    "TUI-RUNTIME-R015.43",
-    "TUI-RUNTIME-R015.44",
-    "TUI-RUNTIME-R015.45",
-    "TUI-RUNTIME-R015.46",
-    "TUI-RUNTIME-R015.47",
-    "TUI-RUNTIME-R015.48",
-    "TUI-RUNTIME-R015.49",
-    "TUI-RUNTIME-R015.50",
-    "TUI-RUNTIME-R015.51",
-    "TUI-RUNTIME-R015.52",
-    "TUI-RUNTIME-R015.53",
-    "TUI-RUNTIME-R015.54",
-    "TUI-RUNTIME-R015.55",
-    "TUI-RUNTIME-R015.56",
-    "TUI-RUNTIME-R015.57",
-    "TUI-RUNTIME-R015.58",
-    "TUI-RUNTIME-R015.59",
-    "TUI-RUNTIME-R015.60",
-    "TUI-RUNTIME-R015.61",
-    "TUI-RUNTIME-R015.62",
-    "TUI-RUNTIME-R015.63",
-    "TUI-RUNTIME-R015.64",
-    "TUI-RUNTIME-R015.65",
-    "TUI-RUNTIME-R015.66",
-    "TUI-RUNTIME-R015.67",
-    "TUI-RUNTIME-R015.68",
-    "TUI-RUNTIME-R015.69",
-    "TUI-RUNTIME-R015.70",
-    "TUI-RUNTIME-R015.71",
-    "TUI-RUNTIME-R012.3.1",
-    "TUI-RUNTIME-R012.3.2",
-    "TUI-RUNTIME-R012.3.2.1",
-    "TUI-RUNTIME-R012.3.2.2",
-    "TUI-RUNTIME-R002.1.3.2.2.2.1",
-    "TUI-RUNTIME-R008.2.3.2.2.3",
-    "TUI-RUNTIME-R012.6.1",
-    "TUI-RUNTIME-R002.1.3.2.2.2.2",
-    "TUI-RUNTIME-R002.1.3.2.2.2.3",
-    "TUI-RUNTIME-R002.1.3.2.2.2.4",
-    "TUI-RUNTIME-R008.2.3.2.2.4",
-    "TUI-RUNTIME-R012.6.2",
-    "TUI-RUNTIME-R012.1.1",
-    "TUI-RUNTIME-R012.1.2",
-    "TUI-RUNTIME-R012.1.3",
-    "TUI-RUNTIME-R002.1.3.3",
-    "TUI-RUNTIME-R008.2.3.2.2.1",
-    "TUI-RUNTIME-R008.2.3.2.2.2",
-    "TUI-RUNTIME-R008.2.3.2.2.2.1",
-    "TUI-RUNTIME-R008.2.3.2.2.2.2",
-    "TUI-RUNTIME-R012.1.4",
-    "TUI-RUNTIME-R012.4.3.3",
-    "TUI-RUNTIME-R008.2.3.2.2.2.2.1",
-    "TUI-RUNTIME-R008.2.3.2.2.2.2.2",
-    "TUI-RUNTIME-R008.2.3.2.2.2.2.2.1",
-    "TUI-RUNTIME-R008.2.3.2.2.2.2.2.2",
-    "TUI-RUNTIME-R012.3.1.1",
-    "TUI-RUNTIME-R010.10",
-    "TUI-RUNTIME-R016",
-    "TUI-RUNTIME-R010.11",
-    "TUI-RUNTIME-R010.12",
-    "TUI-RUNTIME-R010.13",
-    "TUI-RUNTIME-R010.14",
-    "TUI-RUNTIME-R012.7",
-    "TUI-RUNTIME-R012.8",
-    "TUI-RUNTIME-R012.9",
-    "TUI-RUNTIME-R008.3",
-    "TUI-RUNTIME-R010.12.1",
-    "TUI-RUNTIME-R008.3.1",
-    "TUI-RUNTIME-R008.3.2",
-    "TUI-RUNTIME-R010.12.1.1",
-    "TUI-RUNTIME-R010.12.1.2",
-    "TUI-RUNTIME-R010.12.2",
-    "TUI-RUNTIME-R008.4",
-    "TUI-RUNTIME-R008.4.1",
-    "TUI-RUNTIME-R008.4.2",
-    "TUI-RUNTIME-R012.6.3",
-    "TUI-RUNTIME-R012.1.3.1"
+    "TUIG-RUNTIME-R001",
+    "TUIG-RUNTIME-R001.1",
+    "TUIG-RUNTIME-R001.2",
+    "TUIG-RUNTIME-R001.3",
+    "TUIG-RUNTIME-R001.4",
+    "TUIG-RUNTIME-R001.5",
+    "TUIG-RUNTIME-R001.6",
+    "TUIG-RUNTIME-R001.7",
+    "TUIG-RUNTIME-R001.8",
+    "TUIG-RUNTIME-R002",
+    "TUIG-RUNTIME-R003",
+    "TUIG-RUNTIME-R004",
+    "TUIG-RUNTIME-R004.1",
+    "TUIG-RUNTIME-R005",
+    "TUIG-RUNTIME-R006",
+    "TUIG-RUNTIME-R007",
+    "TUIG-RUNTIME-R008",
+    "TUIG-RUNTIME-R008.1",
+    "TUIG-RUNTIME-R008.2",
+    "TUIG-RUNTIME-R009",
+    "TUIG-RUNTIME-R010",
+    "TUIG-RUNTIME-R010.1",
+    "TUIG-RUNTIME-R010.2",
+    "TUIG-RUNTIME-R010.3",
+    "TUIG-RUNTIME-R010.4",
+    "TUIG-RUNTIME-R010.5",
+    "TUIG-RUNTIME-R010.6",
+    "TUIG-RUNTIME-R002.1",
+    "TUIG-RUNTIME-R002.2",
+    "TUIG-RUNTIME-R002.3",
+    "TUIG-RUNTIME-R002.4",
+    "TUIG-RUNTIME-R002.5",
+    "TUIG-RUNTIME-R002.6",
+    "TUIG-RUNTIME-R002.7",
+    "TUIG-RUNTIME-R002.1.1",
+    "TUIG-RUNTIME-R002.1.2",
+    "TUIG-RUNTIME-R002.1.3",
+    "TUIG-RUNTIME-R002.1.3.1",
+    "TUIG-RUNTIME-R002.1.3.2",
+    "TUIG-RUNTIME-R002.1.4",
+    "TUIG-RUNTIME-R002.1.5",
+    "TUIG-RUNTIME-R002.8",
+    "TUIG-RUNTIME-R002.8.1",
+    "TUIG-RUNTIME-R002.8.2",
+    "TUIG-RUNTIME-R002.8.3",
+    "TUIG-RUNTIME-R002.8.4",
+    "TUIG-RUNTIME-R002.8.5",
+    "TUIG-RUNTIME-R002.8.6",
+    "TUIG-RUNTIME-R011.14",
+    "TUIG-RUNTIME-R011",
+    "TUIG-RUNTIME-R011.1",
+    "TUIG-RUNTIME-R011.2",
+    "TUIG-RUNTIME-R011.3",
+    "TUIG-RUNTIME-R011.4",
+    "TUIG-RUNTIME-R011.5",
+    "TUIG-RUNTIME-R011.6",
+    "TUIG-RUNTIME-R011.7",
+    "TUIG-RUNTIME-R011.8",
+    "TUIG-RUNTIME-R011.9",
+    "TUIG-RUNTIME-R011.10",
+    "TUIG-RUNTIME-R011.11",
+    "TUIG-RUNTIME-R011.12",
+    "TUIG-RUNTIME-R010.7",
+    "TUIG-RUNTIME-R011.13",
+    "TUIG-RUNTIME-R008.2.1",
+    "TUIG-RUNTIME-R008.2.2",
+    "TUIG-RUNTIME-R008.2.3",
+    "TUIG-RUNTIME-R008.2.3.1",
+    "TUIG-RUNTIME-R008.2.3.2",
+    "TUIG-RUNTIME-R008.2.3.2.1",
+    "TUIG-RUNTIME-R008.2.3.2.2",
+    "TUIG-RUNTIME-R002.1.3.2.1",
+    "TUIG-RUNTIME-R002.1.3.2.2",
+    "TUIG-RUNTIME-R002.1.3.2.2.1",
+    "TUIG-RUNTIME-R002.1.3.2.2.2",
+    "TUIG-RUNTIME-R010.8",
+    "TUIG-RUNTIME-R010.9",
+    "TUIG-RUNTIME-R002.9",
+    "TUIG-RUNTIME-R002.10",
+    "TUIG-RUNTIME-R002.11",
+    "TUIG-RUNTIME-R002.1.3.2.2.3",
+    "TUIG-RUNTIME-R012",
+    "TUIG-RUNTIME-R012.1",
+    "TUIG-RUNTIME-R012.2",
+    "TUIG-RUNTIME-R012.2.1",
+    "TUIG-RUNTIME-R012.2.2",
+    "TUIG-RUNTIME-R012.3",
+    "TUIG-RUNTIME-R012.4",
+    "TUIG-RUNTIME-R012.4.1",
+    "TUIG-RUNTIME-R012.5",
+    "TUIG-RUNTIME-R012.5.1",
+    "TUIG-RUNTIME-R012.5.2",
+    "TUIG-RUNTIME-R012.6",
+    "TUIG-RUNTIME-R010.4.1",
+    "TUIG-RUNTIME-R012.4.2",
+    "TUIG-RUNTIME-R004.2",
+    "TUIG-RUNTIME-R012.4.3",
+    "TUIG-RUNTIME-R012.4.3.1",
+    "TUIG-RUNTIME-R012.4.3.2",
+    "TUIG-RUNTIME-R010.4.2",
+    "TUIG-RUNTIME-R002.1.6",
+    "TUIG-RUNTIME-R002.1.7",
+    "TUIG-RUNTIME-R015",
+    "TUIG-RUNTIME-R015.1",
+    "TUIG-RUNTIME-R015.2",
+    "TUIG-RUNTIME-R015.3",
+    "TUIG-RUNTIME-R015.4",
+    "TUIG-RUNTIME-R015.5",
+    "TUIG-RUNTIME-R015.6",
+    "TUIG-RUNTIME-R015.7",
+    "TUIG-RUNTIME-R015.8",
+    "TUIG-RUNTIME-R015.9",
+    "TUIG-RUNTIME-R015.10",
+    "TUIG-RUNTIME-R015.11",
+    "TUIG-RUNTIME-R015.12",
+    "TUIG-RUNTIME-R015.13",
+    "TUIG-RUNTIME-R015.14",
+    "TUIG-RUNTIME-R015.15",
+    "TUIG-RUNTIME-R015.16",
+    "TUIG-RUNTIME-R015.17",
+    "TUIG-RUNTIME-R015.18",
+    "TUIG-RUNTIME-R015.19",
+    "TUIG-RUNTIME-R015.20",
+    "TUIG-RUNTIME-R015.21",
+    "TUIG-RUNTIME-R015.22",
+    "TUIG-RUNTIME-R015.23",
+    "TUIG-RUNTIME-R015.24",
+    "TUIG-RUNTIME-R015.25",
+    "TUIG-RUNTIME-R015.26",
+    "TUIG-RUNTIME-R015.27",
+    "TUIG-RUNTIME-R015.28",
+    "TUIG-RUNTIME-R015.29",
+    "TUIG-RUNTIME-R015.29.1",
+    "TUIG-RUNTIME-R015.29.2",
+    "TUIG-RUNTIME-R015.30",
+    "TUIG-RUNTIME-R015.30.1",
+    "TUIG-RUNTIME-R015.30.2",
+    "TUIG-RUNTIME-R015.31",
+    "TUIG-RUNTIME-R015.32",
+    "TUIG-RUNTIME-R015.33",
+    "TUIG-RUNTIME-R015.34",
+    "TUIG-RUNTIME-R015.35",
+    "TUIG-RUNTIME-R015.36",
+    "TUIG-RUNTIME-R015.37",
+    "TUIG-RUNTIME-R015.38",
+    "TUIG-RUNTIME-R015.39",
+    "TUIG-RUNTIME-R015.40",
+    "TUIG-RUNTIME-R015.41",
+    "TUIG-RUNTIME-R015.41.1",
+    "TUIG-RUNTIME-R015.41.2",
+    "TUIG-RUNTIME-R015.42",
+    "TUIG-RUNTIME-R015.42.1",
+    "TUIG-RUNTIME-R015.42.2",
+    "TUIG-RUNTIME-R015.43",
+    "TUIG-RUNTIME-R015.44",
+    "TUIG-RUNTIME-R015.45",
+    "TUIG-RUNTIME-R015.46",
+    "TUIG-RUNTIME-R015.47",
+    "TUIG-RUNTIME-R015.48",
+    "TUIG-RUNTIME-R015.49",
+    "TUIG-RUNTIME-R015.50",
+    "TUIG-RUNTIME-R015.51",
+    "TUIG-RUNTIME-R015.52",
+    "TUIG-RUNTIME-R015.53",
+    "TUIG-RUNTIME-R015.54",
+    "TUIG-RUNTIME-R015.55",
+    "TUIG-RUNTIME-R015.56",
+    "TUIG-RUNTIME-R015.57",
+    "TUIG-RUNTIME-R015.58",
+    "TUIG-RUNTIME-R015.59",
+    "TUIG-RUNTIME-R015.60",
+    "TUIG-RUNTIME-R015.61",
+    "TUIG-RUNTIME-R015.62",
+    "TUIG-RUNTIME-R015.63",
+    "TUIG-RUNTIME-R015.64",
+    "TUIG-RUNTIME-R015.65",
+    "TUIG-RUNTIME-R015.66",
+    "TUIG-RUNTIME-R015.67",
+    "TUIG-RUNTIME-R015.68",
+    "TUIG-RUNTIME-R015.69",
+    "TUIG-RUNTIME-R015.70",
+    "TUIG-RUNTIME-R015.71",
+    "TUIG-RUNTIME-R012.3.1",
+    "TUIG-RUNTIME-R012.3.2",
+    "TUIG-RUNTIME-R012.3.2.1",
+    "TUIG-RUNTIME-R012.3.2.2",
+    "TUIG-RUNTIME-R002.1.3.2.2.2.1",
+    "TUIG-RUNTIME-R008.2.3.2.2.3",
+    "TUIG-RUNTIME-R012.6.1",
+    "TUIG-RUNTIME-R002.1.3.2.2.2.2",
+    "TUIG-RUNTIME-R002.1.3.2.2.2.3",
+    "TUIG-RUNTIME-R002.1.3.2.2.2.4",
+    "TUIG-RUNTIME-R008.2.3.2.2.4",
+    "TUIG-RUNTIME-R012.6.2",
+    "TUIG-RUNTIME-R012.1.1",
+    "TUIG-RUNTIME-R012.1.2",
+    "TUIG-RUNTIME-R012.1.3",
+    "TUIG-RUNTIME-R002.1.3.3",
+    "TUIG-RUNTIME-R008.2.3.2.2.1",
+    "TUIG-RUNTIME-R008.2.3.2.2.2",
+    "TUIG-RUNTIME-R008.2.3.2.2.2.1",
+    "TUIG-RUNTIME-R008.2.3.2.2.2.2",
+    "TUIG-RUNTIME-R012.1.4",
+    "TUIG-RUNTIME-R012.4.3.3",
+    "TUIG-RUNTIME-R008.2.3.2.2.2.2.1",
+    "TUIG-RUNTIME-R008.2.3.2.2.2.2.2",
+    "TUIG-RUNTIME-R008.2.3.2.2.2.2.2.1",
+    "TUIG-RUNTIME-R008.2.3.2.2.2.2.2.2",
+    "TUIG-RUNTIME-R012.3.1.1",
+    "TUIG-RUNTIME-R010.10",
+    "TUIG-RUNTIME-R016",
+    "TUIG-RUNTIME-R010.11",
+    "TUIG-RUNTIME-R010.12",
+    "TUIG-RUNTIME-R010.13",
+    "TUIG-RUNTIME-R010.14",
+    "TUIG-RUNTIME-R012.7",
+    "TUIG-RUNTIME-R012.8",
+    "TUIG-RUNTIME-R012.9",
+    "TUIG-RUNTIME-R008.3",
+    "TUIG-RUNTIME-R010.12.1",
+    "TUIG-RUNTIME-R008.3.1",
+    "TUIG-RUNTIME-R008.3.2",
+    "TUIG-RUNTIME-R010.12.1.1",
+    "TUIG-RUNTIME-R010.12.1.2",
+    "TUIG-RUNTIME-R010.12.2",
+    "TUIG-RUNTIME-R008.4",
+    "TUIG-RUNTIME-R008.4.1",
+    "TUIG-RUNTIME-R008.4.2",
+    "TUIG-RUNTIME-R012.6.3",
+    "TUIG-RUNTIME-R012.1.3.1"
   ],
   "requirements": [
     {
-      "id": "TUI-RUNTIME-R001",
+      "id": "TUIG-RUNTIME-R001",
       "title": "Terminal operation client issues typed commands with pending approvals",
       "delivery_state": "SPECIFIED",
       "landed_in": [
@@ -245,18 +245,18 @@
       ],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R001.1",
-        "TUI-RUNTIME-R001.2",
-        "TUI-RUNTIME-R001.3",
-        "TUI-RUNTIME-R001.4",
-        "TUI-RUNTIME-R001.5",
-        "TUI-RUNTIME-R001.6",
-        "TUI-RUNTIME-R001.7",
-        "TUI-RUNTIME-R001.8"
+        "TUIG-RUNTIME-R001.1",
+        "TUIG-RUNTIME-R001.2",
+        "TUIG-RUNTIME-R001.3",
+        "TUIG-RUNTIME-R001.4",
+        "TUIG-RUNTIME-R001.5",
+        "TUIG-RUNTIME-R001.6",
+        "TUIG-RUNTIME-R001.7",
+        "TUIG-RUNTIME-R001.8"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R001.1",
+      "id": "TUIG-RUNTIME-R001.1",
       "title": "Known op and object params produce one versioned request with correct envelope",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -266,7 +266,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R001.2",
+      "id": "TUIG-RUNTIME-R001.2",
       "title": "Verified caller header reaches remote Arbora only over TLS",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -276,7 +276,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R001.3",
+      "id": "TUIG-RUNTIME-R001.3",
       "title": "One /confirm resumes exactly the issued plan",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -285,7 +285,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R001.4",
+      "id": "TUIG-RUNTIME-R001.4",
       "title": "Typed success renders and chat remains functional",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -295,7 +295,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R001.5",
+      "id": "TUIG-RUNTIME-R001.5",
       "title": "Pending request is displayed. No effect is asserted",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -304,7 +304,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R001.6",
+      "id": "TUIG-RUNTIME-R001.6",
       "title": "Base chat works. Compatible optional install enables /op",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -314,7 +314,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R001.7",
+      "id": "TUIG-RUNTIME-R001.7",
       "title": "Legacy screens still render or use served replacement",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -324,14 +324,14 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R001.8",
+      "id": "TUIG-RUNTIME-R001.8",
       "title": "One-shot background tool-task command extends command/client contract with Arbora preapproval binding",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R002",
+      "id": "TUIG-RUNTIME-R002",
       "title": "Terminal chat transport is reconciled with the current Arbora boundary",
       "delivery_state": "SPECIFIED",
       "landed_in": [
@@ -341,21 +341,21 @@
       ],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R002.1",
-        "TUI-RUNTIME-R002.2",
-        "TUI-RUNTIME-R002.3",
-        "TUI-RUNTIME-R002.4",
-        "TUI-RUNTIME-R002.5",
-        "TUI-RUNTIME-R002.6",
-        "TUI-RUNTIME-R002.7",
-        "TUI-RUNTIME-R002.8",
-        "TUI-RUNTIME-R002.9",
-        "TUI-RUNTIME-R002.10",
-        "TUI-RUNTIME-R002.11"
+        "TUIG-RUNTIME-R002.1",
+        "TUIG-RUNTIME-R002.2",
+        "TUIG-RUNTIME-R002.3",
+        "TUIG-RUNTIME-R002.4",
+        "TUIG-RUNTIME-R002.5",
+        "TUIG-RUNTIME-R002.6",
+        "TUIG-RUNTIME-R002.7",
+        "TUIG-RUNTIME-R002.8",
+        "TUIG-RUNTIME-R002.9",
+        "TUIG-RUNTIME-R002.10",
+        "TUIG-RUNTIME-R002.11"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R003",
+      "id": "TUIG-RUNTIME-R003",
       "title": "Packaged development skill carries the rapid-delivery contract",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -364,7 +364,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R004",
+      "id": "TUIG-RUNTIME-R004",
       "title": "Shared spec and repository checks",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -381,12 +381,12 @@
         "tests/test_precommit_hooks.py:77"
       ],
       "rollup_of": [
-        "TUI-RUNTIME-R004.1",
-        "TUI-RUNTIME-R004.2"
+        "TUIG-RUNTIME-R004.1",
+        "TUIG-RUNTIME-R004.2"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R004.1",
+      "id": "TUIG-RUNTIME-R004.1",
       "title": "Consolidate equivalent spec checks without losing stages",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -401,7 +401,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R005",
+      "id": "TUIG-RUNTIME-R005",
       "title": "Docs layout matches Overstory",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -412,7 +412,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R006",
+      "id": "TUIG-RUNTIME-R006",
       "title": "Pyproject configures the pipelines hook sections",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -423,7 +423,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R007",
+      "id": "TUIG-RUNTIME-R007",
       "title": "Release workflow caller matches Overstory",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -437,7 +437,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R008",
+      "id": "TUIG-RUNTIME-R008",
       "title": "Terminal theme tokens and accessibility are a stated contract",
       "delivery_state": "SPECIFIED",
       "landed_in": [
@@ -449,14 +449,14 @@
       ],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R008.1",
-        "TUI-RUNTIME-R008.2",
-        "TUI-RUNTIME-R008.3",
-        "TUI-RUNTIME-R008.4"
+        "TUIG-RUNTIME-R008.1",
+        "TUIG-RUNTIME-R008.2",
+        "TUIG-RUNTIME-R008.3",
+        "TUIG-RUNTIME-R008.4"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R008.1",
+      "id": "TUIG-RUNTIME-R008.1",
       "title": "Native discovery presentation remains readable after resize",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -468,19 +468,19 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R008.2",
+      "id": "TUIG-RUNTIME-R008.2",
       "title": "Complete native presentation parity",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R008.2.1",
-        "TUI-RUNTIME-R008.2.2",
-        "TUI-RUNTIME-R008.2.3"
+        "TUIG-RUNTIME-R008.2.1",
+        "TUIG-RUNTIME-R008.2.2",
+        "TUIG-RUNTIME-R008.2.3"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R009",
+      "id": "TUIG-RUNTIME-R009",
       "title": "AGENTS.md sections match Overstory",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -491,7 +491,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R010",
+      "id": "TUIG-RUNTIME-R010",
       "title": "Run harness surface is read-only and honest",
       "delivery_state": "SPECIFIED",
       "landed_in": [
@@ -504,45 +504,45 @@
         "tests/test_native_execution_graph_contract.py:33"
       ],
       "rollup_of": [
-        "TUI-RUNTIME-R010.1",
-        "TUI-RUNTIME-R010.2",
-        "TUI-RUNTIME-R010.3",
-        "TUI-RUNTIME-R010.4",
-        "TUI-RUNTIME-R010.5",
-        "TUI-RUNTIME-R010.6",
-        "TUI-RUNTIME-R010.7",
-        "TUI-RUNTIME-R010.8",
-        "TUI-RUNTIME-R010.9",
-        "TUI-RUNTIME-R010.10",
-        "TUI-RUNTIME-R010.11",
-        "TUI-RUNTIME-R010.12",
-        "TUI-RUNTIME-R010.13",
-        "TUI-RUNTIME-R010.14"
+        "TUIG-RUNTIME-R010.1",
+        "TUIG-RUNTIME-R010.2",
+        "TUIG-RUNTIME-R010.3",
+        "TUIG-RUNTIME-R010.4",
+        "TUIG-RUNTIME-R010.5",
+        "TUIG-RUNTIME-R010.6",
+        "TUIG-RUNTIME-R010.7",
+        "TUIG-RUNTIME-R010.8",
+        "TUIG-RUNTIME-R010.9",
+        "TUIG-RUNTIME-R010.10",
+        "TUIG-RUNTIME-R010.11",
+        "TUIG-RUNTIME-R010.12",
+        "TUIG-RUNTIME-R010.13",
+        "TUIG-RUNTIME-R010.14"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R010.1",
+      "id": "TUIG-RUNTIME-R010.1",
       "title": "Run operation wiring",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R010.2",
+      "id": "TUIG-RUNTIME-R010.2",
       "title": "Applied configuration",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R010.3",
+      "id": "TUIG-RUNTIME-R010.3",
       "title": "Context and cost",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R010.4",
+      "id": "TUIG-RUNTIME-R010.4",
       "title": "Read-only current plan",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
@@ -551,42 +551,42 @@
         "native/agent-terminal-ui/src/run_inspector_client.rs:619"
       ],
       "rollup_of": [
-        "TUI-RUNTIME-R010.4.1",
-        "TUI-RUNTIME-R010.4.2"
+        "TUIG-RUNTIME-R010.4.1",
+        "TUIG-RUNTIME-R010.4.2"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R010.5",
+      "id": "TUIG-RUNTIME-R010.5",
       "title": "Distinct terminal reasons",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R010.6",
+      "id": "TUIG-RUNTIME-R010.6",
       "title": "Served surface proof",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R002.1",
+      "id": "TUIG-RUNTIME-R002.1",
       "title": "Preserve original chat transport acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R002.1.1",
-        "TUI-RUNTIME-R002.1.2",
-        "TUI-RUNTIME-R002.1.3",
-        "TUI-RUNTIME-R002.1.4",
-        "TUI-RUNTIME-R002.1.5",
-        "TUI-RUNTIME-R002.1.6",
-        "TUI-RUNTIME-R002.1.7"
+        "TUIG-RUNTIME-R002.1.1",
+        "TUIG-RUNTIME-R002.1.2",
+        "TUIG-RUNTIME-R002.1.3",
+        "TUIG-RUNTIME-R002.1.4",
+        "TUIG-RUNTIME-R002.1.5",
+        "TUIG-RUNTIME-R002.1.6",
+        "TUIG-RUNTIME-R002.1.7"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R002.2",
+      "id": "TUIG-RUNTIME-R002.2",
       "title": "Validate the host receipt and scope",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -598,7 +598,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R002.3",
+      "id": "TUIG-RUNTIME-R002.3",
       "title": "Define the terminal consumer adapter",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -611,28 +611,28 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R002.4",
+      "id": "TUIG-RUNTIME-R002.4",
       "title": "Honor producer-selected modes and unify the log view",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R002.5",
+      "id": "TUIG-RUNTIME-R002.5",
       "title": "Enforce tenant scope and bound log lifecycle",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R002.6",
+      "id": "TUIG-RUNTIME-R002.6",
       "title": "Prove the served consumer journey",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R002.7",
+      "id": "TUIG-RUNTIME-R002.7",
       "title": "Native configured discovery",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -647,7 +647,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R002.1.1",
+      "id": "TUIG-RUNTIME-R002.1.1",
       "title": "Validate native task correlation",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -661,7 +661,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R002.1.2",
+      "id": "TUIG-RUNTIME-R002.1.2",
       "title": "Read a native task snapshot",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -676,19 +676,19 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R002.1.3",
+      "id": "TUIG-RUNTIME-R002.1.3",
       "title": "Complete served native chat transport",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R002.1.3.1",
-        "TUI-RUNTIME-R002.1.3.2",
-        "TUI-RUNTIME-R002.1.3.3"
+        "TUIG-RUNTIME-R002.1.3.1",
+        "TUIG-RUNTIME-R002.1.3.2",
+        "TUIG-RUNTIME-R002.1.3.3"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R002.1.3.1",
+      "id": "TUIG-RUNTIME-R002.1.3.1",
       "title": "Submit one native text task",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -703,18 +703,18 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R002.1.3.2",
+      "id": "TUIG-RUNTIME-R002.1.3.2",
       "title": "Complete original served chat and recovery acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R002.1.3.2.1",
-        "TUI-RUNTIME-R002.1.3.2.2"
+        "TUIG-RUNTIME-R002.1.3.2.1",
+        "TUIG-RUNTIME-R002.1.3.2.2"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R002.1.4",
+      "id": "TUIG-RUNTIME-R002.1.4",
       "title": "Read an existing task in the native terminal",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -729,7 +729,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R002.1.5",
+      "id": "TUIG-RUNTIME-R002.1.5",
       "title": "Acknowledge native remote cancellation",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -744,64 +744,64 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R002.8",
+      "id": "TUIG-RUNTIME-R002.8",
       "title": "One-shot background task visibility",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R002.8.1",
-        "TUI-RUNTIME-R002.8.2",
-        "TUI-RUNTIME-R002.8.3",
-        "TUI-RUNTIME-R002.8.4",
-        "TUI-RUNTIME-R002.8.5",
-        "TUI-RUNTIME-R002.8.6"
+        "TUIG-RUNTIME-R002.8.1",
+        "TUIG-RUNTIME-R002.8.2",
+        "TUIG-RUNTIME-R002.8.3",
+        "TUIG-RUNTIME-R002.8.4",
+        "TUIG-RUNTIME-R002.8.5",
+        "TUIG-RUNTIME-R002.8.6"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R002.8.1",
+      "id": "TUIG-RUNTIME-R002.8.1",
       "title": "Model",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R002.8.2",
+      "id": "TUIG-RUNTIME-R002.8.2",
       "title": "Behavior",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R002.8.3",
+      "id": "TUIG-RUNTIME-R002.8.3",
       "title": "Wiring",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R002.8.4",
+      "id": "TUIG-RUNTIME-R002.8.4",
       "title": "Refusal",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R002.8.5",
+      "id": "TUIG-RUNTIME-R002.8.5",
       "title": "Evidence",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R002.8.6",
+      "id": "TUIG-RUNTIME-R002.8.6",
       "title": "Hot-path proof",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R011.14",
+      "id": "TUIG-RUNTIME-R011.14",
       "title": "Explicit local ACP text transport",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -819,30 +819,30 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R011",
+      "id": "TUIG-RUNTIME-R011",
       "title": "Coding session in the local workspace",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R011.14",
-        "TUI-RUNTIME-R011.1",
-        "TUI-RUNTIME-R011.2",
-        "TUI-RUNTIME-R011.3",
-        "TUI-RUNTIME-R011.4",
-        "TUI-RUNTIME-R011.5",
-        "TUI-RUNTIME-R011.6",
-        "TUI-RUNTIME-R011.7",
-        "TUI-RUNTIME-R011.8",
-        "TUI-RUNTIME-R011.9",
-        "TUI-RUNTIME-R011.10",
-        "TUI-RUNTIME-R011.11",
-        "TUI-RUNTIME-R011.12",
-        "TUI-RUNTIME-R011.13"
+        "TUIG-RUNTIME-R011.14",
+        "TUIG-RUNTIME-R011.1",
+        "TUIG-RUNTIME-R011.2",
+        "TUIG-RUNTIME-R011.3",
+        "TUIG-RUNTIME-R011.4",
+        "TUIG-RUNTIME-R011.5",
+        "TUIG-RUNTIME-R011.6",
+        "TUIG-RUNTIME-R011.7",
+        "TUIG-RUNTIME-R011.8",
+        "TUIG-RUNTIME-R011.9",
+        "TUIG-RUNTIME-R011.10",
+        "TUIG-RUNTIME-R011.11",
+        "TUIG-RUNTIME-R011.12",
+        "TUIG-RUNTIME-R011.13"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R011.1",
+      "id": "TUIG-RUNTIME-R011.1",
       "title": "Model",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -851,7 +851,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R011.2",
+      "id": "TUIG-RUNTIME-R011.2",
       "title": "Behavior",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -860,7 +860,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R011.3",
+      "id": "TUIG-RUNTIME-R011.3",
       "title": "Behavior",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -869,70 +869,70 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R011.4",
+      "id": "TUIG-RUNTIME-R011.4",
       "title": "Behavior",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R011.5",
+      "id": "TUIG-RUNTIME-R011.5",
       "title": "Behavior",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R011.6",
+      "id": "TUIG-RUNTIME-R011.6",
       "title": "Behavior",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R011.7",
+      "id": "TUIG-RUNTIME-R011.7",
       "title": "Behavior",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R011.8",
+      "id": "TUIG-RUNTIME-R011.8",
       "title": "Wiring",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R011.9",
+      "id": "TUIG-RUNTIME-R011.9",
       "title": "Wiring",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R011.10",
+      "id": "TUIG-RUNTIME-R011.10",
       "title": "Refusal",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R011.11",
+      "id": "TUIG-RUNTIME-R011.11",
       "title": "Evidence",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R011.12",
+      "id": "TUIG-RUNTIME-R011.12",
       "title": "Hot-path proof",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R010.7",
+      "id": "TUIG-RUNTIME-R010.7",
       "title": "Native inspector state boundary",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -947,7 +947,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R011.13",
+      "id": "TUIG-RUNTIME-R011.13",
       "title": "Native approval state boundary",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -963,7 +963,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R008.2.1",
+      "id": "TUIG-RUNTIME-R008.2.1",
       "title": "Native baseline palettes",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -974,7 +974,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R008.2.2",
+      "id": "TUIG-RUNTIME-R008.2.2",
       "title": "Native viewport navigation",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -989,18 +989,18 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R008.2.3",
+      "id": "TUIG-RUNTIME-R008.2.3",
       "title": "Remaining full presentation acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R008.2.3.1",
-        "TUI-RUNTIME-R008.2.3.2"
+        "TUIG-RUNTIME-R008.2.3.1",
+        "TUIG-RUNTIME-R008.2.3.2"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R008.2.3.1",
+      "id": "TUIG-RUNTIME-R008.2.3.1",
       "title": "Python selection during startup",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1009,18 +1009,18 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R008.2.3.2",
+      "id": "TUIG-RUNTIME-R008.2.3.2",
       "title": "Remaining full presentation acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R008.2.3.2.1",
-        "TUI-RUNTIME-R008.2.3.2.2"
+        "TUIG-RUNTIME-R008.2.3.2.1",
+        "TUIG-RUNTIME-R008.2.3.2.2"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R008.2.3.2.1",
+      "id": "TUIG-RUNTIME-R008.2.3.2.1",
       "title": "Native runtime baseline palette switching",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -1033,20 +1033,20 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R008.2.3.2.2",
+      "id": "TUIG-RUNTIME-R008.2.3.2.2",
       "title": "Remaining full presentation qualification",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R008.2.3.2.2.3",
-        "TUI-RUNTIME-R008.2.3.2.2.4",
-        "TUI-RUNTIME-R008.2.3.2.2.1",
-        "TUI-RUNTIME-R008.2.3.2.2.2"
+        "TUIG-RUNTIME-R008.2.3.2.2.3",
+        "TUIG-RUNTIME-R008.2.3.2.2.4",
+        "TUIG-RUNTIME-R008.2.3.2.2.1",
+        "TUIG-RUNTIME-R008.2.3.2.2.2"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R002.1.3.2.1",
+      "id": "TUIG-RUNTIME-R002.1.3.2.1",
       "title": "Bounded native read recovery",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -1062,19 +1062,19 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R002.1.3.2.2",
+      "id": "TUIG-RUNTIME-R002.1.3.2.2",
       "title": "Remaining served chat and recovery acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R002.1.3.2.2.1",
-        "TUI-RUNTIME-R002.1.3.2.2.2",
-        "TUI-RUNTIME-R002.1.3.2.2.3"
+        "TUIG-RUNTIME-R002.1.3.2.2.1",
+        "TUIG-RUNTIME-R002.1.3.2.2.2",
+        "TUIG-RUNTIME-R002.1.3.2.2.3"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R002.1.3.2.2.1",
+      "id": "TUIG-RUNTIME-R002.1.3.2.2.1",
       "title": "Bounded local task stream decoder",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -1089,20 +1089,20 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R002.1.3.2.2.2",
+      "id": "TUIG-RUNTIME-R002.1.3.2.2.2",
       "title": "Remaining served stream recovery acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R002.1.3.2.2.2.1",
-        "TUI-RUNTIME-R002.1.3.2.2.2.2",
-        "TUI-RUNTIME-R002.1.3.2.2.2.3",
-        "TUI-RUNTIME-R002.1.3.2.2.2.4"
+        "TUIG-RUNTIME-R002.1.3.2.2.2.1",
+        "TUIG-RUNTIME-R002.1.3.2.2.2.2",
+        "TUIG-RUNTIME-R002.1.3.2.2.2.3",
+        "TUIG-RUNTIME-R002.1.3.2.2.2.4"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R010.8",
+      "id": "TUIG-RUNTIME-R010.8",
       "title": "Native inspector transport boundary",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -1120,7 +1120,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R010.9",
+      "id": "TUIG-RUNTIME-R010.9",
       "title": "Bounded native inspector loop attachment",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -1135,7 +1135,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R002.9",
+      "id": "TUIG-RUNTIME-R002.9",
       "title": "Refuse unbound filesystem logs",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1144,7 +1144,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R002.10",
+      "id": "TUIG-RUNTIME-R002.10",
       "title": "Authenticated host log subscription",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1153,7 +1153,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R002.11",
+      "id": "TUIG-RUNTIME-R002.11",
       "title": "Native authenticated host logs",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -1170,7 +1170,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R002.1.3.2.2.3",
+      "id": "TUIG-RUNTIME-R002.1.3.2.2.3",
       "title": "Bounded committed terminal point-read",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -1185,49 +1185,49 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R012",
+      "id": "TUIG-RUNTIME-R012",
       "title": "Daily coding-agent parity over Arbora",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R012.1",
-        "TUI-RUNTIME-R012.2",
-        "TUI-RUNTIME-R012.3",
-        "TUI-RUNTIME-R012.4",
-        "TUI-RUNTIME-R012.5",
-        "TUI-RUNTIME-R012.6",
-        "TUI-RUNTIME-R012.7",
-        "TUI-RUNTIME-R012.8",
-        "TUI-RUNTIME-R012.9"
+        "TUIG-RUNTIME-R012.1",
+        "TUIG-RUNTIME-R012.2",
+        "TUIG-RUNTIME-R012.3",
+        "TUIG-RUNTIME-R012.4",
+        "TUIG-RUNTIME-R012.5",
+        "TUIG-RUNTIME-R012.6",
+        "TUIG-RUNTIME-R012.7",
+        "TUIG-RUNTIME-R012.8",
+        "TUIG-RUNTIME-R012.9"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R012.1",
+      "id": "TUIG-RUNTIME-R012.1",
       "title": "Live turn rendering",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R012.1.1",
-        "TUI-RUNTIME-R012.1.2",
-        "TUI-RUNTIME-R012.1.3",
-        "TUI-RUNTIME-R012.1.4"
+        "TUIG-RUNTIME-R012.1.1",
+        "TUIG-RUNTIME-R012.1.2",
+        "TUIG-RUNTIME-R012.1.3",
+        "TUIG-RUNTIME-R012.1.4"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R012.2",
+      "id": "TUIG-RUNTIME-R012.2",
       "title": "Model choice",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R012.2.1",
-        "TUI-RUNTIME-R012.2.2"
+        "TUIG-RUNTIME-R012.2.1",
+        "TUIG-RUNTIME-R012.2.2"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R012.2.1",
+      "id": "TUIG-RUNTIME-R012.2.1",
       "title": "Legacy model-read boundary regression coverage",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1238,14 +1238,14 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R012.2.2",
+      "id": "TUIG-RUNTIME-R012.2.2",
       "title": "Preserve governed model-choice acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R012.3",
+      "id": "TUIG-RUNTIME-R012.3",
       "title": "Conversation list and resume",
       "delivery_state": "SPECIFIED",
       "landed_in": [
@@ -1257,24 +1257,24 @@
       ],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R012.3.1",
-        "TUI-RUNTIME-R012.3.2"
+        "TUIG-RUNTIME-R012.3.1",
+        "TUIG-RUNTIME-R012.3.2"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R012.4",
+      "id": "TUIG-RUNTIME-R012.4",
       "title": "Commands reach only served operations",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R012.4.1",
-        "TUI-RUNTIME-R012.4.2",
-        "TUI-RUNTIME-R012.4.3"
+        "TUIG-RUNTIME-R012.4.1",
+        "TUIG-RUNTIME-R012.4.2",
+        "TUIG-RUNTIME-R012.4.3"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R012.4.1",
+      "id": "TUIG-RUNTIME-R012.4.1",
       "title": "Unavailable management commands make no requests",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1284,18 +1284,18 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R012.5",
+      "id": "TUIG-RUNTIME-R012.5",
       "title": "Image and file attachments",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R012.5.1",
-        "TUI-RUNTIME-R012.5.2"
+        "TUIG-RUNTIME-R012.5.1",
+        "TUIG-RUNTIME-R012.5.2"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R012.5.1",
+      "id": "TUIG-RUNTIME-R012.5.1",
       "title": "Unsupported image input refusal",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1304,26 +1304,26 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R012.5.2",
+      "id": "TUIG-RUNTIME-R012.5.2",
       "title": "Served image and file admission",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R012.6",
+      "id": "TUIG-RUNTIME-R012.6",
       "title": "Token and cost display",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R012.6.1",
-        "TUI-RUNTIME-R012.6.2",
-        "TUI-RUNTIME-R012.6.3"
+        "TUIG-RUNTIME-R012.6.1",
+        "TUIG-RUNTIME-R012.6.2",
+        "TUIG-RUNTIME-R012.6.3"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R010.4.1",
+      "id": "TUIG-RUNTIME-R010.4.1",
       "title": "Python current-plan view uses the served read",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1332,7 +1332,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R012.4.2",
+      "id": "TUIG-RUNTIME-R012.4.2",
       "title": "Read fleet and usage through served operations",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1345,7 +1345,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R004.2",
+      "id": "TUIG-RUNTIME-R004.2",
       "title": "Remaining hook parity",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -1357,19 +1357,19 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R012.4.3",
+      "id": "TUIG-RUNTIME-R012.4.3",
       "title": "Complete served command matrix",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R012.4.3.1",
-        "TUI-RUNTIME-R012.4.3.2",
-        "TUI-RUNTIME-R012.4.3.3"
+        "TUIG-RUNTIME-R012.4.3.1",
+        "TUIG-RUNTIME-R012.4.3.2",
+        "TUIG-RUNTIME-R012.4.3.3"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R012.4.3.1",
+      "id": "TUIG-RUNTIME-R012.4.3.1",
       "title": "Dispatcher signatures and mounted usage aliases",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1382,21 +1382,21 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R012.4.3.2",
+      "id": "TUIG-RUNTIME-R012.4.3.2",
       "title": "Retain complete served command acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R010.4.2",
+      "id": "TUIG-RUNTIME-R010.4.2",
       "title": "Live current-plan acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R002.1.6",
+      "id": "TUIG-RUNTIME-R002.1.6",
       "title": "Discover unary Agent Cards",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1405,7 +1405,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R002.1.7",
+      "id": "TUIG-RUNTIME-R002.1.7",
       "title": "Refuse replay after stream acknowledgment",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1414,157 +1414,157 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015",
+      "id": "TUIG-RUNTIME-R015",
       "title": "The client must satisfy each source-quality child obligation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R015.1",
-        "TUI-RUNTIME-R015.2",
-        "TUI-RUNTIME-R015.3",
-        "TUI-RUNTIME-R015.4",
-        "TUI-RUNTIME-R015.5",
-        "TUI-RUNTIME-R015.6",
-        "TUI-RUNTIME-R015.7",
-        "TUI-RUNTIME-R015.8",
-        "TUI-RUNTIME-R015.9",
-        "TUI-RUNTIME-R015.10",
-        "TUI-RUNTIME-R015.11",
-        "TUI-RUNTIME-R015.12",
-        "TUI-RUNTIME-R015.13",
-        "TUI-RUNTIME-R015.14",
-        "TUI-RUNTIME-R015.15",
-        "TUI-RUNTIME-R015.16",
-        "TUI-RUNTIME-R015.17",
-        "TUI-RUNTIME-R015.18",
-        "TUI-RUNTIME-R015.19",
-        "TUI-RUNTIME-R015.20",
-        "TUI-RUNTIME-R015.21",
-        "TUI-RUNTIME-R015.22",
-        "TUI-RUNTIME-R015.23",
-        "TUI-RUNTIME-R015.24",
-        "TUI-RUNTIME-R015.25",
-        "TUI-RUNTIME-R015.26",
-        "TUI-RUNTIME-R015.27",
-        "TUI-RUNTIME-R015.28",
-        "TUI-RUNTIME-R015.29",
-        "TUI-RUNTIME-R015.30",
-        "TUI-RUNTIME-R015.31",
-        "TUI-RUNTIME-R015.32",
-        "TUI-RUNTIME-R015.33",
-        "TUI-RUNTIME-R015.34",
-        "TUI-RUNTIME-R015.35",
-        "TUI-RUNTIME-R015.36",
-        "TUI-RUNTIME-R015.37",
-        "TUI-RUNTIME-R015.38",
-        "TUI-RUNTIME-R015.39",
-        "TUI-RUNTIME-R015.40",
-        "TUI-RUNTIME-R015.41",
-        "TUI-RUNTIME-R015.42",
-        "TUI-RUNTIME-R015.43",
-        "TUI-RUNTIME-R015.44",
-        "TUI-RUNTIME-R015.45",
-        "TUI-RUNTIME-R015.46",
-        "TUI-RUNTIME-R015.47",
-        "TUI-RUNTIME-R015.48",
-        "TUI-RUNTIME-R015.49",
-        "TUI-RUNTIME-R015.50",
-        "TUI-RUNTIME-R015.51",
-        "TUI-RUNTIME-R015.52",
-        "TUI-RUNTIME-R015.53",
-        "TUI-RUNTIME-R015.54",
-        "TUI-RUNTIME-R015.55",
-        "TUI-RUNTIME-R015.56",
-        "TUI-RUNTIME-R015.57",
-        "TUI-RUNTIME-R015.58",
-        "TUI-RUNTIME-R015.59",
-        "TUI-RUNTIME-R015.60",
-        "TUI-RUNTIME-R015.61",
-        "TUI-RUNTIME-R015.62",
-        "TUI-RUNTIME-R015.63",
-        "TUI-RUNTIME-R015.64",
-        "TUI-RUNTIME-R015.65",
-        "TUI-RUNTIME-R015.66",
-        "TUI-RUNTIME-R015.67",
-        "TUI-RUNTIME-R015.68",
-        "TUI-RUNTIME-R015.69",
-        "TUI-RUNTIME-R015.70",
-        "TUI-RUNTIME-R015.71"
+        "TUIG-RUNTIME-R015.1",
+        "TUIG-RUNTIME-R015.2",
+        "TUIG-RUNTIME-R015.3",
+        "TUIG-RUNTIME-R015.4",
+        "TUIG-RUNTIME-R015.5",
+        "TUIG-RUNTIME-R015.6",
+        "TUIG-RUNTIME-R015.7",
+        "TUIG-RUNTIME-R015.8",
+        "TUIG-RUNTIME-R015.9",
+        "TUIG-RUNTIME-R015.10",
+        "TUIG-RUNTIME-R015.11",
+        "TUIG-RUNTIME-R015.12",
+        "TUIG-RUNTIME-R015.13",
+        "TUIG-RUNTIME-R015.14",
+        "TUIG-RUNTIME-R015.15",
+        "TUIG-RUNTIME-R015.16",
+        "TUIG-RUNTIME-R015.17",
+        "TUIG-RUNTIME-R015.18",
+        "TUIG-RUNTIME-R015.19",
+        "TUIG-RUNTIME-R015.20",
+        "TUIG-RUNTIME-R015.21",
+        "TUIG-RUNTIME-R015.22",
+        "TUIG-RUNTIME-R015.23",
+        "TUIG-RUNTIME-R015.24",
+        "TUIG-RUNTIME-R015.25",
+        "TUIG-RUNTIME-R015.26",
+        "TUIG-RUNTIME-R015.27",
+        "TUIG-RUNTIME-R015.28",
+        "TUIG-RUNTIME-R015.29",
+        "TUIG-RUNTIME-R015.30",
+        "TUIG-RUNTIME-R015.31",
+        "TUIG-RUNTIME-R015.32",
+        "TUIG-RUNTIME-R015.33",
+        "TUIG-RUNTIME-R015.34",
+        "TUIG-RUNTIME-R015.35",
+        "TUIG-RUNTIME-R015.36",
+        "TUIG-RUNTIME-R015.37",
+        "TUIG-RUNTIME-R015.38",
+        "TUIG-RUNTIME-R015.39",
+        "TUIG-RUNTIME-R015.40",
+        "TUIG-RUNTIME-R015.41",
+        "TUIG-RUNTIME-R015.42",
+        "TUIG-RUNTIME-R015.43",
+        "TUIG-RUNTIME-R015.44",
+        "TUIG-RUNTIME-R015.45",
+        "TUIG-RUNTIME-R015.46",
+        "TUIG-RUNTIME-R015.47",
+        "TUIG-RUNTIME-R015.48",
+        "TUIG-RUNTIME-R015.49",
+        "TUIG-RUNTIME-R015.50",
+        "TUIG-RUNTIME-R015.51",
+        "TUIG-RUNTIME-R015.52",
+        "TUIG-RUNTIME-R015.53",
+        "TUIG-RUNTIME-R015.54",
+        "TUIG-RUNTIME-R015.55",
+        "TUIG-RUNTIME-R015.56",
+        "TUIG-RUNTIME-R015.57",
+        "TUIG-RUNTIME-R015.58",
+        "TUIG-RUNTIME-R015.59",
+        "TUIG-RUNTIME-R015.60",
+        "TUIG-RUNTIME-R015.61",
+        "TUIG-RUNTIME-R015.62",
+        "TUIG-RUNTIME-R015.63",
+        "TUIG-RUNTIME-R015.64",
+        "TUIG-RUNTIME-R015.65",
+        "TUIG-RUNTIME-R015.66",
+        "TUIG-RUNTIME-R015.67",
+        "TUIG-RUNTIME-R015.68",
+        "TUIG-RUNTIME-R015.69",
+        "TUIG-RUNTIME-R015.70",
+        "TUIG-RUNTIME-R015.71"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R015.1",
+      "id": "TUIG-RUNTIME-R015.1",
       "title": "Terminal functions must meet the shared function-size checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.2",
+      "id": "TUIG-RUNTIME-R015.2",
       "title": "The command processor must meet shared complexity and responsibility checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.3",
+      "id": "TUIG-RUNTIME-R015.3",
       "title": "The client must meet shared complexity and responsibility checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.4",
+      "id": "TUIG-RUNTIME-R015.4",
       "title": "The application event handlers must meet shared complexity checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.5",
+      "id": "TUIG-RUNTIME-R015.5",
       "title": "The skill integration tests must meet shared complexity checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.6",
+      "id": "TUIG-RUNTIME-R015.6",
       "title": "The input widget must meet shared complexity checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.7",
+      "id": "TUIG-RUNTIME-R015.7",
       "title": "Terminal functions must meet the shared nesting-depth checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.8",
+      "id": "TUIG-RUNTIME-R015.8",
       "title": "The dependency and source security scans must report no medium-severity findings. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.9",
+      "id": "TUIG-RUNTIME-R015.9",
       "title": "Each terminal test must assert its observable result. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.10",
+      "id": "TUIG-RUNTIME-R015.10",
       "title": "Documentation examples must match the tested terminal behavior. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.11",
+      "id": "TUIG-RUNTIME-R015.11",
       "title": "The README must explain the terminal purpose and installation. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1573,7 +1573,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.12",
+      "id": "TUIG-RUNTIME-R015.12",
       "title": "The README must cover each supported operator entry point. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1583,7 +1583,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.13",
+      "id": "TUIG-RUNTIME-R015.13",
       "title": "The README must supply navigation for its documented sections. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1592,7 +1592,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.14",
+      "id": "TUIG-RUNTIME-R015.14",
       "title": "The README must supply reproducible installation instructions. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1601,7 +1601,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.15",
+      "id": "TUIG-RUNTIME-R015.15",
       "title": "The README must explain the terminal architecture. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1610,7 +1610,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.16",
+      "id": "TUIG-RUNTIME-R015.16",
       "title": "The README must link its detailed documentation. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1619,7 +1619,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.17",
+      "id": "TUIG-RUNTIME-R015.17",
       "title": "The contributor guide must describe tools, commands and source structure. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1628,7 +1628,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.18",
+      "id": "TUIG-RUNTIME-R015.18",
       "title": "The repository must declare its license in a tracked license file. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1637,88 +1637,88 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.19",
+      "id": "TUIG-RUNTIME-R015.19",
       "title": "Terminal modules must meet the shared module-size checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.20",
+      "id": "TUIG-RUNTIME-R015.20",
       "title": "Terminal classes must meet the shared method-count checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.21",
+      "id": "TUIG-RUNTIME-R015.21",
       "title": "The terminal must separate presentation from its served client adapter. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.22",
+      "id": "TUIG-RUNTIME-R015.22",
       "title": "Terminal collaborators must use explicit dependency injection at test seams. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.23",
+      "id": "TUIG-RUNTIME-R015.23",
       "title": "The terminal package must organize its public modules by responsibility. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.24",
+      "id": "TUIG-RUNTIME-R015.24",
       "title": "The terminal must trace each declared concept to its owning implementation. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.25",
+      "id": "TUIG-RUNTIME-R015.25",
       "title": "The terminal must resolve each orphaned concept reference. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.26",
+      "id": "TUIG-RUNTIME-R015.26",
       "title": "Terminal tests must bind their owning contract identifiers. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.27",
+      "id": "TUIG-RUNTIME-R015.27",
       "title": "Significant terminal functions must identify their owning contracts. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.28",
+      "id": "TUIG-RUNTIME-R015.28",
       "title": "The terminal source must pass the configured lint checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.29",
+      "id": "TUIG-RUNTIME-R015.29",
       "title": "The repository must validate its pinned formatter and dependency hook versions. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R015.29.1",
-        "TUI-RUNTIME-R015.29.2"
+        "TUIG-RUNTIME-R015.29.1",
+        "TUIG-RUNTIME-R015.29.2"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R015.29.1",
+      "id": "TUIG-RUNTIME-R015.29.1",
       "title": "The two shared development guards must use their canonical pinned owners and preserve commit and push invocation",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -1731,14 +1731,14 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R015.29.2",
+      "id": "TUIG-RUNTIME-R015.29.2",
       "title": "The repository must validate all remaining pinned formatter and dependency hook versions",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.30",
+      "id": "TUIG-RUNTIME-R015.30",
       "title": "The terminal CLI must supply help text for its supported arguments. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1749,12 +1749,12 @@
       ],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R015.30.1",
-        "TUI-RUNTIME-R015.30.2"
+        "TUIG-RUNTIME-R015.30.1",
+        "TUIG-RUNTIME-R015.30.2"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R015.30.1",
+      "id": "TUIG-RUNTIME-R015.30.1",
       "title": "Python CLI help and operator examples describe the current arguments without promising model selection or prior-turn loading",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1763,7 +1763,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.30.2",
+      "id": "TUIG-RUNTIME-R015.30.2",
       "title": "Native CLI -h and --help describe supported arguments and environment settings without connecting or opening a terminal. Help works even when runtime configuration is invalid. Argument values that equal --help remain values; mixed help and operation flags remain invalid. Future argument changes must update this help contract",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -1777,7 +1777,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R015.31",
+      "id": "TUIG-RUNTIME-R015.31",
       "title": "The version configuration must cover every authoritative version mirror. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -1788,7 +1788,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R015.32",
+      "id": "TUIG-RUNTIME-R015.32",
       "title": "The preserved JSON analysis must remain historical evidence, separate from authoritative version mirrors. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -1801,7 +1801,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R015.33",
+      "id": "TUIG-RUNTIME-R015.33",
       "title": "The preserved Markdown analysis must remain historical evidence, separate from authoritative version mirrors. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -1814,28 +1814,28 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R015.34",
+      "id": "TUIG-RUNTIME-R015.34",
       "title": "Terminal test modules must meet the shared file-size checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.35",
+      "id": "TUIG-RUNTIME-R015.35",
       "title": "Terminal test modules must meet the shared test-count checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.36",
+      "id": "TUIG-RUNTIME-R015.36",
       "title": "Terminal tests must organize unit, integration and served acceptance coverage. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.37",
+      "id": "TUIG-RUNTIME-R015.37",
       "title": "Terminal tests must supply a shared fixture entry point. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1844,28 +1844,28 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.38",
+      "id": "TUIG-RUNTIME-R015.38",
       "title": "Terminal tests must reuse shared fixtures for common setup. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.39",
+      "id": "TUIG-RUNTIME-R015.39",
       "title": "Each terminal test must assert its observable result. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.40",
+      "id": "TUIG-RUNTIME-R015.40",
       "title": "Terminal tests must reject incorrect values through behavior-specific assertions. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.41",
+      "id": "TUIG-RUNTIME-R015.41",
       "title": "The documentation must cover every supported terminal environment variable. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1874,12 +1874,12 @@
       ],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R015.41.1",
-        "TUI-RUNTIME-R015.41.2"
+        "TUIG-RUNTIME-R015.41.1",
+        "TUIG-RUNTIME-R015.41.2"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R015.41.1",
+      "id": "TUIG-RUNTIME-R015.41.1",
       "title": "Document the Python configuration and data directory overrides, including their fallback order",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1888,7 +1888,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.41.2",
+      "id": "TUIG-RUNTIME-R015.41.2",
       "title": "Retain a complete inventory of other terminal environment inputs and dynamic setting overrides",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1897,7 +1897,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.42",
+      "id": "TUIG-RUNTIME-R015.42",
       "title": "The documentation must define AGENT_LOG_FILE and AGENT_THEME behavior. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1906,12 +1906,12 @@
       ],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R015.42.1",
-        "TUI-RUNTIME-R015.42.2"
+        "TUIG-RUNTIME-R015.42.1",
+        "TUIG-RUNTIME-R015.42.2"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R015.42.1",
+      "id": "TUIG-RUNTIME-R015.42.1",
       "title": "Operator documentation explains startup theme fallback and refusal of unbound AGENT_LOG_FILE paths",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1920,7 +1920,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.42.2",
+      "id": "TUIG-RUNTIME-R015.42.2",
       "title": "Retain theme and log documentation acceptance for native and installed entry points",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1929,7 +1929,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.43",
+      "id": "TUIG-RUNTIME-R015.43",
       "title": "The repository must supply a credential-free environment configuration example. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1938,7 +1938,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.44",
+      "id": "TUIG-RUNTIME-R015.44",
       "title": "The client must obtain MCP configuration through the currently authorized served contract. Touches `agent_terminal_ui/client.py`",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1947,7 +1947,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.45",
+      "id": "TUIG-RUNTIME-R015.45",
       "title": "The client must list MCP tools through the currently authorized served contract. Touches `agent_terminal_ui/client.py`",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1956,7 +1956,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.46",
+      "id": "TUIG-RUNTIME-R015.46",
       "title": "The client must list conversation identifiers through the currently authorized served contract. Touches `agent_terminal_ui/client.py`",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1965,8 +1965,8 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.47",
-      "title": "The client must follow TUI-RUNTIME-R012.4.2 failure semantics. Authenticated empty results differ from unavailable requests. Touches `agent_terminal_ui/client.py`",
+      "id": "TUIG-RUNTIME-R015.47",
+      "title": "The client must follow TUIG-RUNTIME-R012.4.2 failure semantics. Authenticated empty results differ from unavailable requests. Touches `agent_terminal_ui/client.py`",
       "delivery_state": "LANDED",
       "landed_in": [
         "20e00677ac4c"
@@ -1974,7 +1974,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.48",
+      "id": "TUIG-RUNTIME-R015.48",
       "title": "The client changes must pass the configured lint and type hooks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1983,7 +1983,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.49",
+      "id": "TUIG-RUNTIME-R015.49",
       "title": "The client methods must carry type hints consistent with the existing code style. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -1992,7 +1992,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.50",
+      "id": "TUIG-RUNTIME-R015.50",
       "title": "The client tests must prove the three methods satisfy their contract. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -2001,7 +2001,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.51",
+      "id": "TUIG-RUNTIME-R015.51",
       "title": "The owning client contract must record the method implementation and its acceptance evidence. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -2010,14 +2010,14 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.52",
+      "id": "TUIG-RUNTIME-R015.52",
       "title": "The repository must run available client maintenance checks. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.53",
+      "id": "TUIG-RUNTIME-R015.53",
       "title": "The terminal must resolve the remaining theme-switch regression. Alt+Shift+T cycles registered Textual themes from the main screen without changing composer text or focus. Preserve no-color mode",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -2026,7 +2026,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.54",
+      "id": "TUIG-RUNTIME-R015.54",
       "title": "The terminal must assess the remaining environment-example and tool-guard obligations. Touches `agent_terminal_ui/`, tests or the named repository documentation",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -2035,112 +2035,112 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.55",
+      "id": "TUIG-RUNTIME-R015.55",
       "title": "The repository must pass project metadata, layout and public-surface checks under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.56",
+      "id": "TUIG-RUNTIME-R015.56",
       "title": "Terminal source must meet the shared structural limits under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.57",
+      "id": "TUIG-RUNTIME-R015.57",
       "title": "Terminal source and locked dependencies must pass actual security scans under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.58",
+      "id": "TUIG-RUNTIME-R015.58",
       "title": "Terminal tests must measure at least 80 percent line coverage and 80 percent branch coverage under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.59",
+      "id": "TUIG-RUNTIME-R015.59",
       "title": "Terminal documentation and governance must satisfy R015.10–R015.18 under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.60",
+      "id": "TUIG-RUNTIME-R015.60",
       "title": "Terminal architecture must satisfy R015.21–R015.23 under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.61",
+      "id": "TUIG-RUNTIME-R015.61",
       "title": "Terminal concepts and tests must satisfy R015.24–R015.27 under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.62",
+      "id": "TUIG-RUNTIME-R015.62",
       "title": "The complete repository must pass configured commit and push hooks under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.63",
+      "id": "TUIG-RUNTIME-R015.63",
       "title": "Terminal tests must pass the complete Python suite and configured native checks under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.64",
+      "id": "TUIG-RUNTIME-R015.64",
       "title": "Terminal version mirrors and locked dependencies must remain consistent under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.65",
+      "id": "TUIG-RUNTIME-R015.65",
       "title": "Terminal tests must satisfy R015.9 and R015.34–R015.40 under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.66",
+      "id": "TUIG-RUNTIME-R015.66",
       "title": "Terminal environment documentation must satisfy R015.41–R015.43 under quality acceptance v1. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.67",
+      "id": "TUIG-RUNTIME-R015.67",
       "title": "Terminal source quality must satisfy every quality acceptance v1 domain without averaging failures. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.68",
+      "id": "TUIG-RUNTIME-R015.68",
       "title": "Terminal source quality must provide separate reproducible evidence for all 17 quality acceptance v1 domains. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.69",
+      "id": "TUIG-RUNTIME-R015.69",
       "title": "The repository must resolve every actionable finding in the current quality acceptance v1 inventory. Touches source, tests and repository documentation",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.70",
+      "id": "TUIG-RUNTIME-R015.70",
       "title": "Source-quality repairs must preserve the installed native `tuig` command through `native/agent-terminal-ui/src/main.rs`",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -2149,7 +2149,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R015.71",
+      "id": "TUIG-RUNTIME-R015.71",
       "title": "A served integration test must launch the installed command and observe client behavior after source-quality repairs. It must distinguish a denied request from an authenticated empty result",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -2158,7 +2158,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R012.3.1",
+      "id": "TUIG-RUNTIME-R012.3.1",
       "title": "Read caller task history without claiming conversation resume",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -2170,11 +2170,11 @@
       ],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R012.3.1.1"
+        "TUIG-RUNTIME-R012.3.1.1"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R012.3.2",
+      "id": "TUIG-RUNTIME-R012.3.2",
       "title": "Remaining conversation resume acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [
@@ -2182,12 +2182,12 @@
       ],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R012.3.2.1",
-        "TUI-RUNTIME-R012.3.2.2"
+        "TUIG-RUNTIME-R012.3.2.1",
+        "TUIG-RUNTIME-R012.3.2.2"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R012.3.2.1",
+      "id": "TUIG-RUNTIME-R012.3.2.1",
       "title": "Explicit native context continuation",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -2202,14 +2202,14 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R012.3.2.2",
+      "id": "TUIG-RUNTIME-R012.3.2.2",
       "title": "Qualify complete conversation resume after restart",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R002.1.3.2.2.2.1",
+      "id": "TUIG-RUNTIME-R002.1.3.2.2.2.1",
       "title": "Bounded native unary reply display",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -2224,7 +2224,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R008.2.3.2.2.3",
+      "id": "TUIG-RUNTIME-R008.2.3.2.2.3",
       "title": "Native single-row keyboard scrolling",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -2236,7 +2236,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R012.6.1",
+      "id": "TUIG-RUNTIME-R012.6.1",
       "title": "Transient native turn usage receipt",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -2251,7 +2251,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R002.1.3.2.2.2.2",
+      "id": "TUIG-RUNTIME-R002.1.3.2.2.2.2",
       "title": "Bounded queued unary submission deadline",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -2266,7 +2266,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R002.1.3.2.2.2.3",
+      "id": "TUIG-RUNTIME-R002.1.3.2.2.2.3",
       "title": "Explicit committed-event read enrichment",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -2281,28 +2281,28 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R002.1.3.2.2.2.4",
+      "id": "TUIG-RUNTIME-R002.1.3.2.2.2.4",
       "title": "Remaining served stream recovery acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R008.2.3.2.2.4",
+      "id": "TUIG-RUNTIME-R008.2.3.2.2.4",
       "title": "Remaining served presentation qualification",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R012.6.2",
+      "id": "TUIG-RUNTIME-R012.6.2",
       "title": "Served turn and session token and cost display",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R012.1.1",
+      "id": "TUIG-RUNTIME-R012.1.1",
       "title": "Nonblocking Python unary turns",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -2312,14 +2312,14 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R012.1.2",
+      "id": "TUIG-RUNTIME-R012.1.2",
       "title": "Remaining live turn parity",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R012.1.3",
+      "id": "TUIG-RUNTIME-R012.1.3",
       "title": "Native nonblocking unary observation",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -2335,11 +2335,11 @@
         "native/agent-terminal-ui/src/headless.rs:90"
       ],
       "rollup_of": [
-        "TUI-RUNTIME-R012.1.3.1"
+        "TUIG-RUNTIME-R012.1.3.1"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R002.1.3.3",
+      "id": "TUIG-RUNTIME-R002.1.3.3",
       "title": "Explicit loopback anonymous native tasks",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -2354,7 +2354,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R008.2.3.2.2.1",
+      "id": "TUIG-RUNTIME-R008.2.3.2.2.1",
       "title": "Collapsed public details in both terminals",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -2371,18 +2371,18 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R008.2.3.2.2.2",
+      "id": "TUIG-RUNTIME-R008.2.3.2.2.2",
       "title": "Remaining full presentation qualification",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R008.2.3.2.2.2.1",
-        "TUI-RUNTIME-R008.2.3.2.2.2.2"
+        "TUIG-RUNTIME-R008.2.3.2.2.2.1",
+        "TUIG-RUNTIME-R008.2.3.2.2.2.2"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R008.2.3.2.2.2.1",
+      "id": "TUIG-RUNTIME-R008.2.3.2.2.2.1",
       "title": "Python composer-to-fold keyboard route",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -2391,18 +2391,18 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R008.2.3.2.2.2.2",
+      "id": "TUIG-RUNTIME-R008.2.3.2.2.2.2",
       "title": "Retained complete presentation acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R008.2.3.2.2.2.2.1",
-        "TUI-RUNTIME-R008.2.3.2.2.2.2.2"
+        "TUIG-RUNTIME-R008.2.3.2.2.2.2.1",
+        "TUIG-RUNTIME-R008.2.3.2.2.2.2.2"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R012.1.4",
+      "id": "TUIG-RUNTIME-R012.1.4",
       "title": "Mounted tool detail updates",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -2412,7 +2412,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R012.4.3.3",
+      "id": "TUIG-RUNTIME-R012.4.3.3",
       "title": "Unavailable session and fast-mode commands",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -2421,7 +2421,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R008.2.3.2.2.2.2.1",
+      "id": "TUIG-RUNTIME-R008.2.3.2.2.2.2.1",
       "title": "Native held-key viewport navigation",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -2432,18 +2432,18 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R008.2.3.2.2.2.2.2",
+      "id": "TUIG-RUNTIME-R008.2.3.2.2.2.2.2",
       "title": "Remaining complete presentation acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": [],
       "rollup_of": [
-        "TUI-RUNTIME-R008.2.3.2.2.2.2.2.1",
-        "TUI-RUNTIME-R008.2.3.2.2.2.2.2.2"
+        "TUIG-RUNTIME-R008.2.3.2.2.2.2.2.1",
+        "TUIG-RUNTIME-R008.2.3.2.2.2.2.2.2"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R008.2.3.2.2.2.2.2.1",
+      "id": "TUIG-RUNTIME-R008.2.3.2.2.2.2.2.1",
       "title": "Native mouse-wheel viewport navigation",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -2455,14 +2455,14 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R008.2.3.2.2.2.2.2.2",
+      "id": "TUIG-RUNTIME-R008.2.3.2.2.2.2.2.2",
       "title": "Retained full presentation qualification",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R012.3.1.1",
+      "id": "TUIG-RUNTIME-R012.3.1.1",
       "title": "Return to previous task pages",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -2471,7 +2471,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R010.10",
+      "id": "TUIG-RUNTIME-R010.10",
       "title": "Search the native inspector's displayed text",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -2484,7 +2484,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R016",
+      "id": "TUIG-RUNTIME-R016",
       "title": "Refresh documentation screenshots",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -2493,7 +2493,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R010.11",
+      "id": "TUIG-RUNTIME-R010.11",
       "title": "Consume authoritative execution identity and updates",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
@@ -2506,7 +2506,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R010.12",
+      "id": "TUIG-RUNTIME-R010.12",
       "title": "Navigate the execution hierarchy and dependency graph",
       "delivery_state": "SPECIFIED",
       "landed_in": [
@@ -2522,47 +2522,47 @@
         "native/agent-terminal-ui/src/inspector_view.rs:1096"
       ],
       "rollup_of": [
-        "TUI-RUNTIME-R010.12.1",
-        "TUI-RUNTIME-R010.12.2"
+        "TUIG-RUNTIME-R010.12.1",
+        "TUIG-RUNTIME-R010.12.2"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R010.13",
+      "id": "TUIG-RUNTIME-R010.13",
       "title": "Inspect a selected node's public records",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R010.14",
+      "id": "TUIG-RUNTIME-R010.14",
       "title": "Prove the served execution explorer",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R012.7",
+      "id": "TUIG-RUNTIME-R012.7",
       "title": "Message an active child explicitly",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R012.8",
+      "id": "TUIG-RUNTIME-R012.8",
       "title": "Continue a completed child separately",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R012.9",
+      "id": "TUIG-RUNTIME-R012.9",
       "title": "Qualify targeted interaction through the served terminal",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R008.3",
+      "id": "TUIG-RUNTIME-R008.3",
       "title": "Add an optional Canopy palette",
       "delivery_state": "SPECIFIED",
       "landed_in": [
@@ -2576,12 +2576,12 @@
         "tests/test_native_gallery.py:15"
       ],
       "rollup_of": [
-        "TUI-RUNTIME-R008.3.1",
-        "TUI-RUNTIME-R008.3.2"
+        "TUIG-RUNTIME-R008.3.1",
+        "TUIG-RUNTIME-R008.3.2"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R010.12.1",
+      "id": "TUIG-RUNTIME-R010.12.1",
       "title": "Add a bounded read-only spatial flat DAG",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -2598,12 +2598,12 @@
         "native/agent-terminal-ui/src/spatial_graph.rs:359"
       ],
       "rollup_of": [
-        "TUI-RUNTIME-R010.12.1.1",
-        "TUI-RUNTIME-R010.12.1.2"
+        "TUIG-RUNTIME-R010.12.1.1",
+        "TUIG-RUNTIME-R010.12.1.2"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R008.3.1",
+      "id": "TUIG-RUNTIME-R008.3.1",
       "title": "Implement optional Canopy tokens",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -2617,14 +2617,14 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R008.3.2",
+      "id": "TUIG-RUNTIME-R008.3.2",
       "title": "Qualify complete Canopy behavior",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R010.12.1.1",
+      "id": "TUIG-RUNTIME-R010.12.1.1",
       "title": "Implement the bounded spatial flat DAG",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -2640,7 +2640,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R010.12.1.2",
+      "id": "TUIG-RUNTIME-R010.12.1.2",
       "title": "Qualify the spatial flat DAG",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -2655,14 +2655,14 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R010.12.2",
+      "id": "TUIG-RUNTIME-R010.12.2",
       "title": "Retain complete hierarchy navigation acceptance",
       "delivery_state": "SPECIFIED",
       "landed_in": [],
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R008.4",
+      "id": "TUIG-RUNTIME-R008.4",
       "title": "Preserve native input across resize",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -2675,12 +2675,12 @@
         "tests/test_native_public_details_pty.py:280"
       ],
       "rollup_of": [
-        "TUI-RUNTIME-R008.4.1",
-        "TUI-RUNTIME-R008.4.2"
+        "TUIG-RUNTIME-R008.4.1",
+        "TUIG-RUNTIME-R008.4.2"
       ]
     },
     {
-      "id": "TUI-RUNTIME-R008.4.1",
+      "id": "TUIG-RUNTIME-R008.4.1",
       "title": "Select a supported native input backend",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -2692,7 +2692,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R008.4.2",
+      "id": "TUIG-RUNTIME-R008.4.2",
       "title": "Qualify native resize/input delivery",
       "delivery_state": "VERIFIED",
       "landed_in": [
@@ -2703,7 +2703,7 @@
       ]
     },
     {
-      "id": "TUI-RUNTIME-R012.6.3",
+      "id": "TUIG-RUNTIME-R012.6.3",
       "title": "Display bound Python turn receipts",
       "delivery_state": "LANDED",
       "landed_in": [
@@ -2712,7 +2712,7 @@
       "verified_by": []
     },
     {
-      "id": "TUI-RUNTIME-R012.1.3.1",
+      "id": "TUIG-RUNTIME-R012.1.3.1",
       "title": "Native headless invocation",
       "delivery_state": "VERIFIED",
       "landed_in": [

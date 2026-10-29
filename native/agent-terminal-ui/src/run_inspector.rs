@@ -1,4 +1,4 @@
-//! Read-only presentation boundary for TUI-RUNTIME-R010.
+//! Read-only presentation boundary for TUIG-RUNTIME-R010.
 //! Inputs are normalized by an authorized Arbora adapter, not wire models.
 use ratatui::{
     Frame,

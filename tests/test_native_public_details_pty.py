@@ -157,7 +157,7 @@ class NativeTerminal:
         os.close(self.master)
 
 
-@pytest.mark.spec("TUI-RUNTIME-R008.2.3.2.2.1")
+@pytest.mark.spec("TUIG-RUNTIME-R008.2.3.2.2.1")
 def test_native_inline_folds_keyboard_mouse_refresh_and_quit_do_not_write_tasks():
     value = json.loads(
         (Path(__file__).parents[0] / "fixtures/public_run_events.json").read_text()
@@ -277,14 +277,14 @@ def test_native_inline_folds_keyboard_mouse_refresh_and_quit_do_not_write_tasks(
         thread.join(timeout=5)
 
 
-# spec: TUI-RUNTIME-R008.4.2
+# spec: TUIG-RUNTIME-R008.4.2
 @pytest.mark.spec(
-    "TUI-RUNTIME-R010",
-    "TUI-RUNTIME-R010.11",
-    "TUI-RUNTIME-R010.12",
-    "TUI-RUNTIME-R008.4",
-    "TUI-RUNTIME-R008.4.1",
-    "TUI-RUNTIME-R008.4.2",
+    "TUIG-RUNTIME-R010",
+    "TUIG-RUNTIME-R010.11",
+    "TUIG-RUNTIME-R010.12",
+    "TUIG-RUNTIME-R008.4",
+    "TUIG-RUNTIME-R008.4.1",
+    "TUIG-RUNTIME-R008.4.2",
 )
 def test_native_graph_real_binding_navigation_resize_refresh_denial_and_quit():
     value = json.loads(

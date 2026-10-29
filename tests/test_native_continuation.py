@@ -19,7 +19,7 @@ EXTENSION = "https://knuckles-team.github.io/arbora/extensions/completed-text-hi
 CONTEXT = "a2a-context-" + "a" * 64
 
 
-@pytest.mark.spec("TUI-RUNTIME-R012.3.2.1")
+@pytest.mark.spec("TUIG-RUNTIME-R012.3.2.1")
 @pytest.mark.parametrize("outcome", ["accepted", "legacy", "missing-echo", "changed-context"])
 def test_native_continue_requires_capability_activation_and_bound_context(outcome):
     requests: list[tuple[str, dict[str, Any] | None, str | None]] = []

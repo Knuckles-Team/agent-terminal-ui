@@ -323,7 +323,7 @@ mod tests {
             .collect()
     }
 
-    // spec: TUI-RUNTIME-R008.2.3.2.2.2.2.2.1
+    // spec: TUIG-RUNTIME-R008.2.3.2.2.2.2.2.1
     #[tokio::test]
     async fn wheel_routes_only_to_visible_view_and_preserves_folds() {
         use crate::{HostLogView, InspectorView, route_mouse};
@@ -448,7 +448,7 @@ mod tests {
         assert_eq!(details.selected, selected);
     }
 
-    // spec: TUI-RUNTIME-R008.2.3.2.2.1
+    // spec: TUIG-RUNTIME-R008.2.3.2.2.1
     #[test]
     fn actual_task_renderer_starts_collapsed_and_keyboard_choices_survive_updates() {
         let mut view = PublicDetailsView::default();
@@ -512,7 +512,7 @@ mod tests {
         assert!(!shown(&terminal).contains("Public explanation:"));
     }
 
-    // spec: TUI-RUNTIME-R008.2.3.2.2.1
+    // spec: TUIG-RUNTIME-R008.2.3.2.2.1
     #[test]
     fn mouse_hit_regions_follow_wrapping_scroll_resize_and_only_left_click_toggles() {
         let mut view = PublicDetailsView::default();
@@ -568,7 +568,7 @@ mod tests {
         );
     }
 
-    // spec: TUI-RUNTIME-R008.2.3.2.2.1
+    // spec: TUIG-RUNTIME-R008.2.3.2.2.1
     #[test]
     fn keyboard_focus_reveals_offscreen_header_without_pinning_later_scroll() {
         let mut view = PublicDetailsView::default();
@@ -624,7 +624,7 @@ mod tests {
         assert!(view.header_regions[0].is_none());
     }
 
-    // spec: TUI-RUNTIME-R008.2.3.2.2.1
+    // spec: TUIG-RUNTIME-R008.2.3.2.2.1
     #[test]
     fn modified_repeat_release_and_effect_keys_are_not_fold_actions() {
         let mut view = PublicDetailsView::default();
@@ -651,7 +651,7 @@ mod tests {
         assert_eq!(view.expanded, [false; 2]);
     }
 
-    // spec: TUI-RUNTIME-R008.2.3.2.2.1
+    // spec: TUIG-RUNTIME-R008.2.3.2.2.1
     #[test]
     fn task_without_run_has_keyboard_folds_but_never_reads() {
         let task = TaskCorrelation::from_task(&json!({"kind":"task", "id":"task-1", "contextId":"context-1", "status":{"state":"working"}})).unwrap();
@@ -678,7 +678,7 @@ mod tests {
         assert!(content.contains("Unavailable: no validated run binding."));
     }
 
-    // spec: TUI-RUNTIME-R008.2.3.2.2.1
+    // spec: TUIG-RUNTIME-R008.2.3.2.2.1
     #[test]
     fn duplicate_identity_across_pages_clears_values_and_preserves_folds() {
         let mut view = PublicDetailsView::default();
@@ -698,7 +698,7 @@ mod tests {
         assert_eq!(view.expanded, [true, false]);
     }
 
-    // spec: TUI-RUNTIME-R008.2.3.2.2.1
+    // spec: TUIG-RUNTIME-R008.2.3.2.2.1
     #[test]
     fn retained_display_text_is_bounded_even_across_large_pages() {
         let mut view = PublicDetailsView::default();
@@ -729,7 +729,7 @@ mod tests {
         assert_eq!(view.cursor, 1000);
     }
 
-    // spec: TUI-RUNTIME-R008.2.3.2.2.1
+    // spec: TUIG-RUNTIME-R008.2.3.2.2.1
     #[tokio::test]
     async fn refusal_and_identity_changes_clear_values_and_abort_pending_reads() {
         let mut view = PublicDetailsView::default();

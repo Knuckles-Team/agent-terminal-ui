@@ -63,7 +63,7 @@ fn ready(now: Instant) -> RunInspector {
     state
 }
 
-// spec: TUI-RUNTIME-R010.7
+// spec: TUIG-RUNTIME-R010.7
 #[test]
 fn renders_recorded_configuration_and_zero_separately_from_unavailable() {
     let now = Instant::now();
@@ -98,7 +98,7 @@ fn renders_recorded_configuration_and_zero_separately_from_unavailable() {
     assert!(!text.contains("recorded-policy"));
 }
 
-// spec: TUI-RUNTIME-R010.7
+// spec: TUIG-RUNTIME-R010.7
 #[test]
 fn invalid_cost_never_displays_as_measurement() {
     for cost in [f64::NAN, f64::INFINITY, -1.0] {
@@ -111,7 +111,7 @@ fn invalid_cost_never_displays_as_measurement() {
     }
 }
 
-// spec: TUI-RUNTIME-R010.7
+// spec: TUIG-RUNTIME-R010.7
 #[test]
 fn plan_is_ordered_and_empty_is_distinct_from_unavailable() {
     let now = Instant::now();
@@ -131,7 +131,7 @@ fn plan_is_ordered_and_empty_is_distinct_from_unavailable() {
     assert!(state.text(now).contains("Current plan: unavailable"));
 }
 
-// spec: TUI-RUNTIME-R010.7
+// spec: TUIG-RUNTIME-R010.7
 #[test]
 fn wrong_run_stale_regressing_and_malformed_plans_disclose_no_items() {
     for kind in ["wrong-run", "expired-fixture", "older-fixture", "malformed"] {
@@ -157,7 +157,7 @@ fn wrong_run_stale_regressing_and_malformed_plans_disclose_no_items() {
     assert!(!text.contains("opaque-A"));
 }
 
-// spec: TUI-RUNTIME-R010.7
+// spec: TUIG-RUNTIME-R010.7
 #[test]
 fn terminal_reasons_remain_distinct_and_unknown_is_unavailable() {
     let labels: std::collections::HashSet<_> = [
@@ -175,7 +175,7 @@ fn terminal_reasons_remain_distinct_and_unknown_is_unavailable() {
     assert_eq!(terminal_reason(Some("future-reason")), "unavailable");
 }
 
-// spec: TUI-RUNTIME-R010.7
+// spec: TUIG-RUNTIME-R010.7
 #[test]
 fn refusals_and_run_switch_clear_all_protected_display_values() {
     for refusal in [

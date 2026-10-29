@@ -633,7 +633,7 @@ mod tests {
         }
     }
 
-    // spec: TUI-RUNTIME-R010.10
+    // spec: TUIG-RUNTIME-R010.10
     #[test]
     fn inspector_search_reveals_matches_and_preserves_read_only_actions() {
         let now = Instant::now();
@@ -668,7 +668,7 @@ mod tests {
         assert!(!view.is_open());
     }
 
-    // spec: TUI-RUNTIME-R010.10
+    // spec: TUIG-RUNTIME-R010.10
     #[test]
     fn search_cycles_unicode_lines_and_bounds_input() {
         let mut search = InspectorSearch::default();
@@ -719,7 +719,7 @@ last 界"
         assert_eq!(search.query.chars().count(), 128);
     }
 
-    // spec: TUI-RUNTIME-R010.10
+    // spec: TUIG-RUNTIME-R010.10
     #[test]
     fn search_recomputes_after_expiry_refusal_resize_and_run_change() {
         let now = Instant::now();
@@ -764,7 +764,7 @@ last 界"
         assert!(!view.search_key(KeyEvent::new(KeyCode::Char('f'), KeyModifiers::CONTROL)));
     }
 
-    // spec: TUI-RUNTIME-R010.9
+    // spec: TUIG-RUNTIME-R010.9
     #[test]
     fn selection_uses_only_task_run_and_clears_on_failure_or_change() {
         let now = Instant::now();
@@ -782,7 +782,7 @@ last 界"
         assert!(view.text(now).contains("private-plan"));
     }
 
-    // spec: TUI-RUNTIME-R008.2.3.2.2.1
+    // spec: TUIG-RUNTIME-R008.2.3.2.2.1
     #[test]
     fn same_run_with_a_different_owner_or_context_clears_inspector_values() {
         let now = Instant::now();
@@ -801,7 +801,7 @@ last 界"
         }
     }
 
-    // spec: TUI-RUNTIME-R010.9
+    // spec: TUIG-RUNTIME-R010.9
     #[tokio::test]
     async fn denied_or_panicked_reads_clear_protected_values() {
         for panic in [false, true] {
@@ -819,7 +819,7 @@ last 界"
         }
     }
 
-    // spec: TUI-RUNTIME-R010.9
+    // spec: TUIG-RUNTIME-R010.9
     #[tokio::test]
     async fn keys_own_one_read_and_close_cancel_and_drop_abort_it() {
         for key in [Some(KeyCode::Esc), Some(KeyCode::Char('c')), None] {
@@ -863,7 +863,7 @@ last 界"
         }
     }
 
-    // spec: TUI-RUNTIME-R010.9
+    // spec: TUIG-RUNTIME-R010.9
     #[tokio::test]
     async fn opening_without_run_never_starts_a_read() {
         let mut view = InspectorView::default();
@@ -877,7 +877,7 @@ last 界"
         );
     }
 
-    // spec: TUI-RUNTIME-R010.9
+    // spec: TUIG-RUNTIME-R010.9
     #[test]
     fn redraw_expires_plan_without_input_or_another_read() {
         let now = Instant::now();
@@ -933,8 +933,8 @@ last 界"
             .collect()
     }
 
-    // spec: TUI-RUNTIME-R010.12.1, TUI-RUNTIME-R010.12.1.1, TUI-RUNTIME-R008.3
-    // spec: TUI-RUNTIME-R010.12.1.2
+    // spec: TUIG-RUNTIME-R010.12.1, TUIG-RUNTIME-R010.12.1.1, TUIG-RUNTIME-R008.3
+    // spec: TUIG-RUNTIME-R010.12.1.2
     #[test]
     fn spatial_map_keeps_selection_and_list_search_across_resize_and_themes() {
         let mut view = graph_view();
@@ -1037,7 +1037,7 @@ last 界"
         assert!(!view.spatial_mode);
     }
 
-    // spec: TUI-RUNTIME-R010.12
+    // spec: TUIG-RUNTIME-R010.12
     #[test]
     fn graph_keyboard_narrow_resize_search_and_edges_keep_one_step_row() {
         let mut view = graph_view();
@@ -1093,7 +1093,7 @@ last 界"
         assert!(text.contains("g: graph / summary"));
     }
 
-    // spec: TUI-RUNTIME-R010.11, TUI-RUNTIME-R010.12
+    // spec: TUIG-RUNTIME-R010.11, TUIG-RUNTIME-R010.12
     #[tokio::test]
     async fn graph_refresh_cancels_previous_read_and_clears_selection() {
         let mut view = graph_view();
@@ -1140,7 +1140,7 @@ last 界"
         assert!(view.selected_step.is_none());
     }
 
-    // spec: TUI-RUNTIME-R010.11
+    // spec: TUIG-RUNTIME-R010.11
     #[tokio::test]
     async fn graph_is_independent_of_run_summary_and_switches_one_read() {
         let mut view = graph_view();
@@ -1169,7 +1169,7 @@ last 界"
         assert!(view.text(Instant::now()).contains("Flat execution DAG"));
     }
 
-    // spec: TUI-RUNTIME-R010.11
+    // spec: TUIG-RUNTIME-R010.11
     #[tokio::test]
     async fn graph_denial_panic_and_stale_replies_never_restore_protected_data() {
         for invalidation in [
@@ -1229,7 +1229,7 @@ last 界"
         }
     }
 
-    // spec: TUI-RUNTIME-R010.11
+    // spec: TUIG-RUNTIME-R010.11
     #[test]
     fn graph_task_refusal_close_and_client_replacement_clear_selection() {
         for reason in ["task", "close", "client"] {
@@ -1248,7 +1248,7 @@ last 界"
         }
     }
 
-    // spec: TUI-RUNTIME-R010.11
+    // spec: TUIG-RUNTIME-R010.11
     #[tokio::test]
     async fn canceled_complete_future_keeps_join_handle_and_rejects_stale_scope() {
         use std::sync::atomic::{AtomicBool, Ordering};

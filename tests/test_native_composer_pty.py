@@ -13,7 +13,7 @@ import pytest
 from tests.test_native_public_details_pty import NativeTerminal
 
 pytestmark = [
-    pytest.mark.spec("TUI-RUNTIME-R012.1.3"),
+    pytest.mark.spec("TUIG-RUNTIME-R012.1.3"),
     pytest.mark.skipif(
         not os.environ.get("TUI_NATIVE_TEST_BINARY"),
         reason="Set TUI_NATIVE_TEST_BINARY to the current compiled executable",

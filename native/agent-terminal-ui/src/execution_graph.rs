@@ -359,7 +359,7 @@ mod tests {
         .unwrap()
     }
 
-    // spec: TUI-RUNTIME-R010.11, TUI-RUNTIME-R010.12
+    // spec: TUIG-RUNTIME-R010.11, TUIG-RUNTIME-R010.12
     #[test]
     fn producer_diamond_and_unicode_are_semantic_keys_not_serialization_spellings() {
         let fixture = fixture();
@@ -402,7 +402,7 @@ mod tests {
         assert!(graph.text(3).contains("Message active child: unavailable"));
     }
 
-    // spec: TUI-RUNTIME-R010.11, TUI-RUNTIME-R010.12
+    // spec: TUIG-RUNTIME-R010.11, TUIG-RUNTIME-R010.12
     #[test]
     fn opaque_control_and_markup_ids_keep_identity_but_render_inertly() {
         let mut value = fixture()["value"].clone();
@@ -434,7 +434,7 @@ mod tests {
         assert!(text.contains("[link]"));
     }
 
-    // spec: TUI-RUNTIME-R010.11
+    // spec: TUIG-RUNTIME-R010.11
     #[test]
     fn native_bounds_and_fields_match_actual_producer_schema() {
         let fixture = fixture();
@@ -471,7 +471,7 @@ mod tests {
         }
     }
 
-    // spec: TUI-RUNTIME-R010.11
+    // spec: TUIG-RUNTIME-R010.11
     #[test]
     fn malformed_private_wrong_owner_and_unsupported_projections_fail_closed() {
         let value = fixture()["value"].clone();
@@ -534,7 +534,7 @@ mod tests {
         }
     }
 
-    // spec: TUI-RUNTIME-R010.11
+    // spec: TUIG-RUNTIME-R010.11
     #[test]
     fn duplicates_cycles_evidence_reuse_and_bounds_are_rejected() {
         let value = fixture()["value"].clone();

@@ -75,7 +75,7 @@ async fn server(responses: Vec<(u16, Value)>) -> (String, JoinHandle<Vec<String>
     (endpoint, task)
 }
 
-// spec: TUI-RUNTIME-R010.11
+// spec: TUIG-RUNTIME-R010.11
 #[tokio::test]
 async fn public_client_reads_only_advertised_graph_without_summary_prerequisite() {
     for anonymous in [false, true] {
@@ -118,7 +118,7 @@ async fn public_client_reads_only_advertised_graph_without_summary_prerequisite(
     }
 }
 
-// spec: TUI-RUNTIME-R010.11
+// spec: TUIG-RUNTIME-R010.11
 #[tokio::test]
 async fn absent_operation_denied_or_malformed_registry_never_posts() {
     for (status, body, expected) in [
@@ -149,7 +149,7 @@ async fn absent_operation_denied_or_malformed_registry_never_posts() {
     }
 }
 
-// spec: TUI-RUNTIME-R010.11
+// spec: TUIG-RUNTIME-R010.11
 #[tokio::test]
 async fn denied_wrong_digest_and_malformed_graph_do_not_fall_back() {
     let mut bad_digest = envelope();
@@ -181,7 +181,7 @@ async fn denied_wrong_digest_and_malformed_graph_do_not_fall_back() {
     }
 }
 
-// spec: TUI-RUNTIME-R010.11
+// spec: TUIG-RUNTIME-R010.11
 #[tokio::test]
 async fn unbound_or_unauthenticated_client_makes_zero_requests() {
     let (endpoint, requests) = server(vec![]).await;

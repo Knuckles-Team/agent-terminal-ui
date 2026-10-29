@@ -38,7 +38,7 @@ fn invalid_observation_arguments_and_missing_credentials_make_zero_requests() {
     }
 }
 
-// spec: TUI-RUNTIME-R002.1.3.3
+// spec: TUIG-RUNTIME-R002.1.3.3
 #[test]
 fn invalid_anonymous_configuration_makes_zero_requests() {
     for (mode, token) in [

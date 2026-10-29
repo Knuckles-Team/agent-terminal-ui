@@ -10,7 +10,7 @@ Each `specs/<lower-kebab-name>/` directory contains `spec.md` (behavior and acce
 
 | Spec | Requirement family | Scope |
 |---|---|---|
-| [Terminal Arbora operation client](terminal-runtime/spec.md) | TUI-RUNTIME | TUI command, transport, PLAN confirmation and fail-closed approval boundary |
+| [Terminal Arbora operation client](terminal-runtime/spec.md) | TUIG-RUNTIME | TUI command, transport, PLAN confirmation and fail-closed approval boundary |
 
 ## State legend
 
@@ -21,6 +21,6 @@ Planned acceptance paths must not count as passed tests.
 
 Propose the user behavior first, then document the existing implementation and public interfaces, write the test contract, and implement the smallest complete task set. Reuse the existing TUI command registry and client. Apply CCCC, jscpd, Dupehound and KISS requirements where configured; record a missing command or threshold as a gap rather than a pass. Include exact public revisions and check links when updating status. The ecosystem's [spec generator](https://github.com/Knuckles-Team/universal-skills/tree/main/universal_skills/development/spec-generator), [spec verifier](https://github.com/Knuckles-Team/universal-skills/tree/main/universal_skills/development/spec-verifier), and [Arbora development skill](https://github.com/Knuckles-Team/arbora/tree/main/arbora/skills/arbora-development) describe the same workflow.
 
-- [`TUI-RUNTIME`](terminal-runtime/spec.md) — Terminal Arbora operation client
+- [`TUIG-RUNTIME`](terminal-runtime/spec.md) — Terminal Arbora operation client
 
-`TUI-RUNTIME-R010` includes children `.1` through `.6` for run observation, producer wiring and served refusal evidence.
+`TUIG-RUNTIME-R010` includes children `.1` through `.6` for run observation, producer wiring and served refusal evidence.

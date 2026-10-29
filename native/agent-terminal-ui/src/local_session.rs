@@ -401,7 +401,7 @@ async fn run_ui(mut options: Options) -> Result<(), &'static str> {
 mod tests {
     use super::*;
 
-    // spec: TUI-RUNTIME-R011.14
+    // spec: TUIG-RUNTIME-R011.14
     #[test]
     fn terminal_cleanup_runs_during_unwinding() {
         let cleanup = Rc::new(Cell::new(false));
@@ -418,7 +418,7 @@ mod tests {
         assert!(output.windows(6).any(|bytes| bytes == b"\x1b[?25h"));
     }
 
-    // spec: TUI-RUNTIME-R011.14
+    // spec: TUIG-RUNTIME-R011.14
     #[test]
     fn terminal_output_only_ignores_errors_during_cleanup() {
         struct Blocked;
@@ -441,7 +441,7 @@ mod tests {
         assert!(output.flush().is_ok());
     }
 
-    // spec: TUI-RUNTIME-R011.14
+    // spec: TUIG-RUNTIME-R011.14
     #[test]
     fn transcript_is_bounded_unicode_safe_and_inert() {
         let mut transcript = Transcript::default();
@@ -453,7 +453,7 @@ mod tests {
         assert!(!transcript.text.contains(['\u{1b}', '\u{7}', '\u{202e}']));
     }
 
-    // spec: TUI-RUNTIME-R011.14
+    // spec: TUIG-RUNTIME-R011.14
     #[tokio::test]
     async fn quit_interrupts_full_display_queue() {
         let (sender, _receiver) = mpsc::channel(1);
@@ -479,7 +479,7 @@ mod backpressure_tests {
     use serde_json::{Value, json};
     use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, split};
 
-    // spec: TUI-RUNTIME-R011.14
+    // spec: TUIG-RUNTIME-R011.14
     #[tokio::test]
     async fn cancel_and_quit_drain_the_same_id_when_display_is_full() {
         for quitting in [false, true] {

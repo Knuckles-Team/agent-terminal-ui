@@ -83,7 +83,7 @@ mod tests {
     use crate::draw;
     use ratatui::{Terminal, backend::TestBackend};
 
-    // spec: TUI-RUNTIME-R008.2.3.2.2.2.2.1
+    // spec: TUIG-RUNTIME-R008.2.3.2.2.2.2.1
     #[test]
     fn held_navigation_scrolls_without_repeating_actions() {
         let mut viewport = Viewport::default();
@@ -163,7 +163,7 @@ mod tests {
         0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b)
     }
 
-    // spec: TUI-RUNTIME-R008.2.1
+    // spec: TUIG-RUNTIME-R008.2.1
     #[test]
     fn baseline_themes_render_readable_static_text() {
         for (theme, foreground, background) in [
@@ -205,7 +205,7 @@ mod tests {
         }
     }
 
-    // spec: TUI-RUNTIME-R008.3, TUI-RUNTIME-R008.3.1
+    // spec: TUIG-RUNTIME-R008.3, TUIG-RUNTIME-R008.3.1
     #[test]
     fn canopy_border_text_meets_contrast_without_changing_other_themes() {
         for theme in THEMES.into_iter().chain(["unknown"]) {
@@ -307,7 +307,7 @@ mod viewport_tests {
             .collect()
     }
 
-    // spec: TUI-RUNTIME-R008.2.3.2.2.2.2.2.1
+    // spec: TUIG-RUNTIME-R008.2.3.2.2.2.2.2.1
     #[test]
     fn wheel_bounds_refresh_resize_and_ignored_events() {
         let mut viewport = Viewport::default();
@@ -364,7 +364,7 @@ mod viewport_tests {
         assert_eq!(viewport.offset(), 0);
     }
 
-    // spec: TUI-RUNTIME-R008.2.3.2.2.3
+    // spec: TUIG-RUNTIME-R008.2.3.2.2.3
     #[test]
     fn arrows_scroll_one_wrapped_row_and_restore_it_after_refresh() {
         let status = "界界界界界界\ne\u{301}e\u{301}\nabcdefghijklmnop";
@@ -405,7 +405,7 @@ mod viewport_tests {
         assert_eq!(terminal.backend().buffer()[(9, 1)].symbol(), "界");
     }
 
-    // spec: TUI-RUNTIME-R008.2.3.2.2.3
+    // spec: TUIG-RUNTIME-R008.2.3.2.2.3
     #[test]
     fn arrows_clamp_at_both_ends_and_in_empty_viewports() {
         let mut viewport = Viewport::default();
@@ -429,7 +429,7 @@ mod viewport_tests {
         }
     }
 
-    // spec: TUI-RUNTIME-R008.2.2
+    // spec: TUIG-RUNTIME-R008.2.2
     #[test]
     fn paging_refresh_and_resize_preserve_requested_position() {
         let status = (0..40)
@@ -480,7 +480,7 @@ mod viewport_tests {
         assert!(!viewport.handle(KeyCode::Char('x')));
     }
 
-    // spec: TUI-RUNTIME-R008.2.2
+    // spec: TUIG-RUNTIME-R008.2.2
     #[test]
     fn wrapping_keeps_wide_and_combining_graphemes_intact() {
         let mut terminal = Terminal::new(TestBackend::new(12, 8)).unwrap();
@@ -506,7 +506,7 @@ mod viewport_tests {
         assert!(contents(&terminal).contains("klmnop"));
     }
 
-    // spec: TUI-RUNTIME-R008.2.2
+    // spec: TUIG-RUNTIME-R008.2.2
     #[test]
     fn tiny_viewports_and_shorter_results_clamp_without_losing_place() {
         let mut viewport = Viewport::default();
@@ -544,8 +544,8 @@ mod theme_switch_tests {
         assert!(themes.key(KeyEvent::new(KeyCode::F(6), KeyModifiers::NONE)));
     }
 
-    // spec: TUI-RUNTIME-R008.2.3.2.1
-    // spec: TUI-RUNTIME-R008.3, TUI-RUNTIME-R008.3.1
+    // spec: TUIG-RUNTIME-R008.2.3.2.1
+    // spec: TUIG-RUNTIME-R008.3, TUIG-RUNTIME-R008.3.1
     #[test]
     fn runtime_switch_renders_each_palette_in_all_views() {
         let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
@@ -616,7 +616,7 @@ mod theme_switch_tests {
         }
     }
 
-    // spec: TUI-RUNTIME-R008.2.3.2.1
+    // spec: TUIG-RUNTIME-R008.2.3.2.1
     #[test]
     fn runtime_switch_preserves_scroll_and_no_color() {
         let status = (0..100).map(|n| format!("row {n}\n")).collect::<String>();
@@ -665,7 +665,7 @@ mod theme_switch_tests {
         }
     }
 
-    // spec: TUI-RUNTIME-R008.2.3.2.1
+    // spec: TUIG-RUNTIME-R008.2.3.2.1
     #[test]
     fn only_unmodified_f6_presses_switch_the_theme() {
         let mut themes = ThemeSelection::new("nord", "");

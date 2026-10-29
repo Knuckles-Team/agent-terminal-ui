@@ -67,7 +67,7 @@ for line in sys.stdin:
 '''
 
 
-@pytest.mark.spec("TUI-RUNTIME-R011.14")
+@pytest.mark.spec("TUIG-RUNTIME-R011.14")
 @pytest.mark.parametrize("mode", ["complete", "cancel", "foreign", "unresponsive", "backpressure"])
 def test_native_acp_process_lifecycle(tmp_path, mode):
     backend = tmp_path / "arbora-acp"
@@ -163,7 +163,7 @@ asyncio.run(acp.run_agent(Fixture(), use_unstable_protocol=os.environ["ACP_TEST_
 '''
 
 
-@pytest.mark.spec("TUI-RUNTIME-R011.14")
+@pytest.mark.spec("TUIG-RUNTIME-R011.14")
 @pytest.mark.parametrize("close_enabled", [True, False])
 def test_native_client_interoperates_with_official_python_acp_sdk(tmp_path, close_enabled):
     pytest.importorskip("acp", reason="Requires official agent-client-protocol 0.11.0 test SDK")
@@ -183,7 +183,7 @@ def test_native_client_interoperates_with_official_python_acp_sdk(tmp_path, clos
         assert "refused" in result.stderr
 
 
-@pytest.mark.spec("TUI-RUNTIME-R011.14")
+@pytest.mark.spec("TUIG-RUNTIME-R011.14")
 @pytest.mark.parametrize("placement", ["sibling", "symlink", "path", "missing", "broken", "nonexecutable"])
 def test_native_acp_installed_helper_resolution(tmp_path, placement):
     installed = tmp_path / "isolated" / "bin"

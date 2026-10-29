@@ -356,7 +356,7 @@ mod tests {
         OffsetDateTime::parse("2026-10-17T00:00:01Z", &Rfc3339).unwrap()
     }
 
-    // spec: TUI-RUNTIME-R010.8
+    // spec: TUIG-RUNTIME-R010.8
     #[test]
     fn wire_zero_expiry_regression_and_refusal_preserve_boundaries() {
         let now = Instant::now();
@@ -394,7 +394,7 @@ mod tests {
         assert!(!inspector.text(now).contains("private plan"));
     }
 
-    // spec: TUI-RUNTIME-R010.8
+    // spec: TUIG-RUNTIME-R010.8
     #[test]
     fn malformed_and_foreign_snapshots_never_render() {
         let now = Instant::now();
@@ -427,7 +427,7 @@ mod tests {
         assert!(decode_run(&value, "r", wall(), now).is_err());
     }
 
-    // spec: TUI-RUNTIME-R010.8
+    // spec: TUIG-RUNTIME-R010.8
     #[test]
     fn available_empty_is_distinct_from_unavailable() {
         let now = Instant::now();
@@ -446,7 +446,7 @@ mod tests {
             .unwrap();
         assert!(inspector.text(now).contains("Current plan: unavailable"));
     }
-    // spec: TUI-RUNTIME-R010.4
+    // spec: TUIG-RUNTIME-R010.4
     #[test]
     fn plan_only_reads_clear_expiry_refusal_and_preserve_empty() {
         let now = Instant::now();
@@ -547,7 +547,7 @@ mod transport_tests {
         serde_json::json!({"api_version":"v1", "registry_digest":"d", "ops":ops})
     }
 
-    // spec: TUI-RUNTIME-R010.8
+    // spec: TUIG-RUNTIME-R010.8
     #[tokio::test]
     async fn advertised_read_uses_credentials_exact_run_and_digest() {
         let body = serde_json::json!({"ok":true,"meta":{"api_version":"v1","registry_digest":"d"},"result":{"value":{"availability":"available","run_id":"r","peak_context_tokens":0,"current_plan":{"availability":"unavailable","snapshot":null}}}});
@@ -581,7 +581,7 @@ mod transport_tests {
         );
     }
 
-    // spec: TUI-RUNTIME-R002.1.3.3
+    // spec: TUIG-RUNTIME-R002.1.3.3
     #[tokio::test]
     async fn anonymous_advertised_read_preserves_run_and_digest() {
         let body = serde_json::json!({"ok":true,"meta":{"api_version":"v1","registry_digest":"d"},"result":{"value":{"availability":"available","run_id":"r","peak_context_tokens":0,"current_plan":{"availability":"unavailable","snapshot":null}}}});
@@ -616,8 +616,8 @@ mod transport_tests {
         );
     }
 
-    // spec: TUI-RUNTIME-R010.4
-    // spec: TUI-RUNTIME-R010.8
+    // spec: TUIG-RUNTIME-R010.4
+    // spec: TUIG-RUNTIME-R010.8
     #[tokio::test]
     async fn current_plan_only_registry_uses_supported_contract() {
         for anonymous in [false, true] {
@@ -659,7 +659,7 @@ mod transport_tests {
         }
     }
 
-    // spec: TUI-RUNTIME-R010.8
+    // spec: TUIG-RUNTIME-R010.8
     #[tokio::test]
     async fn summary_preferred_with_nested_current_plan() {
         let body = json!({"ok":true,"meta":{"api_version":"v1","registry_digest":"d"},
@@ -695,7 +695,7 @@ mod transport_tests {
         assert_eq!(params, json!({"run_id":"r","task_id":"work-item:owner"}));
     }
 
-    // spec: TUI-RUNTIME-R010.8
+    // spec: TUIG-RUNTIME-R010.8
     #[tokio::test]
     async fn summary_denial_never_dispatches_plan_fallback() {
         let (endpoint, task) = server(vec![
@@ -716,7 +716,7 @@ mod transport_tests {
         assert!(requests[1].starts_with("POST /api/v1/ops/runs.get "));
     }
 
-    // spec: TUI-RUNTIME-R010.8
+    // spec: TUIG-RUNTIME-R010.8
     #[tokio::test]
     async fn malformed_or_unavailable_summary_clears_without_another_read() {
         for result in [
@@ -752,7 +752,7 @@ mod transport_tests {
         }
     }
 
-    // spec: TUI-RUNTIME-R010.8
+    // spec: TUIG-RUNTIME-R010.8
     #[tokio::test]
     async fn absent_operation_does_not_dispatch_and_changed_digest_refuses() {
         let (endpoint, task) = server(vec![(200, registry(serde_json::json!([])))]).await;
@@ -775,7 +775,7 @@ mod transport_tests {
         ));
         task.await.unwrap();
     }
-    // spec: TUI-RUNTIME-R008.2.3.2.2.1
+    // spec: TUIG-RUNTIME-R008.2.3.2.2.1
     #[tokio::test]
     async fn invalid_owner_identifiers_cannot_dispatch_run_reads() {
         let (endpoint, server) = server(vec![]).await;
@@ -793,7 +793,7 @@ mod transport_tests {
         assert!(server.await.unwrap().is_empty());
     }
 
-    // spec: TUI-RUNTIME-R008.2.3.2.2.1
+    // spec: TUIG-RUNTIME-R008.2.3.2.2.1
     #[tokio::test]
     async fn public_events_use_existing_authorized_operation_transport() {
         let value: Value = serde_json::from_str(include_str!(
@@ -835,7 +835,7 @@ mod transport_tests {
         }
     }
 
-    // spec: TUI-RUNTIME-R008.2.3.2.2.1
+    // spec: TUIG-RUNTIME-R008.2.3.2.2.1
     #[tokio::test]
     async fn public_events_refuse_unregistered_denied_and_wrong_digest_reads() {
         let (endpoint, task) = server(vec![(200, registry(serde_json::json!([])))]).await;

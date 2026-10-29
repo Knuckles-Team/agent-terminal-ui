@@ -269,7 +269,7 @@ mod tests {
         }
     }
 
-    // spec: TUI-RUNTIME-R010.12.1.2, TUI-RUNTIME-R010.12.1, TUI-RUNTIME-R010.12.1.1
+    // spec: TUIG-RUNTIME-R010.12.1.2, TUIG-RUNTIME-R010.12.1, TUIG-RUNTIME-R010.12.1.1
     #[test]
     fn layers_are_stable_for_diamond_chain_disconnected_and_maximum_graphs() {
         let mut diamond = graph(5, vec![(0, 1), (0, 2), (1, 3), (2, 3)]);
@@ -304,7 +304,7 @@ mod tests {
         }
     }
 
-    // spec: TUI-RUNTIME-R010.12.1.1, TUI-RUNTIME-R010.12.1.2
+    // spec: TUIG-RUNTIME-R010.12.1.1, TUIG-RUNTIME-R010.12.1.2
     #[test]
     fn selected_edges_distinguish_crossed_pairs_from_full_dependencies() {
         let pairs = graph(4, vec![(0, 3), (1, 2)]);
@@ -356,7 +356,7 @@ mod tests {
         assert_eq!(pairs.edges, vec![(0, 3), (1, 2)]);
     }
 
-    // spec: TUI-RUNTIME-R010.12.1.2, TUI-RUNTIME-R010.12.1, TUI-RUNTIME-R010.12.1.1, TUI-RUNTIME-R008.3
+    // spec: TUIG-RUNTIME-R010.12.1.2, TUIG-RUNTIME-R010.12.1, TUIG-RUNTIME-R010.12.1.1, TUIG-RUNTIME-R008.3
     #[test]
     fn bounded_pan_focus_resize_and_literal_labels_keep_graph_unchanged() {
         let mut graph = graph(MAX_NODES, (1..MAX_NODES).map(|i| (i - 1, i)).collect());
