@@ -97,8 +97,15 @@ jobs:
     if: github.event_name != 'pull_request'
     uses: Knuckles-Team/pipelines/.github/workflows/main_pipeline.yml@main
     with:
+      # tuig ships a native binary and no Python module; the 3.12 floor is
+      # exercised by the Python-only contract tests, not an import.
+      setup-command: |
+        uv sync --frozen --no-install-project --group test
       backward-python: "3.12"
+      backward-module: none
+      backward-test-scope: tests/test_docs_layout.py tests/test_precommit_hooks.py tests/test_native_only_runtime.py
       rust: true
+      rust-manifest-path: native/agent-terminal-ui/Cargo.toml
 
   native-wheels:
     if: github.event_name != 'pull_request'
