@@ -374,8 +374,8 @@
         "b90eb520052a"
       ],
       "verified_by": [
-        "tests/test_precommit_hooks.py:103",
-        "tests/test_precommit_hooks.py:134",
+        "tests/test_precommit_hooks.py:120",
+        "tests/test_precommit_hooks.py:151",
         "tests/test_precommit_hooks.py:19",
         "tests/test_precommit_hooks.py:57",
         "tests/test_precommit_hooks.py:77"
@@ -395,8 +395,8 @@
         "b90eb520052a"
       ],
       "verified_by": [
-        "tests/test_precommit_hooks.py:103",
-        "tests/test_precommit_hooks.py:134",
+        "tests/test_precommit_hooks.py:120",
+        "tests/test_precommit_hooks.py:151",
         "tests/test_precommit_hooks.py:19"
       ]
     },
@@ -844,22 +844,28 @@
     {
       "id": "TUI-RUNTIME-R011.1",
       "title": "Model",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "LANDED",
+      "landed_in": [
+        "8d40e6bc44af"
+      ],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R011.2",
       "title": "Behavior",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "LANDED",
+      "landed_in": [
+        "8d40e6bc44af"
+      ],
       "verified_by": []
     },
     {
       "id": "TUI-RUNTIME-R011.3",
       "title": "Behavior",
-      "delivery_state": "SPECIFIED",
-      "landed_in": [],
+      "delivery_state": "LANDED",
+      "landed_in": [
+        "8d40e6bc44af"
+      ],
       "verified_by": []
     },
     {
