@@ -1,7 +1,6 @@
 //! A terminal-only layout of the already validated flat execution graph.
 
 use crate::presentation::Viewport;
-use tuig_native::{execution_graph::ExecutionGraph, public_run_events::literal};
 use crossterm::event::KeyCode;
 use ratatui::{
     Frame,
@@ -11,6 +10,7 @@ use ratatui::{
     text::Line,
     widgets::{Block, BorderType, Paragraph, Widget},
 };
+use tuig_native::{execution_graph::ExecutionGraph, public_run_events::literal};
 
 const NODE_WIDTH: u16 = 22;
 const NODE_HEIGHT: u16 = 4;
@@ -247,8 +247,8 @@ impl Widget for GraphWidget<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tuig_native::execution_graph::{ExecutionStep, MAX_NODES};
     use ratatui::{Terminal, backend::TestBackend};
+    use tuig_native::execution_graph::{ExecutionStep, MAX_NODES};
 
     fn graph(count: usize, edges: Vec<(usize, usize)>) -> ExecutionGraph {
         ExecutionGraph {

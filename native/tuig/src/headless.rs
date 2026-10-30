@@ -1,7 +1,5 @@
-use tuig_native::{
-    ArboraClient, TaskSnapshot, TaskSubmission, correlation::TaskState,
-};
 use std::{io::Write, time::Duration};
+use tuig_native::{ArboraClient, TaskSnapshot, TaskSubmission, correlation::TaskState};
 
 fn result(state: TaskState) -> Result<bool, &'static str> {
     match state {

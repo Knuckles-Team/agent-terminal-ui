@@ -1,13 +1,13 @@
 mod support;
 
-use tuig_native::{
-    ArboraClient,
-    correlation::{TaskCorrelation, TaskState},
-};
 use serde_json::{Value, json};
 use std::time::Duration;
 use support::{serve, serve_raw};
 use tokio::{io::AsyncReadExt, net::TcpListener};
+use tuig_native::{
+    ArboraClient,
+    correlation::{TaskCorrelation, TaskState},
+};
 
 fn acknowledgement() -> Value {
     json!({

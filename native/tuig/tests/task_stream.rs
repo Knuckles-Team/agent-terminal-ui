@@ -1,8 +1,8 @@
+use serde_json::{Value, json};
 use tuig_native::{
     correlation::{TaskCorrelation, TaskEvent},
     task_stream::{MAX_EVENT_BYTES, MAX_LINE_BYTES, StreamError, TaskStreamDecoder},
 };
-use serde_json::{Value, json};
 
 fn task() -> Value {
     json!({"kind":"task", "id":"task-1", "contextId":"ctx-1",

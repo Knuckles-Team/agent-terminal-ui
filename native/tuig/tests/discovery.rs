@@ -1,8 +1,8 @@
-use tuig_native::ArboraClient;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpListener,
 };
+use tuig_native::ArboraClient;
 
 async fn serve(status: &str, body: &str) -> (String, tokio::task::JoinHandle<String>) {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();

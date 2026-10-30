@@ -2,13 +2,6 @@ use crate::{
     presentation::Viewport,
     spatial_graph::{SpatialGraph, label},
 };
-use tuig_native::{
-    ArboraClient,
-    correlation::TaskCorrelation,
-    execution_graph::ExecutionGraph,
-    run_inspector::{ReadRefusal, RunInspector},
-    run_inspector_client::RunRead,
-};
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers, MouseEvent};
 use ratatui::{
     Frame,
@@ -19,6 +12,13 @@ use ratatui::{
 };
 use std::{sync::Arc, time::Instant};
 use tokio::task::JoinHandle;
+use tuig_native::{
+    ArboraClient,
+    correlation::TaskCorrelation,
+    execution_graph::ExecutionGraph,
+    run_inspector::{ReadRefusal, RunInspector},
+    run_inspector_client::RunRead,
+};
 
 type ReadTask = JoinHandle<Result<RunRead, ReadRefusal>>;
 type GraphReadTask = JoinHandle<(GraphScope, Result<ExecutionGraph, ReadRefusal>)>;
@@ -563,13 +563,13 @@ impl Drop for InspectorView {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ratatui::{Terminal, backend::TestBackend};
+    use serde_json::json;
+    use std::time::Duration;
     use tuig_native::run_inspector::{
         AppliedConfig, PlanItem, PlanRefusal, PlanSnapshot, PlanStatus, PlanValidator,
         RunProjection,
     };
-    use ratatui::{Terminal, backend::TestBackend};
-    use serde_json::json;
-    use std::time::Duration;
 
     fn binding(run: Option<&str>) -> TaskCorrelation {
         let mut task =

@@ -1,8 +1,8 @@
-use tuig_native::acp::{MAX_FRAME_BYTES, TextClient, completed};
 use serde_json::{Value, json};
 use tokio::io::{
     AsyncBufReadExt, AsyncWriteExt, BufReader, DuplexStream, ReadHalf, WriteHalf, split,
 };
+use tuig_native::acp::{MAX_FRAME_BYTES, TextClient, completed};
 
 type Peer = (BufReader<ReadHalf<DuplexStream>>, WriteHalf<DuplexStream>);
 
