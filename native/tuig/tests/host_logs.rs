@@ -1,4 +1,3 @@
-use tuig_native::{ArboraClient, app::run_host_terminal, host_logs::HostLogs};
 use serde_json::{Value, json};
 use std::{
     sync::Arc,
@@ -8,6 +7,7 @@ use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpListener,
 };
+use tuig_native::{ArboraClient, app::run_host_terminal, host_logs::HostLogs};
 
 const ENDPOINT_SENTINEL: &str = "http://127.0.0.1:1/";
 

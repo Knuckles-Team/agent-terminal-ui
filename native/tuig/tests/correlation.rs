@@ -1,5 +1,5 @@
-use tuig_native::correlation::{TaskCorrelation, TaskEvent, TaskState};
 use serde_json::{Value, json};
+use tuig_native::correlation::{TaskCorrelation, TaskEvent, TaskState};
 
 fn events() -> Vec<Value> {
     serde_json::from_str(include_str!(

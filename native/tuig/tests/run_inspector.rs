@@ -1,6 +1,6 @@
-use tuig_native::run_inspector::*;
 use ratatui::{Terminal, backend::TestBackend};
 use std::time::{Duration, Instant};
+use tuig_native::run_inspector::*;
 
 fn projection() -> RunProjection {
     RunProjection {

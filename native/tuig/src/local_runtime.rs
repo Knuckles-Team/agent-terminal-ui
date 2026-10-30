@@ -1,10 +1,10 @@
-#[cfg(unix)]
-use tuig_native::acp::{TextClient, completed};
 use std::ffi::OsString;
 #[cfg(unix)]
 use std::{path::PathBuf, process::Stdio, time::Duration};
 #[cfg(unix)]
 use tokio::{process::Command, time::timeout};
+#[cfg(unix)]
+use tuig_native::acp::{TextClient, completed};
 
 pub struct Options {
     pub model: String,

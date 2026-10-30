@@ -1,9 +1,4 @@
 use crate::presentation::Viewport;
-use tuig_native::{
-    ArboraClient,
-    app::run_host_terminal,
-    host_logs::{HostLogReader, HostLogs, LogBatch, REFUSED, RETENTION_GAP},
-};
 use crossterm::event::{KeyCode, MouseEvent};
 use ratatui::{
     Frame,
@@ -12,6 +7,11 @@ use ratatui::{
 };
 use std::{collections::VecDeque, sync::Arc};
 use tokio::task::JoinHandle;
+use tuig_native::{
+    ArboraClient,
+    app::run_host_terminal,
+    host_logs::{HostLogReader, HostLogs, LogBatch, REFUSED, RETENTION_GAP},
+};
 
 type Read = JoinHandle<Result<(HostLogReader, LogBatch), &'static str>>;
 

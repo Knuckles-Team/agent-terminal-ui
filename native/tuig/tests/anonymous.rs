@@ -1,7 +1,7 @@
 mod support;
 
-use tuig_native::{ArboraClient, AuthMode, TaskSubmission};
 use serde_json::{Value, json};
+use tuig_native::{ArboraClient, AuthMode, TaskSubmission};
 
 fn task(id: &str, state: &str) -> Value {
     json!({"jsonrpc":"2.0", "id":id, "result": {

@@ -3,7 +3,6 @@ use crate::{
     local_runtime::{Options, finish_backend, spawn_backend},
     presentation::{ThemeSelection, Viewport, accepts_key_event},
 };
-use tuig_native::task_output::terminal_text;
 use crossterm::event::{
     DisableBracketedPaste, DisableMouseCapture, Event, EventStream, KeyCode, KeyModifiers,
 };
@@ -18,6 +17,7 @@ use tokio::{
     sync::{mpsc, watch},
     time::timeout,
 };
+use tuig_native::task_output::terminal_text;
 
 const TRANSCRIPT_BYTES: usize = 128 * 1024;
 const TURN_LIMIT: usize = 64;
@@ -475,9 +475,9 @@ mod tests {
 #[cfg(test)]
 mod backpressure_tests {
     use super::*;
-    use tuig_native::acp::TextClient;
     use serde_json::{Value, json};
     use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, split};
+    use tuig_native::acp::TextClient;
 
     // spec: TUIG-RUNTIME-R011.14
     #[tokio::test]

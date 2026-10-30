@@ -1,5 +1,5 @@
-use tuig_native::coding_approval::*;
 use ratatui::{Terminal, backend::TestBackend};
+use tuig_native::coding_approval::*;
 
 fn request() -> ApprovalRequest {
     ApprovalRequest {

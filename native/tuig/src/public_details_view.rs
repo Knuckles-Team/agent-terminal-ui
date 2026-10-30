@@ -1,10 +1,4 @@
 //! Inline task-bound public folds. Keyboard toggles never perform task actions.
-use tuig_native::{
-    ArboraClient,
-    correlation::TaskCorrelation,
-    public_run_events::{MAX_EVENTS, MAX_VIEW_BYTES, PublicEvent, PublicPage},
-    run_inspector::ReadRefusal,
-};
 use crossterm::event::{
     KeyCode, KeyEvent, KeyEventKind, KeyModifiers, MouseButton, MouseEvent, MouseEventKind,
 };
@@ -19,6 +13,12 @@ use std::{
     time::{Duration, Instant},
 };
 use tokio::task::JoinHandle;
+use tuig_native::{
+    ArboraClient,
+    correlation::TaskCorrelation,
+    public_run_events::{MAX_EVENTS, MAX_VIEW_BYTES, PublicEvent, PublicPage},
+    run_inspector::ReadRefusal,
+};
 
 type Read = JoinHandle<Result<PublicPage, ReadRefusal>>;
 
@@ -296,9 +296,9 @@ impl Drop for PublicDetailsView {
 mod tests {
     use super::*;
     use crate::{draw_task_viewport, presentation::Viewport};
-    use tuig_native::correlation::TaskCorrelation;
     use ratatui::{Terminal, backend::TestBackend};
     use serde_json::{Value, json};
+    use tuig_native::correlation::TaskCorrelation;
 
     fn binding(run: &str) -> TaskCorrelation {
         TaskCorrelation::from_task(&json!({"kind":"task", "id":"task-1", "contextId":"context-1", "status":{"state":"working"}, "metadata":{"arbora":{"runId":run}}})).unwrap()

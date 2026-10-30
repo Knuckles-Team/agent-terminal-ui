@@ -1,12 +1,10 @@
 mod support;
 
-use tuig_native::{
-    ArboraClient, SUBMISSION_UNKNOWN, TaskSubmission, correlation::TaskState,
-};
 use serde_json::{Value, json};
 use std::time::Duration;
 use support::{serve, serve_raw};
 use tokio::net::TcpListener;
+use tuig_native::{ArboraClient, SUBMISSION_UNKNOWN, TaskSubmission, correlation::TaskState};
 
 fn accepted(request_id: &str) -> Value {
     json!({

@@ -1,8 +1,8 @@
 mod support;
 
-use tuig_native::{ArboraClient, TaskSubmission, task_output::TaskOutput};
 use serde_json::{Value, json};
 use support::serve;
+use tuig_native::{ArboraClient, TaskSubmission, task_output::TaskOutput};
 
 fn completed(request_id: &str) -> Value {
     json!({
@@ -69,8 +69,7 @@ async fn foreign_or_invalid_artifacts_cannot_be_returned_for_display() {
     ] {
         let initial = completed("task-snapshot");
         let binding =
-            tuig_native::correlation::TaskCorrelation::from_task(&initial["result"])
-                .unwrap();
+            tuig_native::correlation::TaskCorrelation::from_task(&initial["result"]).unwrap();
         let mut response = initial;
         *response.pointer_mut(path).unwrap() = value;
         let (url, server) = serve("200 OK", &response.to_string()).await;

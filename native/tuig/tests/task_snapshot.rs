@@ -1,9 +1,9 @@
-use tuig_native::{ArboraClient, correlation::TaskState};
 use serde_json::{Value, json};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpListener,
 };
+use tuig_native::{ArboraClient, correlation::TaskState};
 
 async fn serve(status: &str, body: &str) -> (String, tokio::task::JoinHandle<String>) {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -218,8 +218,7 @@ async fn point_read_preserves_identity_and_rejects_retained_binding_mismatch() {
         .as_object_mut()
         .unwrap()
         .remove("runId");
-    let binding =
-        tuig_native::correlation::TaskCorrelation::from_task(&unbound).unwrap();
+    let binding = tuig_native::correlation::TaskCorrelation::from_task(&unbound).unwrap();
     let (url, server) = serve("200 OK", &response.to_string()).await;
     assert!(
         ArboraClient::new(&url, Some("fixture-token"))

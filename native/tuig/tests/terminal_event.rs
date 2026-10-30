@@ -1,8 +1,8 @@
+use serde_json::{Value, json};
 use tuig_native::{
     correlation::{TaskCorrelation, TaskState},
     terminal_event::TerminalEvent,
 };
-use serde_json::{Value, json};
 
 fn task() -> Value {
     json!({"kind":"task","id":"task-one","contextId":"context-two", "status":{"state":"completed"},

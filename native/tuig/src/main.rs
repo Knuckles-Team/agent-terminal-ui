@@ -1,7 +1,3 @@
-use tuig_native::{
-    ArboraClient, AuthMode, SUBMISSION_UNKNOWN, TaskSnapshot, TaskSubmission,
-    correlation::{TaskCorrelation, TaskState},
-};
 use crossterm::event::{
     DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture, Event,
     EventStream, KeyCode, KeyModifiers, MouseEvent,
@@ -15,6 +11,10 @@ use ratatui::{
     widgets::{Block, Paragraph, Wrap},
 };
 use std::{env, ffi::OsString, process::ExitCode, sync::Arc};
+use tuig_native::{
+    ArboraClient, AuthMode, SUBMISSION_UNKNOWN, TaskSnapshot, TaskSubmission,
+    correlation::{TaskCorrelation, TaskState},
+};
 
 mod cli;
 mod composer;
@@ -873,14 +873,14 @@ mod tests {
         presentation_style, request_completed, selected_prompt, selected_task, snapshot_status,
         submission_completed,
     };
-    use tuig_native::{
-        TaskSnapshot,
-        correlation::{TaskCorrelation, TaskState},
-    };
     use ratatui::style::{Color, Style};
     use ratatui::{Terminal, backend::TestBackend};
     use std::env::VarError;
     use std::ffi::OsString;
+    use tuig_native::{
+        TaskSnapshot,
+        correlation::{TaskCorrelation, TaskState},
+    };
 
     // spec: TUIG-RUNTIME-R012.1.3
     #[test]
@@ -1037,10 +1037,8 @@ mod tests {
             "metadata":{"arbora":{"runId":"run-three","usage":{
             "taskId":"task-one","contextId":"context-two","runId":"run-three",
             "scope":"turn","counts":{"input_tokens":17,"output_tokens":0}}}}});
-        snapshot.usage = tuig_native::turn_usage::TurnUsage::from_task(
-            &task,
-            &snapshot.correlation,
-        );
+        snapshot.usage =
+            tuig_native::turn_usage::TurnUsage::from_task(&task, &snapshot.correlation);
         let mut binding = None;
         let status = completed_status(Ok(Ok(ReadStatus::Task(snapshot))), &mut binding);
         let mut terminal = Terminal::new(TestBackend::new(100, 40)).unwrap();
@@ -1087,9 +1085,8 @@ mod tests {
             panic!("expected task fixture");
         };
         snapshot.state = TaskState::Completed;
-        snapshot.output = tuig_native::task_output::TaskOutput::Text(
-            "[bold]model reply\nsecond line".to_owned(),
-        );
+        snapshot.output =
+            tuig_native::task_output::TaskOutput::Text("[bold]model reply\nsecond line".to_owned());
         let mut binding = None;
         let status = completed_status(Ok(Ok(ReadStatus::Task(snapshot))), &mut binding);
         let mut terminal = Terminal::new(TestBackend::new(100, 24)).unwrap();
@@ -1743,9 +1740,9 @@ mod recovery_view_tests;
 #[cfg(test)]
 mod terminal_point_view_tests {
     use super::*;
-    use tuig_native::terminal_event::TerminalEvent;
     use ratatui::{Terminal, backend::TestBackend};
     use serde_json::json;
+    use tuig_native::terminal_event::TerminalEvent;
 
     // spec: TUIG-RUNTIME-R002.1.3.2.2.3
     #[test]
