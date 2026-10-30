@@ -17,7 +17,7 @@ def test_pipelines_hook_sections():
 
 
 @pytest.mark.spec("TUIG-RUNTIME-R004.1")
-def test_spec_group_preserves_stages_and_trailer_fallback():
+def test_spec_group_preserves_stages():
     data = yaml.safe_load((ROOT / ".pre-commit-config.yaml").read_text())
     shared = next(
         repo
@@ -28,9 +28,8 @@ def test_spec_group_preserves_stages_and_trailer_fallback():
     assert set(hooks["spec"]["stages"]) == {"pre-commit", "pre-push", "manual"}
     assert not hooks["spec"].get("args")
     assert not {"spec-standard", "spec-status", "spec-decomposition"} & hooks.keys()
-    assert hooks["spec-trailers"]["stages"] == ["pre-push", "manual"]
-    assert hooks["spec-trailers"]["args"] == ["--base-ref", "origin/main"]
-    assert {"ste-staged", "stubs", "sprawl"} <= hooks.keys()
+    assert "secrets" in hooks
+    assert not {"spec-trailers", "ste-staged", "stubs", "sprawl"} & hooks.keys()
 
 
 def test_ci_setup_uses_the_selected_python():

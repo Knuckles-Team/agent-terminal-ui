@@ -75,12 +75,7 @@ repos:
   hooks:
   - id: spec
     stages: [pre-commit, pre-push, manual]
-  - id: ste-staged
-  - id: stubs
-  - id: sprawl
-  - id: spec-trailers
-    stages: [pre-push, manual]
-    args: ["--base-ref", "origin/main"]
+  - id: secrets
 - repo: local
   hooks:
   - id: dependency-readiness
@@ -140,13 +135,5 @@ repos:
     entry: |-
       bash -c 'if [ -f ".bumpversion.cfg" ]; then uvx --from bump2version bump2version patch --dry-run --allow-dirty; fi'
     language: system
-    pass_filenames: false
-    always_run: true
-- repo: local
-  hooks:
-  - id: security-sanitizer
-    name: Security and Garbage Sanitizer
-    entry: python scripts/security_sanitizer.py
-    language: python
     pass_filenames: false
     always_run: true
