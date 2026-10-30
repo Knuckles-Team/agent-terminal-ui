@@ -105,7 +105,7 @@ jobs:
       backward-module: none
       backward-test-scope: tests/test_docs_layout.py tests/test_precommit_hooks.py tests/test_native_only_runtime.py
       rust: true
-      rust-manifest-path: native/agent-terminal-ui/Cargo.toml
+      rust-manifest-path: native/tuig/Cargo.toml
 
   native-wheels:
     if: github.event_name != 'pull_request'
@@ -122,23 +122,23 @@ jobs:
       - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: native/agent-terminal-ui
+          workspaces: native/tuig
       - name: Rust toolchain
         run: rustup toolchain install 1.96.0 --profile minimal --component rustfmt --component clippy
       - name: Native format
-        run: cargo +1.96.0 fmt --manifest-path native/agent-terminal-ui/Cargo.toml --check
+        run: cargo +1.96.0 fmt --manifest-path native/tuig/Cargo.toml --check
       - name: Native tests
-        run: cargo +1.96.0 test --locked --manifest-path native/agent-terminal-ui/Cargo.toml
+        run: cargo +1.96.0 test --locked --manifest-path native/tuig/Cargo.toml
       - name: Native Clippy
-        run: cargo +1.96.0 clippy --locked --manifest-path native/agent-terminal-ui/Cargo.toml --all-targets -- -D warnings
+        run: cargo +1.96.0 clippy --locked --manifest-path native/tuig/Cargo.toml --all-targets -- -D warnings
       - name: Build the checkout's native terminal
-        run: cargo +1.96.0 build --locked --manifest-path native/agent-terminal-ui/Cargo.toml --bin tuig
+        run: cargo +1.96.0 build --locked --manifest-path native/tuig/Cargo.toml --bin tuig
       - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           python-version: '3.14'
       - name: Required compiled-native PTY and headless journeys
         env:
-          TUI_NATIVE_TEST_BINARY: ${{ github.workspace }}/native/agent-terminal-ui/target/debug/tuig
+          TUI_NATIVE_TEST_BINARY: ${{ github.workspace }}/native/tuig/target/debug/tuig
           PTY_RESULTS: ${{ runner.temp }}/native-pty-results.xml
         run: |
           set -euo pipefail
@@ -149,7 +149,7 @@ jobs:
 
       - name: Required local ACP child lifecycle journeys
         env:
-          TUI_NATIVE_TEST_BINARY: ${{ github.workspace }}/native/agent-terminal-ui/target/debug/tuig
+          TUI_NATIVE_TEST_BINARY: ${{ github.workspace }}/native/tuig/target/debug/tuig
           ACP_RESULTS: ${{ runner.temp }}/native-acp-results.xml
         run: |
           uv run --frozen --no-sync --with agent-client-protocol==0.11.0 python -m pytest tests/test_native_acp.py -q -rP --no-cov --junitxml="$ACP_RESULTS"

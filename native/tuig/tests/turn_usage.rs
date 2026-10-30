@@ -1,5 +1,5 @@
 mod support;
-use agent_terminal_ui_native::{ArboraClient, TaskSubmission, turn_usage::TurnUsage};
+use tuig_native::{ArboraClient, TaskSubmission, turn_usage::TurnUsage};
 use serde_json::json;
 
 // spec: TUIG-RUNTIME-R012.6.1

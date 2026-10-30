@@ -1,4 +1,4 @@
-use agent_terminal_ui_native::{
+use tuig_native::{
     ArboraClient, TaskSnapshot, TaskSubmission, correlation::TaskState,
 };
 use std::{io::Write, time::Duration};

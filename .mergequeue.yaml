@@ -1,4 +1,4 @@
-# Merge-queue gate declaration for `agent-terminal-ui` (a PYTHON repository).
+# Merge-queue gate declaration for `tuig` (a PYTHON repository).
 #
 # Bootstrapped directly onto `main` the same way agent-utilities'/epistemic-graph's/
 # agent-webui's own `.mergequeue.yaml` were (D-MQR-1's "chore(merge-queue): bootstrap

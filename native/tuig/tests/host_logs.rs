@@ -1,4 +1,4 @@
-use agent_terminal_ui_native::{ArboraClient, app::run_host_terminal, host_logs::HostLogs};
+use tuig_native::{ArboraClient, app::run_host_terminal, host_logs::HostLogs};
 use serde_json::{Value, json};
 use std::{
     sync::Arc,
@@ -178,7 +178,7 @@ async fn oversized_and_malformed_batches_invalidate_binding() {
 // spec: TUIG-RUNTIME-R002.11
 #[tokio::test]
 async fn exact_retention_gap_stops_without_retry_and_other_conflicts_refuse() {
-    use agent_terminal_ui_native::host_logs::{REFUSED, RETENTION_GAP};
+    use tuig_native::host_logs::{REFUSED, RETENTION_GAP};
     for (body, expected) in [
         (json!({"detail":"retention_gap"}), RETENTION_GAP),
         (json!({"detail":"other"}), REFUSED),
@@ -201,7 +201,7 @@ async fn changed_receipt_binding_is_rejected_before_reader_use() {
     let mut changed = receipt();
     changed["endpoint"] = json!(client.endpoint());
     changed["tenant"] = json!("foreign-tenant");
-    let changed = agent_terminal_ui_native::host_logs::HostLaunchReceipt::parse(&changed).unwrap();
+    let changed = tuig_native::host_logs::HostLaunchReceipt::parse(&changed).unwrap();
     let matching = logs.receipt().clone();
     let reader = logs.into_reader();
     assert!(run_host_terminal(changed, client.as_ref(), Some(reader)).is_err());
@@ -236,7 +236,7 @@ async fn missing_reader_refuses_without_a_network_read() {
     let client = Arc::new(ArboraClient::new("http://127.0.0.1:9", Some("fixture-token")).unwrap());
     let mut payload = receipt();
     payload["endpoint"] = json!(client.endpoint());
-    let receipt = agent_terminal_ui_native::host_logs::HostLaunchReceipt::parse(&payload).unwrap();
+    let receipt = tuig_native::host_logs::HostLaunchReceipt::parse(&payload).unwrap();
     assert!(run_host_terminal(receipt, client.as_ref(), None).is_err());
 }
 
@@ -247,7 +247,7 @@ async fn endpoint_binding_is_checked_before_reader_use() {
     let logs = HostLogs::bind(client.clone()).await.unwrap();
     let mut changed = receipt();
     changed["endpoint"] = json!("http://127.0.0.1:2/");
-    let changed = agent_terminal_ui_native::host_logs::HostLaunchReceipt::parse(&changed).unwrap();
+    let changed = tuig_native::host_logs::HostLaunchReceipt::parse(&changed).unwrap();
     assert!(run_host_terminal(changed, client.as_ref(), Some(logs.into_reader())).is_err());
     server.await.unwrap();
 }

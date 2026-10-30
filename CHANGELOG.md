@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Rename cutover to `tuig`** — the Rust crate now lives in `native/tuig`. The crate is `tuig-native` and its library is `tuig_native`. The maturin path, CI, docs and specs use the new names. No old-name aliases remain.
+
 ### Added
 - **`/ingest` live fact-extraction command (CONCEPT:ECO-4.43)** — runs KG fact extraction from the
   TUI over the backend extraction pipeline. Documented in the KG extraction feature guide.

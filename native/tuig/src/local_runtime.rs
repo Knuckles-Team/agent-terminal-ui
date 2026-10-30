@@ -1,5 +1,5 @@
 #[cfg(unix)]
-use agent_terminal_ui_native::acp::{TextClient, completed};
+use tuig_native::acp::{TextClient, completed};
 use std::ffi::OsString;
 #[cfg(unix)]
 use std::{path::PathBuf, process::Stdio, time::Duration};
@@ -94,7 +94,7 @@ impl Output {
     }
 
     async fn write(&self, text: &str) -> Result<(), &'static str> {
-        let safe = agent_terminal_ui_native::task_output::terminal_text(text);
+        let safe = tuig_native::task_output::terminal_text(text);
         let mut remaining = safe.as_bytes();
         while !remaining.is_empty() {
             match rustix::io::write(&self.stdout, remaining) {

@@ -245,7 +245,7 @@ parity and performance evidence. Verify the incumbent coding terminal remains a 
 
 ## Native discovery tests (R002.7)
 
-Run cargo test with the Tuig native manifest at `native/agent-terminal-ui/Cargo.toml` after slot allocation.
+Run cargo test with the Tuig native manifest at `native/tuig/Cargo.toml` after slot allocation.
 The discovery integration tests serve real loopback HTTP responses. They verify
 the existing Agent Card route, caller header, invalid endpoint refusal,
 authentication errors, redirects, malformed cards and cancellation during a
@@ -329,29 +329,29 @@ Assert that argv, stdout diagnostics, logs and exception messages contain neithe
 
 The suite is `tests/test_coding_session.py`. It uses a fake gateway and a temporary workspace directory.
 
-- TUIG-RUNTIME-R011.1: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_session_model_closed_capability_set`. Unknown methods must map to a typed refusal.
-- TUIG-RUNTIME-R011.2: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_capability_handlers_serve_local_host`. A read inside the root must return file text and prompt zero times.
-- TUIG-RUNTIME-R011.3: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_path_containment_refuses_escape`. Parent segments, absolute paths and symlinks leaving the root must be refused with zero bytes read or written.
-- TUIG-RUNTIME-R011.4: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_write_shows_diff_then_applies_on_approval`. A denied write must leave the file bytes unchanged.
-- TUIG-RUNTIME-R011.5: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_command_displayed_before_run`. A denied command must spawn zero processes.
-- TUIG-RUNTIME-R011.6: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_terminal_output_streams_in_order`. Output above the limit must carry the truncation marker and kill must end the process.
-- TUIG-RUNTIME-R011.7: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_resume_reattaches_without_granting`. A resumed session must display the same pending write and apply no change before approval.
-- TUIG-RUNTIME-R011.8: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_requests_reach_view_from_client_stream`. A request in the stream must reach `CodingSessionView` once.
-- TUIG-RUNTIME-R011.9: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_entry_point_opens_session_at_cwd`. Starting in a temporary directory must send that root at `session/new`.
-- TUIG-RUNTIME-R011.10: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_typed_refusals_reach_gateway`. Each reason must produce one error response and zero host effects.
-- TUIG-RUNTIME-R011.11: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_evidence_record_has_no_secrets`. The record must carry the decision and omit file content.
-- TUIG-RUNTIME-R011.12: Planned `native/agent-terminal-ui/tests/coding_session.rs::test_headless_coding_session_write_and_containment`. The test must observe the diff, the approved write and the refusal.
+- TUIG-RUNTIME-R011.1: Planned `native/tuig/tests/coding_session.rs::test_session_model_closed_capability_set`. Unknown methods must map to a typed refusal.
+- TUIG-RUNTIME-R011.2: Planned `native/tuig/tests/coding_session.rs::test_capability_handlers_serve_local_host`. A read inside the root must return file text and prompt zero times.
+- TUIG-RUNTIME-R011.3: Planned `native/tuig/tests/coding_session.rs::test_path_containment_refuses_escape`. Parent segments, absolute paths and symlinks leaving the root must be refused with zero bytes read or written.
+- TUIG-RUNTIME-R011.4: Planned `native/tuig/tests/coding_session.rs::test_write_shows_diff_then_applies_on_approval`. A denied write must leave the file bytes unchanged.
+- TUIG-RUNTIME-R011.5: Planned `native/tuig/tests/coding_session.rs::test_command_displayed_before_run`. A denied command must spawn zero processes.
+- TUIG-RUNTIME-R011.6: Planned `native/tuig/tests/coding_session.rs::test_terminal_output_streams_in_order`. Output above the limit must carry the truncation marker and kill must end the process.
+- TUIG-RUNTIME-R011.7: Planned `native/tuig/tests/coding_session.rs::test_resume_reattaches_without_granting`. A resumed session must display the same pending write and apply no change before approval.
+- TUIG-RUNTIME-R011.8: Planned `native/tuig/tests/coding_session.rs::test_requests_reach_view_from_client_stream`. A request in the stream must reach `CodingSessionView` once.
+- TUIG-RUNTIME-R011.9: Planned `native/tuig/tests/coding_session.rs::test_entry_point_opens_session_at_cwd`. Starting in a temporary directory must send that root at `session/new`.
+- TUIG-RUNTIME-R011.10: Planned `native/tuig/tests/coding_session.rs::test_typed_refusals_reach_gateway`. Each reason must produce one error response and zero host effects.
+- TUIG-RUNTIME-R011.11: Planned `native/tuig/tests/coding_session.rs::test_evidence_record_has_no_secrets`. The record must carry the decision and omit file content.
+- TUIG-RUNTIME-R011.12: Planned `native/tuig/tests/coding_session.rs::test_headless_coding_session_write_and_containment`. The test must observe the diff, the approved write and the refusal.
 
 The fake gateway sends requests only; the test asserts file bytes and process counts on the host.
 
 ## TUIG-RUNTIME-R010.7: Native inspector boundary
 
-`native/agent-terminal-ui/tests/run_inspector.rs` imports the public library.
+`native/tuig/tests/run_inspector.rs` imports the public library.
 Six tests cover rendering, zero, configuration, distinct reasons, plan admission
 and protected-value clearing. These fixtures do not prove served operations.
 ## TUIG-RUNTIME-R011.13: Native approval boundary
 
-`native/agent-terminal-ui/tests/coding_approval.rs` imports the public library.
+`native/tuig/tests/coding_approval.rs` imports the public library.
 Seven tests cover the closed capability set, previews, exact choices, metadata
 and unanswered reconnect state. These fixtures do not prove admission or host effects.
 ## Scoped acceptance proof
@@ -841,7 +841,7 @@ This fixture does not qualify full native presentation or served performance.
 
 ## Native CLI help
 
-`TUIG-RUNTIME-R015.30.2`: `native/agent-terminal-ui/tests/cli_help.rs` runs the
+`TUIG-RUNTIME-R015.30.2`: `native/tuig/tests/cli_help.rs` runs the
 actual native executable without a terminal. Both help aliases return the same
 usage, supported flags and environment settings, including with invalid runtime
 configuration. Mixed help/operation flags fail. A prompt value of `--help` still
@@ -1068,7 +1068,7 @@ No source dependency or lock changed.
 | Check | Result |
 | --- | --- |
 | `PYTHONPATH=. python -m pytest tests -q -n 4 --tb=short` | 1,651 passed, two optional modules skipped, one warning; six snapshots passed. Both prior `/focus` failures pass. |
-| `cargo +1.96.0 test --locked --manifest-path native/agent-terminal-ui/Cargo.toml` with an isolated target directory | 166 passed, none failed or ignored. |
+| `cargo +1.96.0 test --locked --manifest-path native/tuig/Cargo.toml` with an isolated target directory | 166 passed, none failed or ignored. |
 | `PYTHONPATH=. python -m pytest tests/test_presentation_pty.py tests/test_native_public_details_pty.py -q -ra --tb=short` | Five passed after installing pyte 0.8.2 and wcwidth 0.9.3 and setting `TUI_NATIVE_TEST_BINARY` to the exact-main executable. These cover both initially skipped modules. |
 | `PYTHONPATH=. python -m pytest tests/test_app_workers.py -q -W error::pytest.PytestUnraisableExceptionWarning --tb=short` | 15 passed; the full-run warning did not reproduce. |
 
@@ -1188,9 +1188,9 @@ Use the configured shared hook revision for `pipelines-hook`; record the resolve
 | Dependency consistency | `uv lock --check`; `pre-commit run dependency-readiness --all-files --hook-stage manual`. These are not vulnerability scans. |
 | Version mirrors | `pre-commit run check-bumpversion --all-files --hook-stage pre-commit`. Installed metadata and lock-mirror comparisons still need a pinned executable gate. |
 | Documentation | Planned: `mkdocs build --strict --site-dir /tmp/tui-quality-docs` after pinned documentation dependencies and the inherited theme are installed. Example and link checks remain required. |
-| Native format | `cargo +1.96.0 fmt --manifest-path native/agent-terminal-ui/Cargo.toml --check`. |
-| Native tests | `cargo +1.96.0 test --locked --manifest-path native/agent-terminal-ui/Cargo.toml`. |
-| Native lint | `cargo +1.96.0 clippy --locked --manifest-path native/agent-terminal-ui/Cargo.toml --all-targets -- -D warnings`. |
+| Native format | `cargo +1.96.0 fmt --manifest-path native/tuig/Cargo.toml --check`. |
+| Native tests | `cargo +1.96.0 test --locked --manifest-path native/tuig/Cargo.toml`. |
+| Native lint | `cargo +1.96.0 clippy --locked --manifest-path native/tuig/Cargo.toml --all-targets -- -D warnings`. |
 
 The coverage evaluator must compute line and branch percentages separately from measured coverage data.
 Each percentage must reach 80 across all tracked Python package files, including files not imported during tests.
@@ -1376,8 +1376,8 @@ The original `.specify/reports/` files at
 
 | Preserved report | SHA-256 |
 |---|---|
-| [JSON analysis](https://github.com/Knuckles-Team/agent-terminal-ui/blob/17e010c140395735bef41dba5a896ea0000ac99e/plans/spec-source-history/analysis/results.json) | `28ecaab72f6eedf75d3df249e5f05052dfb05472a32d36dc987e49dcd506521f` |
-| [Markdown analysis](https://github.com/Knuckles-Team/agent-terminal-ui/blob/17e010c140395735bef41dba5a896ea0000ac99e/plans/spec-source-history/analysis/code_enhancement_report.md) | `2ba4a62a4333f2dc616e7b1315e5a28e982ba224db4929489a3acac1a22074f6` |
+| [JSON analysis](https://github.com/Knuckles-Team/tuig/blob/17e010c140395735bef41dba5a896ea0000ac99e/plans/spec-source-history/analysis/results.json) | `28ecaab72f6eedf75d3df249e5f05052dfb05472a32d36dc987e49dcd506521f` |
+| [Markdown analysis](https://github.com/Knuckles-Team/tuig/blob/17e010c140395735bef41dba5a896ea0000ac99e/plans/spec-source-history/analysis/code_enhancement_report.md) | `2ba4a62a4333f2dc616e7b1315e5a28e982ba224db4929489a3acac1a22074f6` |
 
 Run from a full Git checkout:
 
@@ -1509,7 +1509,7 @@ R015.29.2, R015.52 and quality acceptance v1 remain open.
 
 ## Environment and tool-guard assessment (R015.54)
 
-Source: [missing-client task at b4e5940](https://github.com/Knuckles-Team/agent-terminal-ui/blob/b4e5940acc4b21df406eeb115c0f422b0b084901/plans/spec-source-history/tasks/fix_missing_client_methods.md).
+Source: [missing-client task at b4e5940](https://github.com/Knuckles-Team/tuig/blob/b4e5940acc4b21df406eeb115c0f422b0b084901/plans/spec-source-history/tasks/fix_missing_client_methods.md).
 The original next step is “Consider implementing quick wins (.env.example, tool guards)”.
 It is a suggestion to assess, not a defined guard implementation contract.
 The source does not identify shared development hooks as the intended tool guards.
@@ -1842,7 +1842,7 @@ A deleted Python test or a native buffer test does not close those journeys.
 
 ## Native explicit-context submission
 
-TUIG-RUNTIME-R012.3.2.1 uses `native/agent-terminal-ui/tests/continuation.rs`
+TUIG-RUNTIME-R012.3.2.1 uses `native/tuig/tests/continuation.rs`
 and `cli.rs` unit tests. `tests/test_native_continuation.py` checks the compiled
 headless entry point with two fresh client processes against a wire fixture.
 This fixture is not a durable backend restart test. Verify canonical IDs, one prompt, fresh turn identities

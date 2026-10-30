@@ -1,4 +1,4 @@
-use agent_terminal_ui_native::acp::{MAX_FRAME_BYTES, TextClient, completed};
+use tuig_native::acp::{MAX_FRAME_BYTES, TextClient, completed};
 use serde_json::{Value, json};
 use tokio::io::{
     AsyncBufReadExt, AsyncWriteExt, BufReader, DuplexStream, ReadHalf, WriteHalf, split,

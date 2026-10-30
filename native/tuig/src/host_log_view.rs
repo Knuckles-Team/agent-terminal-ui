@@ -1,5 +1,5 @@
 use crate::presentation::Viewport;
-use agent_terminal_ui_native::{
+use tuig_native::{
     ArboraClient,
     app::run_host_terminal,
     host_logs::{HostLogReader, HostLogs, LogBatch, REFUSED, RETENTION_GAP},

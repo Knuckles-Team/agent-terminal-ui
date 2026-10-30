@@ -1,6 +1,6 @@
 mod support;
 
-use agent_terminal_ui_native::{ArboraClient, TaskSubmission, task_output::TaskOutput};
+use tuig_native::{ArboraClient, TaskSubmission, task_output::TaskOutput};
 use serde_json::{Value, json};
 use support::serve;
 
@@ -69,7 +69,7 @@ async fn foreign_or_invalid_artifacts_cannot_be_returned_for_display() {
     ] {
         let initial = completed("task-snapshot");
         let binding =
-            agent_terminal_ui_native::correlation::TaskCorrelation::from_task(&initial["result"])
+            tuig_native::correlation::TaskCorrelation::from_task(&initial["result"])
                 .unwrap();
         let mut response = initial;
         *response.pointer_mut(path).unwrap() = value;

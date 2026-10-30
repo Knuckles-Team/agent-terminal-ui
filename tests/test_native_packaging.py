@@ -30,7 +30,7 @@ class NativePackagingTests(unittest.TestCase):
         self.assertEqual(project["tool"]["maturin"]["bindings"], "bin")
         self.assertTrue(project["tool"]["maturin"]["locked"])
         cargo = tomllib.loads(
-            (ROOT / "native/agent-terminal-ui/Cargo.toml").read_text()
+            (ROOT / "native/tuig/Cargo.toml").read_text()
         )
         self.assertEqual([item["name"] for item in cargo["bin"]], ["tuig"])
 

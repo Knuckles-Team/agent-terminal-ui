@@ -1,4 +1,4 @@
-use agent_terminal_ui_native::ArboraClient;
+use tuig_native::ArboraClient;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpListener,
