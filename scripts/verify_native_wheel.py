@@ -64,7 +64,7 @@ def main() -> None:
         "wheel_sha256": hashlib.sha256(args.wheel.read_bytes()).hexdigest(),
         "native_sha256": hashlib.sha256(binary).hexdigest(),
         "cargo_lock_sha256": hashlib.sha256(
-            (root / "native/agent-terminal-ui/Cargo.lock").read_bytes()
+            (root / "native/tuig/Cargo.lock").read_bytes()
         ).hexdigest(),
         "installed_executable": str(executable),
         "empty_path_help": "passed",

@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-NATIVE = ROOT / "native/agent-terminal-ui"
+NATIVE = ROOT / "native/tuig"
 
 
 def fixture():

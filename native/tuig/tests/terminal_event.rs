@@ -1,4 +1,4 @@
-use agent_terminal_ui_native::{
+use tuig_native::{
     correlation::{TaskCorrelation, TaskState},
     terminal_event::TerminalEvent,
 };

@@ -1,4 +1,4 @@
-use agent_terminal_ui_native::{
+use tuig_native::{
     correlation::{TaskCorrelation, TaskEvent},
     task_stream::{MAX_EVENT_BYTES, MAX_LINE_BYTES, StreamError, TaskStreamDecoder},
 };

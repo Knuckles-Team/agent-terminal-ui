@@ -1,5 +1,5 @@
 //! Inline task-bound public folds. Keyboard toggles never perform task actions.
-use agent_terminal_ui_native::{
+use tuig_native::{
     ArboraClient,
     correlation::TaskCorrelation,
     public_run_events::{MAX_EVENTS, MAX_VIEW_BYTES, PublicEvent, PublicPage},
@@ -296,7 +296,7 @@ impl Drop for PublicDetailsView {
 mod tests {
     use super::*;
     use crate::{draw_task_viewport, presentation::Viewport};
-    use agent_terminal_ui_native::correlation::TaskCorrelation;
+    use tuig_native::correlation::TaskCorrelation;
     use ratatui::{Terminal, backend::TestBackend};
     use serde_json::{Value, json};
 

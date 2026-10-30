@@ -4,7 +4,7 @@
 
 The browser operator experience for working with agents and their runtime. Arbora hosts it as a composed service.
 
-## Agent Terminal UI
+## Tuig
 
 The terminal and headless client for Arbora REST operations.
 

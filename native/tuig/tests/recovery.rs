@@ -1,4 +1,4 @@
-use agent_terminal_ui_native::{ArboraClient, correlation::TaskCorrelation, recovery::ReadFailure};
+use tuig_native::{ArboraClient, correlation::TaskCorrelation, recovery::ReadFailure};
 use serde_json::{Value, json};
 use std::time::Duration;
 use tokio::{
@@ -128,7 +128,7 @@ async fn disconnect_and_interrupted_body_recover_only_the_bound_read() {
     assert_eq!(recovered.correlation, initial.correlation);
     assert_eq!(
         recovered.state,
-        agent_terminal_ui_native::correlation::TaskState::Completed
+        tuig_native::correlation::TaskState::Completed
     );
     server.await.unwrap();
 }

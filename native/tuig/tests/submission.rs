@@ -1,6 +1,6 @@
 mod support;
 
-use agent_terminal_ui_native::{
+use tuig_native::{
     ArboraClient, SUBMISSION_UNKNOWN, TaskSubmission, correlation::TaskState,
 };
 use serde_json::{Value, json};

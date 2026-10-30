@@ -1,4 +1,4 @@
-use agent_terminal_ui_native::{ArboraClient, correlation::TaskState};
+use tuig_native::{ArboraClient, correlation::TaskState};
 use serde_json::{Value, json};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
@@ -219,7 +219,7 @@ async fn point_read_preserves_identity_and_rejects_retained_binding_mismatch() {
         .unwrap()
         .remove("runId");
     let binding =
-        agent_terminal_ui_native::correlation::TaskCorrelation::from_task(&unbound).unwrap();
+        tuig_native::correlation::TaskCorrelation::from_task(&unbound).unwrap();
     let (url, server) = serve("200 OK", &response.to_string()).await;
     assert!(
         ArboraClient::new(&url, Some("fixture-token"))

@@ -1,4 +1,4 @@
-# Project Constitution: agent-terminal-ui
+# Project Constitution: tuig
 
 ## Mission
 

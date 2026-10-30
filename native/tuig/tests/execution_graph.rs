@@ -1,4 +1,4 @@
-use agent_terminal_ui_native::{
+use tuig_native::{
     ArboraClient, AuthMode, correlation::TaskCorrelation, execution_graph::SCHEMA,
     run_inspector::ReadRefusal,
 };

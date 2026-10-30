@@ -31,7 +31,7 @@ IDs and obligations when replacing historical fixture pointers.
 
 ## Structure parity with Overstory (tracked)
 
-- [ ] **TUIG-RUNTIME-R003:** Packaged skill `agent-terminal-ui-development`
+- [ ] **TUIG-RUNTIME-R003:** Packaged skill `tuig-development`
 - [ ] **TUIG-RUNTIME-R004:** Pre-commit spec and sprawl hooks
 - [ ] **TUIG-RUNTIME-R005:** Docs layout pages
 - [ ] **TUIG-RUNTIME-R006:** Pyproject pipelines hook sections
@@ -245,7 +245,7 @@ Record deferred validation as deferred, never passed.
 - [ ] **TUIG-RUNTIME-R015.67:** Terminal source quality must satisfy every quality acceptance v1 domain without averaging failures. Source obligation: `CHECKLIST non-FR checkbox 56`.
 - [ ] **TUIG-RUNTIME-R015.68:** Terminal source quality must provide separate reproducible evidence for all 17 quality acceptance v1 domains. Source obligation: `CHECKLIST non-FR checkbox 57`.
 - [ ] **TUIG-RUNTIME-R015.69:** The repository must resolve every actionable finding in the current quality acceptance v1 inventory. Source obligation: `CHECKLIST non-FR checkbox 58`.
-- [x] **TUIG-RUNTIME-R015.70:** Source-quality repairs must preserve the installed native `tuig` command path through `native/agent-terminal-ui/src/main.rs`.
+- [x] **TUIG-RUNTIME-R015.70:** Source-quality repairs must preserve the installed native `tuig` command path through `native/tuig/src/main.rs`.
 - [x] **TUIG-RUNTIME-R015.71:** A served integration test must start the installed command and observe client behavior after source-quality repairs. It must distinguish a denied request from an authenticated empty result.
 
 - [ ] `TUIG-RUNTIME-R008.2.3.2.1`: Deliver native runtime baseline palette switching with focused production-handler and rendering coverage.

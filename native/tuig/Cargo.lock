@@ -3,7 +3,7 @@
 version = 4
 
 [[package]]
-name = "agent-terminal-ui-native"
+name = "tuig-native"
 version = "0.1.0"
 dependencies = [
  "crossterm",

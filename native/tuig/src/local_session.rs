@@ -3,7 +3,7 @@ use crate::{
     local_runtime::{Options, finish_backend, spawn_backend},
     presentation::{ThemeSelection, Viewport, accepts_key_event},
 };
-use agent_terminal_ui_native::task_output::terminal_text;
+use tuig_native::task_output::terminal_text;
 use crossterm::event::{
     DisableBracketedPaste, DisableMouseCapture, Event, EventStream, KeyCode, KeyModifiers,
 };
@@ -102,7 +102,7 @@ async fn deliver(
 }
 
 async fn turn<R: tokio::io::AsyncRead + Unpin, W: tokio::io::AsyncWrite + Unpin>(
-    client: &mut agent_terminal_ui_native::acp::TextClient<R, W>,
+    client: &mut tuig_native::acp::TextClient<R, W>,
     text: &str,
     updates: &mpsc::Sender<Update>,
     cancel: &mut watch::Receiver<bool>,
@@ -475,7 +475,7 @@ mod tests {
 #[cfg(test)]
 mod backpressure_tests {
     use super::*;
-    use agent_terminal_ui_native::acp::TextClient;
+    use tuig_native::acp::TextClient;
     use serde_json::{Value, json};
     use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, split};
 

@@ -1,4 +1,4 @@
-use agent_terminal_ui_native::coding_approval::*;
+use tuig_native::coding_approval::*;
 use ratatui::{Terminal, backend::TestBackend};
 
 fn request() -> ApprovalRequest {

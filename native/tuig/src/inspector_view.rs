@@ -2,7 +2,7 @@ use crate::{
     presentation::Viewport,
     spatial_graph::{SpatialGraph, label},
 };
-use agent_terminal_ui_native::{
+use tuig_native::{
     ArboraClient,
     correlation::TaskCorrelation,
     execution_graph::ExecutionGraph,
@@ -563,7 +563,7 @@ impl Drop for InspectorView {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use agent_terminal_ui_native::run_inspector::{
+    use tuig_native::run_inspector::{
         AppliedConfig, PlanItem, PlanRefusal, PlanSnapshot, PlanStatus, PlanValidator,
         RunProjection,
     };

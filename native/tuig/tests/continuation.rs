@@ -1,4 +1,4 @@
-use agent_terminal_ui_native::{
+use tuig_native::{
     ArboraClient, CONTINUATION_EXTENSION, CONTINUATION_UNAVAILABLE, SUBMISSION_UNKNOWN,
     TaskSubmission,
 };

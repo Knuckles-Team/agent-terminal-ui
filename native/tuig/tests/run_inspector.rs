@@ -1,4 +1,4 @@
-use agent_terminal_ui_native::run_inspector::*;
+use tuig_native::run_inspector::*;
 use ratatui::{Terminal, backend::TestBackend};
 use std::time::{Duration, Instant};
 

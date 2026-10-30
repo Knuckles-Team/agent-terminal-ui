@@ -1,6 +1,6 @@
 mod support;
 
-use agent_terminal_ui_native::{ArboraClient, AuthMode, TaskSubmission};
+use tuig_native::{ArboraClient, AuthMode, TaskSubmission};
 use serde_json::{Value, json};
 
 fn task(id: &str, state: &str) -> Value {
@@ -111,7 +111,7 @@ async fn anonymous_tasks_do_not_grant_authenticated_host_log_authority() {
     let url = format!("http://{}", listener.local_addr().unwrap());
     let client = ArboraClient::with_auth_mode(&url, None, AuthMode::None).unwrap();
     assert!(
-        agent_terminal_ui_native::host_logs::HostLogs::bind(std::sync::Arc::new(client))
+        tuig_native::host_logs::HostLogs::bind(std::sync::Arc::new(client))
             .await
             .is_err()
     );

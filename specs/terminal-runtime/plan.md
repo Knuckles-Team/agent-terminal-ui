@@ -3,7 +3,7 @@
 ## Existing wiring and architecture
 
 The current implementation baseline is `4f53111e53f6179312995883f4f62c8bb584d502`.
-`native/agent-terminal-ui/src/main.rs` owns the sole `tuig` executable;
+`native/tuig/src/main.rs` owns the sole `tuig` executable;
 `cli.rs` parses headless selection, `lib.rs::ArboraClient` owns the shared public
 HTTP/A2A boundary, and `headless.rs` observes normalized task snapshots. Interactive
 presentation lives in `main.rs`, `presentation.rs` and the native view modules.
@@ -35,7 +35,7 @@ native CLI / terminal input
 | Run and current-plan reads | `run_inspector_client.rs::ArboraClient::get_run`, `run_inspector.rs`, `inspector_view.rs` | Existing native reads use `runs.get` and `runs.current_plan`; historical Python command receipts do not qualify native served journeys. |
 | Presentation | `presentation.rs`, `composer.rs`, native view modules | R008 and the native-only amendments govern native scope. Do not revive Textual to satisfy historical fixture names. |
 
-Paths in this table are relative to `native/agent-terminal-ui/src`. This mapping
+Paths in this table are relative to `native/tuig/src`. This mapping
 changes no requirement ID, delivery state or acceptance gate. Historical fixture
 names elsewhere are migration obligations, not instructions to restore deleted
 code. Unmapped behavior must receive native acceptance before its original
@@ -276,13 +276,13 @@ Record exact client and producer heads, served receipts and parity gaps. Require
 operator approval after parity evidence and the performance gates pass. Keep a
 working incumbent-terminal rollback path until the operator accepts the replacement.
 
-Canonical skill: `agent_terminal_ui/skills/agent-terminal-ui-development/SKILL.md`.
+Canonical skill: `agent_terminal_ui/skills/tuig-development/SKILL.md`.
 Incumbent-terminal provisioning must expose that maintained file, rather than a forked
 copy of its instructions. Provisioning itself is not delivered by this spec.
 
 ### Native discovery entry point (R002.7)
 
-The separate Tuig executable at `native/agent-terminal-ui` reads the existing AGENT_URL
+The separate Tuig executable at `native/tuig` reads the existing AGENT_URL
 and AGENT_BEARER_TOKEN settings. Its single HTTP client fetches
 /.well-known/agent-card.json. Ratatui renders discovery state while Tokio handles
 the request and terminal input. A response name does not prove task capabilities.
@@ -487,7 +487,7 @@ References: none; no paper is cited.
 
 ### 2026-10-16: Native run inspector boundary (R010.7)
 
-`native/agent-terminal-ui/src/run_inspector.rs` owns normalized display state.
+`native/tuig/src/run_inspector.rs` owns normalized display state.
 The Rust attachment point replaces the Python-named view for this slice only.
 It preserves unavailable values, measured zero, recorded configuration and
 terminal reasons. Run switches and failed reads clear protected display values.
@@ -495,7 +495,7 @@ An injected plan validator must use the future AU revision and expiry contract.
 No validator means no plan items. The view checks run identity and clears expired
 plans before rendering. It never orders opaque revisions or invents a wire schema.
 
-`native/agent-terminal-ui/tests/run_inspector.rs` exercises this boundary through
+`native/tuig/tests/run_inspector.rs` exercises this boundary through
 Ratatui. These are focused consumer tests, not served acceptance. R010.1 and
 R010.6 remain open: Arbora registration, generated projections, AU snapshot
 exports and production transport attachment are prerequisites. The presentation
@@ -511,7 +511,7 @@ Boundary tests bind only to `TUIG-RUNTIME-R010.7`. The earlier served requiremen
 and their checkboxes stay pending. This child requires no production activation.
 ### 2026-10-16: Native approval state boundary (R011.13)
 
-`native/agent-terminal-ui/src/coding_approval.rs` is the Rust presentation
+`native/tuig/src/coding_approval.rs` is the Rust presentation
 attachment for this slice of `CodingSessionView`. It holds exact pending request content and previews the full diff or command.
 It records an explicit choice bound to that preview. Changed, foreign and completed request IDs cannot reuse a choice.
 Gateway loss retains unanswered requests. Reattachment does not approve them.
@@ -524,7 +524,7 @@ scope, capabilities, resolved paths, content/digest bindings and permissions bef
 calling it. It must recheck these before any effect. Diff inputs are authorized old/new text;
 command digest comes from that adapter. No digest algorithm or wire field is added.
 
-`native/agent-terminal-ui/tests/coding_approval.rs` covers the state boundary and
+`native/tuig/tests/coding_approval.rs` covers the state boundary and
 Ratatui preview. The native application and client must attach it after
 `CodingSessionAdmission` and `ClientCapabilityToolset` are implemented. Existing
 Python attachment references remain historical and are replaced by Rust only for
@@ -1336,7 +1336,7 @@ A truncated graph must disclose its partial scope.
 | `commands.py:1117` `cmd_agents` -> `AgentViewScreen` | Open the served execution explorer rather than claim a local session inventory. |
 | `screens/main.py:96` -> `GraphTree`; `app.py:975` -> `ChatModal` | Replace supplied-message inspection with validated node selection and public record reads. |
 | `client.py:802` `invoke_op`; `client.py:865` `get_public_run_events` | Consume registered graph, record and control contracts through the same transport. |
-| `native/agent-terminal-ui/src/main.rs:459` -> `inspector_view.rs:236` `draw` | Render the same contract, identity checks and accessible navigation without another execution model. |
+| `native/tuig/src/main.rs:459` -> `inspector_view.rs:236` `draw` | Render the same contract, identity checks and accessible navigation without another execution model. |
 
 These are planned attachments, not claims that production callers already reach the new behavior.
 The existing generated-client admission remains authoritative.
@@ -1583,7 +1583,7 @@ root. Development guidance moves to `docs/development.md`; no importable Python
 skill package or launch path remains. Old Textual screenshots are not presented
 as evidence for Ratatui. Historical source is available at parent `2107779`.
 
-The distribution name remains `agent-terminal-ui`. Initially qualify Linux
+The distribution name is `tuig`. Initially qualify Linux
 x86_64 and aarch64 binary wheels. Validate the installed `tuig` executable and
 its artifact hash, including invocation with Python and Cargo absent from the
 runtime PATH. macOS and Windows are not qualified by Linux receipts. Remove
@@ -1696,7 +1696,7 @@ superseded requirement to keep a Python frontend or register a Python theme.
 Retain every token, contrast, fallback, resize, keyboard, selection, scroll,
 composer, no-color, reduced-motion, served and performance obligation.
 
-The native owners are `native/agent-terminal-ui/src/presentation.rs`,
+The native owners are `native/tuig/src/presentation.rs`,
 `main.rs`, `inspector_view.rs` and their production renderer tests. Existing
 source and buffer evidence proves only its declared scope. R008, R008.2 and
 R008.3 remain open; this amendment changes no proof binding or delivery state.

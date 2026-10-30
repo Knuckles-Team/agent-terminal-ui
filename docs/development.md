@@ -1,6 +1,6 @@
 # Develop tuig
 
-The only runtime is Rust/Ratatui in `native/agent-terminal-ui`. Python is
+The only runtime is Rust/Ratatui in `native/tuig`. Python is
 used for repository validation and native PTY tests, not as a frontend.
 
 Read `AGENTS.md` and the owning requirement in `specs/terminal-runtime` before

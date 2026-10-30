@@ -48,7 +48,7 @@ pub fn continuation(
                 .get(index)
                 .and_then(|value| value.to_str())
                 .ok_or("--continue requires a context identifier")?;
-            agent_terminal_ui_native::validate_context_id(value)?;
+            tuig_native::validate_context_id(value)?;
             context = Some(value.to_owned());
         } else {
             remaining.push(args[index].clone());

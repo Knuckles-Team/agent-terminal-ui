@@ -1,4 +1,4 @@
-use agent_terminal_ui_native::{
+use tuig_native::{
     ArboraClient, AuthMode, SUBMISSION_UNKNOWN, TaskSnapshot, TaskSubmission,
     correlation::{TaskCorrelation, TaskState},
 };
@@ -873,7 +873,7 @@ mod tests {
         presentation_style, request_completed, selected_prompt, selected_task, snapshot_status,
         submission_completed,
     };
-    use agent_terminal_ui_native::{
+    use tuig_native::{
         TaskSnapshot,
         correlation::{TaskCorrelation, TaskState},
     };
@@ -1037,7 +1037,7 @@ mod tests {
             "metadata":{"arbora":{"runId":"run-three","usage":{
             "taskId":"task-one","contextId":"context-two","runId":"run-three",
             "scope":"turn","counts":{"input_tokens":17,"output_tokens":0}}}}});
-        snapshot.usage = agent_terminal_ui_native::turn_usage::TurnUsage::from_task(
+        snapshot.usage = tuig_native::turn_usage::TurnUsage::from_task(
             &task,
             &snapshot.correlation,
         );
@@ -1087,7 +1087,7 @@ mod tests {
             panic!("expected task fixture");
         };
         snapshot.state = TaskState::Completed;
-        snapshot.output = agent_terminal_ui_native::task_output::TaskOutput::Text(
+        snapshot.output = tuig_native::task_output::TaskOutput::Text(
             "[bold]model reply\nsecond line".to_owned(),
         );
         let mut binding = None;
@@ -1743,7 +1743,7 @@ mod recovery_view_tests;
 #[cfg(test)]
 mod terminal_point_view_tests {
     use super::*;
-    use agent_terminal_ui_native::terminal_event::TerminalEvent;
+    use tuig_native::terminal_event::TerminalEvent;
     use ratatui::{Terminal, backend::TestBackend};
     use serde_json::json;
 

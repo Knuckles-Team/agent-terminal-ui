@@ -240,7 +240,7 @@ snapshot_report.html
 .uv-workspace-siblings/
 
 # Native terminal build output
-native/agent-terminal-ui/target/
+native/tuig/target/
 
 # Shared repository hygiene requirements
 *maturin.lock

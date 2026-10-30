@@ -10,9 +10,9 @@ Rust implements the runtime. Python supports repository and native PTY tests.
 ```sh
 uv sync --frozen --no-install-project --group test
 uv run --frozen --no-sync pytest tests -q
-cargo fmt --manifest-path native/agent-terminal-ui/Cargo.toml --check
-cargo test --locked --manifest-path native/agent-terminal-ui/Cargo.toml
-cargo clippy --locked --manifest-path native/agent-terminal-ui/Cargo.toml --all-targets -- -D warnings
+cargo fmt --manifest-path native/tuig/Cargo.toml --check
+cargo test --locked --manifest-path native/tuig/Cargo.toml
+cargo clippy --locked --manifest-path native/tuig/Cargo.toml --all-targets -- -D warnings
 uvx --from pre-commit==4.6.2 pre-commit run --all-files
 ```
 
@@ -25,11 +25,11 @@ command with Python and Cargo absent from its runtime PATH.
 
 | Path | Responsibility |
 | --- | --- |
-| `native/agent-terminal-ui/src/main.rs` | Native command dispatch and terminal loop. |
-| `native/agent-terminal-ui/src/cli.rs` | Headless flag selection. |
-| `native/agent-terminal-ui/src/headless.rs` | Unary headless observation. |
-| `native/agent-terminal-ui/src/lib.rs` | Authenticated Arbora task client. |
-| `native/agent-terminal-ui/tests/` | Native protocol and presentation tests. |
+| `native/tuig/src/main.rs` | Native command dispatch and terminal loop. |
+| `native/tuig/src/cli.rs` | Headless flag selection. |
+| `native/tuig/src/headless.rs` | Unary headless observation. |
+| `native/tuig/src/lib.rs` | Authenticated Arbora task client. |
+| `native/tuig/tests/` | Native protocol and presentation tests. |
 | `tests/` | Developer checks and compiled-native PTY harnesses. |
 | `specs/terminal-runtime/` | Requirements, retained gaps and generated status. |
 

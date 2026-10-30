@@ -212,7 +212,7 @@ is what Dependabot flags. Rules:
 
 ```bash
 uv run --frozen --no-install-project --group test pytest tests -q
-cargo test --locked --manifest-path native/agent-terminal-ui/Cargo.toml
+cargo test --locked --manifest-path native/tuig/Cargo.toml
 tuig                                     # run the terminal app
 uvx --from pre-commit==4.6.0 pre-commit run --files $(git diff --name-only origin/main...HEAD)
 ```

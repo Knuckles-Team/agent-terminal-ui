@@ -1,4 +1,4 @@
-use agent_terminal_ui_native::correlation::{TaskCorrelation, TaskEvent, TaskState};
+use tuig_native::correlation::{TaskCorrelation, TaskEvent, TaskState};
 use serde_json::{Value, json};
 
 fn events() -> Vec<Value> {

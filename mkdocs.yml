@@ -38,7 +38,7 @@ markdown_extensions:
 
 extra:
   ecosystem:
-    current: agent-terminal-ui
+    current: tuig
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/Knuckles-Team/tuig
