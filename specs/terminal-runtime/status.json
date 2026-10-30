@@ -463,8 +463,8 @@
         "99b67585d433"
       ],
       "verified_by": [
-        "native/tuig/src/main.rs:1227",
-        "native/tuig/src/main.rs:1264"
+        "native/tuig/src/main.rs:1224",
+        "native/tuig/src/main.rs:1261"
       ]
     },
     {
@@ -639,7 +639,7 @@
         "e8711e7f49bf"
       ],
       "verified_by": [
-        "native/tuig/src/main.rs:1203",
+        "native/tuig/src/main.rs:1200",
         "native/tuig/tests/discovery.rs:110",
         "native/tuig/tests/discovery.rs:29",
         "native/tuig/tests/discovery.rs:50",
@@ -699,7 +699,7 @@
         "native/tuig/src/main.rs:939",
         "native/tuig/src/main.rs:958",
         "native/tuig/src/main.rs:985",
-        "native/tuig/tests/submission.rs:140"
+        "native/tuig/tests/submission.rs:138"
       ]
     },
     {
@@ -721,11 +721,11 @@
         "3c592ffc6075"
       ],
       "verified_by": [
-        "native/tuig/src/main.rs:1124",
-        "native/tuig/src/main.rs:1150",
-        "native/tuig/src/main.rs:1166",
-        "native/tuig/src/main.rs:1302",
-        "native/tuig/src/main.rs:1356"
+        "native/tuig/src/main.rs:1121",
+        "native/tuig/src/main.rs:1147",
+        "native/tuig/src/main.rs:1163",
+        "native/tuig/src/main.rs:1299",
+        "native/tuig/src/main.rs:1353"
       ]
     },
     {
@@ -736,10 +736,10 @@
         "b05266d66c30"
       ],
       "verified_by": [
-        "native/tuig/src/main.rs:1369",
-        "native/tuig/src/main.rs:1386",
-        "native/tuig/src/main.rs:1425",
-        "native/tuig/src/main.rs:1485",
+        "native/tuig/src/main.rs:1366",
+        "native/tuig/src/main.rs:1383",
+        "native/tuig/src/main.rs:1422",
+        "native/tuig/src/main.rs:1482",
         "native/tuig/tests/cancellation.rs:119"
       ]
     },
@@ -982,7 +982,7 @@
         "608e9e9d122b"
       ],
       "verified_by": [
-        "native/tuig/src/main.rs:1685",
+        "native/tuig/src/main.rs:1682",
         "native/tuig/src/presentation.rs:432",
         "native/tuig/src/presentation.rs:483",
         "native/tuig/src/presentation.rs:509"
@@ -1177,10 +1177,10 @@
         "faeede3c59e8"
       ],
       "verified_by": [
-        "native/tuig/src/main.rs:1750",
+        "native/tuig/src/main.rs:1747",
         "native/tuig/tests/task_snapshot.rs:195",
-        "native/tuig/tests/task_snapshot.rs:234",
-        "native/tuig/tests/task_snapshot.rs:267",
+        "native/tuig/tests/task_snapshot.rs:233",
+        "native/tuig/tests/task_snapshot.rs:266",
         "native/tuig/tests/terminal_event.rs:110"
       ]
     },
@@ -2216,7 +2216,7 @@
         "90fadd31b95d"
       ],
       "verified_by": [
-        "native/tuig/src/main.rs:1081",
+        "native/tuig/src/main.rs:1079",
         "native/tuig/src/task_output.rs:131",
         "native/tuig/src/task_output.rs:83",
         "native/tuig/src/task_output.rs:98",
@@ -2258,11 +2258,11 @@
         "90fadd31b95d"
       ],
       "verified_by": [
-        "native/tuig/src/main.rs:1801",
-        "native/tuig/tests/submission.rs:232",
-        "native/tuig/tests/submission.rs:25",
-        "native/tuig/tests/submission.rs:50",
-        "native/tuig/tests/submission.rs:69"
+        "native/tuig/src/main.rs:1798",
+        "native/tuig/tests/submission.rs:23",
+        "native/tuig/tests/submission.rs:230",
+        "native/tuig/tests/submission.rs:48",
+        "native/tuig/tests/submission.rs:67"
       ]
     },
     {
@@ -2273,10 +2273,10 @@
         "90fadd31b95d"
       ],
       "verified_by": [
-        "native/tuig/src/main.rs:1829",
+        "native/tuig/src/main.rs:1826",
         "native/tuig/tests/task_snapshot.rs:156",
         "native/tuig/tests/task_snapshot.rs:196",
-        "native/tuig/tests/task_snapshot.rs:235",
+        "native/tuig/tests/task_snapshot.rs:234",
         "native/tuig/tests/task_snapshot.rs:59"
       ]
     },
@@ -2331,8 +2331,8 @@
         "native/tuig/src/cli.rs:77",
         "native/tuig/src/composer.rs:132",
         "native/tuig/src/composer.rs:149",
-        "native/tuig/src/headless.rs:66",
-        "native/tuig/src/headless.rs:90"
+        "native/tuig/src/headless.rs:64",
+        "native/tuig/src/headless.rs:88"
       ],
       "rollup_of": [
         "TUIG-RUNTIME-R012.1.3.1"
@@ -2720,8 +2720,8 @@
       ],
       "verified_by": [
         "native/tuig/src/cli.rs:77",
-        "native/tuig/src/headless.rs:66",
-        "native/tuig/src/headless.rs:90",
+        "native/tuig/src/headless.rs:64",
+        "native/tuig/src/headless.rs:88",
         "tests/test_native_headless.py:18",
         "tests/test_native_only_runtime.py:9"
       ]
