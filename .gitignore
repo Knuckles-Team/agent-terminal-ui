@@ -252,6 +252,7 @@ native/tuig/target/
 !/.specify/memory/
 /.specify/memory/*
 !/.specify/memory/constitution.md
+!/.specify/templates/
 dist-*/
 node_modules/
 reports/
