@@ -6,7 +6,7 @@ Ratatui renders presentation state. Interactive and headless commands share
 
 ```text
 tuig -> Arbora A2A task submission and observation
-     -> Arbora generated operations for run inspection and logs
+     -> Arbora served operations for run inspection and logs
 Arbora -> agent runtime, authorization and durable state
 ```
 
@@ -15,6 +15,8 @@ Agent Client Protocol endpoint. A future ACP connection requires a producer
 contract and qualification; it is not enabled by renaming the CLI.
 
 The terminal does not own agent decisions, model execution or tool effects.
+Arbora is the one door: it handles admission, authentication and served operations.
+Meristem runs the agent loop and Medulla holds the facts; Tuig reaches neither directly.
 Unknown submission outcomes are not automatically replayed. Headless execution
 never approves or cancels tasks. Interactive remote cancellation requires an
 explicit confirmation. Existing credentials and authorization remain enforced.
