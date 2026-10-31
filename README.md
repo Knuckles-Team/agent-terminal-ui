@@ -29,7 +29,7 @@ tuig --help
 
 ## Connect
 
-Arbora runs separately. Configure `AGENT_URL` and `AGENT_BEARER_TOKEN`.
+Arbora, the one door to the ecosystem, runs separately. Configure `AGENT_URL` and `AGENT_BEARER_TOKEN`.
 Remote access requires TLS. For a deliberately anonymous loopback service, set
 `AGENT_AUTH_MODE=none` and omit the bearer token.
 
