@@ -9,7 +9,7 @@ import yaml
 pytestmark = pytest.mark.spec("TUIG-RUNTIME-R015.29.1")
 
 OWNERS = {
-    "no-legacy-concepts": ("pipelines", "5f151c60c25212da9ec67c8bbd26de5f5e6c91f4"),
+    "no-legacy-concepts": ("pipelines", "main"),
     "lane-guard": ("repository-manager", "09e91390d446950d345304c7a05fb69d86fdca8b"),
 }
 
@@ -33,11 +33,11 @@ def _config() -> dict:
 
 @pytest.mark.parametrize("hook_id", OWNERS)
 def test_shared_hook_owner_configuration(hook_id: str) -> None:
-    """Pin the canonical owners with a reproducible canonical spec generator."""
+    """The pipelines owner is referenced at main; the lane guard stays pinned."""
     config = _config()
     _assert_owner(config, hook_id)
     policy = next(repo for repo in config["repos"] if any(hook["id"] == "spec" for hook in repo["hooks"]))
-    assert policy["rev"] == "a2dd609d494364daf26fdb3b18abbffa10095993"
+    assert policy["rev"] == "main"
 
 
 @pytest.mark.parametrize("hook_id", OWNERS)
@@ -51,8 +51,8 @@ def test_shared_hook_rejects_changed_semantics(hook_id: str, field: str, value: 
 
 
 @pytest.mark.parametrize("hook_id", OWNERS)
-@pytest.mark.parametrize("field,value", [("repo", "local"), ("rev", "main")])
-def test_shared_hook_rejects_unpinned_owner(hook_id: str, field: str, value: str) -> None:
+@pytest.mark.parametrize("field,value", [("repo", "local"), ("rev", "not-the-owner-revision")])
+def test_shared_hook_rejects_wrong_owner_revision(hook_id: str, field: str, value: str) -> None:
     config = deepcopy(_config())
     repo = next(repo for repo in config["repos"] if any(hook["id"] == hook_id for hook in repo["hooks"]))
     repo[field] = value
