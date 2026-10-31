@@ -49,7 +49,6 @@ jobs:
     if: github.event_name == 'pull_request'
     uses: Knuckles-Team/pipelines/.github/workflows/gates_pipeline.yml@main
     with:
-      docs-only-paths: 'specs/* docs/* *.md plans/* LICENSE'
       config: .pre-commit-config.yaml
       python-version: '3.14'
       setup-command: |
