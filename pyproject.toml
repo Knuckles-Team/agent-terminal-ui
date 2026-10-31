@@ -55,7 +55,7 @@ check_untyped_defs = true
 
 [tool.pipelines_hooks.ste]
 paths = ["README.md", "AGENTS.md", "CLAUDE.md", "CONTRIBUTING.md", "CHANGELOG.md", "docs", "specs"]
-exempt = ["specs/_template/*"]
+exempt = []
 
 [tool.pipelines_hooks.public_surface]
 repository = "Knuckles-Team/tuig"
