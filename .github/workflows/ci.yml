@@ -5,7 +5,6 @@ name: CI
 # native sources change, `native-checks`. The caller aggregate `CI required` is
 # the one required status check. Main and nightly add the full-tree gates, the
 # full suite with the Python 3.12 backward smoke, and the native wheels.
-# ste-advisory is report-only and not part of `CI required`.
 
 on:
   pull_request:
@@ -21,26 +20,9 @@ permissions:
 
 concurrency:
   group: ${{ github.event_name == 'pull_request' && format('pr-{0}-{1}', github.workflow, github.event.pull_request.number) || format('main-{0}-{1}', github.workflow, github.ref) }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  ste-advisory:
-    name: ste-advisory (report-only)
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - uses: astral-sh/setup-uv@v6
-      - name: STE-lite prose lint (advisory, report-only)
-        continue-on-error: true
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: uvx --from pre-commit==4.6.2 pre-commit run ste-staged --config .pre-commit-config.yaml --hook-stage pre-commit --from-ref "$BASE_SHA" --to-ref HEAD
-
   changes:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -74,9 +56,7 @@ jobs:
         uv sync --python 3.14 --frozen --no-install-project --group test
       rust: true
       # sibling-checkout hooks are unavailable on a hosted runner; pytest is replaced by the shared affected-tests step
-      # ste-staged (STE-lite prose lint) is advisory: the ste-advisory job runs it
-      # report-only (operator gate cut).
-      skip-hooks: okf-no-legacy-concepts,lane-guard,dependency-readiness,pytest,ste-staged
+      skip-hooks: okf-no-legacy-concepts,lane-guard,dependency-readiness,pytest
       timeout-minutes: 15
 
   main-gates:
@@ -89,7 +69,7 @@ jobs:
       setup-command: |
         uv sync --python 3.14 --frozen --no-install-project --group test
       rust: true
-      skip-hooks: okf-no-legacy-concepts,lane-guard,dependency-readiness,pytest,ste-staged
+      skip-hooks: okf-no-legacy-concepts,lane-guard,dependency-readiness,pytest
       all-files: true
       timeout-minutes: 60
 
