@@ -151,17 +151,17 @@ uncommitted edits. Take your own git worktree on your own branch instead:
 
 ```bash
 # preferred — repository-manager MCP:
-rm_worktree add <repo> <your-branch>      # -> /home/apps/worktrees/<repo>/<your-branch>
+rm_worktree add <repo> <your-branch>      # -> ${XDG_STATE_HOME}/repository-worktrees/<repo>/<your-branch>
 
 # raw-git fallback:
 git -C agent-packages/<repo> checkout main
-git -C agent-packages/<repo> worktree add /home/apps/worktrees/<repo>/<branch> -b <branch>
+git -C agent-packages/<repo> worktree add ${XDG_STATE_HOME}/repository-worktrees/<repo>/<branch> -b <branch>
 ```
 
 Work in the worktree and **commit often** (commits survive a working-tree reset).
 Each session must use a **distinct branch** — git allows a branch in only one
 worktree, which is what keeps concurrent sessions from colliding. Worktrees live
-under `/home/apps/worktrees/` (outside the workspace scan, so the sync leaves them
+under `${XDG_STATE_HOME}/repository-worktrees/` (outside the workspace scan, so the sync leaves them
 alone).
 
 **Finishing work in a worktree** — run this sequence before calling it done:
@@ -219,7 +219,7 @@ uvx --from pre-commit==4.6.0 pre-commit run --files $(git diff --name-only origi
 
 ## Quality gates
 
-`.pre-commit-config.yaml` runs ruff, mypy, vulture, codespell, the spec hooks, `pytest` and `security-sanitizer`. A change must pass them before it lands. A gate must not be bypassed with a skip, a `type: ignore` comment or an allowlist entry.
+`.pre-commit-config.yaml` runs ruff, mypy, vulture, codespell, the `spec` and `secrets` hooks and `pytest`. A change must pass them before it lands. A gate must not be bypassed with a skip, a `type: ignore` comment or an allowlist entry.
 
 ## Branching & isolation
 
@@ -227,7 +227,7 @@ Work in a real `git worktree add` from `origin/main`. The canonical checkout mus
 
 ## Documentation
 
-Docs live in `docs/` and publish through `mkdocs.yml`. The `ste-staged` hook checks new prose. Pages must stay short and factual.
+Docs live in `docs/` and publish through `mkdocs.yml`. Pages must stay short and factual.
 
 ## Specs: extend first
 

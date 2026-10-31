@@ -7,7 +7,7 @@ name = "tuig"
 version = "2.3.6"
 description = "Tuig: native Ratatui terminal interface for Arbora"
 readme = "README.md"
-authors = [{ name = "Project maintainers" }]
+authors = [{ name = "Repository Maintainers", email = "maintainers@knuckles.team" }]
 license = { file = "LICENSE" }
 classifiers = [
     "Development Status :: 4 - Beta",

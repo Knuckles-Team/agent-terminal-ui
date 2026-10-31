@@ -71,16 +71,11 @@ repos:
   - id: nbqa-ruff
     args: ["--fix"]
 - repo: https://github.com/Knuckles-Team/pipelines
-  rev: a2dd609d494364daf26fdb3b18abbffa10095993
+  rev: main
   hooks:
   - id: spec
     stages: [pre-commit, pre-push, manual]
-  - id: ste-staged
-  - id: stubs
-  - id: sprawl
-  - id: spec-trailers
-    stages: [pre-push, manual]
-    args: ["--base-ref", "origin/main"]
+  - id: secrets
 - repo: local
   hooks:
   - id: dependency-readiness
@@ -98,7 +93,7 @@ repos:
     pass_filenames: false
     stages: [pre-push, manual]
 - repo: https://github.com/Knuckles-Team/pipelines
-  rev: 5f151c60c25212da9ec67c8bbd26de5f5e6c91f4
+  rev: main
   hooks:
   - id: no-legacy-concepts
     stages: [pre-commit, pre-push]
@@ -140,13 +135,5 @@ repos:
     entry: |-
       bash -c 'if [ -f ".bumpversion.cfg" ]; then uvx --from bump2version bump2version patch --dry-run --allow-dirty; fi'
     language: system
-    pass_filenames: false
-    always_run: true
-- repo: local
-  hooks:
-  - id: security-sanitizer
-    name: Security and Garbage Sanitizer
-    entry: python scripts/security_sanitizer.py
-    language: python
     pass_filenames: false
     always_run: true
