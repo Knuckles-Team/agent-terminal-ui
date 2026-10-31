@@ -246,7 +246,12 @@ native/tuig/target/
 *maturin.lock
 .kiss/
 .kissconfig
-.specify/
+/.specify/
+!/.specify/
+/.specify/*
+!/.specify/memory/
+/.specify/memory/*
+!/.specify/memory/constitution.md
 dist-*/
 node_modules/
 reports/

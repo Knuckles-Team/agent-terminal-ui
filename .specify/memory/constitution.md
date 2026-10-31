@@ -1,33 +1,51 @@
-# Project Constitution: tuig
+# Tuig constitution
 
-## Mission
+This repository inherits the [organization constitution](https://github.com/Knuckles-Team/pipelines/blob/main/.specify/memory/constitution.md) version 1.0.0. Every article of that constitution applies here. This file adds only the rules and limits of this repository.
 
-Deliver `tuig`, one Rust/Ratatui terminal frontend for Arbora. PyPI distributes
-the native executable; Python may support developer validation but must not
-provide a runtime UI, compatibility frontend or launcher.
+**Inherits**: organization constitution v1.0.0 | **Version**: 1.0.0 | **Ratified**: 2026-10-31 | **Last amended**: 2026-10-31
 
-## Boundaries
+## Organization standards
 
-The frontend owns terminal presentation and operator input. Arbora owns served
-task lifecycle, authentication, authorization and operations. Agent runtime and
-graph decisions stay upstream. Never implement a second agent or tool executor.
+- [Spec standard](https://github.com/Knuckles-Team/pipelines/blob/main/reference/spec-standard.md): one owning spec per capability, computed states, `Spec:` trailers.
+- [Ecosystem boundaries](https://github.com/Knuckles-Team/pipelines/blob/main/reference/ecosystem-boundaries.md): which repository owns which requirement.
+- [Wording standard](https://github.com/Knuckles-Team/pipelines/blob/main/reference/ste.md): sentences of 20 words or fewer, with `must`, `should`, or `may`.
 
-Current transport is Arbora A2A and served HTTP operations. A planned protocol
-is not an implemented endpoint. Approval fails closed when unavailable. Unknown
-mutation outcomes are never automatically replayed. Preserve distinct opaque
-task, context and run identities across observations.
+## Repository articles
 
-## Engineering
+### R-I. One native terminal frontend
 
-Canonical requirements and retained parity gaps live in `specs/terminal-runtime`.
-Retiring an implementation does not mark its product requirements verified.
-Use Rust tests for runtime behavior and Python only for developer/PTY harnesses.
-Run formatting, native tests, Clippy and repository pre-commit checks. Disclose
-unrun or blocked checks; never bypass them or treat fixture tests as served proof.
+Tuig is one native Rust terminal frontend for arbora. The package index distributes the executable. Python supports developer validation only and provides no runtime interface, compatibility frontend or launcher.
 
-## Presentation
+**Enforced by:** Rust tests, `cargo clippy` and `cargo fmt`; the repository pre-commit checks.
 
-Keep keyboard access, responsive asynchronous I/O, dynamic themes, no-color
-support and bounded views. Remote cancellation requires explicit confirmation.
-Native composition, streaming, approval attachment and durable resume remain
-open until their existing acceptance criteria are met.
+**Plan check:** Does the change keep the runtime native, with no Python runtime path?
+
+### R-II. Arbora owns the task lifecycle
+
+Tuig owns terminal presentation and operator input. Arbora owns the served task lifecycle, authentication, authorization and operations. Tuig never implements a second agent or tool executor.
+
+**Enforced by:** [Ecosystem boundaries](https://github.com/Knuckles-Team/pipelines/blob/main/reference/ecosystem-boundaries.md), tuig row and forbidden-import matrix.
+
+**Plan check:** Does the change reach every operation through arbora?
+
+### R-III. Approval fails closed and mutations are not replayed
+
+Approval fails closed when unavailable. An unknown mutation outcome is never replayed automatically. Task, context and run identities stay distinct. Remote cancellation needs explicit confirmation.
+
+**Enforced by:** The `terminal-runtime` spec rows and their bound Rust tests.
+
+**Plan check:** Does the change refuse on unavailable approval and never replay an unknown outcome?
+
+### R-IV. Terminal access is preserved
+
+Every view works with the keyboard alone, responds without blocking input, supports no-color mode and stays bounded in size.
+
+**Enforced by:** The `terminal-runtime` spec rows and their bound Rust tests.
+
+**Plan check:** Does the new view work by keyboard, in no-color mode, within bounded size?
+
+## Repository limits
+
+This repository sets no numeric limit of its own. It follows the organization limits table.
+
+Amend this file in a reviewed change. State the impact in the pull request. When the organization constitution changes its version, update the **Inherits** line in the same change.
